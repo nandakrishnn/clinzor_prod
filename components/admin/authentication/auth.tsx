@@ -1,5 +1,5 @@
 "use client"
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { CssVarsProvider } from '@mui/joy/styles';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import CssBaseline from '@mui/joy/CssBaseline';
@@ -9,11 +9,12 @@ import Checkbox from '@mui/joy/Checkbox';
 import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
-
 import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
+import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
 
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -27,6 +28,51 @@ interface SignInFormElement extends HTMLFormElement {
 
 
 export default function () {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] =useState<string | null>(null);
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      // Redirect to admin dashboard or home if already logged in
+      router.replace("/admin/dashboard");
+    }
+  }, [status, router]);
+
+  const handleSubmit = async (event: React.FormEvent<SignInFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    const formElements = event.currentTarget.elements;
+    const credentials = {
+      email: formElements.email.value,
+      password: formElements.password.value,
+      persistent: formElements.persistent.checked,
+    };
+
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: credentials.email,
+        password: credentials.password,
+        callbackUrl: '/admin/dashboard', // Redirect after successful login
+      });
+
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.url) {
+        router.push(result.url);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <CssVarsProvider>
       <CssBaseline />
@@ -117,16 +163,7 @@ export default function () {
             >
               <Stack sx={{ gap: 4, mt: 2 }}>
                 <form
-                  onSubmit={(event: React.FormEvent<SignInFormElement>) => {
-                    event.preventDefault();
-                    const formElements = event.currentTarget.elements;
-                    const data = {
-                      email: formElements.email.value,
-                      password: formElements.password.value,
-                      persistent: formElements.persistent.checked,
-                    };
-                    alert(JSON.stringify(data, null, 2));
-                  }}
+                  onSubmit={handleSubmit}
                 >
                   <FormControl required>
                     <FormLabel>Email</FormLabel>
