@@ -1,6 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Heart, Users, ArrowRight, Eye, EyeOff, CheckCircle, AlertCircle, Activity } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
 
 interface FormState {
   email: string;
@@ -27,11 +29,22 @@ const ClinicPortalLogin = () => {
     email: null,
     password: null,
   });
+ const router = useRouter();
+    const [error, setError] =useState<string | null>(null);
+    const { data: session, status } = useSession();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
+useEffect(() => {
+  if (status === "authenticated") {
+    // Check if user has EXPERT role
+    if (session?.user?.role === "CLINIC") {
+      router.replace("/clinic");
+    }
+   
+  }
+}, [status, router, session?.user?.role]);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked, type } = e.target;
     setFormState(prev => ({
@@ -56,9 +69,29 @@ const ClinicPortalLogin = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+     try {
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: formState.email,
+          password: formState.password,
+          callbackUrl: '/clinic', // Redirect after successful login
+        });
+    
+        if (result?.error) {
+          setError(result.error);
+        } else if (result?.url) {
+          router.push(result.url);
+        }
+      } catch (err) {
+        setError('An unexpected error occurred. Please try again.');
+        console.error('Login error:', err);
+      } finally {
+        setIsLoading(false);
+      }
     
     setTimeout(() => {
       alert(`Welcome to Clinzor Portal!\n\nLogin Details:\n${JSON.stringify(formState, null, 2)}`);

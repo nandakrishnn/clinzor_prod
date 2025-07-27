@@ -18,7 +18,7 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const ClinicProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <RoleBasedProvider allowedRoles={["CLINIC"]} authPath="/auth/clinicauthentication">
+    <RoleBasedProvider allowedRoles={["CLINIC"]} authPath="/auth/clinicportallogin">
       {children}
     </RoleBasedProvider>
   );
