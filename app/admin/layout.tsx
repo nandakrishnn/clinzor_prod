@@ -19,7 +19,9 @@ import { AdminProvider } from "../Providers";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-   
+   <AdminProvider>
+
+  
     <Box sx={{ display: "flex", height: "100dvh", overflow: "hidden" }} >
       <AdminSidebar />
       <Box
@@ -48,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {children}
       </Box>
     </Box>
-   
+    </AdminProvider>
     </>
   );
 }

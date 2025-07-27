@@ -67,19 +67,19 @@ const RoleBasedProvider = ({
       setIsAuthorized(true);
     }
   }, [session, status, router, allowedRoles, authPath]);
-
-  if (status === "loading") {
+   // Show loading state that covers the entire screen
+  if (status === "loading" || isAuthorized === null) {
     return (
-      <div className="h-screen w-full grid place-items-center">
-        Loading...
+      <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  if (isAuthorized === false) {
+    if (isAuthorized === false) {
     return (
-      <div className="h-screen w-full grid place-items-center">
-        Redirecting to login...
+      <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
+        <p className="text-lg">Redirecting to login...</p>
       </div>
     );
   }

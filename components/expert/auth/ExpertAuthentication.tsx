@@ -35,11 +35,15 @@ const ExpertAuthentication: React.FC = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-    useEffect(() => {
-      if (status === "authenticated") {
-        router.replace("/expert");
-      }
-    }, [status, router]);
+useEffect(() => {
+  if (status === "authenticated") {
+    // Check if user has EXPERT role
+    if (session?.user?.role === "EXPERT") {
+      router.replace("/expert");
+    }
+   
+  }
+}, [status, router, session?.user?.role]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked, type } = e.target;

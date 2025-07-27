@@ -14,6 +14,7 @@ import {
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
+import { ExpertProvider } from '@/app/Providers';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -277,6 +278,8 @@ export default function ExpertSidebar() {
   return (
     <>
       {/* Mobile toggle button - always visible on mobile */}
+      <ExpertProvider>
+
       <div className="md:hidden fixed top-4 left-4 z-50">
         <motion.button 
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -341,6 +344,7 @@ export default function ExpertSidebar() {
           </motion.div>
         </motion.button>
       </div>
+      </ExpertProvider>
     </>
   );
 }
