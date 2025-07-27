@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut, useSession } from 'next-auth/react';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -74,14 +75,34 @@ export default function ExpertSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('/expert/dashboard');
-  
+    const { data: session, status } = useSession();
+    const userData = session?.user
+    console.log(session?.user ,"user data ")
+      const [user, setUser] = useState<UserProfile>({
+        name: '',
+        email: '',
+        role: '',
+        avatar: '/api/placeholder/32/32'
+      });
+    
+      // Update user data when session changes
+      useEffect(() => {
+        if (session?.user) {
+          setUser({
+            name: session.user.full_name || '',
+            email: session.user.email || '',
+            role: session.user.role || '',
+            avatar: '/api/placeholder/32/32'
+          });
+        }
+      }, [session]);
   // Example user data - in a real app, this would come from your authentication system
-  const [user] = useState<UserProfile>({
-    name: 'Dr. Alex Morgan',
-    email: 'alex.morgan@expertportal.com',
-    role: 'Medical Expert',
-    avatar: '/api/placeholder/32/32' // This is a placeholder, replace with actual avatar URL in production
-  });
+  // const [user] = useState<UserProfile>({
+  //   name: 'Dr. Alex Morgan',
+  //   email: 'alex.morgan@expertportal.com',
+  //   role: 'Medical Expert',
+  //   avatar: '/api/placeholder/32/32' // This is a placeholder, replace with actual avatar URL in production
+  // });
   
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
@@ -122,6 +143,7 @@ export default function ExpertSidebar() {
   
   const handleLogout = () => {
     // Handle logout logic here
+     signOut({ callbackUrl: "/auth/expertauthentication" });
     console.log('Logging out...');
     // e.g., redirect to login page or call logout API
   };
