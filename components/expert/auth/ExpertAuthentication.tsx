@@ -1,5 +1,7 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { Mail, Lock, Stethoscope, Shield, ArrowRight, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
 
 interface FormState {
   email: string;
@@ -26,10 +28,22 @@ const ExpertAuthentication: React.FC = () => {
     email: null,
     password: null,
   });
+    const router = useRouter();
+    const [error, setError] =useState<string | null>(null);
+    const { data: session, status } = useSession();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+useEffect(() => {
+  if (status === "authenticated") {
+    // Check if user has EXPERT role
+    if (session?.user?.role === "EXPERT") {
+      router.replace("/expert");
+    }
+   
+  }
+}, [status, router, session?.user?.role]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked, type } = e.target;
@@ -55,15 +69,31 @@ const ExpertAuthentication: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      alert(JSON.stringify(formState, null, 2));
-      setIsLoading(false);
-    }, 1500);
-  };
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const result = await signIn('credentials', {
+      redirect: false,
+      email: formState.email,
+      password: formState.password,
+      callbackUrl: '/expert', // Redirect after successful login
+    });
+
+    if (result?.error) {
+      setError(result.error);
+    } else if (result?.url) {
+      router.push(result.url);
+    }
+  } catch (err) {
+    setError('An unexpected error occurred. Please try again.');
+    console.error('Login error:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const ExpertBadge = () => (
     <div className="relative">

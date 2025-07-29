@@ -35,7 +35,6 @@ export default function () {
 
   useEffect(() => {
     if (status === "authenticated") {
-      // Redirect to admin dashboard or home if already logged in
       router.replace("/admin/dashboard");
     }
   }, [status, router]);
