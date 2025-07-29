@@ -1,41 +1,71 @@
 // axios.ts
 import axios from "axios";
-import { baseUrl } from "@/utils/Endpoint";
 import { getSession } from "next-auth/react";
 
-const BASE_URL = baseUrl;
+const BASE_URL = "http://13.235.72.88:8000"; // Explicitly define your base URL
 
-const defaultInstance = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-});
-
+// Create axios instance with proper defaults
 const privateInstance = axios.create({
   baseURL: BASE_URL,
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true,
+  timeout: 10000, // Add timeout
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  withCredentials: true
 });
-
 
 interface CustomSession {
   accessToken?: string;
- 
+  refreshToken?: string;
 }
 
-// 🔐 Attach accessToken from NextAuth to each request
+// Enhanced request interceptor
 privateInstance.interceptors.request.use(
   async (config) => {
-    const session = (await getSession()) as CustomSession | null;
-    if (session?.accessToken) {
-      config.headers["Authorization"] = `Bearer ${session.accessToken}`;
-      console.log("✅ Authorization header added:", config.headers["Authorization"]);
-    } else {
-      console.warn("⚠️ No access token found in session");
+    // Only run on client-side
+    if (typeof window === "undefined") {
+      console.warn("Axios request made on server side");
+      return config;
+    }
+
+    try {
+      const session = await getSession();
+      if (session?.accessToken) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`;
+      } else {
+        console.warn("No access token - redirecting to login");
+        window.location.href = "/login";
+        return Promise.reject(new Error("Missing access token"));
+      }
+    } catch (error) {
+      console.error("Session retrieval error:", error);
+      return Promise.reject(error);
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
 );
 
-export default defaultInstance;
+// Enhanced response interceptor
+privateInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    console.error("API Error:", {
+      config: error.config,
+      response: error.response,
+      message: error.message
+    });
+
+    if (error.code === "ERR_NETWORK") {
+      console.error("Network error detected - check backend availability");
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export const axiosPrivate = privateInstance;
