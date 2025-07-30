@@ -46,7 +46,7 @@ export default function HeroSection() {
           speedSegment={1.5}
           delay={0}
           as="h1"
-          className="text-4xl md:text-5xl lg:text-8xl font-bold text-white tracking-tight w-ful md:w-[70%]"
+          className="text-4xl md:text-5xl lg:text-7xl font-bold text-white tracking-tight w-ful md:w-[70%]"
         >
           Discover Trusted Healthcare Providers
         </TextEffect>
@@ -57,7 +57,7 @@ export default function HeroSection() {
           speedSegment={1.5}
           delay={0.05}
           as="p"
-          className="max-w-2xl text-sm sm:text-base md:text-lg text-gray-300"
+          className="max-w-2xl text-sm sm:text-base md:text-lg text-gray-300 md:w-[46%]"
         >
           Instantly find clinics, book telehealth consultations, or schedule
           home visits with top specialists in your area.
@@ -79,8 +79,6 @@ export default function HeroSection() {
             </div>
           </a>
         </AnimatedGroup>
-
-        {/* Search Bar */}
       </div>
     </div>
   );
