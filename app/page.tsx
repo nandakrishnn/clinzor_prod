@@ -79,7 +79,7 @@ export default function Home() {
 
         {/* FAQs */}
         <section className="bg-white py-10 sm:py-14 px-4 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative">
+          <div className="max-w-screen-xl mx-auto relative mt-20">
             <FAQsTwo />
           </div>
         </section>

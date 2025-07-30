@@ -115,7 +115,7 @@ export const NavBody = ({
     }}
     transition={{ type: "spring", stiffness: 200, damping: 30 }}
     className={cn(
-      "relative z-50 mx-auto hidden flex-row items-center justify-between rounded-2xl border px-6 lg:flex",
+      "relative z-50 mx-auto hidden flex-row items-center justify-between rounded-xl border px-6 lg:flex",
       className
     )}
     style={{

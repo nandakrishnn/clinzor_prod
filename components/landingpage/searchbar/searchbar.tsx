@@ -1,14 +1,19 @@
 "use client";
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { IconArrowRight, IconFilter, IconMapPin, IconSearch } from '@tabler/icons-react';
-import { X as IconX, Check as IconCheck } from 'lucide-react';
-import cn from 'classnames';
-import useMedia from '@/src/hooks/useMedia';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  IconArrowRight,
+  IconFilter,
+  IconMapPin,
+  IconSearch
+} from "@tabler/icons-react";
+import { X as IconX, Check as IconCheck } from "lucide-react";
+import cn from "classnames";
+import useMedia from "@/src/hooks/useMedia";
 
 // Import our dropdown components
-import useDropdown from './use';
-import ResponsiveDropdown from './responsivedropdown';
+import useDropdown from "./use";
+import ResponsiveDropdown from "./responsivedropdown";
 
 interface SearchParams {
   keyword: string;
@@ -28,59 +33,59 @@ export interface Option {
 }
 
 const serviceOptions: Option[] = [
-  { value: 'consultation', label: 'Consultation' },
-  { value: 'telehealth', label: 'Telehealth' },
-  { value: 'checkup', label: 'General Check-up' },
-  { value: 'emergency', label: 'Emergency' },
-  { value: 'surgery', label: 'Surgery' },
-  { value: 'lab', label: 'Lab Tests' },
-  { value: 'imaging', label: 'Advanced Imaging' },
-  { value: 'preventive', label: 'Preventive Care' },
-  { value: 'specialist', label: 'Specialist Referral' },
+  { value: "consultation", label: "Consultation" },
+  { value: "telehealth", label: "Telehealth" },
+  { value: "checkup", label: "General Check-up" },
+  { value: "emergency", label: "Emergency" },
+  { value: "surgery", label: "Surgery" },
+  { value: "lab", label: "Lab Tests" },
+  { value: "imaging", label: "Advanced Imaging" },
+  { value: "preventive", label: "Preventive Care" },
+  { value: "specialist", label: "Specialist Referral" }
 ];
 
 const specialtyOptions: Option[] = [
-  { value: 'family', label: 'Family Medicine' },
-  { value: 'cardiology', label: 'Cardiology' },
-  { value: 'dermatology', label: 'Dermatology' },
-  { value: 'neurology', label: 'Neurology' },
-  { value: 'pediatrics', label: 'Pediatrics' },
-  { value: 'orthopedics', label: 'Orthopedics' },
-  { value: 'psychiatry', label: 'Psychiatry' },
-  { value: 'dentistry', label: 'Dentistry' },
-  { value: 'optometry', label: 'Optometry' },
-  { value: 'oncology', label: 'Oncology' },
-  { value: 'endocrinology', label: 'Endocrinology' },
-  { value: 'obstetrics', label: 'Obstetrics & Gynecology' },
+  { value: "family", label: "Family Medicine" },
+  { value: "cardiology", label: "Cardiology" },
+  { value: "dermatology", label: "Dermatology" },
+  { value: "neurology", label: "Neurology" },
+  { value: "pediatrics", label: "Pediatrics" },
+  { value: "orthopedics", label: "Orthopedics" },
+  { value: "psychiatry", label: "Psychiatry" },
+  { value: "dentistry", label: "Dentistry" },
+  { value: "optometry", label: "Optometry" },
+  { value: "oncology", label: "Oncology" },
+  { value: "endocrinology", label: "Endocrinology" },
+  { value: "obstetrics", label: "Obstetrics & Gynecology" }
 ];
 
 const popularSearches = [
-  'Primary Care', 
-  'Dentist', 
-  'Pediatrician', 
-  'Dermatologist'
+  "Primary Care",
+  "Dentist",
+  "Pediatrician",
+  "Dermatologist"
 ];
 
 const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
-  const [keyword, setKeyword] = useState('');
-  const [serviceType, setServiceType] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [location, setLocation] = useState('');
+  const [keyword, setKeyword] = useState("");
+  const [serviceType, setServiceType] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [location, setLocation] = useState("");
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [activePopular, setActivePopular] = useState<string | null>(null);
   const [filtersCount, setFiltersCount] = useState(0);
-  
+
   // Use our custom hooks for dropdowns
   // Use our custom dropdown hooks with unique IDs for coordination
-  const serviceDropdown = useDropdown(false, 'service-dropdown');
-  const specialtyDropdown = useDropdown(false, 'specialty-dropdown');
-  
+  const serviceDropdown = useDropdown(false, "service-dropdown");
+  const specialtyDropdown = useDropdown(false, "specialty-dropdown");
+
   const searchFormRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isMobileView = useMedia('(max-width: 768px)');
+  const isMobileView = useMedia("(max-width: 768px)");
 
   // Initialize filters visibility based on view
   useEffect(() => {
@@ -98,7 +103,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
 
   const handleDetectLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert('Geolocation not supported.');
+      alert("Geolocation not supported.");
       return;
     }
     setIsDetectingLocation(true);
@@ -113,10 +118,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             data.address?.city ||
             data.address?.town ||
             data.display_name ||
-            'Unknown';
+            "Unknown";
           setLocation(city);
         } catch {
-          setLocation('Unknown');
+          setLocation("Unknown");
         } finally {
           setIsDetectingLocation(false);
         }
@@ -133,20 +138,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   };
 
   const clearKeyword = () => {
-    setKeyword('');
+    setKeyword("");
     setActivePopular(null);
   };
 
-  const clearFilter = (type: 'service' | 'specialty' | 'location') => {
+  const clearFilter = (type: "service" | "specialty" | "location") => {
     switch (type) {
-      case 'service':
-        setServiceType('');
+      case "service":
+        setServiceType("");
         break;
-      case 'specialty':
-        setSpecialty('');
+      case "specialty":
+        setSpecialty("");
         break;
-      case 'location':
-        setLocation('');
+      case "location":
+        setLocation("");
         break;
     }
   };
@@ -171,20 +176,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         setShowFilters(false);
       }
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMobileView, showFilters]);
 
   // Get selected option label
   const getSelectedLabel = (options: Option[], value: string) => {
-    const option = options.find(opt => opt.value === value);
-    return option ? option.label : '';
+    const option = options.find((opt) => opt.value === value);
+    return option ? option.label : "";
   };
 
   // Dropdown content components to keep the render method clean
   const serviceDropdownContent = (
-    <div className="py-1 max-h-64 overflow-y-auto">
+    <div className="py-1 max-h-64 overflow-y-auto ">
       {serviceOptions.map((option) => (
         <motion.button
           key={option.value}
@@ -195,13 +200,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           }}
           className={cn(
             "w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50/80 transition-colors flex items-center justify-between",
-            serviceType === option.value ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"
+            serviceType === option.value
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700"
           )}
           whileHover={{ backgroundColor: "rgba(219, 234, 254, 0.7)" }}
           whileTap={{ backgroundColor: "rgba(219, 234, 254, 0.9)" }}
         >
           <span>{option.label}</span>
-          {serviceType === option.value && <IconCheck size={16} className="text-blue-600" />}
+          {serviceType === option.value && (
+            <IconCheck size={16} className="text-blue-600" />
+          )}
         </motion.button>
       ))}
     </div>
@@ -219,20 +228,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           }}
           className={cn(
             "w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50/80 transition-colors flex items-center justify-between",
-            specialty === option.value ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"
+            specialty === option.value
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700"
           )}
           whileHover={{ backgroundColor: "rgba(219, 234, 254, 0.7)" }}
           whileTap={{ backgroundColor: "rgba(219, 234, 254, 0.9)" }}
         >
           <span>{option.label}</span>
-          {specialty === option.value && <IconCheck size={16} className="text-blue-600" />}
+          {specialty === option.value && (
+            <IconCheck size={16} className="text-blue-600" />
+          )}
         </motion.button>
       ))}
     </div>
   );
 
   return (
-    <div className={cn('w-full max-w-6xl mx-auto px-4 md:px-6 ', className)}>
+    <div className={cn("w-full max-w-6xl mx-auto px-4 md:px-6 ", className)}>
       <motion.div
         className="flex justify-center mb-4 "
         initial={{ opacity: 0, y: 10 }}
@@ -251,58 +264,67 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         className="bg-white rounded-xl overflow-hidden"
         style={{
           boxShadow: isInputFocused
-            ? '0 20px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(66, 99, 235, 0.1)'
-            : '0 10px 25px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04)',
-          transition: 'box-shadow 0.3s ease, transform 0.3s ease'
+            ? "0 20px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(66, 99, 235, 0.1)"
+            : "0 10px 25px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04)",
+          transition: "box-shadow 0.3s ease, transform 0.3s ease"
         }}
       >
-        <form
-          ref={searchFormRef}
-          onSubmit={handleSubmit}
-          className="relative"
-        >
+        <form ref={searchFormRef} onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col md:flex-row">
             {/* Location */}
             <div className="p-4 md:pl-6 md:pr-4 md:py-5 border-b md:border-b-0 md:border-r border-gray-100 flex-shrink-0">
               <div className="flex flex-col">
-                <label className="text-xs text-gray-500 mb-1.5 font-medium">LOCATION</label>
+                <label className="text-xs text-gray-500 mb-1.5 font-medium">
+                  LOCATION
+                </label>
                 <div className="flex items-center">
                   {isDetectingLocation ? (
                     <motion.div
                       animate={{ opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{
+                        duration: 1.2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
                       className="flex items-center gap-2 text-sm text-gray-600"
                     >
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      >
                         <IconMapPin size={16} className="text-blue-600" />
                       </motion.div>
                       <span>Finding location...</span>
                     </motion.div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-hidden">
                       <motion.button
                         type="button"
                         onClick={handleDetectLocation}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 focus:outline-none transition-colors"
+                        className="flex items-center gap-2 text-sm text-truncate text-start  text-gray-700 hover:text-blue-600 focus:outline-none transition-colors md:w-[150px]"
                       >
                         <IconMapPin size={16} className="text-blue-600" />
-                        <span className="font-medium">
-                          {location || 'Set your location'}
+                        <span className="font-medium text-truncate line-clamp-1">
+                          {location || "Set your location"}
                         </span>
                       </motion.button>
                       {location && (
                         <motion.button
                           type="button"
-                          onClick={() => clearFilter('location')}
+                          onClick={() => clearFilter("location")}
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.2 }}
                           className="p-1 rounded-full hover:bg-gray-100"
                         >
-                          <IconX size={14} className="text-gray-500" />
+                          <IconX size={14} className="text-gray-500 " />
                         </motion.button>
                       )}
                     </div>
@@ -314,26 +336,33 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             {/* Keyword Search */}
             <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100 flex-1">
               <div className="flex flex-col">
-                <label htmlFor="keyword-search" className="text-xs text-gray-500 mb-1.5 font-medium">
+                <label
+                  htmlFor="keyword-search"
+                  className="text-xs text-gray-500 mb-1.5 font-medium"
+                >
                   SEARCH
                 </label>
                 <div className="relative flex items-center">
-                  <IconSearch 
-                    size={18} 
+                  <IconSearch
+                    size={18}
                     className={cn(
                       "mr-2 transition-colors",
                       isInputFocused ? "text-blue-600" : "text-gray-400"
-                    )} 
+                    )}
                   />
                   <input
                     id="keyword-search"
                     ref={inputRef}
                     type="text"
                     value={keyword}
-                    onChange={e => setKeyword(e.target.value)}
+                    onChange={(e) => setKeyword(e.target.value)}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
-                    placeholder={isMobileView ? "Search healthcare" : "Search doctors, clinics or services"}
+                    placeholder={
+                      isMobileView
+                        ? "Search healthcare"
+                        : "Search doctors, clinics or services"
+                    }
                     className="w-full bg-transparent border-none text-gray-800 focus:outline-none text-sm md:text-base py-1"
                   />
                   <AnimatePresence>
@@ -356,7 +385,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             </div>
 
             {/* Desktop Filters */}
-            <div className={cn("md:flex flex-shrink-0", isMobileView ? "hidden" : "")}>
+            <div
+              className={cn(
+                "md:flex flex-shrink-0",
+                isMobileView ? "hidden" : ""
+              )}
+            >
               {/* Service Type */}
               <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
                 <div className="flex flex-col">
@@ -374,27 +408,38 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                           onClick={serviceDropdown.toggle}
                           className={cn(
                             "flex items-center justify-between min-w-32 h-8 px-3 py-1.5 text-sm transition-all",
-                            isMobileView ? "rounded-md" : "rounded-full", 
-                            serviceType 
-                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium" 
+                            isMobileView ? "rounded-md" : "rounded-full",
+                            serviceType
+                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
                               : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                           )}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
                         >
                           <span className="truncate">
-                            {serviceType ? getSelectedLabel(serviceOptions, serviceType) : 'Any service'}
+                            {serviceType
+                              ? getSelectedLabel(serviceOptions, serviceType)
+                              : "Any service"}
                           </span>
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className={cn("w-4 h-4 ml-1 transition-transform", 
-                              serviceDropdown.isOpen ? "transform rotate-180" : "",
-                              serviceType ? "text-blue-600" : "text-gray-500")} 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={cn(
+                              "w-4 h-4 ml-1 transition-transform",
+                              serviceDropdown.isOpen
+                                ? "transform rotate-180"
+                                : "",
+                              serviceType ? "text-blue-600" : "text-gray-500"
+                            )}
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </motion.button>
                       }
@@ -404,7 +449,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     {serviceType && (
                       <motion.button
                         type="button"
-                        onClick={() => clearFilter('service')}
+                        onClick={() => clearFilter("service")}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.2 }}
@@ -435,26 +480,37 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                           className={cn(
                             "flex items-center justify-between min-w-32 h-8 px-3 py-1.5 text-sm border transition-all",
                             isMobileView ? "rounded-md" : "rounded-full",
-                            specialty 
-                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium" 
+                            specialty
+                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
                               : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                           )}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
                         >
                           <span className="truncate">
-                            {specialty ? getSelectedLabel(specialtyOptions, specialty) : 'Any specialty'}
+                            {specialty
+                              ? getSelectedLabel(specialtyOptions, specialty)
+                              : "Any specialty"}
                           </span>
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className={cn("w-4 h-4 ml-1 transition-transform", 
-                              specialtyDropdown.isOpen ? "transform rotate-180" : "",
-                              specialty ? "text-blue-600" : "text-gray-500")} 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={cn(
+                              "w-4 h-4 ml-1 transition-transform",
+                              specialtyDropdown.isOpen
+                                ? "transform rotate-180"
+                                : "",
+                              specialty ? "text-blue-600" : "text-gray-500"
+                            )}
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </motion.button>
                       }
@@ -464,7 +520,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     {specialty && (
                       <motion.button
                         type="button"
-                        onClick={() => clearFilter('specialty')}
+                        onClick={() => clearFilter("specialty")}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.2 }}
@@ -479,7 +535,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             </div>
 
             {/* Search Button (Desktop) */}
-            <div className={cn("p-4 md:px-6 md:py-5 flex-shrink-0 flex items-end", isMobileView ? "hidden" : "")}>
+            <div
+              className={cn(
+                "p-4 md:px-6 md:py-5 flex-shrink-0 flex items-end",
+                isMobileView ? "hidden" : ""
+              )}
+            >
               <motion.button
                 type="submit"
                 className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 flex items-center justify-center gap-2 transition-colors"
@@ -503,16 +564,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 whileTap={{ scale: 0.99 }}
               >
                 <IconFilter size={16} className="mr-2" />
-                <span>
-                  {showFilters ? 'Hide filters' : 'Show filters'}
-                </span>
+                <span>{showFilters ? "Hide filters" : "Show filters"}</span>
                 {filtersCount > 0 && !showFilters && (
                   <span className="ml-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {filtersCount}
                   </span>
                 )}
               </motion.button>
-              
+
               {/* Active filters indicators for mobile view */}
               {!showFilters && filtersCount > 0 && (
                 <div className="flex items-center gap-2">
@@ -536,7 +595,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             {isMobileView && showFilters && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
+                animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
@@ -551,7 +610,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                       {serviceType && (
                         <button
                           type="button"
-                          onClick={() => clearFilter('service')}
+                          onClick={() => clearFilter("service")}
                           className="text-xs text-blue-600 hover:text-blue-800"
                         >
                           Clear
@@ -569,26 +628,37 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                             onClick={serviceDropdown.toggle}
                             className={cn(
                               "flex items-center justify-between w-full h-10 px-4 py-2 text-sm rounded-lg border transition-all",
-                              serviceType 
-                                ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium" 
+                              serviceType
+                                ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
                                 : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                             )}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                           >
                             <span>
-                              {serviceType ? getSelectedLabel(serviceOptions, serviceType) : 'Any service'}
+                              {serviceType
+                                ? getSelectedLabel(serviceOptions, serviceType)
+                                : "Any service"}
                             </span>
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className={cn("w-4 h-4 ml-1 transition-transform", 
-                                serviceDropdown.isOpen ? "transform rotate-180" : "",
-                                serviceType ? "text-blue-600" : "text-gray-500")} 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={cn(
+                                "w-4 h-4 ml-1 transition-transform",
+                                serviceDropdown.isOpen
+                                  ? "transform rotate-180"
+                                  : "",
+                                serviceType ? "text-blue-600" : "text-gray-500"
+                              )}
+                              fill="none"
+                              viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
                             </svg>
                           </motion.button>
                         }
@@ -607,7 +677,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                       {specialty && (
                         <button
                           type="button"
-                          onClick={() => clearFilter('specialty')}
+                          onClick={() => clearFilter("specialty")}
                           className="text-xs text-blue-600 hover:text-blue-800"
                         >
                           Clear
@@ -625,26 +695,37 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                             onClick={specialtyDropdown.toggle}
                             className={cn(
                               "flex items-center justify-between w-full h-10 px-4 py-2 text-sm rounded-lg border transition-all",
-                              specialty 
-                                ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium" 
+                              specialty
+                                ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
                                 : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                             )}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                           >
                             <span>
-                              {specialty ? getSelectedLabel(specialtyOptions, specialty) : 'Any specialty'}
+                              {specialty
+                                ? getSelectedLabel(specialtyOptions, specialty)
+                                : "Any specialty"}
                             </span>
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className={cn("w-4 h-4 ml-1 transition-transform", 
-                                specialtyDropdown.isOpen ? "transform rotate-180" : "",
-                                specialty ? "text-blue-600" : "text-gray-500")} 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={cn(
+                                "w-4 h-4 ml-1 transition-transform",
+                                specialtyDropdown.isOpen
+                                  ? "transform rotate-180"
+                                  : "",
+                                specialty ? "text-blue-600" : "text-gray-500"
+                              )}
+                              fill="none"
+                              viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
                             </svg>
                           </motion.button>
                         }
@@ -657,7 +738,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           {/* Mobile Search Button (Full-width) */}
           {isMobileView && (
             <motion.div
@@ -686,7 +767,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         transition={{ duration: 0.4, delay: 0.3 }}
         className="mt-4 flex flex-wrap justify-center gap-2"
       >
-        <span className="text-xs text-gray-500 font-medium mr-1 self-center">Popular:</span>
+        <span className="text-xs text-gray-500 font-medium mr-1 self-center">
+          Popular:
+        </span>
         {popularSearches.map((term) => (
           <motion.button
             key={term}
@@ -707,6 +790,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
       </motion.div>
     </div>
   );
-}
+};
 
 export default SearchBar;
