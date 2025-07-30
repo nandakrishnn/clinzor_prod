@@ -1,27 +1,37 @@
 import { User } from "@/types/user";
 import  { axiosPrivate } from "../../axios/axios";
+import { getSession } from "next-auth/react";
+import { baseUrl } from "@/utils/Endpoint";
 
-
-export const updateUserStatus= async (id :string) => {
+// users 
+export const updateUserStatus = async (id: string, body: {
+  is_blocked: boolean;
+  reason_for_block?: string;
+}) => {
   try {
-    console.log(id,"planner")
-    const response = await axiosPrivate.patch(`user/user-block/${id}`);
+    const response = await axiosPrivate.patch(`user/user-block/${id}/`, body);
     return response.data;
   } catch (error) {
-    console.error("Failed to update workout plan", error);
+    console.error("User status update error:", error);
     throw error;
   }
 };
 
 export const deleteUser= async (Id:string) => {
-  return await axiosPrivate.delete(`user/user-delete/${Id}`);
+  return await axiosPrivate.delete(`user/user-delete/${Id}/`);
 };
 export const GetAUser= async (Id:string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
-export const GetAllUsers = async (page_size:number) => {
-  const response = await axiosPrivate.get(`user/user-list/?page_size=5`);
-  console.log(response, "All Users Data");
-  return response.data;
+export const GetAllUsers = async (pageSize: number = 10, page: number = 1) => {
+  try {
+    const response = await axiosPrivate.get(`user/user-list/?page_size=${pageSize}&page=${page}`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
 };
+
+
