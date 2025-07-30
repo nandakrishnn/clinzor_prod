@@ -120,7 +120,7 @@ export const NavBody = ({
     )}
     style={{
       borderWidth: "1px",
-      color: visible ? 'black': 'white',
+      color: visible ? "black" : "white",
       backgroundImage: visible
         ? `linear-gradient(135deg, rgba(255,255,255,${
             0.6 + scrollProgress * 0.3
@@ -157,7 +157,7 @@ export const NavItems = ({
           href={item.link}
           onClick={onItemClick}
           onMouseEnter={() => setHovered(idx)}
-          className="relative px-4 py-2"
+          className="relative px-4 py-2 group"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05, duration: 0.3 }}
@@ -166,18 +166,14 @@ export const NavItems = ({
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-slate-100 to-slate-200"
+              className={`absolute inset-0 rounded-full  bg-gradient-to-r from-slate-100 to-slate-200 `}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             />
           )}
-          <span
-            className={cn(
-              "relative z-10 font-medium"
-            )}
-          >
+          <span className={cn(`relative z-10 font-medium group-hover:text-black`)}>
             {item.name}
           </span>
         </motion.a>
