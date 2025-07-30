@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
+import { GetAllUsers } from '@/service/admin/userManagementService';
 
 interface User {
   uuid: string;
@@ -482,7 +483,10 @@ export default function AllUsersPage() {
     const loadUsers = async () => {
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
+
       const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
+      //  const data = await GetAllUsers(10); // Real API
+        // setUsers(data.users);
       setUsers(mockUsers);
       setBookings(mockBookings);
       setFilteredUsers(mockUsers);
