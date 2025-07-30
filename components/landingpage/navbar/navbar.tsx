@@ -9,7 +9,7 @@ import {
   NavbarButton,
   MobileNavHeader,
   MobileNavToggle,
-  MobileNavMenu,
+  MobileNavMenu
 } from "./navbarhelper";
 import { useState } from "react";
 
@@ -18,7 +18,7 @@ export function NavbarDemo() {
     { name: "Home", link: "/" },
     { name: "Service", link: "#pricing" },
     { name: "Blog", link: "/blog" },
-    { name: "About us", link: "/aboutus" },
+    { name: "About us", link: "/aboutus" }
   ];
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -26,9 +26,9 @@ export function NavbarDemo() {
     <Navbar>
       <NavBody>
         <NavbarLogo />
-        <NavItems items={navItems} />
+        <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
-          <NavbarButton variant="secondary">Login</NavbarButton>
+          <NavbarButton >Login</NavbarButton>
           <NavbarButton variant="primary">Book a call</NavbarButton>
         </div>
       </NavBody>
@@ -38,7 +38,6 @@ export function NavbarDemo() {
           <NavbarLogo />
           <MobileNavToggle
             isOpen={isMobileMenuOpen}
-            
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           />
         </MobileNavHeader>
