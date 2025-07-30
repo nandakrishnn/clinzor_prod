@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
-import { GetAllUsers } from '@/service/admin/userManagementService';
+import { deleteUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
 
 interface User {
   uuid: string;
@@ -485,11 +485,12 @@ export default function AllUsersPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
-      //  const data = await GetAllUsers(10); // Real API
-        // setUsers(data.users);
-      setUsers(mockUsers);
+       const data = await GetAllUsers(10); // Real API
+        setUsers(data);
+        console.log(data ,"user data ")
+      // setUsers(mockUsers);
       setBookings(mockBookings);
-      setFilteredUsers(mockUsers);
+      setFilteredUsers(data);
       setLoading(false);
     };
     loadUsers();
@@ -631,33 +632,69 @@ export default function AllUsersPage() {
     }
   };
 
-  const handleDeleteConfirm = () => {
-    if (selectedUser) {
-      setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
-      setIsDeleteModalOpen(false);
-      setSelectedUser(null);
-      setNotification({
-        type: 'success',
-        message: 'User deleted successfully'
-      });
-    }
+const handleDeleteConfirm = async () => {
+  if (!selectedUser) return;
+
+  try {
+    // Call the API to delete the user from the backend
+    await deleteUser(selectedUser.uuid);
+    
+    // Update the UI state only after successful API call
+    setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
+    setIsDeleteModalOpen(false);
+    setSelectedUser(null);
+    
+    setNotification({
+      type: 'success',
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Failed to delete user:', error);
+    setNotification({
+      type: 'error',
+      message: 'Failed to delete user. Please try again.'
+    });
+  }
+};
+
+const handleBlockConfirm = async () => {
+  if (!selectedUser) return;
+
+  const isBlocking = !selectedUser.is_blocked;
+  const requestBody = {
+    is_blocked: isBlocking,
+    ...(isBlocking && { reason_for_block: "unauthorized actions" }) // Only include if blocking
   };
 
-  const handleBlockConfirm = () => {
-    if (selectedUser) {
-      setUsers(prev => prev.map(u => 
-        u.uuid === selectedUser.uuid ? { ...u, is_blocked: !u.is_blocked } : u
-      ));
-      setIsBlockModalOpen(false);
-      setSelectedUser(null);
-      setNotification({
-        type: 'success',
-        message: selectedUser.is_blocked 
-          ? 'User unblocked successfully'
-          : 'User blocked successfully'
-      });
-    }
-  };
+  try {
+    // Call API to update block status
+    await updateUserStatus(selectedUser.uuid, requestBody);
+    
+    // Update local state
+    setUsers(prev => prev.map(u => 
+      u.uuid === selectedUser.uuid ? { 
+        ...u, 
+        is_blocked: isBlocking,
+        ...(isBlocking && { reason_for_block: "unauthorized actions" })
+      } : u
+    ));
+    
+    setIsBlockModalOpen(false);
+    setSelectedUser(null);
+    
+    setNotification({
+      type: 'success',
+      message: isBlocking ? 'User blocked successfully' : 'User unblocked successfully'
+    });
+    
+  } catch (error) {
+    console.error('Block/Unblock failed:', error);
+    setNotification({
+      type: 'error',
+      message: `Failed to ${isBlocking ? 'block' : 'unblock'} user. Please try again.`
+    });
+  }
+};
   
   const handleExport = () => {
     console.log('Export users');
@@ -736,7 +773,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Users</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.is_active && !u.is_blocked).length}
+                  {users?.filter(u => u.is_active && !u.is_blocked).length}
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
