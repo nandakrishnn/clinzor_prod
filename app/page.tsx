@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white overflow-hidden">
       {/* Decorative Backgrounds */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-50">
+      {/* <div className="fixed inset-0 pointer-events-none z-0 opacity-50">
         <svg
           className="absolute top-1/4 -right-32 sm:-right-40 w-[400px] h-[400px] md:w-[500px] md:h-[500px] text-blue-100"
           viewBox="0 0 200 200"
@@ -49,22 +49,26 @@ export default function Home() {
             <rect width="100%" height="100%" fill="url(#dots-pattern)" />
           </svg>
         </div>
-      </div>
+      </div> */}
 
       {/* Navbar */}
       <NavbarDemo />
 
       <main className="z-10">
         {/* Hero + Search */}
-        <section className="min-h-[70vh] sm:min-h-[80vh] flex flex-col justify-center items-center px-4 pt-20 sm:pt-28 pb-4">
-          <HeroSection />
-          <SearchBar />
+        <section className="min-h-[80vh] sm:min-h-[120vh] relative flex flex-col items-center bg-white">
+          <div className="min-h-[70vh] sm:min-h-[95vh] w-full flex flex-col justify-center items-center px-4 pt-20 pb-4 bg-gradient-to-t from-[#3A68AA] to-[#1C3455]">
+            <HeroSection />
+          </div>
+          <div className="md:w-[80%] mx-auto  md:absolute md:bottom-10 bg-white md:p-5 pt-5 md:pt-8 rounded-t-2xl">
+            <SearchBar />
+          </div>
         </section>
 
         {/* Clinic Listings */}
         <section className="bg-gradient-to-br from-white to-blue-50 px-4 sm:px-6 py-12">
-          <LogoCloud />
-          <div className="max-w-screen-xl mx-auto">
+          {/* <LogoCloud /> */}
+          <div className="max-w-screen-xl mx-auto ">
             <ClinicSearch />
           </div>
         </section>

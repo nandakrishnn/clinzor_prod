@@ -153,7 +153,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
               transition={{ duration: 0.2 }}
             />
           )}
-          <span className="relative z-10 font-medium text-slate-800">{item.name}</span>
+          <span className="relative z-10 font-medium  text-slate-800">{item.name}</span>
         </motion.a>
       ))}
     </motion.div>

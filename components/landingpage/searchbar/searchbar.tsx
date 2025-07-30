@@ -232,23 +232,23 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   );
 
   return (
-    <div className={cn('w-full max-w-6xl mx-auto px-4 md:px-6', className)}>
+    <div className={cn('w-full max-w-6xl mx-auto px-4 md:px-6 ', className)}>
       <motion.div
-        className="flex justify-center mb-4"
+        className="flex justify-center mb-4 "
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h2 className="text-lg md:text-xl font-medium text-gray-800">
+        {/* <h2 className="text-lg md:text-xl font-medium text-black">
           Find healthcare providers & services
-        </h2>
+        </h2> */}
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-white/70 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl"
+        className="bg-white rounded-xl overflow-hidden"
         style={{
           boxShadow: isInputFocused
             ? '0 20px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(66, 99, 235, 0.1)'

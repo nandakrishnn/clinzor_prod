@@ -6,7 +6,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import Link from 'next/link';
 
 export default function FAQsTwo() {
   const faqItems = [
@@ -74,9 +73,9 @@ export default function FAQsTwo() {
 
           <p className="text-muted-foreground mt-6 px-8 text-center">
             Still have questions? Reach out to our{' '}
-            <Link href="#" className="text-primary font-medium hover:underline">
+            <a href="#" className="text-primary font-medium hover:underline">
               support team
-            </Link>{' '}
+            </a>{' '}
             — we're here to help.
           </p>
         </div>

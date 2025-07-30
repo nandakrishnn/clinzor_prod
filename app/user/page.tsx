@@ -9,8 +9,7 @@ export default function Slotmanagement() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {/* Breadcrumb Navigation */}
-      <Box sx={{ display: "flex", alignItems: "center" }}>
-      </Box>
+      <Box sx={{ display: "flex", alignItems: "center" }}></Box>
 
       {/* Table Section */}
       <ExpertBookingManager />

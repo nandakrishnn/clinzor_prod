@@ -1,4 +1,3 @@
-import Link from "next/link";
 
 const Logo = () => (
   <img
@@ -62,23 +61,23 @@ export default function FooterSection() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
-            <Link href="/" aria-label="go home" className="block">
+            <a href="/" aria-label="go home" className="block">
               <Logo />
-            </Link>
+            </a>
           </div>
 
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 md:col-span-3">
-            {links.map((link, index) => (
+            {links.map((data, index) => (
               <div key={index} className="space-y-4 text-sm">
-                <span className="block font-medium text-black">{link.group}</span>
-                {link.items.map((item, subIndex) => (
-                  <Link
+                <span className="block font-medium text-black">{data.group}</span>
+                {data.items.map((item, subIndex) => (
+                  <a
                     key={subIndex}
                     href={item.href}
                     className="text-gray-600 hover:text-black transition duration-150 block"
                   >
                     {item.title}
-                  </Link>
+                  </a>
                 ))}
               </div>
             ))}
@@ -138,7 +137,7 @@ export default function FooterSection() {
                 ),
               },
             ].map((icon, index) => (
-              <Link
+              <a
                 key={index}
                 href="#"
                 target="_blank"
@@ -154,7 +153,7 @@ export default function FooterSection() {
                 >
                   {icon.svg}
                 </svg>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
