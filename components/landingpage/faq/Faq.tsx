@@ -44,18 +44,18 @@ export default function FAQsTwo() {
 
   return (
     <section className="pb-16">
-      <div className="mx-auto max-w-5xl px-4 md:px-6">
+      <div className="mx-auto max-w-5xl px-4 md:px-6 ">
         <Title
           title="Frequently Asked Questions"
           subtitle=" Everything you need to know about using our clinic platform — from
             booking to rescheduling, and more."
         />
 
-        <div className="mx-auto mt-12 max-w-3xl">
+        <div className="mx-auto mt-12 max-w-3xl ">
           <Accordion
             type="single"
             collapsible
-            className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0"
+            className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0 bg-white"
           >
             {faqItems.map((item) => (
               <AccordionItem

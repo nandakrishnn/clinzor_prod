@@ -25,10 +25,9 @@ export function NavbarDemo() {
   return (
     <Navbar>
       <NavBody>
-        <NavbarLogo />
         <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
-          <NavbarButton >Login</NavbarButton>
+          <NavbarButton>Login</NavbarButton>
           <NavbarButton variant="primary">Book a call</NavbarButton>
         </div>
       </NavBody>
