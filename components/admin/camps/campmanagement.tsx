@@ -49,12 +49,12 @@ setLoading(true)
   // Approve/Reject handlers
   const handleApprove = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'approved' } : c));
+    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'APPROVED' } : c));
     setSelectedCamp(null);
   };
   const handleReject = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'rejected' } : c));
+    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'REJECTED' } : c));
     setSelectedCamp(null);
   };
 
@@ -64,13 +64,13 @@ setLoading(true)
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'approved': 
+      case 'APPROVED': 
         return { 
           color: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white', 
           icon: CheckCircle,
           glow: 'shadow-emerald-500/25'
         };
-      case 'rejected': 
+      case 'REJECTED': 
         return { 
           color: 'bg-gradient-to-r from-red-500 to-rose-600 text-white', 
           icon: AlertCircle,
@@ -103,14 +103,14 @@ setLoading(true)
     const matchesSearch = camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || camp.status === filterStatus;
-    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'completed' ? camp.completed : !camp.completed);
+    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'COMPLETED' ? camp.completed : !camp.completed);
     return matchesSearch && matchesFilter && matchesCompletion;
   });
 
   const stats = {
     total: camps.length,
-    pending: camps.filter(c => c.status === 'pending').length,
-    approved: camps.filter(c => c.status === 'approved').length,
+    pending: camps.filter(c => c.status === 'PENDING').length,
+    approved: camps.filter(c => c.status === 'APPROVED').length,
     totalParticipants: camps.reduce((sum, c) => sum + c.expected_participants, 0)
   };
 
@@ -185,9 +185,9 @@ setLoading(true)
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
             </select>
 
             {/* Filter by Completion */}
@@ -197,8 +197,8 @@ setLoading(true)
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="PENDING">Pending</option>
             </select>
           </div>
         </div>
