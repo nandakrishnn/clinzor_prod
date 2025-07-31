@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Users, Mail, MapPin, Instagram, Building2, Search, Filter, MoreHorizontal, Sparkles, TrendingUp, Eye, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { getAllCamps } from '@/service/admin/campManangentService';
 
 // Add Camp type
 interface Camp {
@@ -20,29 +21,30 @@ interface Camp {
 }
 
 const CampManagement = () => {
-  const [camps, setCamps] = useState<Camp[]>([
-    {
-      uuid: "e940b288-9713-409e-b374-3195491c45b3",
-      created_by: "admin@gmail.com",
-      org_name: "A2 Fitness Gym",
-      hear_about_us: "on instagram",
-      association_type: "Gym",
-      expected_participants: 50,
-      preferred_date: "2025-06-01",
-      contact_person: "prakash",
-      email: "gym@gmail.com",
-      additional_info: null,
-      status: "pending",
-      priority: "high",
-      created_at: new Date().toISOString()
-    }
-  ]);
+  const [camps, setCamps] = useState<Camp[]>([]);
 
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCompletion, setFilterCompletion] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+ const fectchCamps = async () => {
+setLoading(true)
+  try {
+    const data = await getAllCamps();
+    setCamps(data)
+  } catch (error) {
+    
+  }finally{
+    setLoading(false);
+  }
+ }
+ fectchCamps();
+  }, [])
+  console.log(camps,"data")
 
   // Approve/Reject handlers
   const handleApprove = () => {
