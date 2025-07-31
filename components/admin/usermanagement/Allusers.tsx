@@ -30,6 +30,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
 import { deleteUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
+import { getAllBookings } from '@/service/admin/bookingManagentService';
 
 interface User {
   uuid: string;
@@ -484,12 +485,14 @@ export default function AllUsersPage() {
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
-       const data = await GetAllUsers(10); // Real API
+      // const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
+       const data = await GetAllUsers(15); // Real API
+       const bookingData = await getAllBookings()
         setUsers(data);
         console.log(data ,"user data ")
+        console.log(bookingData ,"booking data ")
       // setUsers(mockUsers);
-      setBookings(mockBookings);
+      setBookings(bookingData);
       setFilteredUsers(data);
       setLoading(false);
     };

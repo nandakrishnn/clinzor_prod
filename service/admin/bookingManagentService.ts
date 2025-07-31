@@ -1,7 +1,6 @@
-import { User } from "@/types/user";
+
 import  { axiosPrivate } from "../../axios/axios";
-import { getSession } from "next-auth/react";
-import { baseUrl } from "@/utils/Endpoint";
+
 
 // users 
 export const updateBookings = async (id: string, body: {
