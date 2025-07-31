@@ -17,6 +17,7 @@ import {
   Check,
   X
 } from 'lucide-react';
+import { getAllClinic } from '@/service/admin/clientManagentService';
 
 // Types
 interface Clinic {
@@ -336,102 +337,103 @@ const getChangedFields = (clinic: Clinic) => {
 // Main Component
 export default function PendingApprovalPage() {
   // Sample data - in real app, this would come from API
-  const [allClinics] = useState<Clinic[]>([
-    {
-      id: 1,
-      name: 'City Health Clinic',
-      address: 'MG Road, Near Central Mall',
-      city: 'Kozhikode',
-      pincode: '673001',
-      status: 'Pending',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: '9:00 AM - 6:00 PM',
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      phone: '+91 90000 12345',
-      email: 'info@cityhealthclinic.com',
-      isActive: false,
-      openingTime: '09:00',
-      closingTime: '18:00',
-      submissionDate: '2025-06-28',
-      mapLink: 'https://maps.google.com/cityhealth',
-      gpsCoordinates: 'POINT(75.7804 11.2588)'
-    },
-    {
-      id: 2,
-      name: 'Wellness Care Center',
-      address: 'Palayam, Near Railway Station',
-      city: 'Kozhikode',
-      pincode: '673002',
-      status: 'Pending',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: '8:00 AM - 8:00 PM',
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      phone: '+91 90000 23456',
-      email: 'contact@wellnesscare.com',
-      isActive: false,
-      openingTime: '08:00',
-      closingTime: '20:00',
-      submissionDate: '2025-06-27'
-    },
-    {
-      id: 3,
-      name: 'Family Health Clinic',
-      address: 'Mavoor Road, Opposite Police Station',
-      city: 'Kozhikode',
-      pincode: '673004',
-      status: 'Pending',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: '10:00 AM - 7:00 PM',
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      phone: '+91 90000 34567',
-      email: 'admin@familyhealth.com',
-      isActive: false,
-      openingTime: '10:00',
-      closingTime: '19:00',
-      submissionDate: '2025-06-26'
-    },
-    {
-      id: 4,
-      name: 'Metro Medical Center',
-      address: 'Thondayad, Near Metro Mall',
-      city: 'Kozhikode',
-      pincode: '673017',
-      status: 'Pending',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: '6:00 AM - 2:00 PM',
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      phone: '+91 90000 45678',
-      email: 'info@metromedical.com',
-      isActive: false,
-      openingTime: '06:00',
-      closingTime: '14:00',
-      submissionDate: '2025-06-25'
-    },
-    {
-      id: 5,
-      name: 'Prime Healthcare',
-      address: 'Beach Road, Near Lighthouse',
-      city: 'Kozhikode',
-      pincode: '673032',
-      status: 'Pending',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: '9:00 AM - 5:00 PM',
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      phone: '+91 90000 56789',
-      email: 'contact@primehealthcare.com',
-      isActive: false,
-      openingTime: '09:00',
-      closingTime: '17:00',
-      submissionDate: '2025-06-24'
-    }
-  ]);
-
+  // const [allClinics] = useState<Clinic[]>([
+  //   {
+  //     id: 1,
+  //     name: 'City Health Clinic',
+  //     address: 'MG Road, Near Central Mall',
+  //     city: 'Kozhikode',
+  //     pincode: '673001',
+  //     status: 'Pending',
+  //     paymentStatus: 'No Dues',
+  //     dueAmount: '₹0',
+  //     hours: '9:00 AM - 6:00 PM',
+  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  //     phone: '+91 90000 12345',
+  //     email: 'info@cityhealthclinic.com',
+  //     isActive: false,
+  //     openingTime: '09:00',
+  //     closingTime: '18:00',
+  //     submissionDate: '2025-06-28',
+  //     mapLink: 'https://maps.google.com/cityhealth',
+  //     gpsCoordinates: 'POINT(75.7804 11.2588)'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Wellness Care Center',
+  //     address: 'Palayam, Near Railway Station',
+  //     city: 'Kozhikode',
+  //     pincode: '673002',
+  //     status: 'Pending',
+  //     paymentStatus: 'No Dues',
+  //     dueAmount: '₹0',
+  //     hours: '8:00 AM - 8:00 PM',
+  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  //     phone: '+91 90000 23456',
+  //     email: 'contact@wellnesscare.com',
+  //     isActive: false,
+  //     openingTime: '08:00',
+  //     closingTime: '20:00',
+  //     submissionDate: '2025-06-27'
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Family Health Clinic',
+  //     address: 'Mavoor Road, Opposite Police Station',
+  //     city: 'Kozhikode',
+  //     pincode: '673004',
+  //     status: 'Pending',
+  //     paymentStatus: 'No Dues',
+  //     dueAmount: '₹0',
+  //     hours: '10:00 AM - 7:00 PM',
+  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+  //     phone: '+91 90000 34567',
+  //     email: 'admin@familyhealth.com',
+  //     isActive: false,
+  //     openingTime: '10:00',
+  //     closingTime: '19:00',
+  //     submissionDate: '2025-06-26'
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Metro Medical Center',
+  //     address: 'Thondayad, Near Metro Mall',
+  //     city: 'Kozhikode',
+  //     pincode: '673017',
+  //     status: 'Pending',
+  //     paymentStatus: 'No Dues',
+  //     dueAmount: '₹0',
+  //     hours: '6:00 AM - 2:00 PM',
+  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  //     phone: '+91 90000 45678',
+  //     email: 'info@metromedical.com',
+  //     isActive: false,
+  //     openingTime: '06:00',
+  //     closingTime: '14:00',
+  //     submissionDate: '2025-06-25'
+  //   },
+  //   {
+  //     id: 5,
+  //     name: 'Prime Healthcare',
+  //     address: 'Beach Road, Near Lighthouse',
+  //     city: 'Kozhikode',
+  //     pincode: '673032',
+  //     status: 'Pending',
+  //     paymentStatus: 'No Dues',
+  //     dueAmount: '₹0',
+  //     hours: '9:00 AM - 5:00 PM',
+  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  //     phone: '+91 90000 56789',
+  //     email: 'contact@primehealthcare.com',
+  //     isActive: false,
+  //     openingTime: '09:00',
+  //     closingTime: '17:00',
+  //     submissionDate: '2025-06-24'
+  //   }
+  // ]);
+const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [pendingClinics, setPendingClinics] = useState<Clinic[]>([]);
+  const [loading, setLoading] = useState(false);
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -443,9 +445,27 @@ export default function PendingApprovalPage() {
 
   // Filter only pending clinics
   useEffect(() => {
-    const pending = allClinics.filter(clinic => clinic.status === 'Pending');
-    setPendingClinics(pending);
-  }, [allClinics]);
+    const fetchClinics = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllClinic(); // Assuming this is your API function
+      
+setAllClinics(data);
+      // Filter pending clinics after data is fetched
+      const pending = data.filter((clinic: Clinic) => clinic.status === 'Pending');
+      setPendingClinics(pending);
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: 'Failed to load clinics'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchClinics();
+  }, []);
 
   // Search functionality
   useEffect(() => {

@@ -33,14 +33,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sampleBookings } from '../dues/dueslist';
+import { approveOrRejectClinic, createClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clientManagentService';
+import { Call } from '@mui/icons-material';
 
 interface Clinic {
-  id: number;
+  uuid: string;
   name: string;
   address: string;
   city: string;
   pincode: string;
-  status: 'Approved' | 'Draft' | 'Pending' | 'Rejected';
+  status: 'APPROVED' | 'Draft' | 'Pending' | 'REJECTED';
   paymentStatus: 'Paid' | 'Pending' | 'No Dues' | 'Overdue';
   dueAmount: string;
   hours: string;
@@ -236,18 +238,30 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
 
 const StatusBadge = ({ status }: { status: Clinic['status'] }) => {
   const statusConfig = {
-    Approved: { color: 'bg-green-100 text-green-700', icon: CheckCircle },
-    Draft: { color: 'bg-gray-100 text-gray-700', icon: Edit },
-    Pending: { color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-    Rejected: { color: 'bg-red-100 text-red-700', icon: XCircle }
+    APPROVED: { 
+      color: 'bg-green-100 text-green-700', 
+      icon: CheckCircle // Make sure this is imported correctly
+    },
+    Draft: { 
+      color: 'bg-gray-100 text-gray-700', 
+      icon: Edit // Make sure this is imported correctly
+    },
+    Pending: { 
+      color: 'bg-yellow-100 text-yellow-700', 
+      icon: Clock // Make sure this is imported correctly
+    },
+    REJECTED: { 
+      color: 'bg-red-100 text-red-700', 
+      icon: XCircle // Make sure this is imported correctly
+    }
   };
   
   const config = statusConfig[status];
-  const Icon = config.icon;
+  const Icon = config?.icon;
   
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-      <Icon size={12} className="mr-1" />
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}>
+      {Icon && <Icon size={12} className="mr-1" />}
       {status}
     </span>
   );
@@ -264,210 +278,210 @@ const PaymentStatusBadge = ({ status }: { status: Clinic['paymentStatus'] }) => 
   const config = statusConfig[status];
   
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}>
       {status}
     </span>
   );
 };
 
 // Mock data array similar to PendingClinics
-const allClinicsMockData: Clinic[] = [
-  {
-    id: 1,
-    name: 'Greater Kailash Hospital',
-    address: 'Old Palasia, AB Road, Indore, Madhya Pradesh 452001',
-    city: 'Indore',
-    pincode: '452001',
-    status: 'Approved',
-    paymentStatus: 'No Dues',
-    dueAmount: '₹0',
-    hours: '10:00 AM - 5:00 PM',
-    workingDays: ['Mon', 'Wed', 'Fri'],
-    phone: '+91 98765 43210',
-    email: 'contact@greaterkailash.com',
-    isActive: false,
-    mapLink: 'https://www.google.com/maps/place/Greater+Kailash+Hospital',
-    openingTime: '10:00',
-    closingTime: '17:00',
-    submissionDate: '2025-06-28',
-    documents: ['doc1.pdf', 'doc2.pdf']
-  },
-  {
-    id: 2,
-    name: 'Getwell Medical Center',
-    address: 'Post Office Rd, Dr. Ambedkar Nagar, Indore',
-    city: 'Indore',
-    pincode: '453331',
-    status: 'Draft',
-    paymentStatus: 'No Dues',
-    dueAmount: '₹0',
-    hours: '10:00 AM - 6:30 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Sun'],
-    phone: '+91 98765 43211',
-    email: 'contact@getwell.com',
-    isActive: false,
-    openingTime: '10:00',
-    closingTime: '18:30',
-    submissionDate: '2025-06-27',
-    documents: ['doc3.pdf']
-  },
-  {
-    id: 3,
-    name: 'Sunshine Healthcare',
-    address: 'MG Road, Vijay Nagar, Indore',
-    city: 'Indore',
-    pincode: '452010',
-    status: 'Approved',
-    paymentStatus: 'Paid',
-    dueAmount: '₹0',
-    hours: '9:00 AM - 8:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    phone: '+91 98765 43212',
-    email: 'info@sunshine.com',
-    isActive: true,
-    openingTime: '09:00',
-    closingTime: '20:00',
-    submissionDate: '2025-06-26',
-    documents: []
-  },
-  {
-    id: 4,
-    name: 'City Care Clinic',
-    address: 'Palasia Square, Indore',
-    city: 'Indore',
-    pincode: '452001',
-    status: 'Pending',
-    paymentStatus: 'Pending',
-    dueAmount: '₹2,500',
-    hours: '10:00 AM - 7:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    phone: '+91 98765 43213',
-    email: 'admin@citycare.com',
-    isActive: false,
-    openingTime: '10:00',
-    closingTime: '19:00',
-    submissionDate: '2025-06-25',
-    documents: ['doc4.pdf']
-  },
-  {
-    id: 5,
-    name: 'Apollo Clinic',
-    address: 'MG Road, Mumbai',
-    city: 'Mumbai',
-    pincode: '400001',
-    status: 'Approved',
-    paymentStatus: 'Paid',
-    dueAmount: '₹0',
-    hours: '8:00 AM - 4:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    phone: '+91 90000 11111',
-    email: 'info@apollomumbai.com',
-    isActive: true,
-    openingTime: '08:00',
-    closingTime: '16:00',
-    submissionDate: '2025-06-24',
-    documents: []
-  },
-  {
-    id: 6,
-    name: 'Fortis Health',
-    address: 'Sector 62, Noida',
-    city: 'Noida',
-    pincode: '201301',
-    status: 'Rejected',
-    paymentStatus: 'Overdue',
-    dueAmount: '₹5,000',
-    hours: '9:00 AM - 5:00 PM',
-    workingDays: ['Mon', 'Wed', 'Fri'],
-    phone: '+91 90000 22222',
-    email: 'contact@fortisnoida.com',
-    isActive: false,
-    openingTime: '09:00',
-    closingTime: '17:00',
-    submissionDate: '2025-06-23',
-    documents: ['doc5.pdf']
-  },
-  {
-    id: 7,
-    name: 'Care Plus Clinic',
-    address: 'Park Street, Kolkata',
-    city: 'Kolkata',
-    pincode: '700016',
-    status: 'Draft',
-    paymentStatus: 'Pending',
-    dueAmount: '₹1,200',
-    hours: '11:00 AM - 7:00 PM',
-    workingDays: ['Tue', 'Thu', 'Sat'],
-    phone: '+91 90000 33333',
-    email: 'careplus@kolkata.com',
-    isActive: false,
-    openingTime: '11:00',
-    closingTime: '19:00',
-    submissionDate: '2025-06-22',
-    documents: []
-  },
-  {
-    id: 8,
-    name: 'Medicover Hospitals',
-    address: 'Banjara Hills, Hyderabad',
-    city: 'Hyderabad',
-    pincode: '500034',
-    status: 'Pending',
-    paymentStatus: 'No Dues',
-    dueAmount: '₹0',
-    hours: '7:00 AM - 3:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    phone: '+91 90000 44444',
-    email: 'info@medicoverhyd.com',
-    isActive: false,
-    openingTime: '07:00',
-    closingTime: '15:00',
-    submissionDate: '2025-06-21',
-    documents: ['doc6.pdf']
-  },
-  {
-    id: 9,
-    name: 'Rainbow Children Hospital',
-    address: 'Jayanagar, Bangalore',
-    city: 'Bangalore',
-    pincode: '560041',
-    status: 'Approved',
-    paymentStatus: 'Paid',
-    dueAmount: '₹0',
-    hours: '6:00 AM - 2:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    phone: '+91 90000 55555',
-    email: 'contact@rainbowblr.com',
-    isActive: true,
-    openingTime: '06:00',
-    closingTime: '14:00',
-    submissionDate: '2025-06-20',
-    documents: []
-  },
-  {
-    id: 10,
-    name: 'Aster Clinic',
-    address: 'Ernakulam, Kochi',
-    city: 'Kochi',
-    pincode: '682016',
-    status: 'Draft',
-    paymentStatus: 'No Dues',
-    dueAmount: '₹0',
-    hours: '10:00 AM - 6:00 PM',
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    phone: '+91 90000 66666',
-    email: 'aster@kochi.com',
-    isActive: false,
-    openingTime: '10:00',
-    closingTime: '18:00',
-    submissionDate: '2025-06-19',
-    documents: []
-  }
-];
+// const allClinicsMockData: Clinic[] = [
+//   {
+//     uuid: 1,
+//     name: 'Greater Kailash Hospital',
+//     address: 'Old Palasia, AB Road, Indore, Madhya Pradesh 452001',
+//     city: 'Indore',
+//     pincode: '452001',
+//     status: 'Approved',
+//     paymentStatus: 'No Dues',
+//     dueAmount: '₹0',
+//     hours: '10:00 AM - 5:00 PM',
+//     workingDays: ['Mon', 'Wed', 'Fri'],
+//     phone: '+91 98765 43210',
+//     email: 'contact@greaterkailash.com',
+//     isActive: false,
+//     mapLink: 'https://www.google.com/maps/place/Greater+Kailash+Hospital',
+//     openingTime: '10:00',
+//     closingTime: '17:00',
+//     submissionDate: '2025-06-28',
+//     documents: ['doc1.pdf', 'doc2.pdf']
+//   },
+//   {
+//     id: 2,
+//     name: 'Getwell Medical Center',
+//     address: 'Post Office Rd, Dr. Ambedkar Nagar, Indore',
+//     city: 'Indore',
+//     pincode: '453331',
+//     status: 'Draft',
+//     paymentStatus: 'No Dues',
+//     dueAmount: '₹0',
+//     hours: '10:00 AM - 6:30 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Sun'],
+//     phone: '+91 98765 43211',
+//     email: 'contact@getwell.com',
+//     isActive: false,
+//     openingTime: '10:00',
+//     closingTime: '18:30',
+//     submissionDate: '2025-06-27',
+//     documents: ['doc3.pdf']
+//   },
+//   {
+//     id: 3,
+//     name: 'Sunshine Healthcare',
+//     address: 'MG Road, Vijay Nagar, Indore',
+//     city: 'Indore',
+//     pincode: '452010',
+//     status: 'Approved',
+//     paymentStatus: 'Paid',
+//     dueAmount: '₹0',
+//     hours: '9:00 AM - 8:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//     phone: '+91 98765 43212',
+//     email: 'info@sunshine.com',
+//     isActive: true,
+//     openingTime: '09:00',
+//     closingTime: '20:00',
+//     submissionDate: '2025-06-26',
+//     documents: []
+//   },
+//   {
+//     id: 4,
+//     name: 'City Care Clinic',
+//     address: 'Palasia Square, Indore',
+//     city: 'Indore',
+//     pincode: '452001',
+//     status: 'Pending',
+//     paymentStatus: 'Pending',
+//     dueAmount: '₹2,500',
+//     hours: '10:00 AM - 7:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     phone: '+91 98765 43213',
+//     email: 'admin@citycare.com',
+//     isActive: false,
+//     openingTime: '10:00',
+//     closingTime: '19:00',
+//     submissionDate: '2025-06-25',
+//     documents: ['doc4.pdf']
+//   },
+//   {
+//     id: 5,
+//     name: 'Apollo Clinic',
+//     address: 'MG Road, Mumbai',
+//     city: 'Mumbai',
+//     pincode: '400001',
+//     status: 'Approved',
+//     paymentStatus: 'Paid',
+//     dueAmount: '₹0',
+//     hours: '8:00 AM - 4:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     phone: '+91 90000 11111',
+//     email: 'info@apollomumbai.com',
+//     isActive: true,
+//     openingTime: '08:00',
+//     closingTime: '16:00',
+//     submissionDate: '2025-06-24',
+//     documents: []
+//   },
+//   {
+//     id: 6,
+//     name: 'Fortis Health',
+//     address: 'Sector 62, Noida',
+//     city: 'Noida',
+//     pincode: '201301',
+//     status: 'Rejected',
+//     paymentStatus: 'Overdue',
+//     dueAmount: '₹5,000',
+//     hours: '9:00 AM - 5:00 PM',
+//     workingDays: ['Mon', 'Wed', 'Fri'],
+//     phone: '+91 90000 22222',
+//     email: 'contact@fortisnoida.com',
+//     isActive: false,
+//     openingTime: '09:00',
+//     closingTime: '17:00',
+//     submissionDate: '2025-06-23',
+//     documents: ['doc5.pdf']
+//   },
+//   {
+//     id: 7,
+//     name: 'Care Plus Clinic',
+//     address: 'Park Street, Kolkata',
+//     city: 'Kolkata',
+//     pincode: '700016',
+//     status: 'Draft',
+//     paymentStatus: 'Pending',
+//     dueAmount: '₹1,200',
+//     hours: '11:00 AM - 7:00 PM',
+//     workingDays: ['Tue', 'Thu', 'Sat'],
+//     phone: '+91 90000 33333',
+//     email: 'careplus@kolkata.com',
+//     isActive: false,
+//     openingTime: '11:00',
+//     closingTime: '19:00',
+//     submissionDate: '2025-06-22',
+//     documents: []
+//   },
+//   {
+//     id: 8,
+//     name: 'Medicover Hospitals',
+//     address: 'Banjara Hills, Hyderabad',
+//     city: 'Hyderabad',
+//     pincode: '500034',
+//     status: 'Pending',
+//     paymentStatus: 'No Dues',
+//     dueAmount: '₹0',
+//     hours: '7:00 AM - 3:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+//     phone: '+91 90000 44444',
+//     email: 'info@medicoverhyd.com',
+//     isActive: false,
+//     openingTime: '07:00',
+//     closingTime: '15:00',
+//     submissionDate: '2025-06-21',
+//     documents: ['doc6.pdf']
+//   },
+//   {
+//     id: 9,
+//     name: 'Rainbow Children Hospital',
+//     address: 'Jayanagar, Bangalore',
+//     city: 'Bangalore',
+//     pincode: '560041',
+//     status: 'Approved',
+//     paymentStatus: 'Paid',
+//     dueAmount: '₹0',
+//     hours: '6:00 AM - 2:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//     phone: '+91 90000 55555',
+//     email: 'contact@rainbowblr.com',
+//     isActive: true,
+//     openingTime: '06:00',
+//     closingTime: '14:00',
+//     submissionDate: '2025-06-20',
+//     documents: []
+//   },
+//   {
+//     id: 10,
+//     name: 'Aster Clinic',
+//     address: 'Ernakulam, Kochi',
+//     city: 'Kochi',
+//     pincode: '682016',
+//     status: 'Draft',
+//     paymentStatus: 'No Dues',
+//     dueAmount: '₹0',
+//     hours: '10:00 AM - 6:00 PM',
+//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//     phone: '+91 90000 66666',
+//     email: 'aster@kochi.com',
+//     isActive: false,
+//     openingTime: '10:00',
+//     closingTime: '18:00',
+//     submissionDate: '2025-06-19',
+//     documents: []
+//   }
+// ];
 
 export default function ClinicManagement() {
   const router = useRouter();
-  const [clinics, setClinics] = useState<Clinic[]>(allClinicsMockData);
+  const [clinics, setClinics] = useState<Clinic[]>([]);
 
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>(clinics);
   const [loading, setLoading] = useState(false);
@@ -491,6 +505,7 @@ export default function ClinicManagement() {
   const [newClinic, setNewClinic] = useState({
     name: '',
     city: '',
+    phone: '',
     email: '',
     password: '',
     address: '',
@@ -515,11 +530,32 @@ export default function ClinicManagement() {
   ];
 
   const clinicsListRef = useRef<HTMLDivElement>(null);
+const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const [showDeactivated, setShowDeactivated] = useState(false);
 
   const [selectedHeader, setSelectedHeader] = useState<'ALL' | 'Approved' | 'Pending' | 'Active' | 'Deactivated'>('Approved');
 
+  useEffect(() => {
+   const fetchClinecs =async ()=>{
+    setLoading(true);
+    try {
+      const data = await getAllClinic()
+      setClinics(data)
+      
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: 'Failed to load bookings',
+      });
+    }finally{
+      setLoading(false)
+    }
+
+   }
+   fetchClinecs();
+  }, [])
+  console.log("clinics data", clinics)
   // Filter clinics
   useEffect(() => {
     let filtered = [...clinics];
@@ -547,7 +583,7 @@ export default function ClinicManagement() {
 
   // Filter for header selection
   let clinicsToShow = filteredClinics;
-  if (selectedHeader === 'Approved') clinicsToShow = filteredClinics.filter(c => c.status === 'Approved');
+  if (selectedHeader === 'Approved') clinicsToShow = filteredClinics.filter(c => c.status === 'APPROVED');
   else if (selectedHeader === 'Pending') clinicsToShow = filteredClinics.filter(c => c.status === 'Pending');
   else if (selectedHeader === 'Active') clinicsToShow = filteredClinics.filter(c => c.isActive);
   else if (selectedHeader === 'Deactivated') clinicsToShow = filteredClinics.filter(c => !c.isActive);
@@ -591,63 +627,60 @@ export default function ClinicManagement() {
     }));
   };
 
-  const handleAddClinic = () => {
-    if (!newClinic.name || !newClinic.city || !newClinic.email || !newClinic.password) {
-      setNotification({
-        type: 'error',
-        message: 'Please fill in all required fields'
-      });
-      return;
-    }
+const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (newClinic.workingDays.length === 0) {
-      setNotification({
-        type: 'error',
-        message: 'Please select at least one working day'
-      });
-      return;
-    }
+const handleAddClinic = async () => {
+  if (!newClinic.name || !newClinic.city || !newClinic.email || !newClinic.password) {
+    setNotification({
+      type: 'error',
+      message: 'Please fill in all required fields'
+    });
+    return;
+  }
 
-    const openingTime = newClinic.openingTime ? 
-      new Date(`2000-01-01T${newClinic.openingTime}`).toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
-      }) : '';
-    
-    const closingTime = newClinic.closingTime ? 
-      new Date(`2000-01-01T${newClinic.closingTime}`).toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
-      }) : '';
+  if (newClinic.workingDays.length === 0) {
+    setNotification({
+      type: 'error',
+      message: 'Please select at least one working day'
+    });
+    return;
+  }
 
-    const clinic: Clinic = {
-      id: Date.now(),
+  setIsSubmitting(true);
+
+  try {
+    const clinicData = {
       name: newClinic.name,
-      address: newClinic.address || `${newClinic.city}, India`,
+      email: newClinic.email,
+     phone: newClinic.phone,
+      password: newClinic.password,
       city: newClinic.city,
-      pincode: '000000',
+      address: newClinic.address,
+      map_link: newClinic.mapLink,
+      gps_coordinates: newClinic.gpsCoordinates,
+      opening_time: newClinic.openingTime,
+      closing_time: newClinic.closingTime,
+      working_days: newClinic.workingDays
+    };
+
+    const createdClinic = await createClinic(clinicData);
+
+    setClinics(prev => [...prev, {
+      ...createdClinic,
       status: 'Draft',
       paymentStatus: 'No Dues',
       dueAmount: '₹0',
-      hours: openingTime && closingTime ? `${openingTime} - ${closingTime}` : '',
-      workingDays: newClinic.workingDays,
-      phone: '+91 00000 00000',
-      email: newClinic.email,
+      hours: newClinic.openingTime && newClinic.closingTime ? 
+        `${formatTime(newClinic.openingTime)} - ${formatTime(newClinic.closingTime)}` : '',
       isActive: false,
-      mapLink: newClinic.mapLink,
-      gpsCoordinates: newClinic.gpsCoordinates,
-      openingTime: newClinic.openingTime,
-      closingTime: newClinic.closingTime,
       submissionDate: new Date().toISOString().split('T')[0],
       documents: []
-    };
+    }]);
 
-    setClinics(prev => [...prev, clinic]);
     setNewClinic({
       name: '',
       city: '',
+      phone: "",
       email: '',
       password: '',
       address: '',
@@ -657,38 +690,109 @@ export default function ClinicManagement() {
       closingTime: '',
       workingDays: []
     });
+
     setIsAddModalOpen(false);
     setNotification({
       type: 'success',
       message: 'Clinic added successfully'
     });
-  };
+  } catch (error :any) {
+    setNotification({
+      type: 'error',
+      message: `Failed to add clinic: ${ error.message}`
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+// Helper function to format time
+const formatTime = (time24: string) => {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':');
+  const hourNum = parseInt(hours, 10);
+  const ampm = hourNum >= 12 ? 'PM' : 'AM';
+  const hour12 = hourNum % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+};
 
   const stats = {
     total: clinics.length,
-    approved: clinics.filter(c => c.status === 'Approved').length,
+    approved: clinics.filter(c => c.status === 'APPROVED').length,
     pending: clinics.filter(c => c.status === 'Pending').length,
     active: clinics.filter(c => c.isActive).length,
     deactivated: clinics.filter(c => !c.isActive).length
   };
 
-  function handleApprove(clinic: Clinic) {
-    setClinics(prev => prev.map(c => c.id === clinic.id ? { ...c, status: 'Approved' } : c));
-    setNotification({ type: 'success', message: `Clinic "${clinic.name}" approved!` });
-  }
+function handleApprove(clinic: Clinic) {
+  // Optimistically update the UI
+  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: 'APPROVED' } : c));
+  
+  // Call the API
+  approveOrRejectClinic(clinic.uuid.toString(), { status:"APPROVED"})
+    .then(() => {
+      setNotification({ type: 'success', message: `Clinic "${clinic.name}" approved!` });
+    })
+    .catch(error => {
+      // Revert the UI change if the API call fails
+      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c));
+      setNotification({ 
+        type: 'error', 
+        message: `Failed to approve clinic "${clinic.name}". ${error.response?.data?.message || ''}` 
+      });
+    });
+}
 
-  function handleReject(clinic: Clinic) {
-    setClinics(prev => prev.map(c => c.id === clinic.id ? { ...c, status: 'Rejected' } : c));
-    setNotification({ type: 'error', message: `Clinic "${clinic.name}" rejected.` });
-  }
+function handleReject(clinic: Clinic) {
+  // Optimistically update the UI
+  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: 'REJECTED' } : c));
+  
+  // Call the API
+  approveOrRejectClinic(clinic.uuid.toString(), { status: "REJECTED" })
+    .then(() => {
+      setNotification({ type: 'error', message: `Clinic "${clinic.name}" rejected.` });
+    })
+    .catch(error => {
+      // Revert the UI change if the API call fails
+      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c));
+      setNotification({ 
+        type: 'error', 
+        message: `Failed to reject clinic "${clinic.name}". ${error.response?.data?.message || ''}` 
+      });
+    });
+}
 
-  function handleToggleActive(clinic: Clinic) {
-    setClinics(prev => prev.map(c => c.id === clinic.id ? { ...c, isActive: !c.isActive } : c));
-    setNotification({ type: 'success', message: `Clinic "${clinic.name}" is now ${clinic.isActive ? 'inactive' : 'active'}.` });
-  }
+
+
+function handleToggleActive(clinic: Clinic) {
+  setLoadingId(clinic.uuid);
+  
+  // Optimistically update the UI
+  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, isActive: !c.isActive } : c));
+  
+  // Call the API
+  toggleActiveClinic(clinic.uuid, { is_active: !clinic.isActive })
+    .then(() => {
+      setNotification({ 
+        type: 'success', 
+        message: `Clinic "${clinic.name}" is now ${!clinic.isActive ? 'active' : 'inactive'}.` 
+      });
+    })
+    .catch(error => {
+      // Revert the UI change if the API call fails
+      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, isActive: clinic.isActive } : c));
+      setNotification({ 
+        type: 'error', 
+        message: `Failed to ${clinic.isActive ? 'deactivate' : 'activate'} clinic "${clinic.name}". ${error.response?.data?.message || ''}`
+      });
+    })
+    .finally(() => {
+      setLoadingId(null);
+    });
+}
 
   function handleDeleteClinic(clinic: Clinic) {
-    setClinics(prev => prev.filter(c => c.id !== clinic.id));
+    setClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
     setNotification({ type: 'success', message: `Clinic "${clinic.name}" deleted.` });
   }
 
@@ -907,12 +1011,12 @@ export default function ClinicManagement() {
         <div ref={clinicsListRef} className="mb-8 space-y-4">
           {clinicsToShow.map((clinic, index) => (
             <motion.div
-              key={clinic.id}
+              key={clinic.uuid}
               className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => window.location.href = `/admin/allclinics/${clinic.id}`}
+              // onClick={() => window.location.href = `/admin/allclinics/${clinic.uuid}`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* Clinic Info */}
@@ -947,7 +1051,7 @@ export default function ClinicManagement() {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar size={14} />
-                      <span>{clinic.workingDays.join(', ')}</span>
+                      <span>{clinic?.workingDays?.join(', ')}</span>
                     </div>
                   </div>
                   {clinic.submissionDate && (
@@ -962,7 +1066,7 @@ export default function ClinicManagement() {
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
-                  <Link href={`/admin/allclinics/${clinic.id}`} legacyBehavior>
+                  <Link href={`/admin/allclinics/${clinic.uuid}`} legacyBehavior>
                     <a
                       className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
                       aria-label="Review details"
@@ -972,7 +1076,7 @@ export default function ClinicManagement() {
                       <span className="hidden sm:inline">Review</span>
                     </a>
                   </Link>
-                  {clinic.status !== 'Approved' && (
+                  {clinic.status !== 'APPROVED' && (
                     <button
                       onClick={() => handleApprove(clinic)}
                       className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
@@ -981,7 +1085,7 @@ export default function ClinicManagement() {
                       <span className="hidden sm:inline">Approve</span>
                     </button>
                   )}
-                  {clinic.status !== 'Rejected' && clinic.status !== 'Approved' && (
+                  {clinic.status !== 'REJECTED' && clinic.status !== 'APPROVED' && (
                     <button
                       onClick={() => handleReject(clinic)}
                       className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
@@ -1117,6 +1221,15 @@ export default function ClinicManagement() {
                     placeholder="Enter temporary password (min 6 chars)"
                     required
                     icon={Lock}
+                  />
+                   <InputField
+                    label="Contact Number"
+                    type="number"
+                    value={newClinic.phone}
+                    onChange={e => setNewClinic({ ...newClinic, phone: e.target.value })}
+                    placeholder="Enter clinic Contact number"
+                    required
+                    icon={Call}
                   />
                 </div>
                 <span className="text-xs text-gray-500 block mt-2">This email and password will be used as the clinic's login credentials.</span>
