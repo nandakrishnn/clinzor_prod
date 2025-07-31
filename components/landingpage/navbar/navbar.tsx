@@ -34,7 +34,7 @@ export function NavbarDemo() {
 
       <MobileNav>
         <MobileNavHeader>
-          <NavbarLogo />
+          <></>
           <MobileNavToggle
             isOpen={isMobileMenuOpen}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
