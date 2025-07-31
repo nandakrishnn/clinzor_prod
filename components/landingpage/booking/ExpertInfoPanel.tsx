@@ -3,14 +3,14 @@ import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 export default function ExpertInfoPanel() {
   return (
     <section className="flex flex-col gap-6 px-2 md:px-8 md:py-10 w-full md:w-[80%]">
-      <h2 className="text-balance text-2xl md:text-4xl font-bold bg-clip-text">
+      <h2 className="text-balance text-2xl text-center md:text-start md:text-4xl font-bold bg-clip-text">
         Book an Expert Call
       </h2>
-      <p className="text-gray-600">
+      <p className="text-gray-600 text-center md:text-start">
         Get personalized medical advice from top specialists through a secure
         video consultation. It’s simple, convenient, and effective.
       </p>
-      <ul className="space-y-5">
+      <ul className="space-y-5 my-3 md:my-0">
         <li className="flex gap-3 items-start">
           <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
             <HealthAndSafetyIcon className="45" />

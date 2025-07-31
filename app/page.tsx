@@ -50,9 +50,6 @@ export default function Home() {
         </div>
       </div> */}
 
-      {/* Navbar */}
-      <NavbarDemo />
-
       <main className="z-10">
         {/* Hero + Search */}
         <section className="sm:min-h-[120vh] relative flex flex-col items-center ">
@@ -65,37 +62,30 @@ export default function Home() {
         </section>
 
         {/* Services */}
-        <section className="bg-white py-10 sm:py-14 mb-20 px-4 sm:px-6">
-          <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-10">
+        <section className="bg-white py-10 sm:py-14 mb-20  sm:px-6">
+          <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-8">
             <ServicesWeOffer />
           </div>
         </section>
 
         {/* Dummy Booking */}
-        <section className="bg-[#F2F5FF] py-10 sm:py-14 pb-20 px-4 sm:px-6">
+        <section className="bg-bgLight py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
             <Booking />
           </div>
         </section>
 
         {/* Testimonials */}
-        <section className="bg-white py-10 sm:py-14 px-4 sm:px-6">
-          <div className="max-w-screen-[1480px] mx-auto relative mt-20">
+        <section className="bg-white py-10 sm:py-14  sm:px-6">
+          <div className="max-w-screen-[1480px] mx-auto relative my-20">
             <WallOfLoveSection />
           </div>
         </section>
 
         {/* FAQs */}
-        <section className="bg-white py-10 sm:py-14 px-4 sm:px-6">
+        <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-20">
             <FAQsTwo />
-          </div>
-        </section>
-
-        {/* Footer */}
-        <section className="bg-white pt-6 pb-10 px-4 sm:px-6">
-          <div className="max-w-screen-xl mx-auto">
-            <FooterSection />
           </div>
         </section>
       </main>

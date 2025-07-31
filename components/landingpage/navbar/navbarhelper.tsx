@@ -93,7 +93,7 @@ export const NavBody = ({
   <motion.div
     initial={{
       width: "100%",
-      height: "80px",
+      height: "85px",
       backgroundColor: "rgba(255,255,255,0)",
       backdropFilter: "none",
       boxShadow: "none",
@@ -101,8 +101,8 @@ export const NavBody = ({
       borderColor: "rgba(0,0,0,0.05)"
     }}
     animate={{
-      width: visible ? "65%" : "70%",
-      height: visible ? "60px" : "80px",
+      width: visible ? "80%" : "85%",
+      height: visible ? "70px" : "85px",
       backgroundColor: visible
         ? "rgba(255,255,255,0.7)"
         : "rgba(255,255,255,0)",
@@ -130,7 +130,10 @@ export const NavBody = ({
         : undefined
     }}
   >
-    {children}
+    <>
+      <NavbarLogo visible={visible || false} />
+      {children}
+    </>
   </motion.div>
 );
 
@@ -173,7 +176,9 @@ export const NavItems = ({
               transition={{ duration: 0.2 }}
             />
           )}
-          <span className={cn(`relative z-10 font-medium group-hover:text-black`)}>
+          <span
+            className={cn(`relative z-10 font-medium group-hover:text-black`)}
+          >
             {item.name}
           </span>
         </motion.a>
@@ -181,6 +186,16 @@ export const NavItems = ({
     </motion.div>
   );
 };
+
+export const NavbarLogo = ({ visible }: { visible: boolean }) => (
+  <Image
+    src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
+    alt="Logo"
+    width={80}
+    height={80}
+    className="rounded-full z-50"
+  />
+);
 
 // Mobile Nav
 export const MobileNav = ({
@@ -191,7 +206,7 @@ export const MobileNav = ({
 }: MobileNavProps & { scrollProgress?: number }) => (
   <motion.div
     initial={{
-      width: "70%",
+      width: "85%",
       height: "70px",
       backgroundColor: "rgba(255,255,255,0)",
       borderRadius: "1.5rem",
@@ -201,7 +216,7 @@ export const MobileNav = ({
       borderColor: "rgba(0,0,0,0.05)"
     }}
     animate={{
-      width: visible ? "70%" : "100%",
+      width: visible ? "85%" : "100%",
       height: visible ? "55px" : "70px",
       backgroundColor: visible
         ? "rgba(255,255,255,0.7)"
@@ -230,7 +245,7 @@ export const MobileNav = ({
         : undefined
     }}
   >
-    {children}
+    <>{children}</>
   </motion.div>
 );
 
@@ -300,16 +315,6 @@ export const MobileNavToggle = ({
       <IconMenu2 className="h-5 w-5 text-slate-800" />
     )}
   </motion.div>
-);
-
-export const NavbarLogo = () => (
-  <Image
-    src="/assets/logo/logo.png"
-    alt="Logo"
-    width={80}
-    height={80}
-    className="rounded-full z-50"
-  />
 );
 
 export const NavbarButton = ({

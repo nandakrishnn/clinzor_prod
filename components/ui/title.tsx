@@ -20,7 +20,7 @@ const Title: React.FC<TitleProps> = ({ title, subtitle, variants }) => {
         <h2 className="text-balance text-2xl md:text-4xl font-bold bg-clip-text">
           {title}
         </h2>
-        <p className="mt-4 text-[#4B5563] text-lg">{subtitle}</p>
+        <p className="mt-4 text-[#4B5563] md:text-lg">{subtitle}</p>
       </motion.div>
     </div>
   );

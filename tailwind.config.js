@@ -10,7 +10,8 @@ module.exports = {
       colors: {
         primaryColor: "#033C8D",
         blueLight: "#3B82F6",
-        blueText: "#1D4ED8"
+        blueText: "#1D4ED8",
+        bgLight: "#F2F5FF"
       }
     }
   },

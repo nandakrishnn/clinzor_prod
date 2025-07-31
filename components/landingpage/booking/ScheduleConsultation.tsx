@@ -47,7 +47,7 @@ export default function ScheduleConsultation() {
 
   return (
     <section className="flex flex-col gap-5 px-5 md:px-8 py-10 bg-white rounded-xl shadow-md w-full overflow-hidden">
-      <h2 className="text-xl font-bold md:text-center">
+      <h2 className="text-xl font-bold text-center">
         Schedule Your Consultation
       </h2>
 
@@ -118,10 +118,10 @@ export default function ScheduleConsultation() {
           {TIME_SLOTS.map((slot) => (
             <button
               key={slot}
-              className={`py-2 rounded transition border-2 ${
+              className={`py-2 rounded transition border-2 text-sm ${
                 selectedTime === slot
                   ? "bg-primaryColor text-white border-primaryColor"
-                  : "bg-gray-100 text-gray-800 border-transparent hover:bg-blue-100"
+                  : "bg-gray-100 text-gray-800 border-transparent hover:bg-blue-100 hover:text-blueText"
               }`}
               onClick={() => setSelectedTime(slot)}
               aria-pressed={selectedTime === slot}
