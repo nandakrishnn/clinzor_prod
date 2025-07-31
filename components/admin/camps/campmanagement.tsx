@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Users, Mail, MapPin, Instagram, Building2, Search, Filter, MoreHorizontal, Sparkles, TrendingUp, Eye, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { getAllCamps } from '@/service/admin/campManangentService';
 
 // Add Camp type
 interface Camp {
@@ -20,39 +21,40 @@ interface Camp {
 }
 
 const CampManagement = () => {
-  const [camps, setCamps] = useState<Camp[]>([
-    {
-      uuid: "e940b288-9713-409e-b374-3195491c45b3",
-      created_by: "admin@gmail.com",
-      org_name: "A2 Fitness Gym",
-      hear_about_us: "on instagram",
-      association_type: "Gym",
-      expected_participants: 50,
-      preferred_date: "2025-06-01",
-      contact_person: "prakash",
-      email: "gym@gmail.com",
-      additional_info: null,
-      status: "pending",
-      priority: "high",
-      created_at: new Date().toISOString()
-    }
-  ]);
+  const [camps, setCamps] = useState<Camp[]>([]);
 
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCompletion, setFilterCompletion] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+ const fectchCamps = async () => {
+setLoading(true)
+  try {
+    const data = await getAllCamps();
+    setCamps(data)
+  } catch (error) {
+    
+  }finally{
+    setLoading(false);
+  }
+ }
+ fectchCamps();
+  }, [])
+  console.log(camps,"data")
 
   // Approve/Reject handlers
   const handleApprove = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'approved' } : c));
+    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'APPROVED' } : c));
     setSelectedCamp(null);
   };
   const handleReject = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'rejected' } : c));
+    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'REJECTED' } : c));
     setSelectedCamp(null);
   };
 
@@ -62,13 +64,13 @@ const CampManagement = () => {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'approved': 
+      case 'APPROVED': 
         return { 
           color: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white', 
           icon: CheckCircle,
           glow: 'shadow-emerald-500/25'
         };
-      case 'rejected': 
+      case 'REJECTED': 
         return { 
           color: 'bg-gradient-to-r from-red-500 to-rose-600 text-white', 
           icon: AlertCircle,
@@ -101,14 +103,14 @@ const CampManagement = () => {
     const matchesSearch = camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || camp.status === filterStatus;
-    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'completed' ? camp.completed : !camp.completed);
+    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'COMPLETED' ? camp.completed : !camp.completed);
     return matchesSearch && matchesFilter && matchesCompletion;
   });
 
   const stats = {
     total: camps.length,
-    pending: camps.filter(c => c.status === 'pending').length,
-    approved: camps.filter(c => c.status === 'approved').length,
+    pending: camps.filter(c => c.status === 'PENDING').length,
+    approved: camps.filter(c => c.status === 'APPROVED').length,
     totalParticipants: camps.reduce((sum, c) => sum + c.expected_participants, 0)
   };
 
@@ -183,9 +185,9 @@ const CampManagement = () => {
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
             </select>
 
             {/* Filter by Completion */}
@@ -195,8 +197,8 @@ const CampManagement = () => {
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="PENDING">Pending</option>
             </select>
           </div>
         </div>
