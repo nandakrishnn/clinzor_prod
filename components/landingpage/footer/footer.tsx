@@ -63,7 +63,7 @@ export default function FooterSection() {
             <a href="/" aria-label="go home" className="block">
               <LogoWhite />
             </a>
-            <div className="w-full md:w-[80%] mt-5 text-justify">
+            <div className="w-full md:w-[65%] mt-5 text-justify">
               Your trusted partner in healthcare. Finding the right care has
               never been easier.
               <div className="text-start space-y-1 pt-4">

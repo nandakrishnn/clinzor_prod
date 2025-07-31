@@ -245,7 +245,10 @@ export const MobileNav = ({
         : undefined
     }}
   >
-    <>{children}</>
+    <div className="flex justify-between w-full">
+      <NavbarLogo visible={visible || false} />
+      {children}
+    </div>
   </motion.div>
 );
 
@@ -254,10 +257,7 @@ export const MobileNavHeader = ({
   className
 }: MobileNavHeaderProps) => (
   <div
-    className={cn(
-      "flex w-full flex-row items-center justify-between z-50",
-      className
-    )}
+    className={cn("flex w-full flex-row items-end justify-end z-50", className)}
   >
     {children}
   </div>
