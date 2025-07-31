@@ -24,6 +24,7 @@ import {
   Building
 } from 'lucide-react';
 import Link from 'next/link';
+import { getAllBookings } from '@/service/admin/bookingManagentService';
 
 type Booking = {
   uuid: string;
@@ -181,7 +182,8 @@ export default function BookingManagement() {
     },
   ];
 
-  const [bookings] = useState<Booking[]>(sampleBookings);
+ const [bookings, setBookings] = useState<Booking[]>([]);
+const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>(bookings);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<Booking['booking_status'] | 'ALL'>('ALL');
@@ -192,6 +194,25 @@ export default function BookingManagement() {
   const [itemsPerPage] = useState(6);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const data = await getAllBookings();
+      setBookings(data);
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: 'Failed to load bookings',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
   
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
