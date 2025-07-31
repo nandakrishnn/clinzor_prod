@@ -24,6 +24,7 @@ import {
   Search
 } from 'lucide-react';
 import React from 'react';
+import { signOut, useSession } from 'next-auth/react';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -244,15 +245,30 @@ export default function AdminSidebar() {
   const [activeItem, setActiveItem] = useState('/admin/dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  
+  const { data: session, status } = useSession();
+  const userData = session?.user
+  console.log(session?.user ,"user data ")
   // Example user data - in a real app, this would come from your authentication system
-  const [user] = useState<UserProfile>({
-    name: 'Admin User',
-    email: 'admin@hospital.com',
-    role: 'System Administrator',
+  // Initialize user state with proper types and session data
+
+  const [user, setUser] = useState<UserProfile>({
+    name: '',
+    email: '',
+    role: '',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
   });
-  
+
+  // Update user data when session changes
+  useEffect(() => {
+    if (session?.user) {
+      setUser({
+        name: session.user.full_name || '',
+        email: session.user.email || '',
+        role: session.user.role || '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
+      });
+    }
+  }, [session]);
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
     const handleResize = () => {
@@ -393,6 +409,7 @@ export default function AdminSidebar() {
   };
   
   const handleLogout = () => {
+    signOut({ callbackUrl: "/auth/adminauthentication" });
     console.log('Logging out...');
   };
 

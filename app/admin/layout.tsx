@@ -12,11 +12,16 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import AdminSidebar from "@/components/admin/Sidebar";
+import { AdminProvider } from "../Providers";
 
 // Sidebar component
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
+    <>
+   <AdminProvider>
+
+  
     <Box sx={{ display: "flex", height: "100dvh", overflow: "hidden" }} >
       <AdminSidebar />
       <Box
@@ -45,5 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {children}
       </Box>
     </Box>
+    </AdminProvider>
+    </>
   );
 }
