@@ -7,6 +7,7 @@ import HeroSection from "@/components/landingpage/hero/Hero";
 import SearchBar from "@/components/landingpage/searchbar/searchbar";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
+import Booking from "@/components/landingpage/booking/Booking";
 
 export default function Home() {
   return (
@@ -64,9 +65,16 @@ export default function Home() {
         </section>
 
         {/* Services */}
-        <section className="bg-white py-10 sm:py-14 px-4 sm:px-6">
+        <section className="bg-white py-10 sm:py-14 mb-20 px-4 sm:px-6">
           <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-10">
             <ServicesWeOffer />
+          </div>
+        </section>
+
+        {/* Dummy Booking */}
+        <section className="bg-[#F2F5FF] py-10 sm:py-14 pb-20 px-4 sm:px-6">
+          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+            <Booking />
           </div>
         </section>
 
