@@ -49,6 +49,8 @@ export default function Home() {
           </svg>
         </div>
       </div> */}
+      {/* Navbar */}
+      <NavbarDemo />
 
       <main className="z-10">
         {/* Hero + Search */}
@@ -86,6 +88,13 @@ export default function Home() {
         <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-20">
             <FAQsTwo />
+          </div>
+        </section>
+
+        {/* Footer */}
+        <section className=" bg-gradient-to-b from-[#1C3455] to-[#1C3455] pb-10  sm:px-6">
+          <div className="max-w-screen-xl mx-auto">
+            <FooterSection />
           </div>
         </section>
       </main>
