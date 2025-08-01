@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Users, Mail, MapPin, Instagram, Building2, Search, Filter, MoreHorizontal, Sparkles, TrendingUp, Eye, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
-import { getAllCamps } from '@/service/admin/campManangentService';
+import { getAllCamps, toggleCompletion } from '@/service/admin/campManangentService';
 
 // Add Camp type
 interface Camp {
@@ -20,6 +20,7 @@ interface Camp {
   completed?: boolean;
 }
 
+
 const CampManagement = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
 
@@ -29,6 +30,11 @@ const CampManagement = () => {
   const [filterCompletion, setFilterCompletion] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
 const [loading, setLoading] = useState(false);
+const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
  const fectchCamps = async () => {
@@ -58,10 +64,32 @@ setLoading(true)
     setSelectedCamp(null);
   };
 
-  const handleMarkComplete = (campId: string) => {
-    setCamps(prev => prev.map(c => c.uuid === campId ? { ...c, completed: true } : c));
-  };
-
+const handleMarkComplete = async (campId: string) => {
+  setLoadingCampId(campId);
+  
+  // Optimistically update the UI
+  setCamps(prev => prev.map(c => c.uuid === campId ? { ...c, completed: true } : c));
+  
+  try {
+    // Call the API to mark as complete
+    await toggleCompletion(campId, { is_completed: true });
+    
+    setNotification({
+      type: 'success',
+      message: 'Camp marked as completed successfully'
+    });
+  } catch (error:any) {
+    // Revert the UI change if the API call fails
+    setCamps(prev => prev.map(c => c.uuid === campId ? { ...c, completed: false } : c));
+    
+    setNotification({
+      type: 'error',
+      message: `Failed to mark camp as complete: ${error.response?.data?.message || error.message}`
+    });
+  } finally {
+    setLoadingCampId(null);
+  }
+};
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'APPROVED': 

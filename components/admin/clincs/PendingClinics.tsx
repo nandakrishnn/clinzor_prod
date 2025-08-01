@@ -17,7 +17,7 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { getAllClinic } from '@/service/admin/clientManagentService';
+import { getAllClinic } from '@/service/admin/clinicManagentService';
 
 // Types
 interface Clinic {

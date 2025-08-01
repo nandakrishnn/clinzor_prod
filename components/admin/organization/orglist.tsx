@@ -1,5 +1,6 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { Edit3, Save, X, Building2, Users, CreditCard, Shield, Info, Plus, Trash2, Eye } from 'lucide-react';
+import { createOrganization, editOrganization, GetAllOrganization } from '@/service/admin/organizationManagementService';
 
 // Define the organization type
 interface Organization {
@@ -22,19 +23,13 @@ interface OrganizationFormData {
 
 const OrganizationManagement = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([
-    {
-      uuid: "7cca9e3f-0f34-4eac-9a43-06e6e0271e04",
-      created_by: "admin@gmail.com",
-      privacy_policy: "We are committed to protecting your privacy and ensuring the security of your personal information. Our comprehensive privacy policy outlines how we collect, use, and safeguard your data.",
-      about_organization: "We are a leading technology company focused on delivering innovative solutions that transform businesses and improve lives. Our mission is to bridge the gap between technology and human needs.",
-      free_expert_booking: 3,
-      expert_booking_charge: "500.00"
-    }
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create'); // 'create', 'edit', 'view'
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [formData, setFormData] = useState<OrganizationFormData>({
     created_by: '',
     privacy_policy: '',
@@ -42,6 +37,25 @@ const OrganizationManagement = () => {
     free_expert_booking: 0,
     expert_booking_charge: '0.00'
   });
+ const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
+
+  const fetchOrgData = async () => {
+    try {
+      const data = await GetAllOrganization()
+      setOrganizations(data)
+      console.log(data ,"org data")
+    } catch (error) {
+      
+    }
+    
+  }
+  useEffect(() => {
+   fetchOrgData();
+  }, [])
+  
 
   const resetForm = () => {
     setFormData({
@@ -80,34 +94,67 @@ const OrganizationManagement = () => {
     resetForm();
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setApiError(null);
+
+  try {
+    // Prepare common organization data
+    const orgData = {
+      ...formData,
+      free_expert_booking: typeof formData.free_expert_booking === 'string' 
+        ? parseInt(formData.free_expert_booking) 
+        : formData.free_expert_booking,
+      expert_booking_charge: formData.expert_booking_charge
+    };
 
     if (modalMode === 'create') {
-      const newOrg: Organization = {
-        ...formData,
-        uuid: crypto.randomUUID(),
-        free_expert_booking: typeof formData.free_expert_booking === 'string' ? parseInt(formData.free_expert_booking) : formData.free_expert_booking,
-        expert_booking_charge: formData.expert_booking_charge
-      };
+      // Create new organization
+      const newOrg = await createOrganization({
+        ...orgData,  
+      });
+
       setOrganizations(prev => [...prev, newOrg]);
+      // Show success message or notification
+      setNotification({
+      type: 'success',
+      message: 'Organization created successfully!'
+    });
+      
+
     } else if (modalMode === 'edit' && selectedOrg) {
+      // Update existing organization
+      const updatedOrg = await editOrganization({
+        ...orgData,
+      });
+fetchOrgData();
       setOrganizations(prev =>
         prev.map(org =>
-          org.uuid === selectedOrg.uuid
-            ? {
-                ...formData,
-                uuid: selectedOrg.uuid,
-                free_expert_booking: typeof formData.free_expert_booking === 'string' ? parseInt(formData.free_expert_booking) : formData.free_expert_booking,
-                expert_booking_charge: formData.expert_booking_charge
-              }
-            : org
+          org.uuid === selectedOrg.uuid ? updatedOrg : org
         )
       );
+      // Show success message or notification
+       setNotification({
+      type: 'success',
+      message: 'Organization updated successfully!'
+    });
+    
     }
 
     closeModal();
-  };
+  } catch (error:any) {
+    console.error('Error saving organization:', error);
+    setApiError(error.response?.data?.message || 'Failed to save organization');
+    // Optionally keep the modal open to show errors
+  } finally {
+    setIsSubmitting(false);
+    setTimeout(() => {
+     
+      setApiError(null);
+    }, 3000);
+  }
+};
 
   const handleDelete = (uuid: string) => {
     if (window.confirm('Are you sure you want to delete this organization?')) {
@@ -177,7 +224,7 @@ const OrganizationManagement = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-600">Total Free Bookings</h3>
                 <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {organizations.reduce((sum, org) => sum + org.free_expert_booking, 0)}
+                  {organizations?.reduce((sum, org) => sum + org.free_expert_booking, 0)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -225,7 +272,7 @@ const OrganizationManagement = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-900 font-mono">
-                        {org.uuid.slice(0, 8)}...
+                        {org?.uuid?.slice(0, 8)}...
                       </h3>
                       <p className="text-xs text-gray-500">Organization ID</p>
                     </div>

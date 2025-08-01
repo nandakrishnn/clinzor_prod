@@ -311,20 +311,21 @@ export default function AdminSidebar() {
   // Menu items configuration
   const menuItems = [
     { icon: <BarChart3 size={20} strokeWidth={1.5} />, label: 'Dashboard', href: '/admin/dashboard' },
+    { icon: <Users size={20} strokeWidth={1.5} />, label: 'User Management', href: '/admin/allusers' },
   ];
 
   const nestedMenuItems = [
-    {
-      icon: <Users size={20} strokeWidth={1.5} />,
-      label: 'User Management',
-      badge: '245',
-      badgeColor: 'blue' as const,
-      children: [
-        { label: 'All Users', href: '/admin/allusers' },
-        { label: 'Blocked Users', href: '/admin/blocked', badge: '12', badgeColor: 'red' as const },
-        { label: 'User Analytics', href: '/admin/analytics' }
-      ]
-    },
+    // {
+    //   icon: <Users size={20} strokeWidth={1.5} />,
+    //   label: 'User Management',
+    //   badge: '245',
+    //   badgeColor: 'blue' as const,
+    //   children: [
+    //     { label: 'All Users', href: '/admin/allusers' },
+    //     // { label: 'Blocked Users', href: '/admin/blocked', badge: '12', badgeColor: 'red' as const },
+    //     // { label: 'User Analytics', href: '/admin/analytics' }
+    //   ]
+    // },
     {
       icon: <Building2 size={20} strokeWidth={1.5} />,
       label: 'Clinic Management',
@@ -333,7 +334,7 @@ export default function AdminSidebar() {
       children: [
         { label: 'All Clinics', href: '/admin/allclinics' },
         { label: 'Pending Approvals', href: '/admin/pending', badge: '7', badgeColor: 'yellow' as const },
-        { label: 'Clinic Analytics', href: '/admin/clinics/analytics' }
+        // { label: 'Clinic Analytics', href: '/admin/clinics/analytics' }
       ]
     },
     {
@@ -343,8 +344,8 @@ export default function AdminSidebar() {
       badgeColor: 'blue' as const,
       children: [
         { label: 'All Experts', href: '/admin/experts' },
-        { label: 'Pending Verification', href: '/admin/experts/pending', badge: '5', badgeColor: 'yellow' as const },
-        { label: 'Expert Performance', href: '/admin/experts/performance' }
+        // { label: 'Pending Verification', href: '/admin/experts/pending', badge: '5', badgeColor: 'yellow' as const },
+        // { label: 'Expert Performance', href: '/admin/experts/performance' }
       ]
     },
     {
