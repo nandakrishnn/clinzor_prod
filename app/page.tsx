@@ -12,43 +12,7 @@ import Booking from "@/components/landingpage/booking/Booking";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b  to-white overflow-hidden">
-      {/* Decorative Backgrounds */}
-      {/* <div className="fixed inset-0 pointer-events-none z-0 opacity-50">
-        <svg
-          className="absolute top-1/4 -right-32 sm:-right-40 w-[400px] h-[400px] md:w-[500px] md:h-[500px] text-blue-100"
-          viewBox="0 0 200 200"
-          aria-hidden
-        >
-          <circle cx="100" cy="100" r="100" fill="currentColor" />
-        </svg>
-        <svg
-          className="absolute -left-20 top-1/3 w-56 h-56 text-indigo-100 opacity-70"
-          viewBox="0 0 100 100"
-          aria-hidden
-        >
-          <path
-            d="M0,50 C20,30 40,70 60,50 C80,30 100,70 120,50"
-            stroke="currentColor"
-            strokeWidth="12"
-            fill="none"
-          />
-        </svg>
-        <div className="absolute inset-0 hidden md:block">
-          <svg width="100%" height="100%" aria-hidden>
-            <pattern
-              id="dots-pattern"
-              x="0"
-              y="0"
-              width="40"
-              height="40"
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx="2" cy="2" r="1" fill="#BFDBFE" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#dots-pattern)" />
-          </svg>
-        </div>
-      </div> */}
+      
       {/* Navbar */}
       <NavbarDemo />
 
