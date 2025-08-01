@@ -33,7 +33,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sampleBookings } from '../dues/dueslist';
-import { approveOrRejectClinic, createClinic, deleteClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clientManagentService';
+import { approveOrRejectClinic, createClinic, deleteClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clinicManagentService';
 import { Call } from '@mui/icons-material';
 
 interface Clinic {

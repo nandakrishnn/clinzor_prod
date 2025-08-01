@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Star, MapPin, Phone, Clock, ChevronRight, Calendar, Users, Shield, Camera, Heart, Award, CheckCircle } from "lucide-react";
+import { getAClinic } from "@/service/admin/clinicManagentService";
 
 interface Doctor {
   id: string;
@@ -12,53 +13,36 @@ interface Doctor {
 }
 
 interface Clinic {
-  id: string;
+  uuid: string;
+  created_by: string;
   name: string;
-  imageUrl: string;
-  rating: number;
-  location: string;
-  openHours: string;
-  phone: string;
   address: string;
-  description: string;
-  specialty: string[];
-  services: string[];
-  insurance: string[];
-  doctors: Doctor[];
-  gallery: {
-    imageUrl: string;
-    caption: string;
-  }[];
-  availableSlots?: {
-    [date: string]: string[];
-  };
+  pincode: number;
+  map_link: string;
+  coordinates: string;
+  is_active: boolean;
+  status: string;
+  city: string;
+  about_clinic?: string;
 }
 
 export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
+  const [clinic, setClinic] = useState<Clinic | null>(null);
   
-  // Mock data for now
-  const clinic: Clinic = {
-    id: clinicId,
-    name: "Sunrise Health Clinic",
-    imageUrl: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&h=600&fit=crop",
+  // Static data for sections not provided by API
+  const staticData = {
     rating: 4.9,
-    location: "123 Main St, Springfield",
     openHours: "8:00 AM – 6:00 PM",
     phone: "123-456-7890",
-    address: "123 Main St, Springfield, USA",
-    description:
-      "Welcome to Sunrise Health Clinic—your premier healthcare destination. We deliver exceptional patient-centered care with innovative technology and a compassionate approach. Our state-of-the-art facility provides comprehensive medical services for patients of all ages, ensuring your health needs are met with precision and care.",
+    description: "Welcome to our healthcare facility—your premier healthcare destination. We deliver exceptional patient-centered care with innovative technology and a compassionate approach.",
     specialty: ["Primary Care", "Family Medicine", "Dermatology", "Cardiology"],
-    services: ["Consultation", "Health Screenings", "Preventive Care", "Diagnostic Services", "Specialized Treatment", "Telemedicine"],
-    insurance: ["Apple Health", "Medicare", "Blue Cross", "Aetna", "UnitedHealth", "Cigna"],
+    services: ["Consultation", "Health Screenings", "Preventive Care", "Diagnostic Services"],
+    insurance: ["Apple Health", "Medicare", "Blue Cross", "Aetna"],
     gallery: [
       { imageUrl: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400&h=300&fit=crop", caption: "Modern Reception Area" },
       { imageUrl: "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=400&h=300&fit=crop", caption: "State-of-the-Art Examination Room" },
-      { imageUrl: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=300&fit=crop", caption: "Comfortable Waiting Lounge" },
-      { imageUrl: "https://images.unsplash.com/photo-1632833239869-a37e3a5806d2?w=400&h=300&fit=crop", caption: "Advanced Medical Equipment" },
-      { imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop", caption: "Child-Friendly Play Area" },
-      { imageUrl: "https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=400&h=300&fit=crop", caption: "Consultation Room" }
+      { imageUrl: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=300&fit=crop", caption: "Comfortable Waiting Lounge" }
     ],
     doctors: [
       {
@@ -78,38 +62,30 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         education: "Stanford University",
         experience: "15 years",
         availability: "Tue, Thu"
-      },
-      {
-        id: "d3",
-        name: "Dr. Emily Williams",
-        specialty: "Dermatology",
-        imageUrl: "https://images.unsplash.com/photo-1594824723737-97a10ea5e48c?w=200&h=200&fit=crop&crop=face",
-        education: "Johns Hopkins University",
-        experience: "8 years",
-        availability: "Mon-Fri"
-      },
-      {
-        id: "d4",
-        name: "Dr. James Rodriguez",
-        specialty: "Primary Care",
-        imageUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
-        education: "Yale School of Medicine",
-        experience: "10 years",
-        availability: "Wed-Sat"
       }
     ],
     availableSlots: {
       "2025-05-02": ["09:00", "11:30", "14:00", "16:30"],
-      "2025-05-03": ["08:30", "10:00", "13:30", "15:00"],
-      "2025-05-04": ["09:30", "11:00", "14:30", "16:00"],
-      "2025-05-05": ["08:00", "10:30", "13:00", "15:30"],
-      "2025-05-06": ["08:30", "10:00", "13:00", "15:30"],
-      "2025-05-07": ["09:00", "10:30", "11:30", "14:00", "15:30"],
-      "2025-05-08": ["09:30", "11:30", "13:30", "15:00"],
-      "2025-05-09": ["09:00", "11:30", "14:30", "16:00"],
-      "2025-05-10": ["09:00", "10:30", "11:30", "14:00"]
+      "2025-05-03": ["08:30", "10:00", "13:30", "15:00"]
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getAClinic(clinicId);
+        setClinic(data.data.data); // Assuming the API returns { data: Clinic }
+        console.log(data.data.data,"data")
+      } catch (error) {
+        console.error("Failed to fetch clinic data", error);
+      }
+    };
+    fetchData();
+  }, [clinicId]);
+
+  if (!clinic) {
+    return <div className="min-h-screen flex items-center justify-center">Loading clinic data...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -125,7 +101,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
       <div className="relative overflow-hidden">
         <div className="h-[50vh] lg:h-[60vh] relative">
           <img 
-            src={clinic.imageUrl} 
+            src={staticData.gallery[0].imageUrl} 
             alt={clinic.name} 
             className="w-full h-full object-cover"
           />
@@ -140,7 +116,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full">
                     <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                    <span className="text-xl font-bold text-gray-900">{clinic.rating}</span>
+                    <span className="text-xl font-bold text-gray-900">{staticData.rating}</span>
                     <span className="text-gray-600">Excellence Rating</span>
                   </div>
                 </div>
@@ -150,11 +126,11 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 <div className="flex items-center gap-4 text-gray-600">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium">{clinic.location}</span>
+                    <span className="font-medium">{clinic.city}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-green-600" />
-                    <span className="font-medium">{clinic.openHours}</span>
+                    <span className="font-medium">{staticData.openHours}</span>
                   </div>
                 </div>
               </div>
@@ -183,7 +159,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Operating Hours</h3>
-                <p className="text-gray-600">{clinic.openHours}</p>
+                <p className="text-gray-600">{staticData.openHours}</p>
               </div>
             </div>
           </div>
@@ -195,7 +171,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Expert Doctors</h3>
-                <p className="text-gray-600">{clinic.doctors.length} Specialists</p>
+                <p className="text-gray-600">{staticData.doctors.length} Specialists</p>
               </div>
             </div>
           </div>
@@ -207,7 +183,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Services</h3>
-                <p className="text-gray-600">{clinic.services.length} Available</p>
+                <p className="text-gray-600">{staticData.services.length} Available</p>
               </div>
             </div>
           </div>
@@ -217,7 +193,22 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">About Our Clinic</h2>
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
-            <p className="text-gray-700 leading-relaxed text-lg">{clinic.description}</p>
+            <p className="text-gray-700 leading-relaxed text-lg">
+              {clinic.about_clinic || staticData.description}
+            </p>
+            <div className="mt-4">
+              <h3 className="font-bold text-gray-900 mb-2">Address:</h3>
+              <p className="text-gray-600">{clinic.address}</p>
+              <p className="text-gray-600">{clinic.city}, PIN: {clinic.pincode}</p>
+              <a 
+                href={clinic.map_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline mt-2 inline-block"
+              >
+                View on Map
+              </a>
+            </div>
           </div>
         </section>
 
@@ -225,7 +216,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {clinic.specialty.map((specialty, index) => (
+            {staticData.specialty.map((specialty) => (
               <div 
                 key={specialty} 
                 className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
@@ -240,25 +231,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           </div>
         </section>
 
-        {/* Services */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Our Services</h2>
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-100 shadow-lg overflow-hidden">
-            {clinic.services.map((service, index) => (
-              <div key={service} className="p-6 flex items-center justify-between hover:bg-blue-50/50 transition-all duration-200 border-b border-gray-100 last:border-b-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <span className="text-gray-900 font-medium text-lg">{service}</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Doctors */}
+        {/* Doctors Section - Using static data */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
@@ -267,7 +240,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Meet Our Doctors</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {clinic.doctors.map((doctor) => (
+            {staticData.doctors.map((doctor) => (
               <div key={doctor.id} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
                 <div className="flex items-start gap-6">
                   <div className="relative">
@@ -297,7 +270,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           </div>
         </section>
 
-        {/* Gallery */}
+        {/* Gallery Section - Using static data */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -308,16 +281,16 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
             <div className="mb-8">
               <img 
-                src={clinic.gallery[selectedGalleryIndex].imageUrl} 
-                alt={clinic.gallery[selectedGalleryIndex].caption}
+                src={staticData.gallery[selectedGalleryIndex].imageUrl} 
+                alt={staticData.gallery[selectedGalleryIndex].caption}
                 className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-lg"
               />
               <p className="text-center text-gray-700 mt-4 font-semibold text-lg">
-                {clinic.gallery[selectedGalleryIndex].caption}
+                {staticData.gallery[selectedGalleryIndex].caption}
               </p>
             </div>
-            <div className="grid grid-cols-6 gap-3">
-              {clinic.gallery.map((image, index) => (
+            <div className="grid grid-cols-3 gap-3">
+              {staticData.gallery.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedGalleryIndex(index)}
@@ -332,44 +305,11 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                     alt={image.caption}
                     className="w-full h-full object-cover"
                   />
-                  {selectedGalleryIndex === index && (
-                    <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-white" />
-                    </div>
-                  )}
                 </button>
               ))}
             </div>
           </div>
         </section>
-
-        {/* Available Slots */}
-        {clinic.availableSlots && (
-          <section className="mb-16">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-orange-600" />
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Available Appointments</h2>
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {Object.entries(clinic.availableSlots).map(([date, slots]) => (
-                  <div key={date} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200">
-                    <h3 className="font-bold text-gray-900 mb-4 text-lg">{date}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {slots.map((slot) => (
-                        <span key={slot} className="bg-white px-3 py-2 rounded-xl text-gray-700 font-medium text-sm shadow-sm">
-                          {slot}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Contact Info */}
         <section className="mb-16">
@@ -383,6 +323,15 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 <div>
                   <h3 className="font-bold text-gray-900 text-xl">Visit Us</h3>
                   <p className="text-gray-600">{clinic.address}</p>
+                  <p className="text-gray-600">{clinic.city}, {clinic.pincode}</p>
+                  <a 
+                    href={clinic.map_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline mt-2 inline-block"
+                  >
+                    View on Map
+                  </a>
                 </div>
               </div>
             </div>
@@ -393,14 +342,15 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                   <Phone className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-xl">Call Us</h3>
-                  <p className="text-gray-600">{clinic.phone}</p>
+                  <h3 className="font-bold text-gray-900 text-xl">Contact Us</h3>
+                  <p className="text-gray-600">{staticData.phone}</p>
+                  <p className="text-gray-600 mt-2">Email: {clinic.created_by}</p>
+                  <p className="text-gray-600 mt-1">Status: <span className="font-medium capitalize">{clinic?.status?.toLowerCase()}</span></p>
                 </div>
               </div>
             </div>
           </div>
         </section>
-
       </div>
     </div>
   );
