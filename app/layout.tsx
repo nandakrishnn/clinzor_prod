@@ -1,15 +1,13 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "./Providers";
-import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
-import FooterSection from "@/components/landingpage/footer/footer";
 import Head from "next/head";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter"
-});
+import type { Metadata } from "next";
+import { Domine, Inter, Raleway } from "next/font/google";
+import { AuthProvider } from "./Providers";
+
+const inter = Inter({  subsets: ["latin"], variable: "--font-inter"});
+const domine = Domine({ subsets: ["latin"], variable: "--font-domine" });
+const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
 
 export const metadata: Metadata = {
   title: "Clinzor",
@@ -38,8 +36,7 @@ export default function RootLayout({
         ></link>
       </Head>
       <AuthProvider>
-        <body className={`${inter.variable} antialiased`}>
-          {/* Content */}
+        <body className={`${inter.variable} ${domine.variable} ${raleway.variable} antialiased`}>
           {children}
         </body>
       </AuthProvider>

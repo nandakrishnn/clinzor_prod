@@ -2,7 +2,7 @@ import React from "react";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 
 import FooterSection from "@/components/landingpage/footer/footer";
-import CommonHeroSection from "@/components/common/commonHeroSection";
+import CommonHeroSection from "@/components/common/CommonHeroSection";
 
 const ServicePage = () => {
   return (
