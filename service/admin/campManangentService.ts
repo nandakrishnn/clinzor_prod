@@ -49,11 +49,11 @@ export const approveOrRejectCamp = async (id: string, body: {
     throw error;
   }
 };
-export const toggleActiveCamp = async (id: string, body: {
-  is_active: boolean;
+export const toggleCompletion = async (id: string, body: {
+  is_completed: boolean;
 }) => {
   try {
-    const response = await axiosPrivate.patch(`clinic/clinic-patch/${id}/`, body);
+    const response = await axiosPrivate.patch(`clinic/toggle-camp-completion/${id}/`, body);
     return response.data;
   } catch (error) {
     console.error("User status update error:", error);

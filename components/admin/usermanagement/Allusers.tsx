@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  UserX, 
-  UserCheck, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Download, 
+import {
+  Users,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  UserX,
+  UserCheck,
+  Mail,
+  Phone,
+  Calendar,
+  Download,
   Plus,
   Shield,
   ShieldCheck,
@@ -25,11 +25,12 @@ import {
   RefreshCw,
   Settings,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
-import { deleteUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
+import { deleteUser, editUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
 import { getAllBookings } from '@/service/admin/bookingManagentService';
 
 interface User {
@@ -62,7 +63,7 @@ interface UserCardProps {
   onView: (user: User) => void;
 }
 
-interface UserRowProps extends UserCardProps {}
+interface UserRowProps extends UserCardProps { }
 
 interface ModalProps {
   isOpen: boolean;
@@ -271,30 +272,30 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
 const StatusBadge = ({ status, type }: StatusBadgeProps) => {
   const getStatusConfig = () => {
     if (type === 'active') {
-      return status ? 
+      return status ?
         { color: 'bg-green-100 text-green-700', icon: <CheckCircle size={12} />, text: 'Active' } :
         { color: 'bg-red-100 text-red-700', icon: <XCircle size={12} />, text: 'Inactive' };
     }
     if (type === 'blocked') {
-      return status ? 
+      return status ?
         { color: 'bg-red-100 text-red-700', icon: <UserX size={12} />, text: 'Blocked' } :
         { color: 'bg-green-100 text-green-700', icon: <UserCheck size={12} />, text: 'Unblocked' };
     }
     if (type === 'staff') {
-      return status ? 
+      return status ?
         { color: 'bg-blue-100 text-blue-700', icon: <Shield size={12} />, text: 'Staff' } :
         { color: 'bg-gray-100 text-gray-700', icon: <Users size={12} />, text: 'User' };
     }
     if (type === 'superuser') {
-      return status ? 
+      return status ?
         { color: 'bg-purple-100 text-purple-700', icon: <ShieldCheck size={12} />, text: 'Super Admin' } :
         { color: 'bg-gray-100 text-gray-700', icon: <Users size={12} />, text: 'Regular' };
     }
     return { color: 'bg-gray-100 text-gray-700', icon: <Users size={12} />, text: 'Unknown' };
   };
-  
+
   const config = getStatusConfig();
-  
+
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
       {config.icon}
@@ -304,7 +305,7 @@ const StatusBadge = ({ status, type }: StatusBadgeProps) => {
 };
 
 const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) => (
-  <motion.div 
+  <motion.div
     className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -324,14 +325,14 @@ const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) =>
           </div>
         </div>
       </div>
-      
+
       <div className="relative">
         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <MoreVertical size={16} className="text-gray-500" />
         </button>
       </div>
     </div>
-    
+
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">Status:</span>
@@ -340,14 +341,14 @@ const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) =>
           {user.is_blocked && <StatusBadge status={user.is_blocked} type="blocked" />}
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">Last Login:</span>
         <span className="text-sm text-gray-900">
           {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
         </span>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">Joined:</span>
         <span className="text-sm text-gray-900">
@@ -355,27 +356,26 @@ const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) =>
         </span>
       </div>
     </div>
-    
+
     <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-      <button 
+      <button
         onClick={() => onView(user)}
         className="flex-1 py-2 px-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
       >
         View
       </button>
-      <button 
+      <button
         onClick={() => onEdit(user)}
         className="flex-1 py-2 px-3 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
       >
         Edit
       </button>
-      <button 
+      <button
         onClick={() => onBlock(user)}
-        className={`flex-1 py-2 px-3 rounded-lg transition-colors text-sm font-medium ${
-          user.is_blocked 
-            ? 'bg-green-50 text-green-600 hover:bg-green-100' 
-            : 'bg-red-50 text-red-600 hover:bg-red-100'
-        }`}
+        className={`flex-1 py-2 px-3 rounded-lg transition-colors text-sm font-medium ${user.is_blocked
+          ? 'bg-green-50 text-green-600 hover:bg-green-100'
+          : 'bg-red-50 text-red-600 hover:bg-red-100'
+          }`}
       >
         {user.is_blocked ? 'Unblock' : 'Block'}
       </button>
@@ -384,7 +384,7 @@ const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) =>
 );
 
 const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
-  <motion.tr 
+  <motion.tr
     className="hover:bg-gray-50 transition-colors"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -418,29 +418,28 @@ const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
       <div className="flex items-center justify-end gap-2">
-        <button 
+        <button
           onClick={() => onView(user)}
           className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-all"
         >
           <Eye size={16} />
         </button>
-        <button 
+        <button
           onClick={() => onEdit(user)}
           className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-all"
         >
           <Edit size={16} />
         </button>
-        <button 
+        <button
           onClick={() => onBlock(user)}
-          className={`p-1 rounded transition-all ${
-            user.is_blocked 
-              ? 'text-green-600 hover:text-green-900 hover:bg-green-50' 
-              : 'text-red-600 hover:text-red-900 hover:bg-red-50'
-          }`}
+          className={`p-1 rounded transition-all ${user.is_blocked
+            ? 'text-green-600 hover:text-green-900 hover:bg-green-50'
+            : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+            }`}
         >
           {user.is_blocked ? <UserCheck size={16} /> : <UserX size={16} />}
         </button>
-        <button 
+        <button
           onClick={() => onDelete(user)}
           className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-all"
         >
@@ -463,7 +462,7 @@ export default function AllUsersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [sortBy, setSortBy] = useState<keyof User>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
+
   // Modal states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -471,47 +470,48 @@ export default function AllUsersPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<User>>({});
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-  
-  const isMobile = useMedia('(max-width: 640px)');
-  
-  // Load users on component mount
-  useEffect(() => {
-    const loadUsers = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
-       const data = await GetAllUsers(15); // Real API
-       const bookingData = await getAllBookings()
-        setUsers(data);
-        console.log(data ,"user data ")
-        console.log(bookingData ,"booking data ")
-      // setUsers(mockUsers);
-      setBookings(bookingData);
-      setFilteredUsers(data);
-      setLoading(false);
-    };
+  const isMobile = useMedia('(max-width: 640px)');
+
+  // Load users on component mount
+  const loadUsers = async () => {
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
+    const data = await GetAllUsers(15); // Real API
+    const bookingData = await getAllBookings()
+    setUsers(data);
+    console.log(data, "user data ")
+    console.log(bookingData, "booking data ")
+    // setUsers(mockUsers);
+    setBookings(bookingData);
+    setFilteredUsers(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     loadUsers();
   }, []);
-  
+
   // Filter and search users
   useEffect(() => {
     let filtered = [...users];
-    
+
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.phone_number.includes(searchQuery)
       );
     }
-    
+
     // Status filter
     if (statusFilter === 'ACTIVE') {
       filtered = filtered.filter(user => user.is_active && !user.is_blocked);
@@ -520,48 +520,48 @@ export default function AllUsersPage() {
     } else if (statusFilter === 'BLOCKED') {
       filtered = filtered.filter(user => user.is_blocked);
     }
-    
+
     // Sort
     filtered.sort((a, b) => {
       const aValue = a[sortBy];
       const bValue = b[sortBy];
-      
+
       if (sortBy === 'created_at' || sortBy === 'last_login') {
         const aDate = aValue ? new Date(aValue as string).getTime() : 0;
         const bDate = bValue ? new Date(bValue as string).getTime() : 0;
         return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
       }
-      
+
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortOrder === 'asc' 
+        return sortOrder === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
-      
+
       if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
         return sortOrder === 'asc'
           ? (aValue === bValue ? 0 : aValue ? 1 : -1)
           : (aValue === bValue ? 0 : aValue ? -1 : 1);
       }
-      
+
       return 0;
     });
-    
+
     setFilteredUsers(filtered);
     setCurrentPage(1);
   }, [users, searchQuery, statusFilter, sortBy, sortOrder]);
-  
+
   // Pagination
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-  
+
   // Action handlers
   const handleView = (user: User) => {
     setSelectedUser(user);
     setIsViewModalOpen(true);
   };
-  
+
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setEditFormData({
@@ -575,12 +575,12 @@ export default function AllUsersPage() {
     });
     setIsEditModalOpen(true);
   };
-  
+
   const handleDelete = (user: User) => {
     setSelectedUser(user);
     setIsDeleteModalOpen(true);
   };
-  
+
   const handleBlock = (user: User) => {
     setSelectedUser(user);
     setIsBlockModalOpen(true);
@@ -611,7 +611,8 @@ export default function AllUsersPage() {
     return null;
   };
 
-  const handleEditSubmit = () => {
+  const handleEditSubmit = async () => {
+    // Validate form data
     const validationError = validateEditForm(editFormData);
     if (validationError) {
       setNotification({
@@ -621,10 +622,31 @@ export default function AllUsersPage() {
       return;
     }
 
-    if (selectedUser && editFormData) {
-      setUsers(prev => prev.map(u => 
-        u.uuid === selectedUser.uuid ? { ...u, ...editFormData } : u
+    if (!selectedUser || !editFormData) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare the complete request body with all user fields
+      const requestBody = {
+        full_name: editFormData.full_name,
+        email: editFormData.email,
+        phone_number: editFormData.phone_number,
+        country_code: editFormData.country_code,
+        is_active: editFormData.is_active,
+        is_staff: editFormData.is_staff,
+        is_superuser: editFormData.is_superuser
+      };
+
+      // Call the API with all user data
+      const updatedUser = await editUser(selectedUser.uuid, requestBody);
+
+      // Update local state with the response from backend
+      setUsers(prev => prev.map(u =>
+        u.uuid === selectedUser.uuid ? { ...u, ...updatedUser } : u
       ));
+
+      // Close modal and show success
       setIsEditModalOpen(false);
       setSelectedUser(null);
       setEditFormData({});
@@ -632,84 +654,92 @@ export default function AllUsersPage() {
         type: 'success',
         message: 'User updated successfully'
       });
+    } catch (error: any) {
+      setNotification({
+        type: 'error',
+        message: `Failed to update user: ${error.response?.data?.message || error.message}`
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-const handleDeleteConfirm = async () => {
-  if (!selectedUser) return;
+  const handleDeleteConfirm = async () => {
+    if (!selectedUser) return;
 
-  try {
-    // Call the API to delete the user from the backend
-    await deleteUser(selectedUser.uuid);
-    
-    // Update the UI state only after successful API call
-    setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
-    setIsDeleteModalOpen(false);
-    setSelectedUser(null);
-    
-    setNotification({
-      type: 'success',
-      message: 'User deleted successfully'
-    });
-  } catch (error) {
-    console.error('Failed to delete user:', error);
-    setNotification({
-      type: 'error',
-      message: 'Failed to delete user. Please try again.'
-    });
-  }
-};
+    try {
+      // Call the API to delete the user from the backend
+      await deleteUser(selectedUser.uuid);
 
-const handleBlockConfirm = async () => {
-  if (!selectedUser) return;
+      // Update the UI state only after successful API call
+      setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
+      setIsDeleteModalOpen(false);
+      setSelectedUser(null);
 
-  const isBlocking = !selectedUser.is_blocked;
-  const requestBody = {
-    is_blocked: isBlocking,
-    ...(isBlocking && { reason_for_block: "unauthorized actions" }) // Only include if blocking
+      setNotification({
+        type: 'success',
+        message: 'User deleted successfully'
+      });
+      loadUsers();
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to delete user. Please try again.'
+      });
+    }
   };
 
-  try {
-    // Call API to update block status
-    await updateUserStatus(selectedUser.uuid, requestBody);
-    
-    // Update local state
-    setUsers(prev => prev.map(u => 
-      u.uuid === selectedUser.uuid ? { 
-        ...u, 
-        is_blocked: isBlocking,
-        ...(isBlocking && { reason_for_block: "unauthorized actions" })
-      } : u
-    ));
-    
-    setIsBlockModalOpen(false);
-    setSelectedUser(null);
-    
-    setNotification({
-      type: 'success',
-      message: isBlocking ? 'User blocked successfully' : 'User unblocked successfully'
-    });
-    
-  } catch (error) {
-    console.error('Block/Unblock failed:', error);
-    setNotification({
-      type: 'error',
-      message: `Failed to ${isBlocking ? 'block' : 'unblock'} user. Please try again.`
-    });
-  }
-};
-  
+  const handleBlockConfirm = async () => {
+    if (!selectedUser) return;
+
+    const isBlocking = !selectedUser.is_blocked;
+    const requestBody = {
+      is_blocked: isBlocking,
+      ...(isBlocking && { reason_for_block: "unauthorized actions" }) // Only include if blocking
+    };
+
+    try {
+      // Call API to update block status
+      await updateUserStatus(selectedUser.uuid, requestBody);
+
+      // Update local state
+      setUsers(prev => prev.map(u =>
+        u.uuid === selectedUser.uuid ? {
+          ...u,
+          is_blocked: isBlocking,
+          ...(isBlocking && { reason_for_block: "unauthorized actions" })
+        } : u
+      ));
+
+      setIsBlockModalOpen(false);
+      setSelectedUser(null);
+
+      setNotification({
+        type: 'success',
+        message: isBlocking ? 'User blocked successfully' : 'User unblocked successfully'
+      });
+      loadUsers();
+    } catch (error) {
+      console.error('Block/Unblock failed:', error);
+      setNotification({
+        type: 'error',
+        message: `Failed to ${isBlocking ? 'block' : 'unblock'} user. Please try again.`
+      });
+    }
+  };
+
   const handleExport = () => {
     console.log('Export users');
   };
-  
+
   const handleRefresh = () => {
     window.location.reload();
   };
-  
+
   // Users Display mode: force grid on mobile
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -720,12 +750,12 @@ const handleBlockConfirm = async () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -738,7 +768,7 @@ const handleBlockConfirm = async () => {
             <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and monitor all platform users</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 mt-2 md:mt-0 w-full md:w-auto">
-            <button 
+            <button
               onClick={handleRefresh}
               className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full md:w-auto"
             >
@@ -747,10 +777,10 @@ const handleBlockConfirm = async () => {
             </button>
           </div>
         </motion.div>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <motion.div 
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -765,8 +795,8 @@ const handleBlockConfirm = async () => {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -784,8 +814,8 @@ const handleBlockConfirm = async () => {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -803,8 +833,8 @@ const handleBlockConfirm = async () => {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -823,9 +853,9 @@ const handleBlockConfirm = async () => {
             </div>
           </motion.div>
         </div>
-        
+
         {/* Filters and Search */}
-        <motion.div 
+        <motion.div
           className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -842,7 +872,7 @@ const handleBlockConfirm = async () => {
                 className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
-            
+
             {/* Status Filter */}
             <div className="relative w-full md:w-auto">
               <select
@@ -857,23 +887,21 @@ const handleBlockConfirm = async () => {
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
-            
+
             {/* View Mode Toggle: hide on mobile */}
             {!isMobile && (
               <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-auto">
                 <button
                   onClick={() => setViewMode('table')}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'table' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
-                  }`}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'table' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                    }`}
                 >
                   Table
                 </button>
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
-                  }`}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                    }`}
                 >
                   Grid
                 </button>
@@ -881,7 +909,7 @@ const handleBlockConfirm = async () => {
             )}
           </div>
         </motion.div>
-        
+
         {/* Results Count */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
           <p className="text-gray-600 text-sm sm:text-base">
@@ -906,7 +934,7 @@ const handleBlockConfirm = async () => {
             </button>
           </div>
         </div>
-        
+
         {/* Users Display */}
         {effectiveViewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
@@ -922,7 +950,7 @@ const handleBlockConfirm = async () => {
             ))}
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -967,10 +995,10 @@ const handleBlockConfirm = async () => {
             </div>
           </motion.div>
         )}
-        
+
         {/* Pagination */}
         {totalPages > 1 && (
-          <motion.div 
+          <motion.div
             className="flex flex-col sm:flex-row items-center justify-between bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 gap-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -979,11 +1007,10 @@ const handleBlockConfirm = async () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
-                  currentPage === 1 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
               >
                 Previous
               </button>
@@ -993,11 +1020,10 @@ const handleBlockConfirm = async () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
-                  currentPage === totalPages 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
               >
                 Next
               </button>
@@ -1250,9 +1276,18 @@ const handleBlockConfirm = async () => {
               </button>
               <button
                 onClick={handleEditSubmit}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                disabled={isSubmitting}
+                className={`px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
-                Save Changes
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin h-4 w-4" />
+                    Saving...
+                  </span>
+                ) : (
+                  'Save Changes'
+                )}
               </button>
             </div>
           </div>
@@ -1322,11 +1357,10 @@ const handleBlockConfirm = async () => {
               </button>
               <button
                 onClick={handleBlockConfirm}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  selectedUser.is_blocked
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium ${selectedUser.is_blocked
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
               >
                 {selectedUser.is_blocked ? 'Unblock' : 'Block'}
               </button>

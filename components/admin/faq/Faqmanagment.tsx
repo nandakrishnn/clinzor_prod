@@ -1,30 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, X, Check, Sparkles, MoreVertical } from 'lucide-react';
+import { createFAQ, deleteFAQ, editFAQ, GetAllFAQ } from '@/service/admin/faqManagentService';
 
 // FAQ type for better type safety
 interface FAQ {
-  id: string;
+  uuid: string;
   question: string;
   answer: string;
 }
 
 const FAQAdminPanel = () => {
   const [faqs, setFaqs] = useState<FAQ[]>([
-    {
-      id: "a9a37e85-b1fa-4eab-bd00-b8a3563f3fdf",
-      question: "How do I get started with your platform?",
-      answer: "Getting started is simple! Sign up for an account, complete the onboarding process, and you'll have access to all our features within minutes."
-    },
-    {
-      id: "e568b634-910c-4f37-81da-0407364b930b",
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards, PayPal, Apple Pay, Google Pay, and bank transfers for enterprise customers."
-    },
-    {
-      id: "f568b634-910c-4f37-81da-0407364b931c",
-      question: "Is there a mobile app available?",
-      answer: "Yes! Our mobile apps are available on both iOS and Android. Download them from the App Store or Google Play Store."
-    }
+  
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,59 +22,160 @@ const FAQAdminPanel = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null); // For delete animation
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
+    const fetchFaqs = async () => {
+      try {
+        const data = await GetAllFAQ();
+        setFaqs(data)
+        
+      } catch (error) {
+        console.error("Failed to fetch FAQs:", error);
+        setNotification({
+          type: 'error',
+          message: 'Failed to load FAQs. Please try again later.'
+        });
+        
+      }
+    }
+  useEffect(() => {
+  
+   fetchFaqs();
+  }, [])
+  
 
   const filteredFaqs = faqs.filter(faq =>
-    faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+    faq?.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    faq?.answer?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (faq: FAQ) => {
-    setEditingId(faq.id);
+    setEditingId(faq.uuid);
     setEditForm({ question: faq.question, answer: faq.answer });
     setActiveDropdown(null);
   };
 
-  const handleSaveEdit = async () => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+const handleSaveEdit = async () => {
+  if (!editingId || !editForm.question.trim() || !editForm.answer.trim()) {
+    setNotification({
+      type: 'error',
+      message: 'Both question and answer are required'
+    });
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // Call the API to update FAQ
+    const updatedFAQ = await editFAQ(editingId, {
+      question: editForm.question,
+      answer: editForm.answer
+    });
+
+    // Update local state with the response from backend
     setFaqs(faqs.map(faq =>
-      faq.id === editingId
-        ? { ...faq, question: editForm.question, answer: editForm.answer }
-        : faq
+      faq.uuid === editingId ? updatedFAQ : faq
     ));
+
+    // Reset edit state
     setEditingId(null);
     setEditForm({ question: '', answer: '' });
+
+    setNotification({
+      type: 'success',
+      message: 'FAQ updated successfully'
+    });
+    fetchFaqs();
+  } catch (error:any) {
+    setNotification({
+      type: 'error',
+      message: `Failed to update FAQ: ${error.response?.data?.message || error.message}`
+    });
+  } finally {
     setIsLoading(false);
-  };
+  }
+};
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditForm({ question: '', answer: '' });
   };
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setFaqs(faqs.filter(faq => faq.id !== id));
+const handleDelete = async (id: string) => {
+  if (!id) return;
+
+  setDeletingId(id);
+  setIsLoading(true);
+
+  try {
+    // Call the API to delete FAQ
+    await deleteFAQ(id);
+
+    // Update local state
+    setFaqs(faqs.filter(faq => faq.uuid !== id));
     setActiveDropdown(null);
+
+    setNotification({
+      type: 'success',
+      message: 'FAQ deleted successfully'
+    });
+    fetchFaqs();
+  } catch (error:any) {
+    setNotification({
+      type: 'error',
+      message: `Failed to delete FAQ: ${error.response?.data?.message || error.message}`
+    });
+  } finally {
     setIsLoading(false);
     setTimeout(() => setDeletingId(null), 400); // Wait for animation to finish
-  };
+  }
+};
+const handleCreate = async () => {
+  // Validate form data
+  if (!createForm.question.trim() || !createForm.answer.trim()) {
+    setNotification({
+      type: 'error',
+      message: 'Both question and answer are required'
+    });
+    return;
+  }
 
-  const handleCreate = async () => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newFaq: FAQ = {
-      id: Date.now().toString(),
+  setIsLoading(true);
+
+  try {
+    // Call the API to create FAQ
+    const createdFAQ = await createFAQ({
       question: createForm.question,
       answer: createForm.answer
-    };
-    setFaqs([newFaq, ...faqs]);
+      // Add other required fields if needed
+    });
+
+    // Update local state with the response from backend
+    setFaqs([createdFAQ, ...faqs]);
+    
+    // Reset form and close
     setCreateForm({ question: '', answer: '' });
     setShowCreateForm(false);
+    
+    setNotification({
+      type: 'success',
+      message: 'FAQ created successfully'
+    });
+    fetchFaqs();
+  } catch (error:any) {
+    setNotification({
+      type: 'error',
+      message: `Failed to create FAQ: ${error.response?.data?.message || error.message}`
+    });
+  } finally {
     setIsLoading(false);
-  };
+  }
+};
+
+
 
   const handleCancelCreate = () => {
     setCreateForm({ question: '', answer: '' });
@@ -233,13 +321,13 @@ const FAQAdminPanel = () => {
           ) : (
             filteredFaqs.map((faq, index) => (
               <div
-                key={faq.id}
-                className={`group relative transition-all duration-400 ease-in-out ${deletingId === faq.id ? 'opacity-0 -translate-y-8 pointer-events-none' : 'opacity-100 translate-y-0'} animate-in slide-in-from-bottom duration-300`}
+                key={faq.uuid}
+                className={`group relative transition-all duration-400 ease-in-out ${deletingId === faq.uuid ? 'opacity-0 -translate-y-8 pointer-events-none' : 'opacity-100 translate-y-0'} animate-in slide-in-from-bottom duration-300`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative backdrop-blur-xl bg-white/80 rounded-3xl border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  {editingId === faq.id ? (
+                  {editingId === faq.uuid ? (
                     <div className="p-4 md:p-8">
                       <div className="space-y-6">
                         <div className="space-y-3">
@@ -285,7 +373,7 @@ const FAQAdminPanel = () => {
                         <h3 className="text-lg md:text-xl font-semibold text-gray-900 leading-tight pr-4">{faq.question}</h3>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setActiveDropdown(faq.id)}
+                            onClick={() => setActiveDropdown(faq.uuid)}
                             className="flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50/80 rounded-xl transition-all duration-200 font-semibold"
                           >
                             <Search className="w-4 h-4 mr-1" /> Read
@@ -297,7 +385,7 @@ const FAQAdminPanel = () => {
                             <Edit2 className="w-4 h-4 mr-1" /> Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(faq.id)}
+                            onClick={() => handleDelete(faq.uuid)}
                             disabled={isLoading}
                             className="flex items-center px-3 py-2 text-red-600 hover:bg-red-50/80 rounded-xl transition-all duration-200 font-semibold disabled:opacity-50"
                           >
@@ -375,13 +463,13 @@ const FAQAdminPanel = () => {
                 <div className="space-y-3">
                   <label className="block text-sm font-semibold text-gray-700 tracking-wide">QUESTION</label>
                   <div className="w-full px-4 py-4 bg-gray-50/80 border border-gray-200/50 rounded-2xl text-base md:text-lg">
-                    {faqs.find(f => f.id === activeDropdown)?.question}
+                    {faqs.find(f => f.uuid === activeDropdown)?.question}
                   </div>
                 </div>
                 <div className="space-y-3">
                   <label className="block text-sm font-semibold text-gray-700 tracking-wide">ANSWER</label>
                   <div className="w-full px-4 py-4 bg-gray-50/80 border border-gray-200/50 rounded-2xl text-base md:text-lg">
-                    {faqs.find(f => f.id === activeDropdown)?.answer}
+                    {faqs.find(f => f.uuid === activeDropdown)?.answer}
                   </div>
                 </div>
               </div>

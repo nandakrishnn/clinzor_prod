@@ -33,7 +33,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sampleBookings } from '../dues/dueslist';
-import { approveOrRejectClinic, createClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clientManagentService';
+import { approveOrRejectClinic, createClinic, deleteClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clientManagentService';
 import { Call } from '@mui/icons-material';
 
 interface Clinic {
@@ -537,7 +537,7 @@ const [loadingId, setLoadingId] = useState<string | null>(null);
   const [selectedHeader, setSelectedHeader] = useState<'ALL' | 'Approved' | 'Pending' | 'Active' | 'Deactivated'>('Approved');
 
   useEffect(() => {
-   const fetchClinecs =async ()=>{
+   const fetchClinecs = async ()=>{
     setLoading(true);
     try {
       const data = await getAllClinic()
@@ -793,7 +793,20 @@ function handleToggleActive(clinic: Clinic) {
 
   function handleDeleteClinic(clinic: Clinic) {
     setClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-    setNotification({ type: 'success', message: `Clinic "${clinic.name}" deleted.` });
+    deleteClinic(clinic.uuid)
+    .then(()=>{
+
+      setNotification({ type: 'success', message: `Clinic "${clinic.name}" deleted Successfully.` });
+    })
+    .catch(error => {
+      setNotification({
+        type:"error",
+        message: `Failed to delete clinic "${clinic.name}". ${error.response?.data?.message || ''}`
+      })
+    })
+    .finally(()=>{
+      setLoadingId(null);
+    })
   }
 
   // Calculate bookings per clinic (by name)

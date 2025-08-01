@@ -62,7 +62,7 @@ export const toggleActiveClinic = async (id: string, body: {
 };
 
 export const deleteClinic= async (Id:string) => {
-  return await axiosPrivate.delete(`user/user-delete/${Id}/`);
+  return await axiosPrivate.delete(`/clinic/clinic-service-rud/${Id}/`);
 };
 export const getAClinic = async (Id:string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
