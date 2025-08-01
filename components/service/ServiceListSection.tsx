@@ -10,7 +10,7 @@ const ServiceListSection = () => {
   if (isLoading) {
     return (
       <section className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-9 ">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <ServiceCardSkeleton />
         ))}
       </section>
@@ -18,8 +18,8 @@ const ServiceListSection = () => {
   }
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-9 ">
-      {Array.from({ length: 10 }).map((_, i) => (
+    <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9 ">
+      {Array.from({ length: 6 }).map((_, i) => (
         <ServiceCard key={i} />
       ))}
     </section>
