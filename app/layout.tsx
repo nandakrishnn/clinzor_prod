@@ -36,18 +36,8 @@ export default function RootLayout({
       ></link>
       <AuthProvider>
         <body className={`${inter.variable} antialiased`}>
-          {/* Navbar */}
-          <NavbarDemo />
-
           {/* Content */}
           {children}
-
-          {/* Footer */}
-          <section className=" bg-gradient-to-b from-[#1C3455] to-[#1C3455] pb-10  sm:px-6">
-            <div className="max-w-screen-xl mx-auto">
-              <FooterSection />
-            </div>
-          </section>
         </body>
       </AuthProvider>
     </html>
