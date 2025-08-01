@@ -24,7 +24,7 @@ import {
   Building
 } from 'lucide-react';
 import Link from 'next/link';
-import { getAllBookings } from '@/service/admin/bookingManagentService';
+import { getAllBookings } from '@/service/admin/bookingManagementService';
 
 type Booking = {
   uuid: string;

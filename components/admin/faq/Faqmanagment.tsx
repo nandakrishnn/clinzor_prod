@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, X, Check, Sparkles, MoreVertical } from 'lucide-react';
-import { createFAQ, deleteFAQ, editFAQ, GetAllFAQ } from '@/service/admin/faqManagentService';
+import { createFAQ, deleteFAQ, editFAQ, GetAllFAQ } from '@/service/admin/faqManagementService';
 
 // FAQ type for better type safety
 interface FAQ {

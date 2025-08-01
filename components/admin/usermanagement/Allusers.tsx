@@ -31,7 +31,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
 import { deleteUser, editUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
-import { getAllBookings } from '@/service/admin/bookingManagentService';
+import { getAllBookings } from '@/service/admin/bookingManagementService';
 
 interface User {
   uuid: string;

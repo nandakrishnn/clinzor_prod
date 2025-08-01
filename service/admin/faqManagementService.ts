@@ -1,23 +1,7 @@
 
 import { axiosPrivate } from "../../axios/axios";
 
-
-// users
-// export const updateUserStatus = async (
-//   id: string,
-//   body: {
-//     is_blocked: boolean;
-//     reason_for_block?: string;
-//   }
-// ) => {
-//   try {
-//     const response = await axiosPrivate.patch(`user/user-block/${id}/`, body);
-//     return response.data;
-//   } catch (error) {
-//     console.error("User status update error:", error);
-//     throw error;
-//   }
-// };
+// FAQ Api
 export const createFAQ = async (body: {
   question: string;
   answer: string;
