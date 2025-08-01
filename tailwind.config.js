@@ -11,7 +11,13 @@ module.exports = {
         primaryColor: "#033C8D",
         blueLight: "#3B82F6",
         blueText: "#1D4ED8",
-        bgLight: "#F2F5FF"
+        bgLight: "#F2F5FF",
+        hButton: "#E1DFC6"
+      },
+      fontFamily: {
+        inter: "var(--font-inter)",
+        domine: "var(--font-domine)",
+        raleway: "var(--font-raleway)"
       }
     }
   },
