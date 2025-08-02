@@ -1,12 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Users, Calendar, Check, X, Filter, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, XCircle, Eye, EyeOff, Plus, Building2, MapPin, User, Activity, Settings, RefreshCw, Download, Upload } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { getAllSlots } from '@/service/admin/bookingManagementService';
 
-// Slot type definition
+// Updated Slot type definition to match API response
 interface Slot {
-  id: string;
-  clinic_service: string;
+  uuid: string;
+  clinic: string;
   start_time: string;
   end_time: string;
   created_by: string;
@@ -14,73 +15,20 @@ interface Slot {
   available_slots: number;
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
   reason_for_rejection: string | null;
+  is_video_call: boolean;
+  is_home_visit: boolean;
+  is_physical_visit: boolean;
+  slot_type: string;
+  female_doctor_count: number;
+  clinic_name: string;
 }
 
 const PAGE_SIZE = 6;
 
 const SlotManager = () => {
-  // Sample data based on the provided JSON
-  const [slots, setSlots] = useState<Slot[]>([
-    {
-      id: "8178e6bc-d723-4df8-bc49-f03e72a5dbf0",
-      clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      start_time: "2025-06-22T17:25:00Z",
-      end_time: "2025-06-22T18:21:00Z",
-      created_by: "admin@gmail.com",
-      max_bookings: 6,
-      available_slots: 6,
-      status: "APPROVED",
-      reason_for_rejection: null
-    },
-    {
-      id: "6562ab44-a657-4a30-a7ff-5583341b97ce",
-      clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      start_time: "2025-06-21T19:01:00Z",
-      end_time: "2025-06-21T19:21:00Z",
-      created_by: "admin@gmail.com",
-      max_bookings: 6,
-      available_slots: 5,
-      status: "APPROVED",
-      reason_for_rejection: null
-    },
-    {
-      id: "4cb6a934-e653-4c12-8734-ba099b73a2e3",
-      clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      start_time: "2025-06-21T19:00:00Z",
-      end_time: "2025-06-21T19:21:00Z",
-      created_by: "admin@gmail.com",
-      max_bookings: 6,
-      available_slots: 7,
-      status: "PENDING",
-      reason_for_rejection: null
-    },
-    {
-      id: "85b0bbb4-f963-43ad-a500-3ab30b4a563e",
-      clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      start_time: "2025-06-21T18:59:00Z",
-      end_time: "2025-06-21T19:21:00Z",
-      created_by: "admin@gmail.com",
-      max_bookings: 6,
-      available_slots: 6,
-      status: "PENDING",
-      reason_for_rejection: null
-    },
-    {
-      id: "c319afcc-4348-444b-a8e6-187164baa3e2",
-      clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      start_time: "2025-06-21T18:58:00Z",
-      end_time: "2025-06-21T19:21:00Z",
-      created_by: "admin@gmail.com",
-      max_bookings: 6,
-      available_slots: 6,
-      status: "REJECTED",
-      reason_for_rejection: "Double booking conflict"
-    }
-  ]);
-
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
@@ -88,15 +36,22 @@ const SlotManager = () => {
   const [actionFeedback, setActionFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [viewSlot, setViewSlot] = useState<Slot | null>(null);
   const [clinicNameSearch, setClinicNameSearch] = useState('');
+  const [fromDateObj, setFromDateObj] = useState<Date | null>(null);
+  const [toDateObj, setToDateObj] = useState<Date | null>(null);
 
-  // Sample clinic services for the dropdown
-  const clinicServices = [
-    { id: '159e3627-65eb-40b2-b535-37cbb6535ab8', name: 'General Consultation' },
-    { id: '259e3627-65eb-40b2-b535-37cbb6535ab9', name: 'Dental Checkup' },
-    { id: '359e3627-65eb-40b2-b535-37cbb6535ac0', name: 'Eye Examination' },
-    { id: '459e3627-65eb-40b2-b535-37cbb6535ac1', name: 'Physical Therapy' },
-    { id: '559e3627-65eb-40b2-b535-37cbb6535ac2', name: 'Blood Test' }
-  ];
+  const fetchSlots = async () => {
+    try {
+      const data = await getAllSlots();
+      setSlots(data);
+    } catch (error) {
+      console.error(error);
+      showFeedback('error', 'Failed to fetch slots. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    fetchSlots();
+  }, []);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -155,7 +110,7 @@ const SlotManager = () => {
 
   const handleApprove = (slotId: string) => {
     setSlots(slots.map(slot =>
-      slot.id === slotId
+      slot.uuid === slotId
         ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
         : slot
     ));
@@ -166,7 +121,7 @@ const SlotManager = () => {
     const rejectionReason = reason || prompt('Please provide a detailed reason for rejection:');
     if (rejectionReason) {
       setSlots(slots.map(slot =>
-        slot.id === slotId
+        slot.uuid === slotId
           ? { ...slot, status: 'REJECTED', reason_for_rejection: rejectionReason }
           : slot
       ));
@@ -177,7 +132,7 @@ const SlotManager = () => {
   const handleBulkApprove = () => {
     const count = selectedSlots.length;
     setSlots(slots.map(slot =>
-      selectedSlots.includes(slot.id)
+      selectedSlots.includes(slot.uuid)
         ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
         : slot
     ));
@@ -190,7 +145,7 @@ const SlotManager = () => {
     if (reason) {
       const count = selectedSlots.length;
       setSlots(slots.map(slot =>
-        selectedSlots.includes(slot.id)
+        selectedSlots.includes(slot.uuid)
           ? { ...slot, status: 'REJECTED', reason_for_rejection: reason }
           : slot
       ));
@@ -208,7 +163,7 @@ const SlotManager = () => {
   };
 
   const selectAllVisible = () => {
-    const visibleIds = paginatedSlots.map(slot => slot.id);
+    const visibleIds = paginatedSlots.map(slot => slot.uuid);
     setSelectedSlots(prev => {
       const newSelected = [...prev];
       visibleIds.forEach(id => {
@@ -226,91 +181,52 @@ const SlotManager = () => {
 
   const clearAllFilters = () => {
     setStatusFilter('ALL');
-    setSearchTerm('');
+    setClinicNameSearch('');
     setFromDate('');
     setToDate('');
+    setFromDateObj(null);
+    setToDateObj(null);
     setCurrentPage(1);
   };
 
-  // Sample clinics and clinic services (copy from servicelist.tsx)
-  const sampleClinics = [
-    { uuid: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f", name: "City General Hospital", location: "Downtown Medical District" },
-    { uuid: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f", name: "Metro Medical Center", location: "Central Business District" },
-    { uuid: "c3d9f5e2-5b6c-5d8e-9f0g-2b3c4d5e6f7g", name: "Downtown Clinic", location: "Main Street" }
-  ];
-
-  const sampleClinicServices = [
-    {
-      uuid: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-      service: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-      clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-      service_name: "Cardiology Consultation",
-      created_by: "admin@gmail.com",
-      clinic_provided_name: "Advanced Cardiology Care",
-      rank: 1,
-      consultation_charge_video_call: "400.00",
-      consultation_charge_physical_visit: "200.00",
-      consultation_charge_home_visit: "200.00",
-      treatment_charge_video_call: "600.00",
-      treatment_charge_physical_visit: "500.00",
-      treatment_charge_home_visit: "800.00",
-      status: "APPROVED",
-      is_video_call: true,
-      is_home_visit: false,
-      is_physical_visit: true,
-      image: null,
-      description: "Premium cardiology services with experienced specialists",
-      reason_for_rejection: null
-    },
-    {
-      uuid: "269f4738-76fc-51c3-c646-48dcc7646cb9",
-      service: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-      clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
-      service_name: "Heart Specialist Consultation",
-      created_by: "admin@gmail.com",
-      clinic_provided_name: null,
-      rank: 2,
-      consultation_charge_video_call: "350.00",
-      consultation_charge_physical_visit: "180.00",
-      consultation_charge_home_visit: "250.00",
-      treatment_charge_video_call: "550.00",
-      treatment_charge_physical_visit: "450.00",
-      treatment_charge_home_visit: "700.00",
-      status: "PENDING",
-      is_video_call: true,
-      is_home_visit: true,
-      is_physical_visit: true,
-      image: null,
-      description: null,
-      reason_for_rejection: null
+  const getSlotTypeDisplay = (slot: Slot) => {
+    if (slot.slot_type === 'PHYSICAL_OR_VIDEO') {
+      return 'Physical/Video';
+    } else if (slot.slot_type === 'HOME_VISIT') {
+      return 'Home Visit';
     }
-  ];
-
-  const getClinicNameByService = (clinic_service_id: string) => {
-    const svc = sampleClinicServices.find(s => s.uuid === clinic_service_id);
-    if (!svc) return 'Unknown Clinic';
-    const clinic = sampleClinics.find(c => c.uuid === svc.clinic);
-    return clinic ? clinic.name : 'Unknown Clinic';
+    return slot.slot_type;
   };
 
-  const getServiceDetailsByService = (clinic_service_id: string) => {
-    const svc = sampleClinicServices.find(s => s.uuid === clinic_service_id);
-    if (!svc) return { name: 'Unknown Service', clinic: 'Unknown Clinic', location: 'Unknown Location' };
-    const clinic = sampleClinics.find(c => c.uuid === svc.clinic);
-    return {
-      name: svc.clinic_provided_name || svc.service_name,
-      clinic: clinic ? clinic.name : 'Unknown Clinic',
-      location: clinic ? clinic.location : 'Unknown Location'
-    };
+  const getVisitTypeBadges = (slot: Slot) => {
+    return (
+      <div className="flex gap-1 flex-wrap">
+        {slot.is_video_call && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+            Video
+          </span>
+        )}
+        {slot.is_physical_visit && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+            Physical
+          </span>
+        )}
+        {slot.is_home_visit && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+            Home
+          </span>
+        )}
+      </div>
+    );
   };
 
   // Filtering logic
   const filteredSlots = slots.filter(slot => {
     const matchesStatus = statusFilter === 'ALL' || slot.status === statusFilter;
-    const clinicName = (getClinicNameByService(slot.clinic_service) || '').toLowerCase();
-    const matchesClinicName = clinicName.includes(clinicNameSearch.toLowerCase());
+    const matchesClinicName = slot.clinic_name.toLowerCase().includes(clinicNameSearch.toLowerCase());
     let matchesFromDate = true;
     let matchesToDate = true;
+    
     if (fromDate) {
       matchesFromDate = new Date(slot.start_time) >= new Date(fromDate);
     }
@@ -319,6 +235,7 @@ const SlotManager = () => {
       toDateObj.setDate(toDateObj.getDate() + 1);
       matchesToDate = new Date(slot.start_time) < toDateObj;
     }
+    
     return matchesStatus && matchesClinicName && matchesFromDate && matchesToDate;
   });
 
@@ -330,7 +247,7 @@ const SlotManager = () => {
   // Reset page if filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, fromDate, toDate]);
+  }, [statusFilter, fromDate, toDate, clinicNameSearch]);
 
   // Get counts for quick stats
   const statusCounts = slots.reduce((acc, slot) => {
@@ -343,18 +260,12 @@ const SlotManager = () => {
   const totalMaxCapacity = slots.filter(s => s.status === 'APPROVED').reduce((sum, slot) => sum + slot.max_bookings, 0);
   const utilizationRate = totalMaxCapacity > 0 ? Math.round(((totalMaxCapacity - totalBookableSlots) / totalMaxCapacity) * 100) : 0;
 
-  // Simulate fetching slot by UUID (in real app, replace with API call)
   const handleViewSlot = (uuid: string) => {
-    const slot = slots.find((s) => s.id === uuid);
+    const slot = slots.find((s) => s.uuid === uuid);
     if (slot) setViewSlot(slot);
   };
 
   const closeViewSlot = () => setViewSlot(null);
-
-  // Remove refs for native date pickers
-  // Add state for DatePicker (convert string to Date and vice versa)
-  const [fromDateObj, setFromDateObj] = useState<Date | null>(fromDate ? new Date(fromDate) : null);
-  const [toDateObj, setToDateObj] = useState<Date | null>(toDate ? new Date(toDate) : null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-2 sm:p-4 md:p-6 lg:p-8">
@@ -382,7 +293,7 @@ const SlotManager = () => {
           </div>
         )}
 
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <div className="mb-8">
           <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -444,7 +355,7 @@ const SlotManager = () => {
           </div>
         </div>
 
-        {/* Enhanced Filters Section */}
+        {/* Filters Section */}
         <div className="mb-6">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
             <div className="p-4 sm:p-6 border-b border-gray-100">
@@ -661,15 +572,14 @@ const SlotManager = () => {
                   paginatedSlots.map((slot) => {
                     const { date, time } = formatDateTime(slot.start_time);
                     const statusConfig = getStatusConfig(slot.status);
-                    const serviceDetails = getServiceDetailsByService(slot.clinic_service);
                     
                     return (
-                      <tr key={slot.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={slot.uuid} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
                             type="checkbox"
-                            checked={selectedSlots.includes(slot.id)}
-                            onChange={() => toggleSlotSelection(slot.id)}
+                            checked={selectedSlots.includes(slot.uuid)}
+                            onChange={() => toggleSlotSelection(slot.uuid)}
                             className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                           />
                         </td>
@@ -679,11 +589,16 @@ const SlotManager = () => {
                               <Activity className="h-5 w-5 text-indigo-600" />
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{serviceDetails.name}</div>
+                              <div className="font-medium text-gray-900">{slot.clinic_name}</div>
                               <div className="text-sm text-gray-500 flex items-center gap-1">
                                 <Building2 className="h-4 w-4" />
-                                {serviceDetails.clinic}
+                                {slot.clinic_name}
                               </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                Type: {getSlotTypeDisplay(slot)} | 
+                                Female doctors: {slot.female_doctor_count}
+                              </div>
+                              {getVisitTypeBadges(slot)}
                             </div>
                           </div>
                         </td>
@@ -720,14 +635,14 @@ const SlotManager = () => {
                             {slot.status === 'PENDING' && (
                               <>
                                 <button
-                                  onClick={() => handleApprove(slot.id)}
+                                  onClick={() => handleApprove(slot.uuid)}
                                   className="text-emerald-600 hover:text-emerald-900 flex items-center gap-1"
                                 >
                                   <Check className="h-4 w-4" />
                                   Approve
                                 </button>
                                 <button
-                                  onClick={() => handleReject(slot.id)}
+                                  onClick={() => handleReject(slot.uuid)}
                                   className="text-red-600 hover:text-red-900 flex items-center gap-1"
                                 >
                                   <X className="h-4 w-4" />
@@ -736,7 +651,7 @@ const SlotManager = () => {
                               </>
                             )}
                             <button
-                              onClick={() => handleViewSlot(slot.id)}
+                              onClick={() => handleViewSlot(slot.uuid)}
                               className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
                             >
                               <Eye className="h-4 w-4" />
@@ -843,69 +758,40 @@ const SlotManager = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900">
-                    {getServiceDetailsByService(viewSlot.clinic_service).name}
+                    {viewSlot.clinic_name}
                   </h4>
                   <div className="flex items-center gap-2 text-gray-600">
                     <Building2 className="h-4 w-4" />
-                    {getServiceDetailsByService(viewSlot.clinic_service).clinic}
+                    {viewSlot.clinic_name}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    <span className="font-medium">Slot Type:</span> {getSlotTypeDisplay(viewSlot)} | 
+                    <span className="font-medium ml-2">Female Doctors:</span> {viewSlot.female_doctor_count}
                   </div>
                 </div>
               </div>
 
-              {/* Clinic Service Details Section */}
-              {(() => {
-                const svc = sampleClinicServices.find(s => s.uuid === viewSlot.clinic_service);
-                if (!svc) return null;
-                return (
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <h5 className="text-md font-bold text-blue-800 mb-2">Clinic Service Details</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">Service Name: </span>
-                          <span>{svc.service_name}</span>
-                        </div>
-                        {svc.clinic_provided_name && (
-                          <div className="mb-2">
-                            <span className="font-medium text-gray-700">Clinic Provided Name: </span>
-                            <span>{svc.clinic_provided_name}</span>
-                          </div>
-                        )}
-                        {svc.description && (
-                          <div className="mb-2">
-                            <span className="font-medium text-gray-700">Description: </span>
-                            <span>{svc.description}</span>
-                          </div>
-                        )}
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">Status: </span>
-                          <span>{svc.status}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">Consultation Charges: </span>
-                          <span>Video: ₹{svc.consultation_charge_video_call}, Physical: ₹{svc.consultation_charge_physical_visit}, Home: ₹{svc.consultation_charge_home_visit}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">Treatment Charges: </span>
-                          <span>Video: ₹{svc.treatment_charge_video_call}, Physical: ₹{svc.treatment_charge_physical_visit}, Home: ₹{svc.treatment_charge_home_visit}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">Service Types: </span>
-                          <span>
-                            {svc.is_video_call && 'Video Call'}
-                            {svc.is_video_call && (svc.is_home_visit || svc.is_physical_visit) ? ', ' : ''}
-                            {svc.is_home_visit && 'Home Visit'}
-                            {svc.is_home_visit && svc.is_physical_visit ? ', ' : ''}
-                            {svc.is_physical_visit && 'Physical Visit'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+              {/* Visit Type Section */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <h5 className="text-md font-bold text-blue-800 mb-2">Visit Type</h5>
+                <div className="flex gap-2">
+                  {viewSlot.is_video_call && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      Video Call
+                    </span>
+                  )}
+                  {viewSlot.is_physical_visit && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      Physical Visit
+                    </span>
+                  )}
+                  {viewSlot.is_home_visit && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                      Home Visit
+                    </span>
+                  )}
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">

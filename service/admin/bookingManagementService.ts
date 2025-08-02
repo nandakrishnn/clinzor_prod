@@ -2,7 +2,7 @@
 import  { axiosPrivate } from "../../axios/axios";
 
 
-// users 
+// Booking  
 export const updateBookings = async (id: string, body: {
   is_blocked: boolean;
   reason_for_block?: string;
@@ -34,3 +34,29 @@ export const getAllBookings = async () => {
 };
 
 
+
+
+// Slot management 
+
+export const getAllSlots = async () => {
+  try {
+    const response = await axiosPrivate.get(`/clinic/slot-lc/`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};
+
+
+// Payment Management 
+
+export const getAllPayment = async () => {
+  try {
+    const response = await axiosPrivate.get(`/clinic/payment-transaction-list/`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};

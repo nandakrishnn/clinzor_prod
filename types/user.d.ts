@@ -31,3 +31,10 @@
   clinic_id: string;
   service_type: string;
 };
+
+
+interface NotificationProps {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
+}
