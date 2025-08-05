@@ -201,7 +201,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           className={cn(
             "w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50/80 transition-colors flex items-center justify-between",
             serviceType === option.value
-              ? "bg-blue-50 text-blue-600 font-medium"
+              ? "bg-blue-50 text-primaryColor font-medium"
               : "text-gray-700"
           )}
           whileHover={{ backgroundColor: "rgba(219, 234, 254, 0.7)" }}
@@ -209,7 +209,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         >
           <span>{option.label}</span>
           {serviceType === option.value && (
-            <IconCheck size={16} className="text-blue-600" />
+            <IconCheck size={16} className="text-primaryColor" />
           )}
         </motion.button>
       ))}
@@ -229,7 +229,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           className={cn(
             "w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50/80 transition-colors flex items-center justify-between",
             specialty === option.value
-              ? "bg-blue-50 text-blue-600 font-medium"
+              ? "bg-blue-50 text-primaryColor font-medium"
               : "text-gray-700"
           )}
           whileHover={{ backgroundColor: "rgba(219, 234, 254, 0.7)" }}
@@ -237,7 +237,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         >
           <span>{option.label}</span>
           {specialty === option.value && (
-            <IconCheck size={16} className="text-blue-600" />
+            <IconCheck size={16} className="text-primaryColor" />
           )}
         </motion.button>
       ))}
@@ -296,7 +296,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                           ease: "linear"
                         }}
                       >
-                        <IconMapPin size={16} className="text-blue-600" />
+                        <IconMapPin size={16} className="text-primaryColor" />
                       </motion.div>
                       <span>Finding location...</span>
                     </motion.div>
@@ -308,9 +308,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2 text-sm text-truncate text-start  text-gray-700 hover:text-blue-600 focus:outline-none transition-colors md:w-[150px]"
+                        className="flex items-center gap-2 text-sm text-truncate text-start  text-gray-700 hover:primaryColor focus:outline-none transition-colors md:w-[150px]"
                       >
-                        <IconMapPin size={16} className="text-blue-600" />
+                        <IconMapPin size={16} className="text-primaryColor" />
                         <span className="font-medium text-truncate line-clamp-1">
                           {location || "Set your location"}
                         </span>
@@ -347,7 +347,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     size={18}
                     className={cn(
                       "mr-2 transition-colors",
-                      isInputFocused ? "text-blue-600" : "text-gray-400"
+                      isInputFocused ? "text-primaryColor0" : "text-gray-400"
                     )}
                   />
                   <input
@@ -410,7 +410,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                             "flex items-center justify-between min-w-32 h-8 px-3 py-1.5 text-sm transition-all",
                             isMobileView ? "rounded-md" : "rounded-full",
                             serviceType
-                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
+                              ? "border-blue-300 bg-blue-50/50 text-primaryColor font-medium"
                               : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                           )}
                           whileHover={{ scale: 1.01 }}
@@ -428,7 +428,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                               serviceDropdown.isOpen
                                 ? "transform rotate-180"
                                 : "",
-                              serviceType ? "text-blue-600" : "text-gray-500"
+                              serviceType ? "text-primaryColor" : "text-gray-500"
                             )}
                             fill="none"
                             viewBox="0 0 24 24"
@@ -481,7 +481,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                             "flex items-center justify-between min-w-32 h-8 px-3 py-1.5 text-sm border transition-all",
                             isMobileView ? "rounded-md" : "rounded-full",
                             specialty
-                              ? "border-blue-300 bg-blue-50/50 text-blue-600 font-medium"
+                              ? "border-blue-300 bg-blue-50/50 text-primaryColor font-medium"
                               : "border-gray-200 hover:border-blue-300 bg-white text-gray-700"
                           )}
                           whileHover={{ scale: 1.01 }}
@@ -543,7 +543,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             >
               <motion.button
                 type="submit"
-                className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 flex items-center justify-center gap-2 transition-colors"
+                className="w-full h-10 bg-primaryColor hover:bg-blue-800 text-white rounded-full px-6 flex items-center justify-center gap-2 transition-colors"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
