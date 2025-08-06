@@ -1,6 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Users, Mail, MapPin, Instagram, Building2, Search, Filter, MoreHorizontal, Sparkles, TrendingUp, Eye, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
-import { getAllCamps, toggleCompletion } from '@/service/admin/campManangentService';
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  Calendar,
+  Users,
+  Mail,
+  MapPin,
+  Instagram,
+  Building2,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Sparkles,
+  TrendingUp,
+  Eye,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  X
+} from "lucide-react";
+import {
+  getAllCamps,
+  toggleCompletion
+} from "@/service/admin/campManangentService";
 
 // Add Camp type
 interface Camp {
@@ -20,126 +41,149 @@ interface Camp {
   completed?: boolean;
 }
 
-
 const CampManagement = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
 
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCompletion, setFilterCompletion] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-const [loading, setLoading] = useState(false);
-const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCompletion, setFilterCompletion] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [loading, setLoading] = useState(false);
+  const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
-    type: 'success' | 'error' | 'warning';
+    type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
 
   useEffect(() => {
- const fectchCamps = async () => {
-setLoading(true)
-  try {
-    const data = await getAllCamps();
-    setCamps(data)
-  } catch (error) {
-    
-  }finally{
-    setLoading(false);
-  }
- }
- fectchCamps();
-  }, [])
-  console.log(camps,"data")
+    const fectchCamps = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllCamps();
+        setCamps(data);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+    fectchCamps();
+  }, []);
+  console.log(camps, "data");
 
   // Approve/Reject handlers
   const handleApprove = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'APPROVED' } : c));
+    setCamps((prev) =>
+      prev.map((c) =>
+        c.uuid === selectedCamp.uuid ? { ...c, status: "APPROVED" } : c
+      )
+    );
     setSelectedCamp(null);
   };
   const handleReject = () => {
     if (!selectedCamp) return;
-    setCamps(prev => prev.map(c => c.uuid === selectedCamp.uuid ? { ...c, status: 'REJECTED' } : c));
+    setCamps((prev) =>
+      prev.map((c) =>
+        c.uuid === selectedCamp.uuid ? { ...c, status: "REJECTED" } : c
+      )
+    );
     setSelectedCamp(null);
   };
 
-const handleMarkComplete = async (campId: string) => {
-  setLoadingCampId(campId);
-  
-  // Optimistically update the UI
-  setCamps(prev => prev.map(c => c.uuid === campId ? { ...c, completed: true } : c));
-  
-  try {
-    // Call the API to mark as complete
-    await toggleCompletion(campId, { is_completed: true });
-    
-    setNotification({
-      type: 'success',
-      message: 'Camp marked as completed successfully'
-    });
-  } catch (error:any) {
-    // Revert the UI change if the API call fails
-    setCamps(prev => prev.map(c => c.uuid === campId ? { ...c, completed: false } : c));
-    
-    setNotification({
-      type: 'error',
-      message: `Failed to mark camp as complete: ${error.response?.data?.message || error.message}`
-    });
-  } finally {
-    setLoadingCampId(null);
-  }
-};
+  const handleMarkComplete = async (campId: string) => {
+    setLoadingCampId(campId);
+
+    // Optimistically update the UI
+    setCamps((prev) =>
+      prev.map((c) => (c.uuid === campId ? { ...c, completed: true } : c))
+    );
+
+    try {
+      // Call the API to mark as complete
+      await toggleCompletion(campId, { is_completed: true });
+
+      setNotification({
+        type: "success",
+        message: "Camp marked as completed successfully"
+      });
+    } catch (error: any) {
+      // Revert the UI change if the API call fails
+      setCamps((prev) =>
+        prev.map((c) => (c.uuid === campId ? { ...c, completed: false } : c))
+      );
+
+      setNotification({
+        type: "error",
+        message: `Failed to mark camp as complete: ${
+          error.response?.data?.message || error.message
+        }`
+      });
+    } finally {
+      setLoadingCampId(null);
+    }
+  };
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'APPROVED': 
-        return { 
-          color: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white', 
+      case "APPROVED":
+        return {
+          color: "bg-gradient-to-r from-emerald-500 to-green-600 text-white",
           icon: CheckCircle,
-          glow: 'shadow-emerald-500/25'
+          glow: "shadow-emerald-500/25"
         };
-      case 'REJECTED': 
-        return { 
-          color: 'bg-gradient-to-r from-red-500 to-rose-600 text-white', 
+      case "REJECTED":
+        return {
+          color: "bg-gradient-to-r from-red-500 to-rose-600 text-white",
           icon: AlertCircle,
-          glow: 'shadow-red-500/25'
+          glow: "shadow-red-500/25"
         };
-      default: 
-        return { 
-          color: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white', 
+      default:
+        return {
+          color: "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
           icon: Clock,
-          glow: 'shadow-amber-500/25'
+          glow: "shadow-amber-500/25"
         };
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-gradient-to-r from-red-500 to-pink-500';
-      case 'medium': return 'bg-gradient-to-r from-blue-500 to-purple-500';
-      case 'low': return 'bg-gradient-to-r from-green-500 to-teal-500';
-      default: return 'bg-gradient-to-r from-gray-400 to-gray-500';
+      case "high":
+        return "bg-gradient-to-r from-red-500 to-pink-500";
+      case "medium":
+        return "bg-gradient-to-r from-blue-500 to-purple-500";
+      case "low":
+        return "bg-gradient-to-r from-green-500 to-teal-500";
+      default:
+        return "bg-gradient-to-r from-gray-400 to-gray-500";
     }
   };
 
   const getHearAboutIcon = (source: string) => {
-    if (source?.includes('instagram')) return <Instagram className="w-4 h-4" />;
+    if (source?.includes("instagram")) return <Instagram className="w-4 h-4" />;
     return <MapPin className="w-4 h-4" />;
   };
 
-  const filteredCamps = camps.filter(camp => {
-    const matchesSearch = camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || camp.status === filterStatus;
-    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'COMPLETED' ? camp.completed : !camp.completed);
+  const filteredCamps = camps.filter((camp) => {
+    const matchesSearch =
+      camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter =
+      filterStatus === "all" || camp.status === filterStatus;
+    const matchesCompletion =
+      filterCompletion === "all" ||
+      (filterCompletion === "COMPLETED" ? camp.completed : !camp.completed);
     return matchesSearch && matchesFilter && matchesCompletion;
   });
 
   const stats = {
     total: camps.length,
-    pending: camps.filter(c => c.status === 'PENDING').length,
-    approved: camps.filter(c => c.status === 'APPROVED').length,
-    totalParticipants: camps.reduce((sum, c) => sum + c.expected_participants, 0)
+    pending: camps.filter((c) => c.status === "PENDING").length,
+    approved: camps.filter((c) => c.status === "APPROVED").length,
+    totalParticipants: camps.reduce(
+      (sum, c) => sum + c.expected_participants,
+      0
+    )
   };
 
   return (
@@ -156,10 +200,12 @@ const handleMarkComplete = async (campId: string) => {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                   Camp Management
                 </h1>
-                <p className="text-gray-600 mt-1">Manage your camp registrations with style</p>
+                <p className="text-gray-600 mt-1">
+                  Manage your camp registrations with style
+                </p>
               </div>
             </div>
-            
+
             {/* Stats Cards */}
             <div className="flex flex-wrap gap-4 mt-6 lg:mt-0">
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
@@ -169,11 +215,13 @@ const handleMarkComplete = async (campId: string) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Total Camps</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.total}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-green-100 rounded-xl">
@@ -181,7 +229,9 @@ const handleMarkComplete = async (campId: string) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Participants</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalParticipants}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.totalParticipants}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -205,7 +255,7 @@ const handleMarkComplete = async (campId: string) => {
                 className="w-full pl-12 pr-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
               />
             </div>
-            
+
             {/* Filter by Status */}
             <select
               value={filterStatus}
@@ -236,7 +286,7 @@ const handleMarkComplete = async (campId: string) => {
           {filteredCamps.map((camp, index) => {
             const statusConfig = getStatusConfig(camp.status);
             const StatusIcon = statusConfig.icon;
-            
+
             return (
               <div
                 key={camp.uuid}
@@ -245,11 +295,15 @@ const handleMarkComplete = async (campId: string) => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Priority Indicator */}
-                <div className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(camp.priority)}`}></div>
-                
+                <div
+                  className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(
+                    camp.priority
+                  )}`}
+                ></div>
+
                 {/* Hover Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
-                
+
                 <div className="relative p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -273,42 +327,57 @@ const handleMarkComplete = async (campId: string) => {
                       <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                         <Users className="w-4 h-4 mr-2 text-blue-500" />
                         <div>
-                          <p className="font-medium">{camp.expected_participants}</p>
+                          <p className="font-medium">
+                            {camp.expected_participants}
+                          </p>
                           <p className="text-xs text-gray-500">participants</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                         <Calendar className="w-4 h-4 mr-2 text-purple-500" />
                         <div>
-                          <p className="font-medium">{new Date(camp.preferred_date).toLocaleDateString('en', {month: 'short', day: 'numeric'})}</p>
+                          <p className="font-medium">
+                            {new Date(camp.preferred_date).toLocaleDateString(
+                              "en",
+                              { month: "short", day: "numeric" }
+                            )}
+                          </p>
                           <p className="text-xs text-gray-500">preferred</p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                       <Mail className="w-4 h-4 mr-2 text-green-500" />
                       <div className="flex-1">
-                        <p className="font-medium truncate">{camp.contact_person}</p>
-                        <p className="text-xs text-gray-500 truncate">{camp.email}</p>
+                        <p className="font-medium truncate">
+                          {camp.contact_person}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {camp.email}
+                        </p>
                       </div>
                     </div>
-                    
+
                     {camp.hear_about_us && (
                       <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                         {getHearAboutIcon(camp.hear_about_us)}
-                        <span className="ml-2 capitalize font-medium">{camp.hear_about_us}</span>
+                        <span className="ml-2 capitalize font-medium">
+                          {camp.hear_about_us}
+                        </span>
                       </div>
                     )}
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold ${statusConfig.color} ${statusConfig.glow} shadow-lg`}>
+                    <span
+                      className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold ${statusConfig.color} ${statusConfig.glow} shadow-lg`}
+                    >
                       <StatusIcon className="w-3 h-3 mr-1" />
                       {camp.status.toUpperCase()}
                     </span>
-                    
+
                     <div className="flex items-center text-xs text-gray-500">
                       <Eye className="w-3 h-3 mr-1" />
                       View Details
@@ -318,14 +387,19 @@ const handleMarkComplete = async (campId: string) => {
                   {/* Mark as Complete Button */}
                   {!camp.completed && (
                     <button
-                      onClick={e => { e.stopPropagation(); handleMarkComplete(camp.uuid); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMarkComplete(camp.uuid);
+                      }}
                       className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow hover:from-emerald-600 hover:to-green-700 transition"
                     >
                       Mark as Complete
                     </button>
                   )}
                   {camp.completed && (
-                    <div className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center">Completed</div>
+                    <div className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center">
+                      Completed
+                    </div>
                   )}
                 </div>
               </div>
@@ -338,8 +412,13 @@ const handleMarkComplete = async (campId: string) => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full mb-6">
               <Building2 className="w-10 h-10 text-blue-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No camps found</h3>
-            <p className="text-gray-500 max-w-md mx-auto">Try adjusting your search filters or add a new camp registration to get started.</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              No camps found
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Try adjusting your search filters or add a new camp registration
+              to get started.
+            </p>
           </div>
         )}
       </div>
@@ -355,7 +434,9 @@ const handleMarkComplete = async (campId: string) => {
                     <Building2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{selectedCamp.org_name}</h2>
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                      {selectedCamp.org_name}
+                    </h2>
                     <p className="text-gray-600">Registration Details</p>
                   </div>
                 </div>
@@ -377,26 +458,44 @@ const handleMarkComplete = async (campId: string) => {
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Name</span>
-                        <span className="text-lg font-semibold text-gray-900">{selectedCamp.org_name}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Name
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {selectedCamp.org_name}
+                        </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Type</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Type
+                        </span>
                         <span className="inline-flex items-center px-3 py-1 bg-white rounded-xl text-sm font-medium text-gray-700 shadow-sm">
                           {selectedCamp.association_type}
                         </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">UUID</span>
-                        <span className="text-xs font-mono text-gray-700">{selectedCamp.uuid}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          UUID
+                        </span>
+                        <span className="text-xs font-mono text-gray-700">
+                          {selectedCamp.uuid}
+                        </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Created By</span>
-                        <span className="text-sm text-gray-700">{selectedCamp.created_by}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Created By
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {selectedCamp.created_by}
+                        </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Created At</span>
-                        <span className="text-sm text-gray-700">{new Date(selectedCamp.created_at).toLocaleString()}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Created At
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {new Date(selectedCamp.created_at).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -410,12 +509,20 @@ const handleMarkComplete = async (campId: string) => {
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Contact Person</span>
-                        <span className="text-lg font-semibold text-gray-900">{selectedCamp.contact_person}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Contact Person
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {selectedCamp.contact_person}
+                        </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-medium text-gray-500 mb-1">Email</span>
-                        <span className="text-lg font-semibold text-gray-900">{selectedCamp.email}</span>
+                        <span className="block text-sm font-medium text-gray-500 mb-1">
+                          Email
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {selectedCamp.email}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -428,15 +535,29 @@ const handleMarkComplete = async (campId: string) => {
                     <Users className="w-5 h-5 mr-2 text-amber-600" />
                     Participants
                   </h3>
-                  <div className="text-3xl font-bold text-amber-600 mb-2">{selectedCamp.expected_participants}</div>
-                  <div className="text-sm text-gray-500">Expected Participants</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">
+                    {selectedCamp.expected_participants}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Expected Participants
+                  </div>
                 </div>
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                     <Calendar className="w-5 h-5 mr-2 text-purple-600" />
                     Preferred Date
                   </h3>
-                  <div className="text-lg font-semibold text-purple-600 mb-2">{selectedCamp.preferred_date ? new Date(selectedCamp.preferred_date).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</div>
+                  <div className="text-lg font-semibold text-purple-600 mb-2">
+                    {selectedCamp.preferred_date
+                      ? new Date(
+                          selectedCamp.preferred_date
+                        ).toLocaleDateString("en", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })
+                      : "-"}
+                  </div>
                   <div className="text-sm text-gray-500">Preferred Date</div>
                 </div>
                 <div className="bg-gradient-to-r from-pink-50 to-red-50 rounded-2xl p-6">
@@ -444,7 +565,13 @@ const handleMarkComplete = async (campId: string) => {
                     <Sparkles className="w-5 h-5 mr-2 text-pink-600" />
                     Priority
                   </h3>
-                  <div className={`inline-block px-4 py-2 rounded-xl font-bold text-white text-sm ${getPriorityColor(selectedCamp.priority)}`}>{selectedCamp.priority?.toUpperCase()}</div>
+                  <div
+                    className={`inline-block px-4 py-2 rounded-xl font-bold text-white text-sm ${getPriorityColor(
+                      selectedCamp.priority
+                    )}`}
+                  >
+                    {selectedCamp.priority?.toUpperCase()}
+                  </div>
                 </div>
               </div>
 
@@ -456,7 +583,9 @@ const handleMarkComplete = async (campId: string) => {
                   </h3>
                   <div className="flex items-center text-gray-700 text-base font-medium">
                     {getHearAboutIcon(selectedCamp.hear_about_us)}
-                    <span className="ml-2 capitalize">{selectedCamp.hear_about_us}</span>
+                    <span className="ml-2 capitalize">
+                      {selectedCamp.hear_about_us}
+                    </span>
                   </div>
                 </div>
                 <div className="bg-gradient-to-r from-gray-50 to-slate-100 rounded-2xl p-6">
@@ -464,7 +593,9 @@ const handleMarkComplete = async (campId: string) => {
                     <AlertCircle className="w-5 h-5 mr-2 text-gray-600" />
                     Additional Information
                   </h3>
-                  <div className="text-gray-700 text-base">{selectedCamp.additional_info || '-'}</div>
+                  <div className="text-gray-700 text-base">
+                    {selectedCamp.additional_info || "-"}
+                  </div>
                 </div>
               </div>
 
@@ -473,14 +604,18 @@ const handleMarkComplete = async (campId: string) => {
                   <CheckCircle className="w-5 h-5 mr-2 text-emerald-600" />
                   Status
                 </h3>
-                <div className="inline-flex items-center px-4 py-2 rounded-xl font-bold text-black text-sm"
-                  style={{ background: getStatusConfig(selectedCamp.status).color }}>
+                <div
+                  className="inline-flex items-center px-4 py-2 rounded-xl font-bold text-black text-sm"
+                  style={{
+                    background: getStatusConfig(selectedCamp.status).color
+                  }}
+                >
                   {selectedCamp.status.toUpperCase()}
                 </div>
               </div>
 
               {/* Approve/Reject Buttons */}
-              {selectedCamp.status === 'pending' && (
+              {selectedCamp.status === "pending" && (
                 <div className="flex justify-end gap-4 pb-6 pr-6">
                   <button
                     onClick={handleReject}
