@@ -8,11 +8,25 @@ interface TitleProps {
   description?: string;
 }
 
+const headingVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+      duration: 0.6
+    }
+  }
+};
+
 const Title: React.FC<TitleProps> = ({
   title,
   subtitle,
   description,
-  variants
+  variants = { headingVariants }
 }) => {
   return (
     <div>
@@ -29,9 +43,11 @@ const Title: React.FC<TitleProps> = ({
           </h3>
           <h2 className="w-full text-2xl md:text-4xl font-bold text-center pt-2 text-primaryColor leading-7">
             {description ||
-              "Lorem Ipsum is simply dummy text of the printing. "}
+              "Lorem Ipsum is simply dummy text "}
           </h2>
-          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[45%]">{subtitle}</p>
+          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[45%]">
+            {subtitle}
+          </p>
         </div>
       </motion.div>
     </div>

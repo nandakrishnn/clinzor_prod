@@ -16,6 +16,7 @@ const Offers = () => {
       }
     }
   };
+  
   return (
     <section className="overflow-hidden">
       <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-20">

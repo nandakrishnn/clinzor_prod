@@ -9,6 +9,7 @@ import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
 import Offers from "@/components/landingpage/offers/Offers";
+import Camp from "@/components/landingpage/camp/Camp";
 
 export default function Home() {
   return (
@@ -39,12 +40,12 @@ export default function Home() {
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
             <Offers />
           </div>
-
         </section>
-        {/* Offers */}
+
+        {/* Camp */}
         <section className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
-            <Offers />
+            <Camp />
           </div>
         </section>
 

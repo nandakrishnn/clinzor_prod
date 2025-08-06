@@ -23,7 +23,9 @@ const CardTwo: React.FC<CardProps> = ({ className, icon, title, content }) => {
         {icon}
       </div>
       <div className="text-center">
-        <h2 className="font-semibold text-[18px] md:text-[20px] mt-5">{title}</h2>
+        <h2 className="font-semibold text-[18px] md:text-[20px] mt-5">
+          {title}
+        </h2>
         <p className="mt-3 text-[#4B5563] text-sm md:text-[16px]">{content}</p>
       </div>
     </div>
