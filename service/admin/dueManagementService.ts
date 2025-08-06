@@ -20,8 +20,8 @@ interface Expert {
   extra_info: string | null;
 }
 
-// Epert Management Api 
-export const createExpert = async (body:Expert) => {
+// Due Management Api 
+export const createDue = async (body:Expert) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/doctor-lc/`, // Changed from PUT to POST for creation
@@ -33,7 +33,7 @@ export const createExpert = async (body:Expert) => {
     throw error;
   }
 };
-export const editExpert = async (
+export const editDue = async (
   id: string,
  body: Expert) => {
   try {
@@ -47,7 +47,7 @@ export const editExpert = async (
     throw error;
   }
 };
-export const approveOrRejectExpert = async (id: string, body: {
+export const approveOrRejectDue = async (id: string, body: {
   status: string;
 }) => {
   try {
@@ -58,17 +58,17 @@ export const approveOrRejectExpert = async (id: string, body: {
     throw error;
   }
 };
-export const deleteExpert = async (Id: string) => {
+export const deleteDue = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
-export const GetAExpert = async (Id: string) => {
+export const GetADue = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllExpert= async () => {
+export const GetAllDues= async () => {
   try {
     const response = await axiosPrivate.get(
-      `/clinic/list-transactions/?transaction_type=DUE`
+      `clinic/list-clinic-dues/?search=`
     );
     return response.data.data.data;
   } catch (error) {
