@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Calendar, 
   CalendarDays, 
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { createBlukSlot, createSlot, deleteSlot, editSlot, GetAllSlot } from '@/service/expert/slotManangementService';
 
 // Type definitions
 interface ExpertSlot {
@@ -50,6 +51,7 @@ export default function ExpertSlotManagement() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [notification, setNotification] = useState<Notification | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  // const [currentPage, setCurrentPage] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState<ExpertSlot | null>(null);
   const [modalType, setModalType] = useState<ModalType>(null);
   const [formData, setFormData] = useState<Partial<ExpertSlot>>({});
@@ -73,6 +75,20 @@ export default function ExpertSlotManagement() {
     timeSlots?: string;
     weekdays?: string;
   }>({});
+
+const fectchSlots = async () => {
+  try {
+    const data =await GetAllSlot();
+    setSlots(data.data);
+    console.log(data,"res")
+  } catch (error) {
+     console.error("Error fetching dues data:", error);
+  }
+}
+
+useEffect(() => {
+ fectchSlots();
+}, [])
 
   const itemsPerPage = 10;
 
@@ -601,7 +617,7 @@ export default function ExpertSlotManagement() {
   // Memoized filtered slots for performance
   const filteredSlots = useMemo(() => {
     return slots.filter(slot => {
-      const matchesSearch = slot.start_time.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = slot.start_time?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || slot.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -723,11 +739,42 @@ export default function ExpertSlotManagement() {
     setModalType('view');
   }, []);
 
-  const handleDelete = useCallback((slot: ExpertSlot) => {
-    setSelectedSlot(slot);
-    setModalType('delete');
-  }, []);
+// Separate function to handle delete confirmation
+const handleDeleteConfirm = useCallback(async () => {
+  if (!selectedSlot || !selectedSlot.uuid) {
+    setNotification({ 
+      type: 'error', 
+      message: 'No slot selected for deletion' 
+    });
+    return;
+  }
 
+  setIsLoading(true);
+  try {
+    await deleteSlot(selectedSlot.uuid);
+    // Update the slots state by removing the deleted slot
+    setSlots(prev => prev.filter(slot => slot.uuid !== selectedSlot.uuid));
+    setNotification({ 
+      type: 'success', 
+      message: 'Slot deleted successfully' 
+    });
+    closeModal();
+    fectchSlots(); // Refresh the slots list
+  } catch (error: any) {
+    setNotification({ 
+      type: 'error', 
+      message: error.response?.data?.message || 'Failed to delete slot. Please try again.' 
+    });
+  } finally {
+    setIsLoading(false);
+  }
+}, [selectedSlot, closeModal, fectchSlots]);
+
+// Function to initiate delete (opens confirmation modal)
+const handleDelete = useCallback((slot: ExpertSlot) => {
+  setSelectedSlot(slot);
+  setModalType('delete');
+}, []);
   // Enhanced validation function
   const validateBulkTemplate = useCallback(() => {
     const errors: typeof validationErrors = {};
@@ -836,61 +883,90 @@ export default function ExpertSlotManagement() {
     showNotification('success', `Generated ${slots.length} slots successfully`);
   }, [bulkTemplate, showNotification, validateBulkTemplate]);
 
-  // Complete the handleSave function
-  const handleSave = useCallback(async () => {
-    if (modalType === 'add' || modalType === 'edit') {
-      if (!formData.start_time) {
-        setNotification({ type: 'error', message: 'Start time is required' });
-        return;
-      }
-      if (modalType === 'add' && slots.some(slot => slot.start_time === formData.start_time)) {
-        setNotification({ type: 'error', message: 'A slot already exists at this time' });
-        return;
-      }
-    } else if (modalType === 'bulk') {
-      if (bulkFormData.slot_list.length === 0) {
-        setNotification({ type: 'error', message: 'Please generate slots before saving' });
-        return;
-      }
-    }
-    setIsLoading(true);
-    try {
-      // --- Local state logic only ---
-      if (modalType === 'add' && formData.start_time) {
-        const newSlot: ExpertSlot = {
-          uuid: Date.now().toString(),
-          start_time: formData.start_time as string,
-          status: 'DRAFT'
-        };
-        setSlots(prev => [...prev, newSlot]);
-        setNotification({ type: 'success', message: 'Slot created successfully' });
-        closeModal();
-      } else if (modalType === 'edit' && selectedSlot && formData.start_time) {
-        const updatedSlot: ExpertSlot = {
-          ...selectedSlot,
-          start_time: formData.start_time as string,
-          status: formData.status || 'DRAFT'
-        };
-        setSlots(prev => prev.map(slot => slot.uuid === selectedSlot.uuid ? updatedSlot : slot));
-        setNotification({ type: 'success', message: 'Slot updated successfully' });
-        closeModal();
-      } else if (modalType === 'bulk') {
-        const newSlots: ExpertSlot[] = bulkFormData.slot_list.map(slot => ({
-          uuid: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          start_time: slot.start_time as string,
-          status: 'DRAFT'
-        }));
-        setSlots(prev => [...prev, ...newSlots]);
-        setNotification({ type: 'success', message: `Created ${newSlots.length} slots successfully` });
-        closeModal();
-      }
-    } catch (error: any) {
-      setNotification({ type: 'error', message: error.message || 'Failed to save slots. Please try again.' });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [modalType, formData, selectedSlot, bulkFormData, slots, closeModal]);
+  const formatStartTime = (isoString: string) => {
+  const date = new Date(isoString);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
+  // Complete the handleSave function
+const handleSave = useCallback(async () => {
+  if (modalType === 'add' || modalType === 'edit') {
+    if (!formData.start_time) {
+      setNotification({ type: 'error', message: 'Start time is required' });
+      return;
+    }
+    if (modalType === 'add' && slots.some(slot => slot.start_time === formData.start_time)) {
+      setNotification({ type: 'error', message: 'A slot already exists at this time' });
+      return;
+    }
+  } else if (modalType === 'bulk') {
+    if (bulkFormData.slot_list.length === 0) {
+      setNotification({ type: 'error', message: 'Please generate slots before saving' });
+      return;
+    }
+  }
+
+  setIsLoading(true);
+  try {
+    if (modalType === 'add' && formData.start_time) {
+      // Call createSlot API for single slot
+     const response = await createSlot({
+  start_time: formatStartTime(formData.start_time)
+});
+      fectchSlots();
+      const newSlot: ExpertSlot = {
+        uuid: response.uuid || Date.now().toString(),
+        start_time: response.start_time,
+        status: 'DRAFT'
+      };
+      setSlots(prev => [...prev, newSlot]);
+      setNotification({ type: 'success', message: 'Slot created successfully' });
+      closeModal();
+    } else if (modalType === 'edit' && selectedSlot && formData.start_time) {
+      // Call updateSlot API (you'll need to implement this)
+    const response = await editSlot(selectedSlot.uuid || '', {
+  start_time: formatStartTime(formData.start_time)
+});
+fectchSlots();
+      
+      const updatedSlot: ExpertSlot = {
+        ...selectedSlot,
+        start_time: response.start_time,
+        status: formData.status || 'DRAFT'
+      };
+      setSlots(prev => prev.map(slot => slot.uuid === selectedSlot.uuid ? updatedSlot : slot));
+      setNotification({ type: 'success', message: 'Slot updated successfully' });
+      closeModal();
+    } else if (modalType === 'bulk') {
+      // Call createBulkSlot API
+      const response = await createBlukSlot({
+  slot_list: bulkFormData.slot_list.map(slot => ({
+    ...slot,
+    start_time: formatStartTime(slot.start_time)
+  }))
+});
+
+      const newSlots: ExpertSlot[] = response.slot_list.map((slot: any) => ({
+        uuid: slot.uuid || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        start_time: slot.start_time,
+        status: 'DRAFT'
+      }));
+      
+      // setSlots(prev => [...prev, ...newSlots]);
+      setNotification({ type: 'success', message: `Created ${newSlots.length} slots successfully` });
+      closeModal();
+      fectchSlots();
+    }
+  } catch (error: any) {
+    setNotification({ 
+      type: 'error', 
+      message: error.response?.data?.message || 'Failed to save slots. Please try again.' 
+    });
+  } finally {
+    setIsLoading(false);
+  }
+}, [modalType, formData, selectedSlot, bulkFormData, slots, closeModal]);
   // Toggle slot selection
   const toggleSlotSelection = (uuid: string) => {
     setSelectedSlots(prev => {
@@ -1299,7 +1375,65 @@ export default function ExpertSlotManagement() {
       )}
     </Modal>
   );
+const DeleteConfirmationModal = () => (
+  <Modal
+    isOpen={modalType === 'delete'}
+    onClose={closeModal}
+    title="Confirm Deletion"
+    size="md"
+    notification={notification}
+    onNotificationClose={() => setNotification(null)}
+  >
+    {selectedSlot && (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-2xl border border-red-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-red-100 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Delete Slot</h3>
+          </div>
+          
+          <p className="text-gray-700">
+            Are you sure you want to delete the slot on{' '}
+            <span className="font-semibold">
+              {formatDateTime(selectedSlot.start_time).date} at {formatDateTime(selectedSlot.start_time).time}
+            </span>?
+          </p>
+          <p className="text-sm text-red-600 mt-2">
+            This action cannot be undone.
+          </p>
+        </div>
 
+        <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+          <button
+            onClick={closeModal}
+            className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDeleteConfirm}
+            disabled={isLoading}
+            className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg hover:shadow-xl"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 size={16} />
+                Delete Slot
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    )}
+  </Modal>
+);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-4 sm:py-8">
@@ -1585,6 +1719,7 @@ export default function ExpertSlotManagement() {
       <AddEditModal />
       <BulkCreateModal />
       <ViewModal />
+        <DeleteConfirmationModal />
     </div>
   );
 }

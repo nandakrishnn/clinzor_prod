@@ -1,52 +1,9 @@
 
 import { axiosPrivate } from "../../axios/axios";
 
-interface Expert {
-  uuid: string;
-  clinic_service: string;
-  created_by: string;
-  name: string;
-  dob: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER"; // Assuming these are the possible values
-  specializaton: string; // Note: There's a typo in "specialization" in your JSON
-  experience: number | null;
-  phone_number: string;
-  email: string | null;
-  profile_pic: string | null;
-  status: "APPROVED" | "REJECTED" | "PENDING"; // Assuming possible statuses
-  reason_for_rejection: string | null;
-  education: string;
-  government_document: string | null;
-  extra_info: string | null;
-}
 
 // Due Management Api 
-export const createDue = async (body:Expert) => {
-  try {
-    const response = await axiosPrivate.post(
-      `clinic/doctor-lc/`, // Changed from PUT to POST for creation
-      body
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Expert creation error:", error);
-    throw error;
-  }
-};
-export const editDue = async (
-  id: string,
- body: Expert) => {
-  try {
-    const response = await axiosPrivate.put(
-      `clinic/doctor-rud/${id}/`,
-      body
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Expert update error:", error);
-    throw error;
-  }
-};
+
 export const approveOrRejectDue = async (id: string, body: {
   status: string;
 }) => {
