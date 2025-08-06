@@ -8,11 +8,12 @@ import SearchBar from "@/components/landingpage/searchbar/searchbar";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
+import Offers from "@/components/landingpage/offers/Offers";
+import Camp from "@/components/landingpage/camp/Camp";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b  to-white overflow-hidden">
-      
       {/* Navbar */}
       <NavbarDemo />
 
@@ -31,6 +32,20 @@ export default function Home() {
         <section className="bg-white py-10 sm:py-14 mb-20  sm:px-6">
           <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-8">
             <ServicesWeOffer />
+          </div>
+        </section>
+
+        {/* Offers */}
+        <section className="bg-bgLight py-5 sm:py-14 pb-28 px-4 sm:px-6">
+          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+            <Offers />
+          </div>
+        </section>
+
+        {/* Camp */}
+        <section className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
+          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+            <Camp />
           </div>
         </section>
 

@@ -24,6 +24,8 @@ export const createOrganization = async (body:Organization) => {
     throw error;
   }
 };
+
+
 export const editOrganization = async (
  body: Organization) => {
   try {
@@ -33,6 +35,7 @@ export const editOrganization = async (
     );
     return response.data;
   } catch (error) {
+    
     console.error("Organization update error:", error);
     throw error;
   }
