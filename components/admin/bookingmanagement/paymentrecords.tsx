@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   CreditCard, 
   Calendar, 
@@ -22,223 +22,83 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { getAllPayment } from '@/service/admin/bookingManagementService';
 
-// Enhanced Payment Record Type
+// Updated Payment Record Type based on your API response
 type PaymentRecord = {
-  transactionId: string;
-  bookingId: string;
-  paymentDate: string;
-  amount: number;
+  uuid: string;
+  booking: string;
+  expert_booking: string | null;
+  clinic: string | null;
+  user: string;
+  created_by: string | null;
+  amount: string;
   currency: string;
-  paymentStatus: 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED';
-  paymentMethod: 'CARD' | 'UPI' | 'NET_BANKING' | 'WALLET' | 'CASH';
-  serviceType: 'VIDEO_CALL' | 'PHYSICAL_VISIT';
-  patientName: string;
-  patientEmail: string;
-  patientMobile: string;
-  clinicName: string;
-  clinicId: string;
-  serviceName: string;
-  sessionDuration: number; // in minutes
-  doctorName: string;
-  bookingDate: string;
-  processingFee: number;
-  platformFee: number;
-  netAmount: number;
-  refundAmount?: number;
-  refundDate?: string;
-  gatewayTransactionId: string;
-  paymentGateway: 'RAZORPAY' | 'STRIPE' | 'PAYU' | 'CASHFREE';
-  remarks?: string;
+  transaction_id: string;
+  notes: string | null;
+  status: 'CREATED' | 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED';
+  payment_type: string;
+  payment_id: string | null;
+  patient_name: string;
+  service_name: string;
+  clinic_service_name: string | null;
+  clinic_name: string;
+  paymentDate?: string; // Adding optional field for date handling
 };
 
 const PaymentRecordsDashboard = () => {
-  // Sample payment records data
-  const samplePaymentRecords: PaymentRecord[] = [
-    {
-      transactionId: "TXN001",
-      bookingId: "1d56bfba-4407-41e5-b067-e55439db9607",
-      paymentDate: "2025-06-30T10:30:00Z",
-      amount: 160.00,
-      currency: "INR",
-      paymentStatus: "COMPLETED",
-      paymentMethod: "UPI",
-      serviceType: "VIDEO_CALL",
-      patientName: "patient 1",
-      patientEmail: "patient@email.com",
-      patientMobile: "1234567890",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Consultation",
-      sessionDuration: 30,
-      doctorName: "Dr. Rajesh Kumar",
-      bookingDate: "2025-05-31T16:31:00Z",
-      processingFee: 5.00,
-      platformFee: 15.00,
-      netAmount: 140.00,
-      gatewayTransactionId: "rzp_live_1234567890",
-      paymentGateway: "RAZORPAY",
-      remarks: "Consultation for skin condition"
-    },
-    {
-      transactionId: "TXN002",
-      bookingId: "d9a5c17d-277d-4fa9-88dd-285a588834a6",
-      paymentDate: "2025-06-29T14:45:00Z",
-      amount: 200.00,
-      currency: "INR",
-      paymentStatus: "COMPLETED",
-      paymentMethod: "CARD",
-      serviceType: "VIDEO_CALL",
-      patientName: "patient 2",
-      patientEmail: "patient2@email.com",
-      patientMobile: "1234567891",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Session",
-      sessionDuration: 45,
-      doctorName: "Dr. Priya Sharma",
-      bookingDate: "2025-06-10T17:31:00Z",
-      processingFee: 6.00,
-      platformFee: 18.00,
-      netAmount: 176.00,
-      gatewayTransactionId: "rzp_live_0987654321",
-      paymentGateway: "RAZORPAY"
-    },
-    {
-      transactionId: "TXN003",
-      bookingId: "0860745e-125b-408c-b614-9f47df7fa868",
-      paymentDate: "2025-06-28T16:20:00Z",
-      amount: 200.00,
-      currency: "INR",
-      paymentStatus: "COMPLETED",
-      paymentMethod: "CASH",
-      serviceType: "PHYSICAL_VISIT",
-      patientName: "patient 3",
-      patientEmail: "patient3@email.com",
-      patientMobile: "1234567892",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Consultation",
-      sessionDuration: 60,
-      doctorName: "Dr. Anjali Gupta",
-      bookingDate: "2025-06-11T20:19:00Z",
-      processingFee: 0.00,
-      platformFee: 20.00,
-      netAmount: 180.00,
-      gatewayTransactionId: "CASH_1234567890",
-      paymentGateway: "CASHFREE"
-    },
-    {
-      transactionId: "TXN004",
-      bookingId: "fd336206-9759-4b15-a756-c1f643aa0d77",
-      paymentDate: "2025-06-27T12:15:00Z",
-      amount: 400.00,
-      currency: "INR",
-      paymentStatus: "PENDING",
-      paymentMethod: "NET_BANKING",
-      serviceType: "VIDEO_CALL",
-      patientName: "patient 4",
-      patientEmail: "patient4@email.com",
-      patientMobile: "1234567893",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Consultation",
-      sessionDuration: 30,
-      doctorName: "Dr. Vikram Singh",
-      bookingDate: "2025-06-18T16:50:00Z",
-      processingFee: 8.00,
-      platformFee: 35.00,
-      netAmount: 357.00,
-      gatewayTransactionId: "rzp_live_pending123",
-      paymentGateway: "RAZORPAY",
-      remarks: "Payment verification in progress"
-    },
-    {
-      transactionId: "TXN005",
-      bookingId: "fb7f80c1-30bd-41a4-8393-a693f37fe43c",
-      paymentDate: "2025-06-26T09:30:00Z",
-      amount: 400.00,
-      currency: "INR",
-      paymentStatus: "FAILED",
-      paymentMethod: "CARD",
-      serviceType: "VIDEO_CALL",
-      patientName: "patient 5",
-      patientEmail: "patient5@email.com",
-      patientMobile: "1234567894",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Consultation",
-      sessionDuration: 30,
-      doctorName: "Dr. Meera Patel",
-      bookingDate: "2025-06-13T20:50:00Z",
-      processingFee: 8.00,
-      platformFee: 35.00,
-      netAmount: 357.00,
-      gatewayTransactionId: "rzp_live_failed456",
-      paymentGateway: "RAZORPAY",
-      remarks: "Insufficient balance"
-    },
-    {
-      transactionId: "TXN006",
-      bookingId: "a1d56bfba-4407-41e5-b067-e55439db9601",
-      paymentDate: "2025-06-25T11:20:00Z",
-      amount: 250.00,
-      currency: "INR",
-      paymentStatus: "REFUNDED",
-      paymentMethod: "UPI",
-      serviceType: "PHYSICAL_VISIT",
-      patientName: "patient 6",
-      patientEmail: "patient6@email.com",
-      patientMobile: "1234567895",
-      clinicName: "Sunrise Clinic",
-      clinicId: "clinic-1",
-      serviceName: "Dermatology Session",
-      sessionDuration: 60,
-      doctorName: "Dr. Rahul Joshi",
-      bookingDate: "2025-07-01T10:00:00Z",
-      processingFee: 7.00,
-      platformFee: 22.00,
-      netAmount: 221.00,
-      refundAmount: 250.00,
-      refundDate: "2025-06-26T15:30:00Z",
-      gatewayTransactionId: "rzp_live_refund789",
-      paymentGateway: "RAZORPAY",
-      remarks: "Appointment cancelled by patient"
-    }
-  ];
-
   // State management
+  const [payment, setPayment] = useState<PaymentRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | PaymentRecord['paymentStatus']>('ALL');
-  const [serviceFilter, setServiceFilter] = useState<'ALL' | PaymentRecord['serviceType']>('ALL');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<'ALL' | PaymentRecord['paymentMethod']>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | PaymentRecord['status']>('ALL');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<'ALL' | string>('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<'paymentDate' | 'amount' | 'patientName'>('paymentDate');
+  const [sortBy, setSortBy] = useState<'transaction_id' | 'amount' | 'patient_name'>('transaction_id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pageSize = 10;
+
+  const fetchPayments = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getAllPayment();
+      // Add paymentDate field to each record if not present
+      const recordsWithDates = data.map((record: any) => ({
+        ...record,
+        paymentDate: record.paymentDate || new Date().toISOString() // Fallback to current date if not provided
+      }));
+      setPayment(recordsWithDates);
+    } catch (error) {
+      console.error("Failed to fetch payments:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
 
   // Filtered and sorted data
   const filteredRecords = useMemo(() => {
-    let filtered = samplePaymentRecords.filter(record => {
+    let filtered = payment.filter(record => {
       const matchesSearch = 
-        record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.patientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.clinicName.toLowerCase().includes(searchTerm.toLowerCase());
+        record.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.transaction_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.clinic_name.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === 'ALL' || record.paymentStatus === statusFilter;
-      const matchesService = serviceFilter === 'ALL' || record.serviceType === serviceFilter;
-      const matchesPaymentMethod = paymentMethodFilter === 'ALL' || record.paymentMethod === paymentMethodFilter;
+      const matchesStatus = statusFilter === 'ALL' || record.status === statusFilter;
+      const matchesPaymentMethod = paymentMethodFilter === 'ALL' || record.payment_type === paymentMethodFilter;
       
-      const paymentDate = new Date(record.paymentDate);
+      const paymentDate = new Date(record.paymentDate || '');
       const matchesFromDate = !fromDate || paymentDate >= new Date(fromDate);
       const matchesToDate = !toDate || paymentDate <= new Date(toDate);
       
-      return matchesSearch && matchesStatus && matchesService && matchesPaymentMethod && matchesFromDate && matchesToDate;
+      return matchesSearch && matchesStatus && matchesPaymentMethod && matchesFromDate && matchesToDate;
     });
 
     // Sort the filtered records
@@ -246,15 +106,12 @@ const PaymentRecordsDashboard = () => {
       let aValue: any = a[sortBy];
       let bValue: any = b[sortBy];
       
-      if (sortBy === 'paymentDate') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      } else if (sortBy === 'amount') {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
+      if (sortBy === 'amount') {
+        aValue = parseFloat(aValue);
+        bValue = parseFloat(bValue);
       } else {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+        aValue = aValue?.toLowerCase() || '';
+        bValue = bValue?.toLowerCase() || '';
       }
       
       if (sortOrder === 'asc') {
@@ -265,7 +122,7 @@ const PaymentRecordsDashboard = () => {
     });
 
     return filtered;
-  }, [searchTerm, statusFilter, serviceFilter, paymentMethodFilter, fromDate, toDate, sortBy, sortOrder]);
+  }, [payment, searchTerm, statusFilter, paymentMethodFilter, fromDate, toDate, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / pageSize);
@@ -277,33 +134,36 @@ const PaymentRecordsDashboard = () => {
   // Statistics
   const stats = useMemo(() => {
     const total = filteredRecords.length;
-    const completed = filteredRecords.filter(r => r.paymentStatus === 'COMPLETED').length;
-    const pending = filteredRecords.filter(r => r.paymentStatus === 'PENDING').length;
-    const failed = filteredRecords.filter(r => r.paymentStatus === 'FAILED').length;
-    const refunded = filteredRecords.filter(r => r.paymentStatus === 'REFUNDED').length;
+    const completed = filteredRecords.filter(r => r.status === 'COMPLETED').length;
+    const pending = filteredRecords.filter(r => r.status === 'PENDING').length;
+    const failed = filteredRecords.filter(r => r.status === 'FAILED').length;
+    const refunded = filteredRecords.filter(r => r.status === 'REFUNDED').length;
+    const created = filteredRecords.filter(r => r.status === 'CREATED').length;
     
     const totalRevenue = filteredRecords
-      .filter(r => r.paymentStatus === 'COMPLETED')
-      .reduce((sum, r) => sum + r.netAmount, 0);
+      .filter(r => r.status === 'COMPLETED')
+      .reduce((sum, r) => sum + parseFloat(r.amount), 0);
     
     const pendingAmount = filteredRecords
-      .filter(r => r.paymentStatus === 'PENDING')
-      .reduce((sum, r) => sum + r.amount, 0);
+      .filter(r => r.status === 'PENDING' || r.status === 'CREATED')
+      .reduce((sum, r) => sum + parseFloat(r.amount), 0);
 
-    return { total, completed, pending, failed, refunded, totalRevenue, pendingAmount };
+    return { total, completed, pending, failed, refunded, created, totalRevenue, pendingAmount };
   }, [filteredRecords]);
 
   // Utility functions
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string) => {
+    const numAmount = parseFloat(amount);
     return new Intl.NumberFormat('en-IN', { 
       style: 'currency', 
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -313,42 +173,40 @@ const PaymentRecordsDashboard = () => {
     });
   };
 
-  const getStatusColor = (status: PaymentRecord['paymentStatus']) => {
+  const getStatusColor = (status: PaymentRecord['status']) => {
     switch (status) {
       case 'COMPLETED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'PENDING': 
+      case 'CREATED': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'FAILED': return 'bg-red-50 text-red-700 border-red-200';
       case 'REFUNDED': return 'bg-purple-50 text-purple-700 border-purple-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
-  const getStatusIcon = (status: PaymentRecord['paymentStatus']) => {
+  const getStatusIcon = (status: PaymentRecord['status']) => {
     switch (status) {
       case 'COMPLETED': return <CheckCircle className="w-4 h-4" />;
-      case 'PENDING': return <Clock className="w-4 h-4" />;
+      case 'PENDING': 
+      case 'CREATED': return <Clock className="w-4 h-4" />;
       case 'FAILED': return <XCircle className="w-4 h-4" />;
       case 'REFUNDED': return <RefreshCw className="w-4 h-4" />;
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
 
-  const getServiceIcon = (serviceType: PaymentRecord['serviceType']) => {
-    return serviceType === 'VIDEO_CALL' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />;
-  };
-
   const handleExportData = () => {
     const csvContent = [
-      ['Transaction ID', 'Payment Date', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Method', 'Clinic'],
+      ['Transaction ID', 'Payment Date', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
       ...filteredRecords.map(record => [
-        record.transactionId,
-        formatDate(record.paymentDate),
-        record.patientName,
-        record.serviceName,
+        record.transaction_id,
+        formatDate(record.paymentDate || ''),
+        record.patient_name,
+        record.service_name,
         record.amount,
-        record.paymentStatus,
-        record.paymentMethod,
-        record.clinicName
+        record.status,
+        record.payment_type,
+        record.clinic_name
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -360,6 +218,14 @@ const PaymentRecordsDashboard = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
@@ -384,7 +250,7 @@ const PaymentRecordsDashboard = () => {
                 Export Data
               </button>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={fetchPayments}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <RefreshCw size={16} />
@@ -412,7 +278,7 @@ const PaymentRecordsDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalRevenue)}</p>
+                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalRevenue.toString())}</p>
               </div>
               <div className="p-3 bg-emerald-100 rounded-xl">
                 <TrendingUp size={24} className="text-emerald-600" />
@@ -435,8 +301,8 @@ const PaymentRecordsDashboard = () => {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Amount</p>
-                <p className="text-2xl font-bold text-amber-600">{formatCurrency(stats.pendingAmount)}</p>
+                <p className="text-sm font-medium text-gray-600">Pending/Created</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.pending + stats.created}</p>
               </div>
               <div className="p-3 bg-amber-100 rounded-xl">
                 <Clock size={24} className="text-amber-600" />
@@ -471,6 +337,7 @@ const PaymentRecordsDashboard = () => {
               >
                 <option value="ALL">All Status</option>
                 <option value="COMPLETED">Completed</option>
+                <option value="CREATED">Created</option>
                 <option value="PENDING">Pending</option>
                 <option value="FAILED">Failed</option>
                 <option value="REFUNDED">Refunded</option>
@@ -478,16 +345,16 @@ const PaymentRecordsDashboard = () => {
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
 
-            {/* Service Filter */}
+            {/* Payment Method Filter */}
             <div className="relative">
               <select
-                value={serviceFilter}
-                onChange={(e) => setServiceFilter(e.target.value as any)}
+                value={paymentMethodFilter}
+                onChange={(e) => setPaymentMethodFilter(e.target.value)}
                 className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="ALL">All Services</option>
-                <option value="VIDEO_CALL">Video Call</option>
-                <option value="PHYSICAL_VISIT">Physical Visit</option>
+                <option value="ALL">All Methods</option>
+                <option value="NORMAL_BOOKING">Normal Booking</option>
+                {/* Add other payment types if available */}
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
@@ -526,12 +393,12 @@ const PaymentRecordsDashboard = () => {
               }}
               className="px-3 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="paymentDate-desc">Date (Newest)</option>
-              <option value="paymentDate-asc">Date (Oldest)</option>
+              <option value="transaction_id-desc">Transaction ID (Desc)</option>
+              <option value="transaction_id-asc">Transaction ID (Asc)</option>
               <option value="amount-desc">Amount (High to Low)</option>
               <option value="amount-asc">Amount (Low to High)</option>
-              <option value="patientName-asc">Patient Name (A-Z)</option>
-              <option value="patientName-desc">Patient Name (Z-A)</option>
+              <option value="patient_name-asc">Patient Name (A-Z)</option>
+              <option value="patient_name-desc">Patient Name (Z-A)</option>
             </select>
           </div>
         </div>
@@ -553,42 +420,41 @@ const PaymentRecordsDashboard = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {paginatedRecords.map((record) => (
-                  <tr key={record.transactionId} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={record.uuid} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <div className="text-sm font-medium text-gray-900">{record.transactionId}</div>
-                        <div className="text-xs text-gray-500">{record.paymentMethod}</div>
+                        <div className="text-sm font-medium text-gray-900">{record.transaction_id}</div>
+                        <div className="text-xs text-gray-500">{record.payment_type}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <div className="text-sm font-medium text-gray-900">{record.patientName}</div>
-                        <div className="text-xs text-gray-500">{record.patientEmail}</div>
+                        <div className="text-sm font-medium text-gray-900">{record.patient_name}</div>
+                        <div className="text-xs text-gray-500">{record.user}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        {getServiceIcon(record.serviceType)}
                         <div className="flex flex-col">
-                          <div className="text-sm font-medium text-gray-900">{record.serviceName}</div>
-                          <div className="text-xs text-gray-500">{record.clinicName}</div>
+                          <div className="text-sm font-medium text-gray-900">{record.service_name}</div>
+                          <div className="text-xs text-gray-500">{record.clinic_name}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="text-sm font-bold text-gray-900">{formatCurrency(record.amount)}</div>
-                        <div className="text-xs text-gray-500">Net: {formatCurrency(record.netAmount)}</div>
+                        <div className="text-xs text-gray-500">Currency: {record.currency}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.paymentStatus)}`}>
-                        {getStatusIcon(record.paymentStatus)}
-                        {record.paymentStatus}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
+                        {getStatusIcon(record.status)}
+                        {record.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(record.paymentDate)}
+                      {formatDate(record.paymentDate || '')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
@@ -674,60 +540,60 @@ const PaymentRecordsDashboard = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Transaction ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.transactionId}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.transaction_id}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Booking ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.bookingId}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.booking}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Patient Name</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.patientName}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.patient_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Patient Email</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.patientEmail}</p>
+                    <p className="text-sm font-medium text-gray-500">User ID</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.user}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Service</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.serviceName}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.service_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Doctor</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.doctorName}</p>
+                    <p className="text-sm font-medium text-gray-500">Clinic</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.clinic_name || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Amount</p>
                     <p className="text-base font-semibold text-gray-900">{formatCurrency(selectedRecord.amount)}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Net Amount</p>
-                    <p className="text-base font-semibold text-gray-900">{formatCurrency(selectedRecord.netAmount)}</p>
+                    <p className="text-sm font-medium text-gray-500">Currency</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.currency}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Payment Method</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.paymentMethod}</p>
+                    <p className="text-sm font-medium text-gray-500">Payment Type</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.payment_type}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Payment Gateway</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.paymentGateway}</p>
+                    <p className="text-sm font-medium text-gray-500">Payment ID</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord.payment_id || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Status</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedRecord.paymentStatus)}`}>
-                      {getStatusIcon(selectedRecord.paymentStatus)}
-                      {selectedRecord.paymentStatus}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedRecord.status)}`}>
+                      {getStatusIcon(selectedRecord.status)}
+                      {selectedRecord.status}
                     </span>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Payment Date</p>
-                    <p className="text-base font-semibold text-gray-900">{formatDate(selectedRecord.paymentDate)}</p>
+                    <p className="text-base font-semibold text-gray-900">{formatDate(selectedRecord.paymentDate || '')}</p>
                   </div>
                 </div>
-                {selectedRecord.remarks && (
+                {selectedRecord.notes && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Remarks</p>
-                    <p className="text-base text-gray-900 mt-1">{selectedRecord.remarks}</p>
+                    <p className="text-sm font-medium text-gray-500">Notes</p>
+                    <p className="text-base text-gray-900 mt-1">{selectedRecord.notes}</p>
                   </div>
                 )}
               </div>
