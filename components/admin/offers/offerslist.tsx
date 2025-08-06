@@ -1,128 +1,89 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Edit3, Trash2, Calendar, Percent, Tag, FileText, X, Check, XCircle, CheckCircle, Clock, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Plus, Edit3, Trash2, Calendar, Percent, Tag, FileText, X, Check, XCircle, CheckCircle, Clock, ChevronLeft, ChevronRight, Search, Filter, AlertTriangle } from 'lucide-react';
+import { approveOrRejectOffers, createOffers, deleteOffers, editOffers, GetAllOffers } from '@/service/admin/offerManagementService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { NotificationProps } from '@/types/user';
 
-// Type definitions
-type ClinicDetails = {
-  name: string;
-  email: string;
-};
-
+// Updated type definitions to match API response
 type Offer = {
   uuid: string;
+  created_by: string;
   title: string;
-  offer_type: 'ADMIN' | 'PROMOTIONAL' | 'SYSTEM';
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  offer_type: 'ADMIN' | 'CLINIC' | 'PROMOTIONAL' | 'SYSTEM';
+  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
   description: string;
   valid_from: string;
   valid_to: string;
-  discount_percentage: string;
-  created_by: string;
-  created_by_type: 'ADMIN' | 'CLINIC';
-  clinic_details?: ClinicDetails;
+  discount_percentage: string | null;
+  flat_discount_amt: number | null;
+  reason_for_rejection: string | null;
+  max_use_limit: number;
+  clinic_service: string | null;
+  clinic: string | null;
+  users: string[];
+  service_name?: string | null;
+  default_service_name?: string | null;
 };
 
 type OfferFormData = {
   title: string;
-  offer_type: 'ADMIN' | 'PROMOTIONAL' | 'SYSTEM';
+  offer_type: 'ADMIN' | 'CLINIC' | 'PROMOTIONAL' | 'SYSTEM';
   description: string;
   valid_from: string;
   valid_to: string;
-  discount_percentage: string;
-  created_by_type: 'ADMIN' | 'CLINIC';
-  clinic_details?: ClinicDetails;
+  discount_percentage: string | null;
+  flat_discount_amt: number | null;
+  max_use_limit: number;
+  clinic_service: string | null;
+  clinic: string | null;
+};
+
+const Notification = ({ type, message, onClose }: NotificationProps) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case 'error':
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case 'warning':
+        return <AlertTriangle className="h-5 w-5 text-yellow-400" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50';
+      case 'error':
+        return 'bg-red-50';
+      case 'warning':
+        return 'bg-yellow-50';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getBgColor()} border border-gray-200`}
+    >
+      <div className="flex items-center">
+        {getIcon()}
+        <p className="ml-3 text-sm font-medium text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-400 hover:text-gray-500"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
 };
 
 const OfferManagementTable = () => {
-  const [offers, setOffers] = useState<Offer[]>([
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c69",
-      title: "50% discount",
-      offer_type: "ADMIN",
-      status: "PENDING",
-      description: "avail rs 300 discount on all the related service",
-      valid_from: "2025-05-18T14:00:00Z",
-      valid_to: "2025-05-20T10:00:00Z",
-      discount_percentage: "50.00",
-      created_by: "admin@gmail.com",
-      created_by_type: 'ADMIN',
-    },
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c70",
-      title: "Summer Sale",
-      offer_type: "PROMOTIONAL",
-      status: "APPROVED",
-      description: "Special summer discount for all services",
-      valid_from: "2025-06-01T00:00:00Z",
-      valid_to: "2025-06-30T23:59:59Z",
-      discount_percentage: "30.00",
-      created_by: "manager@gmail.com",
-      created_by_type: 'ADMIN',
-    },
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c71",
-      title: "New Customer Offer",
-      offer_type: "SYSTEM",
-      status: "REJECTED",
-      description: "Welcome discount for first-time customers",
-      valid_from: "2025-05-01T00:00:00Z",
-      valid_to: "2025-05-31T23:59:59Z",
-      discount_percentage: "25.00",
-      created_by: "system@gmail.com",
-      created_by_type: 'ADMIN',
-    },
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c72",
-      title: "Flash Sale",
-      offer_type: "ADMIN",
-      status: "PENDING",
-      description: "Limited time flash sale offer",
-      valid_from: "2025-06-25T00:00:00Z",
-      valid_to: "2025-06-26T23:59:59Z",
-      discount_percentage: "70.00",
-      created_by: "admin@gmail.com",
-      created_by_type: 'ADMIN',
-    },
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c73",
-      title: "Loyalty Reward",
-      offer_type: "PROMOTIONAL",
-      status: "APPROVED",
-      description: "Exclusive discount for loyal customers",
-      valid_from: "2025-06-01T00:00:00Z",
-      valid_to: "2025-12-31T23:59:59Z",
-      discount_percentage: "15.00",
-      created_by: "manager@gmail.com",
-      created_by_type: 'ADMIN',
-    },
-    // Example clinic offers
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c74",
-      title: "Clinic Special",
-      offer_type: "PROMOTIONAL",
-      status: "APPROVED",
-      description: "Special offer from Clinic A",
-      valid_from: "2025-07-01T00:00:00Z",
-      valid_to: "2025-07-31T23:59:59Z",
-      discount_percentage: "20.00",
-      created_by: "clinicA@gmail.com",
-      created_by_type: 'CLINIC',
-      clinic_details: { name: 'Clinic A', email: 'clinicA@gmail.com' },
-    },
-    {
-      uuid: "34447087-365d-4074-81eb-f88b00fc6c75",
-      title: "Clinic B Monsoon",
-      offer_type: "ADMIN",
-      status: "PENDING",
-      description: "Monsoon offer from Clinic B",
-      valid_from: "2025-08-01T00:00:00Z",
-      valid_to: "2025-08-15T23:59:59Z",
-      discount_percentage: "10.00",
-      created_by: "clinicB@gmail.com",
-      created_by_type: 'CLINIC',
-      clinic_details: { name: 'Clinic B', email: 'clinicB@gmail.com' },
-    },
-  ]);
-
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,15 +98,37 @@ const OfferManagementTable = () => {
     description: '',
     valid_from: '',
     valid_to: '',
-    discount_percentage: '',
-    created_by_type: 'ADMIN',
-    clinic_details: undefined,
+    discount_percentage: null,
+    flat_discount_amt: null,
+    max_use_limit: 1,
+    clinic_service: null,
+    clinic: null,
   });
+
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
+
+  const fetchOffers = async () => {
+    try {
+      const data = await GetAllOffers();
+      setOffers(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   // Filter and search logic
   const filteredOffers = useMemo(() => {
     return offers.filter(offer => {
-      const matchesViewType = offer.created_by_type === offerViewType;
+      const matchesViewType = offerViewType === 'ADMIN' 
+        ? offer.offer_type === 'ADMIN' || offer.offer_type === 'SYSTEM'
+        : offer.offer_type === 'CLINIC';
       const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            offer.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || offer.status === statusFilter;
@@ -179,20 +162,24 @@ const OfferManagementTable = () => {
         valid_from: new Date(offer.valid_from).toISOString().slice(0, 16),
         valid_to: new Date(offer.valid_to).toISOString().slice(0, 16),
         discount_percentage: offer.discount_percentage,
-        created_by_type: offer.created_by_type,
-        clinic_details: offer.clinic_details,
+        flat_discount_amt: offer.flat_discount_amt,
+        max_use_limit: offer.max_use_limit,
+        clinic_service: offer.clinic_service,
+        clinic: offer.clinic,
       });
     } else {
       setEditingOffer(null);
       setFormData({
         title: '',
-        offer_type: 'ADMIN',
+        offer_type: offerViewType === 'ADMIN' ? 'ADMIN' : 'CLINIC',
         description: '',
         valid_from: '',
         valid_to: '',
-        discount_percentage: '',
-        created_by_type: offerViewType,
-        clinic_details: offerViewType === 'CLINIC' ? { name: '', email: '' } : undefined,
+        discount_percentage: null,
+        flat_discount_amt: null,
+        max_use_limit: 1,
+        clinic_service: null,
+        clinic: null,
       });
     }
     setIsModalOpen(true);
@@ -201,16 +188,6 @@ const OfferManagementTable = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingOffer(null);
-    setFormData({
-      title: '',
-      offer_type: 'ADMIN',
-      description: '',
-      valid_from: '',
-      valid_to: '',
-      discount_percentage: '',
-      created_by_type: 'ADMIN',
-      clinic_details: undefined,
-    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -221,65 +198,132 @@ const OfferManagementTable = () => {
     }));
   };
 
-  // For clinic details in the form
-  const handleClinicDetailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      clinic_details: {
-        name: name === 'name' ? value : prev.clinic_details?.name || '',
-        email: name === 'email' ? value : prev.clinic_details?.email || '',
-      }
+      [name]: value === '' ? null : Number(value)
     }));
   };
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.description || !formData.valid_from || !formData.valid_to || !formData.discount_percentage) {
-      return;
-    }
-    if (formData.created_by_type === 'CLINIC' && (!formData.clinic_details?.name || !formData.clinic_details?.email)) {
-      return;
-    }
+const handleSubmit = async () => {
+  // Basic validation
+  if (!formData.title || !formData.description || !formData.valid_from || !formData.valid_to) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  // Either percentage or flat amount must be provided
+  if (!formData.discount_percentage && !formData.flat_discount_amt) {
+    alert('Please provide either a discount percentage or flat amount');
+    return;
+  }
+
+  try {
+    // Prepare the minimal payload for the API
+    const apiPayload = {
+      title: formData.title,
+      offer_type: formData.offer_type,
+      description: formData.description,
+      valid_from: new Date(formData.valid_from).toISOString(),
+      valid_to: new Date(formData.valid_to).toISOString(),
+      discount_percentage: formData.discount_percentage,
+       max_use_limit: formData.max_use_limit,
+      // Only include flat_discount_amt if discount_percentage is not provided
+      ...(formData.discount_percentage ? {} : { flat_discount_amt: formData.flat_discount_amt })
+    };
+
     if (editingOffer) {
+      // Edit existing offer
+      const response = await editOffers(editingOffer.uuid, apiPayload);
+      
+      // Update local state with the response from API
       setOffers(prev => prev.map(offer => 
-        offer.uuid === editingOffer.uuid 
-          ? {
-              ...offer,
-              ...formData,
-              valid_from: new Date(formData.valid_from).toISOString(),
-              valid_to: new Date(formData.valid_to).toISOString(),
-            }
-          : offer
+        offer.uuid === editingOffer.uuid ? response.data : offer
       ));
     } else {
-      const newOffer: Offer = {
-        uuid: Date.now().toString(),
-        ...formData,
-        status: 'PENDING',
-        created_by: formData.created_by_type === 'ADMIN' ? 'admin@gmail.com' : (formData.clinic_details?.email || ''),
-        valid_from: new Date(formData.valid_from).toISOString(),
-        valid_to: new Date(formData.valid_to).toISOString(),
-      };
-      setOffers(prev => [...prev, newOffer]);
+      // Create new offer
+      const response = await createOffers(apiPayload);
+      
+      // Add the new offer to local state
+      setOffers(prev => [...prev, response.data]);
     }
+
+    // Close modal on success
     closeModal();
-  };
-
-  const deleteOffer = (uuid: string) => {
+     setNotification({
+      type: 'success',
+      message: 'Offer saved successfully!'
+    });
+   
+  } catch (error:any) {
+    console.error('Error saving offer:', error);
+    setNotification({
+      type: 'error',
+      message: `Failed to save offer. Please try again ${error.response?.data?.message || error.message}`
+    });
+   
+  }
+};
+const deleteOffer = async (uuid: string) => {
+  try {
+    // Call the delete API
+    await deleteOffers(uuid);
+    
+    // Update local state if API call succeeds
     setOffers(prev => prev.filter(offer => offer.uuid !== uuid));
-  };
+    
+    // Show success feedback
+      setNotification({
+      type: 'success',
+      message: 'Offer deleted successfully!'
+    });
+   
+  } catch (error) {
+    console.error('Error deleting offer:', error);
+        setNotification({
+      type: 'error',
+      message: 'Failed to delete offer. Please try again.'
+    });
+   
+  }
+};
 
-  const updateOfferStatus = (uuid: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DRAFT') => {
+  // Optimistically update the UI first
+  setOffers(prev => prev.map(offer => 
+    offer.uuid === uuid ? { ...offer, status: newStatus } : offer
+  ));
+
+  try {
+    // Call the API to update status
+    await approveOrRejectOffers(uuid, { status: newStatus });
+    
+    // Show success notification
+    setNotification({
+      type: 'success',
+      message: `Offer ${newStatus.toLowerCase()} successfully!`
+    });
+  } catch (error) {
+    console.error('Error updating offer status:', error);
+    
+    // Revert the UI change if the API call fails
     setOffers(prev => prev.map(offer => 
-      offer.uuid === uuid ? { ...offer, status: newStatus } : offer
+      offer.uuid === uuid ? { ...offer, status: offer.status } : offer
     ));
-  };
-
+    
+    setNotification({
+      type: 'error',
+      message: `Failed to ${newStatus.toLowerCase()} offer. Please try again.`
+    });
+  }
+};
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'REJECTED': return 'bg-red-50 text-red-700 border-red-200';
+      case 'DRAFT': return 'bg-gray-50 text-gray-700 border-gray-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
@@ -287,7 +331,8 @@ const OfferManagementTable = () => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'ADMIN': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'PROMOTIONAL': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'CLINIC': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'PROMOTIONAL': return 'bg-green-50 text-green-700 border-green-200';
       case 'SYSTEM': return 'bg-gray-50 text-gray-700 border-gray-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
@@ -298,8 +343,22 @@ const OfferManagementTable = () => {
       case 'APPROVED': return <CheckCircle size={14} className="text-emerald-600" />;
       case 'PENDING': return <Clock size={14} className="text-amber-600" />;
       case 'REJECTED': return <XCircle size={14} className="text-red-600" />;
+      case 'DRAFT': return <FileText size={14} className="text-gray-600" />;
       default: return null;
     }
+  };
+
+  const getDiscountDisplay = (offer: Offer) => {
+    if (offer.discount_percentage) {
+      return `${offer.discount_percentage}%`;
+    } else if (offer.flat_discount_amt) {
+      return `₹${offer.flat_discount_amt}`;
+    }
+    return 'N/A';
+  };
+
+  const getServiceName = (offer: Offer) => {
+    return offer.service_name || offer.default_service_name || 'General';
   };
 
   return (
@@ -359,6 +418,7 @@ const OfferManagementTable = () => {
                 className="px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
               >
                 <option value="ALL">All Status</option>
+                <option value="DRAFT">Draft</option>
                 <option value="PENDING">Pending</option>
                 <option value="APPROVED">Approved</option>
                 <option value="REJECTED">Rejected</option>
@@ -370,6 +430,7 @@ const OfferManagementTable = () => {
               >
                 <option value="ALL">All Types</option>
                 <option value="ADMIN">Admin</option>
+                <option value="CLINIC">Clinic</option>
                 <option value="PROMOTIONAL">Promotional</option>
                 <option value="SYSTEM">System</option>
               </select>
@@ -384,9 +445,7 @@ const OfferManagementTable = () => {
               <thead className="bg-gray-50/50 backdrop-blur-sm border-b border-gray-100">
                 <tr>
                   <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Offer Details</th>
-                  {offerViewType === 'CLINIC' && (
-                    <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Clinic Details</th>
-                  )}
+                  <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Service</th>
                   <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Type</th>
                   <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Discount</th>
                   <th className="text-left py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Valid Period</th>
@@ -402,16 +461,14 @@ const OfferManagementTable = () => {
                         <h3 className="font-semibold text-gray-900 text-lg">{offer.title}</h3>
                         <p className="text-sm text-gray-500 mt-1 leading-relaxed">{offer.description}</p>
                         <p className="text-xs text-gray-400 mt-2">Created by {offer.created_by}</p>
+                        <p className="text-xs text-gray-400">Max uses: {offer.max_use_limit}</p>
                       </div>
                     </td>
-                    {offerViewType === 'CLINIC' && (
-                      <td className="py-5 px-6">
-                        <div>
-                          <div className="font-semibold text-gray-800">{offer.clinic_details?.name}</div>
-                          <div className="text-sm text-gray-500">{offer.clinic_details?.email}</div>
-                        </div>
-                      </td>
-                    )}
+                    <td className="py-5 px-6">
+                      <div className="text-sm text-gray-700">
+                        {getServiceName(offer)}
+                      </div>
+                    </td>
                     <td className="py-5 px-6">
                       <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${getTypeColor(offer.offer_type)}`}>
                         <Tag size={14} />
@@ -423,7 +480,9 @@ const OfferManagementTable = () => {
                         <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
                           <Percent size={18} className="text-white" />
                         </div>
-                        <span className="text-xl font-bold text-gray-900">{offer.discount_percentage}%</span>
+                        <span className="text-xl font-bold text-gray-900">
+                          {getDiscountDisplay(offer)}
+                        </span>
                       </div>
                     </td>
                     <td className="py-5 px-6">
@@ -446,67 +505,53 @@ const OfferManagementTable = () => {
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex items-center justify-end gap-2">
-                        {offer.created_by_type === 'CLINIC' ? (
-                          offer.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => updateOfferStatus(offer.uuid, 'APPROVED')}
-                                className="p-2.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                                title="Approve"
-                              >
-                                <CheckCircle size={18} />
-                              </button>
-                              <button
-                                onClick={() => updateOfferStatus(offer.uuid, 'REJECTED')}
-                                className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                                title="Reject"
-                              >
-                                <XCircle size={18} />
-                              </button>
-                            </>
-                          )
-                        ) : (
+                        {offer.status === 'PENDING' && (
                           <>
-                            {offer.status === 'PENDING' && (
-                              <>
-                                <button
-                                  onClick={() => updateOfferStatus(offer.uuid, 'APPROVED')}
-                                  className="p-2.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                                  title="Approve"
-                                >
-                                  <CheckCircle size={18} />
-                                </button>
-                                <button
-                                  onClick={() => updateOfferStatus(offer.uuid, 'REJECTED')}
-                                  className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                                  title="Reject"
-                                >
-                                  <XCircle size={18} />
-                                </button>
-                              </>
-                            )}
                             <button
-                              onClick={() => openModal(offer)}
-                              className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                              title="Edit"
+                              onClick={() => updateOfferStatus(offer.uuid, 'APPROVED')}
+                              className="p-2.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all duration-200 group-hover:scale-105"
+                              title="Approve"
                             >
-                              <Edit3 size={18} />
+                              <CheckCircle size={18} />
                             </button>
                             <button
-                              onClick={() => deleteOffer(offer.uuid)}
+                              onClick={() => updateOfferStatus(offer.uuid, 'REJECTED')}
                               className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                              title="Delete"
+                              title="Reject"
                             >
-                              <Trash2 size={18} />
+                              <XCircle size={18} />
                             </button>
                           </>
                         )}
+                        {offer.status === 'DRAFT' && (
+                          <button
+                            onClick={() => updateOfferStatus(offer.uuid, 'PENDING')}
+                            className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
+                            title="Submit for Approval"
+                          >
+                            <Check size={18} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openModal(offer)}
+                          className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
+                          title="Edit"
+                        >
+                          <Edit3 size={18} />
+                        </button>
+                        <button
+                          onClick={() => deleteOffer(offer.uuid)}
+                          className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-500">
+                    <td colSpan={7} className="py-12 text-center text-gray-500">
                       <div className="flex flex-col items-center gap-3">
                         <FileText size={48} className="text-gray-300" />
                         <p className="text-lg font-medium">No offers found</p>
@@ -582,7 +627,7 @@ const OfferManagementTable = () => {
       </div>
 
       {/* Modal */}
-      {isModalOpen && offerViewType === 'ADMIN' && (
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-8 border-b border-gray-100">
@@ -614,39 +659,7 @@ const OfferManagementTable = () => {
                   required
                 />
               </div>
-              {/* Clinic details fields if Clinic offer */}
-              {formData.created_by_type === 'CLINIC' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Clinic Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.clinic_details?.name || ''}
-                      onChange={handleClinicDetailChange}
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
-                      placeholder="Enter clinic name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Clinic Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.clinic_details?.email || ''}
-                      onChange={handleClinicDetailChange}
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
-                      placeholder="Enter clinic email"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Offer Type
@@ -656,10 +669,12 @@ const OfferManagementTable = () => {
                   value={formData.offer_type}
                   onChange={handleInputChange}
                   className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                  disabled={!!editingOffer}
                 >
                   <option value="ADMIN">Admin</option>
-                  <option value="SYSTEM">System</option>
+                  <option value="CLINIC">Clinic</option>
                   <option value="PROMOTIONAL">Promotional</option>
+                  <option value="SYSTEM">System</option>
                 </select>
               </div>
 
@@ -708,26 +723,63 @@ const OfferManagementTable = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Discount Percentage
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="discount_percentage"
-                    value={formData.discount_percentage}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
-                    placeholder="Enter discount percentage"
-                    min="0"
-                    max="100"
-                    required
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                    <Percent size={24} className="text-gray-400" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Discount Percentage
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="discount_percentage"
+                      value={formData.discount_percentage || ''}
+                      onChange={handleNumberInputChange}
+                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                      placeholder="Enter percentage"
+                      min="0"
+                      max="100"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                      <Percent size={24} className="text-gray-400" />
+                    </div>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Flat Discount Amount
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="flat_discount_amt"
+                      value={formData.flat_discount_amt || ''}
+                      onChange={handleNumberInputChange}
+                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                      placeholder="Enter amount"
+                      min="0"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                      <span className="text-gray-400">₹</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Max Use Limit
+                </label>
+                <input
+                  type="number"
+                  name="max_use_limit"
+                  value={formData.max_use_limit}
+                  onChange={handleNumberInputChange}
+                  className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                  placeholder="Enter max uses"
+                  min="1"
+                  required
+                />
               </div>
 
               <div className="flex items-center gap-4 pt-6">
@@ -750,6 +802,16 @@ const OfferManagementTable = () => {
           </div>
         </div>
       )}
+      {/* Notifications */}
+            <AnimatePresence>
+              {notification && (
+                <Notification
+                  type={notification.type}
+                  message={notification.message}
+                  onClose={() => setNotification(null)}
+                />
+              )}
+            </AnimatePresence>
     </div>
   );
 };
