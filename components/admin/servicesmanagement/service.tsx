@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Brain, User, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
 
 type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 interface Service {
   uuid: string;
-  name: string;
+  clinic_name: string;
   description: string;
   tags: string;
   status: ServiceStatus;
@@ -14,62 +15,62 @@ interface Service {
 
 const MedicalServicesApp: React.FC = () => {
   const [services, setServices] = useState<Service[]>([
-    {
-      uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-      name: "cardiologist",
-      description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
-      tags: "heart,cardiology,blood pressure,ECG,chest pain",
-      status: "PENDING",
-      image: undefined
-    },
-    {
-      uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-      name: "heart speciality",
-      description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
-      tags: "heart",
-      status: "APPROVED",
-      image: undefined
-    },
-    {
-      uuid: "62111833-4927-4060-acdf-f2d857e9d688",
-      name: "neurologist",
-      description: "Specialist in diagnosing and treating neurological disorders and brain conditions.",
-      tags: "brain,neurology,headache,seizures,memory",
-      status: "REJECTED",
-      image: undefined
-    },
-    {
-      uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
-      name: "physician",
-      description: "General practitioner providing comprehensive healthcare and preventive medicine.",
-      tags: "general,healthcare,checkup,prevention,medicine",
-      status: "PENDING",
-      image: undefined
-    },
-    {
-      uuid: "1234567890",
-      name: "dermatologist",
-      description: "Specialist in diagnosing and treating skin, hair, and nail conditions.",
-      tags: "skin,dermatology,acne,eczema,hair",
-      status: "APPROVED",
-      image: undefined
-    },
-    {
-      uuid: "0987654321",
-      name: "orthopedic surgeon",
-      description: "Specialist in treating musculoskeletal system disorders and injuries.",
-      tags: "bones,joints,surgery,fractures,sports",
-      status: "PENDING",
-      image: undefined
-    },
-    {
-      uuid: "1122334455",
-      name: "pediatrician",
-      description: "Medical doctor specializing in the care of infants, children, and adolescents.",
-      tags: "children,pediatrics,vaccination,growth,development",
-      status: "APPROVED",
-      image: undefined
-    }
+    // {
+    //   uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
+    //   name: "cardiologist",
+    //   description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
+    //   tags: "heart,cardiology,blood pressure,ECG,chest pain",
+    //   status: "PENDING",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
+    //   name: "heart speciality",
+    //   description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
+    //   tags: "heart",
+    //   status: "APPROVED",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "62111833-4927-4060-acdf-f2d857e9d688",
+    //   name: "neurologist",
+    //   description: "Specialist in diagnosing and treating neurological disorders and brain conditions.",
+    //   tags: "brain,neurology,headache,seizures,memory",
+    //   status: "REJECTED",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
+    //   name: "physician",
+    //   description: "General practitioner providing comprehensive healthcare and preventive medicine.",
+    //   tags: "general,healthcare,checkup,prevention,medicine",
+    //   status: "PENDING",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "1234567890",
+    //   name: "dermatologist",
+    //   description: "Specialist in diagnosing and treating skin, hair, and nail conditions.",
+    //   tags: "skin,dermatology,acne,eczema,hair",
+    //   status: "APPROVED",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "0987654321",
+    //   name: "orthopedic surgeon",
+    //   description: "Specialist in treating musculoskeletal system disorders and injuries.",
+    //   tags: "bones,joints,surgery,fractures,sports",
+    //   status: "PENDING",
+    //   image: undefined
+    // },
+    // {
+    //   uuid: "1122334455",
+    //   name: "pediatrician",
+    //   description: "Medical doctor specializing in the care of infants, children, and adolescents.",
+    //   tags: "children,pediatrics,vaccination,growth,development",
+    //   status: "APPROVED",
+    //   image: undefined
+    // }
   ]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -80,25 +81,40 @@ const MedicalServicesApp: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [formData, setFormData] = useState<{
-    name: string;
+    clinic_name: string;
     description: string;
     tags: string;
     image: string;
   }>({
-    name: '',
+    clinic_name: '',
     description: '',
     tags: '',
     image: '',
   });
   const [viewMode, setViewMode] = useState<'all' | 'approved'>('all');
 
+  const fectchSercicve = async () => {
+    try {
+      const data = await GetAllClinicService()
+      setServices(data)
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      throw error;
+      
+    }
+  }
+  useEffect(() => {
+    fectchSercicve();
+  }, [])
+  console.log("service",services)
+
   const getServiceIcon = (name: string) => {
-    const serviceLower = name.toLowerCase();
-    if (serviceLower.includes('cardio') || serviceLower.includes('heart')) {
+    const serviceLower = name?.toLowerCase();
+    if (serviceLower?.includes('cardio') || serviceLower?.includes('heart')) {
       return <Heart className="w-5 h-5 text-red-500" />;
-    } else if (serviceLower.includes('neuro') || serviceLower.includes('brain')) {
+    } else if (serviceLower?.includes('neuro') || serviceLower?.includes('brain')) {
       return <Brain className="w-5 h-5 text-purple-500" />;
-    } else if (serviceLower.includes('physician') || serviceLower.includes('doctor')) {
+    } else if (serviceLower?.includes('physician') || serviceLower?.includes('doctor')) {
       return <User className="w-5 h-5 text-blue-500" />;
     } else {
       return <Stethoscope className="w-5 h-5 text-green-500" />;
@@ -119,7 +135,7 @@ const MedicalServicesApp: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.description.trim() || !formData.tags.trim()) {
+    if (!formData.clinic_name.trim() || !formData.description.trim() || !formData.tags.trim()) {
       alert('Please fill in all fields');
       return;
     }
@@ -141,14 +157,14 @@ const MedicalServicesApp: React.FC = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', tags: '', image: '' });
+    setFormData({ clinic_name: '', description: '', tags: '', image: '' });
     setIsFormOpen(false);
     setEditingService(null);
   };
 
   const handleEdit = (service: Service) => {
     setFormData({
-      name: service.name,
+      clinic_name: service.clinic_name,
       description: service.description,
       tags: service.tags,
       image: service.image || '',
@@ -171,7 +187,7 @@ const MedicalServicesApp: React.FC = () => {
 
   const getFilteredServices = () => {
     let filtered = services.filter((service) => {
-      const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = service.clinic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.tags.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
@@ -341,16 +357,16 @@ const MedicalServicesApp: React.FC = () => {
                   <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden">
                     <img 
                       src={service.image} 
-                      alt={service.name} 
+                      alt={service.clinic_name} 
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    {getServiceIcon(service.name)}
+                    {getServiceIcon(service?.clinic_name)}
                     <div>
-                      <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.name}</h3>
+                      <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.clinic_name}</h3>
                       <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(service.status)}`}>
                         {service.status === 'PENDING' ? 'Requested' : 
                          service.status === 'APPROVED' ? 'Newly Added' : 
@@ -361,14 +377,14 @@ const MedicalServicesApp: React.FC = () => {
                 </div>
                 <p className="text-gray-600 text-xs sm:text-sm mb-4 line-clamp-3 leading-relaxed">{service.description}</p>
                 <div className="flex flex-wrap gap-1 mb-4 sm:mb-6">
-                  {service.tags.split(',').slice(0, 3).map((tag, index) => (
+                  {service?.tags?.split(',').slice(0, 3).map((tag, index) => (
                     <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center space-x-1">
                       <Tag className="w-3 h-3" />
                       <span>{tag.trim()}</span>
                     </span>
                   ))}
-                  {service.tags.split(',').length > 3 && (
-                    <span className="text-xs text-gray-400">+{service.tags.split(',').length - 3} more</span>
+                  {service?.tags?.split(',').length > 3 && (
+                    <span className="text-xs text-gray-400">+{service?.tags?.split(',').length - 3} more</span>
                   )}
                 </div>
                 {/* Action Buttons */}
@@ -521,7 +537,7 @@ const MedicalServicesApp: React.FC = () => {
                 </h2>
                 <button
                   onClick={() => {
-                    setFormData({ name: '', description: '', tags: '', image: '' });
+                    setFormData({ clinic_name: '', description: '', tags: '', image: '' });
                     setIsFormOpen(false);
                     setEditingService(null);
                   }}
@@ -537,8 +553,8 @@ const MedicalServicesApp: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    value={formData.clinic_name}
+                    onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter service name"
                   />
@@ -609,7 +625,7 @@ const MedicalServicesApp: React.FC = () => {
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2 sm:pt-4">
                   <button
                     onClick={() => {
-                      setFormData({ name: '', description: '', tags: '', image: '' });
+                      setFormData({ clinic_name: '', description: '', tags: '', image: '' });
                       setIsFormOpen(false);
                       setEditingService(null);
                     }}
@@ -647,14 +663,14 @@ const MedicalServicesApp: React.FC = () => {
                 <div className="mb-6 relative w-full h-64 rounded-xl overflow-hidden">
                   <img 
                     src={viewingService.image} 
-                    alt={viewingService.name} 
+                    alt={viewingService.clinic_name} 
                     className="w-full h-full object-cover"
                   />
                 </div>
               )}
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                {getServiceIcon(viewingService.name)}
-                <span>{viewingService.name}</span>
+                {getServiceIcon(viewingService.clinic_name)}
+                <span>{viewingService.clinic_name}</span>
               </h2>
               <div className="space-y-4">
                 <div>
@@ -674,10 +690,10 @@ const MedicalServicesApp: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {viewingService.tags.split(',').map((tag, index) => (
+                    {viewingService.tags?.split(',').map((tag, index) => (
                       <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center space-x-1">
                         <Tag className="w-3 h-3" />
-                        <span>{tag.trim()}</span>
+                        <span>{tag?.trim()}</span>
                       </span>
                     ))}
                   </div>

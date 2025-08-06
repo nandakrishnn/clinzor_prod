@@ -50,7 +50,7 @@ export const approveOrRejectCamp = async (id: string, body: {
   }
 };
 export const toggleCompletion = async (id: string, body: {
-  is_completed: boolean;
+  status: string;
 }) => {
   try {
     const response = await axiosPrivate.patch(`clinic/toggle-camp-completion/${id}/`, body);
