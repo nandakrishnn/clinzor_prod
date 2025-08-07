@@ -33,7 +33,7 @@ type Expert = {
   gender: 'MALE' | 'FEMALE';
   enabled: boolean;
   status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'DRAFT';
-  specialization?: string;
+  specializaton?: string;
   experience?: string;
   rating?: number;
   totalBookings?: number;
@@ -495,7 +495,7 @@ export default function ExpertManagement() {
         expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expert?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expert.phone_number.includes(searchQuery) ||
-        expert.specialization?.toLowerCase().includes(searchQuery.toLowerCase())
+        expert.specializaton?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -539,7 +539,7 @@ export default function ExpertManagement() {
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '' };
+    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '' ,  clinic_service: '',};
 
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';

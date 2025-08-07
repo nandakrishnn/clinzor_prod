@@ -22,6 +22,7 @@ import {
   Users,
   Building
 } from 'lucide-react';
+import { GetAllClinicTransactions } from '@/service/clinic/dueManagementService';
 
 // Types
 interface DuesSummary {
@@ -46,7 +47,7 @@ interface PaymentOrder {
 }
 
 interface Transaction {
-  id: string;
+  uuid: string;
   clinic_id: string;
   clinic_name: string;
   amount: number;
@@ -55,7 +56,7 @@ interface Transaction {
   updated_at: string;
   payment_order?: PaymentOrder;
   description: string;
-  type: 'PAYMENT' | 'DUE' | 'REFUND';
+  transaction_type: 'PAYMENT' | 'DUE' | 'REFUND';
 }
 
 interface Clinic {
@@ -118,41 +119,41 @@ const sampleClinics: Clinic[] = [
   }
 ];
 
-const sampleTransactions: Transaction[] = [
-  {
-    id: "txn_001",
-    clinic_id: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-    clinic_name: "MediCare Clinic",
-    amount: 2000,
-    status: "COMPLETED",
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-15T10:35:00Z",
-    description: "Monthly subscription payment",
-    type: "PAYMENT"
-  },
-  {
-    id: "txn_002",
-    clinic_id: "7b2e9e4a-db49-575d-a4c6-fb9fced7d14g",
-    clinic_name: "City Health Center",
-    amount: 1500,
-    status: "PENDING",
-    created_at: "2025-01-14T15:20:00Z",
-    updated_at: "2025-01-14T15:20:00Z",
-    description: "Service charges",
-    type: "DUE"
-  },
-  {
-    id: "txn_003",
-    clinic_id: "8c3f0f5b-ec5a-686e-b5d7-gca0ged8e25h",
-    clinic_name: "Family Wellness Clinic",
-    amount: 800,
-    status: "FAILED",
-    created_at: "2025-01-13T09:15:00Z",
-    updated_at: "2025-01-13T09:18:00Z",
-    description: "Platform fees",
-    type: "PAYMENT"
-  }
-];
+// const sampleTransactions: Transaction[] = [
+//   {
+//     id: "txn_001",
+//     clinic_id: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
+//     clinic_name: "MediCare Clinic",
+//     amount: 2000,
+//     status: "COMPLETED",
+//     created_at: "2025-01-15T10:30:00Z",
+//     updated_at: "2025-01-15T10:35:00Z",
+//     description: "Monthly subscription payment",
+//     type: "PAYMENT"
+//   },
+//   {
+//     id: "txn_002",
+//     clinic_id: "7b2e9e4a-db49-575d-a4c6-fb9fced7d14g",
+//     clinic_name: "City Health Center",
+//     amount: 1500,
+//     status: "PENDING",
+//     created_at: "2025-01-14T15:20:00Z",
+//     updated_at: "2025-01-14T15:20:00Z",
+//     description: "Service charges",
+//     type: "DUE"
+//   },
+//   {
+//     id: "txn_003",
+//     clinic_id: "8c3f0f5b-ec5a-686e-b5d7-gca0ged8e25h",
+//     clinic_name: "Family Wellness Clinic",
+//     amount: 800,
+//     status: "FAILED",
+//     created_at: "2025-01-13T09:15:00Z",
+//     updated_at: "2025-01-13T09:18:00Z",
+//     description: "Platform fees",
+//     type: "PAYMENT"
+//   }
+// ];
 
 export const sampleBookings: Booking[] = [
   {
@@ -268,14 +269,29 @@ const DuesManagement: React.FC = () => {
   });
   
   const [clinics, setClinics] = useState<Clinic[]>(sampleClinics);
-  const [transactions, setTransactions] = useState<Transaction[]>(sampleTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
-  
+
+  const fetchTransactions = async () => {
+    try {
+      const data = await GetAllClinicTransactions()
+      setTransactions(data)
+    } catch (error) {
+      console.error("error to fetch data",error);
+    }
+    
+  }
+
+  useEffect(() => {
+ fetchTransactions()
+  }, [])
+  console.log(transactions,"transactions data")
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -295,7 +311,7 @@ const DuesManagement: React.FC = () => {
   const filteredPaymentTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.clinic_name.toLowerCase().includes(paymentHistorySearch.toLowerCase()) ||
-      transaction.id.toLowerCase().includes(paymentHistorySearch.toLowerCase());
+      transaction.uuid.toLowerCase().includes(paymentHistorySearch.toLowerCase());
     const matchesStatus = paymentHistoryStatus ? transaction.status === paymentHistoryStatus : true;
     return matchesSearch && matchesStatus;
   });
@@ -304,7 +320,7 @@ const DuesManagement: React.FC = () => {
   const exportPaymentHistoryToCSV = () => {
     const headers = ['Transaction ID', 'Clinic', 'Amount', 'Status', 'Date', 'Description'];
     const rows = filteredPaymentTransactions.map((t) => [
-      t.id,
+      t.uuid,
       t.clinic_name,
       t.amount,
       t.status,
@@ -387,7 +403,7 @@ const DuesManagement: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     const newTransaction: Transaction = {
-      id: `txn_${Date.now()}`,
+      uuid: `txn_${Date.now()}`,
       clinic_id: clinicId,
       clinic_name: clinics.find(c => c.id === clinicId)?.name || 'Unknown Clinic',
       amount: amount,
@@ -395,7 +411,7 @@ const DuesManagement: React.FC = () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       description: paymentDescription || 'Manual payment',
-      type: 'PAYMENT',
+      transaction_type: 'PAYMENT',
       payment_order: {
         amount: amount * 100, // Convert to paise
         amount_due: amount * 100,
@@ -435,7 +451,7 @@ const DuesManagement: React.FC = () => {
   // Filter transactions
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.clinic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         transaction.uuid.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter ? transaction.status === statusFilter : true;
     const matchesClinic = clinicFilter ? transaction.clinic_id === clinicFilter : true;
@@ -908,21 +924,21 @@ const DuesManagement: React.FC = () => {
                   const StatusIcon = statusConfig.icon;
                   
                   return (
-                    <tr key={transaction.id} className="hover:bg-slate-50 transition-all duration-200 group">
+                    <tr key={transaction.uuid} className="hover:bg-slate-50 transition-all duration-200 group">
                       <td className="py-4 sm:py-6 px-4 sm:px-8">
                         <div className="flex items-center space-x-3 sm:space-x-4">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
                             <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 text-sm sm:text-base">{transaction.id}</p>
+                            <p className="font-bold text-slate-900 text-sm sm:text-base">{transaction.uuid}</p>
                             <p className="text-sm text-slate-600 font-medium">{transaction.description}</p>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 sm:py-6 px-4 sm:px-8">
                         <p className="font-semibold text-slate-900 text-sm sm:text-base">{transaction.clinic_name}</p>
-                        <p className="text-sm text-slate-600 capitalize font-medium">{transaction.type.toLowerCase()}</p>
+                        <p className="text-sm text-slate-600 capitalize font-medium">{transaction.transaction_type?.toLowerCase()}</p>
                       </td>
                       <td className="py-4 sm:py-6 px-4 sm:px-8">
                         <p className="font-bold text-slate-900 text-lg sm:text-xl">{formatCurrency(transaction.amount)}</p>
@@ -1064,7 +1080,7 @@ const DuesManagement: React.FC = () => {
               <div className="space-y-3 sm:space-y-4">
                 <div>
                   <span className="block text-xs text-slate-500 font-medium mb-1">Transaction ID</span>
-                  <span className="font-mono text-xs sm:text-sm text-slate-900">{selectedTransaction.id}</span>
+                  <span className="font-mono text-xs sm:text-sm text-slate-900">{selectedTransaction.uuid}</span>
                 </div>
                 <div>
                   <span className="block text-xs text-slate-500 font-medium mb-1">Clinic</span>
@@ -1148,20 +1164,20 @@ const DuesManagement: React.FC = () => {
                       const statusConfig = getStatusConfig(transaction.status);
                       const StatusIcon = statusConfig.icon;
                       return (
-                        <tr key={transaction.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={transaction.uuid} className="hover:bg-slate-50 transition-colors">
                           <td className="py-2 sm:py-4 px-2 sm:px-4">
                             <div className="flex items-center space-x-2 sm:space-x-3">
                               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                                 <Receipt className="w-4 h-4 text-white" />
                               </div>
                               <div>
-                                <p className="font-semibold text-slate-900 text-xs sm:text-sm">{transaction.id}</p>
+                                <p className="font-semibold text-slate-900 text-xs sm:text-sm">{transaction.uuid}</p>
                               </div>
                             </div>
                           </td>
                           <td className="py-2 sm:py-4 px-2 sm:px-4">
                             <p className="font-medium text-slate-900 text-xs sm:text-sm">{transaction.clinic_name}</p>
-                            <p className="text-xs sm:text-sm text-slate-600 capitalize">{transaction.type.toLowerCase()}</p>
+                            <p className="text-xs sm:text-sm text-slate-600 capitalize">{transaction.transaction_type.toLowerCase()}</p>
                           </td>
                           <td className="py-2 sm:py-4 px-2 sm:px-4">
                             <p className="font-bold text-slate-900 text-xs sm:text-sm">{formatCurrency(transaction.amount)}</p>

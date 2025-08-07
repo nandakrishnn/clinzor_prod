@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Plus, Search, Filter, Edit, Trash2, Eye, Save, X, ChevronDown, CalendarDays, MapPin, Stethoscope, AlertCircle, Layers, RotateCcw, Home, Video } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { createClinicBlukSlot, deleteClinicSlot, GetAllClinicSlot } from '@/service/clinic/slotManagementService';
 
-// Slot type definition
 interface Slot {
   uuid: string;
   clinic: string;
@@ -19,6 +19,8 @@ interface Slot {
   is_video_call: boolean;
   is_home_visit: boolean;
   is_physical_visit: boolean;
+  female_doctor_count: number;
+  clinic_name: string;
 }
 
 const SlotManagementSystem = () => {
@@ -26,14 +28,12 @@ const SlotManagementSystem = () => {
   const [filteredSlots, setFilteredSlots] = useState<Slot[]>([]);
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter states with advanced options
   const [filters, setFilters] = useState({
     fromDate: null as Date | null,
     toDate: null as Date | null,
@@ -44,29 +44,21 @@ const SlotManagementSystem = () => {
     availability: ''
   });
 
-  // Bulk creation states
   const [bulkModalType, setBulkModalType] = useState<'' | 'PHYSICAL_OR_VIDEO' | 'HOME_VISIT'>('');
-
-  // Physical/Video bulk form state
   const [physicalVideoSlots, setPhysicalVideoSlots] = useState([
     { start_time: '', end_time: '', max_bookings: 6, is_video_call: true, is_physical_visit: true }
   ]);
-
-  // Home Visit bulk form state
   const [homeVisitTemplate, setHomeVisitTemplate] = useState({
     startDate: '',
     endDate: '',
-    weekdays: [1, 2, 3, 4, 5], // Mon-Fri
+    weekdays: [1, 2, 3, 4, 5],
     timeSlots: ['09:00'],
     max_bookings: 1
   });
   const [homeVisitPreview, setHomeVisitPreview] = useState<{ start_time: string }[]>([]);
-
-  // View modal state
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingSlot, setViewingSlot] = useState<Slot | null>(null);
 
-  // Mock clinic services for dropdown
   const clinicServices = [
     { id: "159e3627-65eb-40b2-b535-37cbb6535ab8", name: "General Consultation" },
     { id: "259e3627-65eb-40b2-b535-37cbb6535ab9", name: "Cardiology" },
@@ -74,84 +66,27 @@ const SlotManagementSystem = () => {
     { id: "459e3627-65eb-40b2-b535-37cbb6535ac1", name: "Pediatrics" }
   ];
 
-  // Mock data initialization
-  useEffect(() => {
-    const mockSlots = [
-      {
-        uuid: "6562ab44-a657-4a30-a7ff-5583341b97ce",
-        clinic: "mock-clinic-id",
-        clinic_service: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-        slot_type: "HOME_VISIT",
-        start_time: "2025-06-27T09:00:00Z",
-        end_time: "2025-06-27T09:30:00Z",
-        created_by: "admin@gmail.com",
-        max_bookings: 6,
-        available_slots: 5,
-        status: "APPROVED",
-        reason_for_rejection: null,
-        is_video_call: false,
-        is_home_visit: true,
-        is_physical_visit: false
-      },
-      {
-        uuid: "4cb6a934-e653-4c12-8734-ba099b73a2e3",
-        clinic: "mock-clinic-id",
-        clinic_service: "259e3627-65eb-40b2-b535-37cbb6535ab9",
-        slot_type: "PHYSICAL_VISIT",
-        start_time: "2025-06-27T10:00:00Z",
-        end_time: "2025-06-27T10:30:00Z",
-        created_by: "admin@gmail.com",
-        max_bookings: 4,
-        available_slots: 4,
-        status: "PENDING",
-        reason_for_rejection: null,
-        is_video_call: false,
-        is_home_visit: false,
-        is_physical_visit: true
-      },
-      {
-        uuid: "85b0bbb4-f963-43ad-a500-3ab30b4a563e",
-        clinic: "mock-clinic-id",
-        clinic_service: "359e3627-65eb-40b2-b535-37cbb6535ac0",
-        slot_type: "VIDEO_CALL",
-        start_time: "2025-06-27T14:00:00Z",
-        end_time: "2025-06-27T14:30:00Z",
-        created_by: "admin@gmail.com",
-        max_bookings: 8,
-        available_slots: 2,
-        status: "REJECTED",
-        reason_for_rejection: "Overlapping slots",
-        is_video_call: true,
-        is_home_visit: false,
-        is_physical_visit: false
-      },
-      {
-        uuid: "95b0bbb4-f963-43ad-a500-3ab30b4a563f",
-        clinic: "mock-clinic-id",
-        clinic_service: "459e3627-65eb-40b2-b535-37cbb6535ac1",
-        slot_type: "HOME_VISIT",
-        start_time: "2025-06-28T11:00:00Z",
-        end_time: "2025-06-28T11:30:00Z",
-        created_by: "doctor@gmail.com",
-        max_bookings: 6,
-        available_slots: 6,
-        status: "APPROVED",
-        reason_for_rejection: null,
-        is_video_call: false,
-        is_home_visit: true,
-        is_physical_visit: false
-      }
-    ];
-    setSlots(mockSlots);
-    setFilteredSlots(mockSlots);
-    setTotalPages(1);
-  }, []);
+  const fetchSlots = async (page = 1) => {
+    try {
+      setLoading(true);
+      const data = await GetAllClinicSlot(page);
+      setSlots(data.data);
+      setFilteredSlots(data.data);
+      setTotalPages(data.total_pages || 1);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Advanced filtering logic
+  useEffect(() => {
+    fetchSlots(currentPage);
+  }, [currentPage]);
+
   useEffect(() => {
     let filtered = slots;
 
-    // Search term filter
     if (searchTerm) {
       filtered = filtered.filter(slot => {
         const serviceName = getServiceName(slot.clinic_service);
@@ -160,7 +95,6 @@ const SlotManagementSystem = () => {
       });
     }
 
-    // Date range filters
     if (filters.fromDate) {
       filtered = filtered.filter(slot =>
         filters.fromDate && new Date(slot.start_time) >= filters.fromDate
@@ -173,17 +107,14 @@ const SlotManagementSystem = () => {
       );
     }
 
-    // Status filter
     if (filters.status) {
       filtered = filtered.filter(slot => slot.status === filters.status);
     }
 
-    // Service filter
     if (filters.clinicService) {
       filtered = filtered.filter(slot => slot.clinic_service === filters.clinicService);
     }
 
-    // Time range filter
     if (filters.timeRange) {
       filtered = filtered.filter(slot => {
         const hour = new Date(slot.start_time).getHours();
@@ -196,7 +127,6 @@ const SlotManagementSystem = () => {
       });
     }
 
-    // Capacity filter
     if (filters.capacity) {
       filtered = filtered.filter(slot => {
         switch (filters.capacity) {
@@ -208,7 +138,6 @@ const SlotManagementSystem = () => {
       });
     }
 
-    // Availability filter
     if (filters.availability) {
       filtered = filtered.filter(slot => {
         const availabilityRatio = slot.available_slots / slot.max_bookings;
@@ -235,6 +164,7 @@ const SlotManagementSystem = () => {
       ...prev,
       [key]: value
     }));
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -248,6 +178,8 @@ const SlotManagementSystem = () => {
       availability: ''
     });
     setSearchTerm('');
+    setCurrentPage(1);
+    fetchSlots(1);
   };
 
   const handleEdit = (slot: Slot) => {
@@ -264,12 +196,17 @@ const SlotManagementSystem = () => {
     setEditingSlot(null);
   };
 
-  const handleDelete = (uuid: string) => {
-    if (window.confirm('Are you sure you want to delete this slot?')) {
+ const handleDelete = async (uuid: string) => {
+  if (window.confirm('Are you sure you want to delete this slot?')) {
+    try {
+      await deleteClinicSlot(uuid);
       setSlots(prev => prev.filter(slot => slot.uuid !== uuid));
+    } catch (error) {
+      console.error('Failed to delete slot:', error);
+      // You might want to show an error message to the user here
     }
-  };
-
+  }
+};
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED': return 'bg-green-50 text-green-700 border-green-200';
@@ -318,22 +255,6 @@ const SlotManagementSystem = () => {
     setShowViewModal(true);
   };
 
-  const SLOTS_PER_PAGE = 5;
-
-  // Pagination logic
-  useEffect(() => {
-    setCurrentPage(1); // Reset to first page on filter/search change
-  }, [filteredSlots.length]);
-
-  const paginatedSlots = filteredSlots.slice(
-    (currentPage - 1) * SLOTS_PER_PAGE,
-    currentPage * SLOTS_PER_PAGE
-  );
-
-  useEffect(() => {
-    setTotalPages(Math.max(1, Math.ceil(filteredSlots.length / SLOTS_PER_PAGE)));
-  }, [filteredSlots.length]);
-
   // Generate home visit slots from template
   const generateHomeVisitSlots = () => {
     const { startDate, endDate, weekdays, timeSlots, max_bookings } = homeVisitTemplate;
@@ -358,7 +279,7 @@ const SlotManagementSystem = () => {
   };
 
   // Handle bulk slot creation submission
-  const submitBulkSlots = () => {
+  const submitBulkSlots =async () => {
     let payload;
     if (bulkModalType === 'PHYSICAL_OR_VIDEO') {
       payload = {
@@ -388,8 +309,18 @@ const SlotManagementSystem = () => {
     }
     console.log("Bulk Slot Payload:", payload);
     // Submit to API here
+     try {
+    // Call the API with the payload
+    await createClinicBlukSlot(payload);
+    // Handle successful creation
     setShowBulkForm(false);
     setBulkModalType('');
+    // You might want to add a success message or refresh the slots list
+    fetchSlots(currentPage); // Refresh the slots list
+  } catch (error) {
+    console.error("Error creating bulk slots:", error);
+    // Handle error (show error message to user, etc.)
+  }
   };
 
   // Restore handleBulkFormChange for bulk slot editing
@@ -587,82 +518,86 @@ const SlotManagementSystem = () => {
 
         {/* Slots Grid */}
         <div className="grid gap-3 sm:gap-4">
-          {paginatedSlots.map((slot) => (
-            <div key={slot.uuid} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow duration-200">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 w-full">
-                  {/* Date & Time */}
-                  <div className="flex items-center space-x-3 w-full sm:w-auto">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900 text-sm sm:text-base">{formatDate(slot.start_time)}</div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : filteredSlots.length > 0 ? (
+            filteredSlots.map((slot) => (
+              <div key={slot.uuid} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 w-full">
+                    {/* Date & Time */}
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm sm:text-base">{formatDate(slot.start_time)}</div>
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {/* Service */}
-                  <div className="flex items-center space-x-3 w-full sm:w-auto">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                      <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900 text-sm sm:text-base">{getServiceName(slot.clinic_service)}</div>
-                    </div>
-                  </div>
-                  {/* Capacity */}
-                  <div className="flex items-center space-x-3 w-full sm:w-auto">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-                    </div>
-                    <div>
-                      <div className={`font-semibold ${getAvailabilityColor(slot.available_slots, slot.max_bookings)} text-sm sm:text-base`}>
-                        {slot.available_slots}/{slot.max_bookings}
+                    {/* Service */}
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-500">Available</div>
+                      <div>
+                        <div className="font-medium text-gray-900 text-sm sm:text-base">{getServiceName(slot.clinic_service)}</div>
+                      </div>
+                    </div>
+                    {/* Capacity */}
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                      </div>
+                      <div>
+                        <div className={`font-semibold ${getAvailabilityColor(slot.available_slots, slot.max_bookings)} text-sm sm:text-base`}>
+                          {slot.available_slots}/{slot.max_bookings}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500">Available</div>
+                      </div>
+                    </div>
+                    {/* Status */}
+                    <div>
+                      <span className={`inline-flex px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(slot.status)}`}>
+                        {slot.status}
+                      </span>
+                      {slot.reason_for_rejection && (
+                        <div className="flex items-center space-x-1 mt-1">
+                          <AlertCircle className="w-3 h-3 text-red-500" />
+                          <span className="text-xs text-red-600">{slot.reason_for_rejection}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {/* Status */}
-                  <div>
-                    <span className={`inline-flex px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(slot.status)}`}>
-                      {slot.status}
-                    </span>
-                    {slot.reason_for_rejection && (
-                      <div className="flex items-center space-x-1 mt-1">
-                        <AlertCircle className="w-3 h-3 text-red-500" />
-                        <span className="text-xs text-red-600">{slot.reason_for_rejection}</span>
-                      </div>
-                    )}
+                  {/* Actions */}
+                  <div className="flex items-center space-x-1 sm:space-x-2 mt-2 md:mt-0">
+                    <button
+                      onClick={() => handleEdit(slot)}
+                      className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors duration-200"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(slot.uuid)}
+                      className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-xl transition-colors duration-200"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleView(slot)}
+                      className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors duration-200"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-                {/* Actions */}
-                <div className="flex items-center space-x-1 sm:space-x-2 mt-2 md:mt-0">
-                  <button
-                    onClick={() => handleEdit(slot)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors duration-200"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(slot.uuid)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-xl transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleView(slot)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors duration-200"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-
-          {filteredSlots.length === 0 && (
+            ))
+          ) : (
             <div className="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
               <Calendar className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No slots found</h3>
@@ -672,7 +607,7 @@ const SlotManagementSystem = () => {
         </div>
 
         {/* Pagination Controls */}
-        {filteredSlots.length > SLOTS_PER_PAGE && (
+        {totalPages > 1 && (
           <div className="flex justify-center items-center mt-4 gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -681,7 +616,7 @@ const SlotManagementSystem = () => {
             >
               Prev
             </button>
-            {[...Array(totalPages)].map((_, idx) => (
+            {Array.from({ length: totalPages }, (_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentPage(idx + 1)}
@@ -999,117 +934,7 @@ const SlotManagementSystem = () => {
   );
 };
 
-function CombinedDateTimePicker({ value, onChange, label, error, minDateTime }: { value: Date | null, onChange: (date: Date | null) => void, label: string, error?: string, minDateTime?: Date | string | null | undefined }) {
-  const [dateValue, setDateValue] = useState<Date | null>(value);
-  const [timeValue, setTimeValue] = useState(() => {
-    if (!value) return '09:00';
-    const date = value;
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  });
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-
-  useEffect(() => {
-    setDateValue(value);
-    if (value) {
-      setTimeValue(`${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`);
-    }
-  }, [value]);
-
-  const handleDateChange = (date: Date | null) => {
-    setDateValue(date);
-    if (date && timeValue) {
-      const [hours, minutes] = timeValue.split(':').map(Number);
-      const newDate = new Date(date);
-      newDate.setHours(hours, minutes, 0, 0);
-      onChange(newDate);
-    } else {
-      onChange(null);
-    }
-    setIsDatePickerOpen(false);
-  };
-
-  const handleTimeChange = (newTime: string) => {
-    setTimeValue(newTime);
-    if (dateValue && newTime) {
-      const [hours, minutes] = newTime.split(':').map(Number);
-      const newDate = new Date(dateValue);
-      newDate.setHours(hours, minutes, 0, 0);
-      onChange(newDate);
-    }
-  };
-
-  // Ensure minDate is a Date object or undefined
-  let minDate: Date | undefined = undefined;
-  if (minDateTime) {
-    if (minDateTime instanceof Date) {
-      minDate = minDateTime;
-    } else if (typeof minDateTime === 'string') {
-      const d = new Date(minDateTime);
-      if (!isNaN(d.getTime())) minDate = d;
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-        <CalendarDays className="w-4 h-4" />
-        {label}
-      </label>
-      <div className="flex gap-3">
-        <div
-          onClick={() => setIsDatePickerOpen(true)}
-          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md cursor-pointer ${
-            error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-          }`}
-        >
-          {dateValue ? dateValue.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          }) : 'Select date...'}
-        </div>
-        <input
-          type="time"
-          value={timeValue}
-          onChange={(e) => handleTimeChange(e.target.value)}
-          className={`w-36 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md ${
-            error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-          }`}
-        />
-      </div>
-      {isDatePickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setIsDatePickerOpen(false)}>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300" />
-          <div className="relative bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-100" onClick={e => e.stopPropagation()}>
-            <div className="absolute top-4 right-4 z-10">
-              <button
-                onClick={() => setIsDatePickerOpen(false)}
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            <div className="mt-4">
-              <DatePicker
-                selected={dateValue}
-                onChange={handleDateChange}
-                minDate={minDate}
-                inline
-                className="w-full p-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-lg"
-                calendarClassName="!bg-white !border-2 !border-gray-200 !rounded-2xl !shadow-lg"
-                wrapperClassName="w-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      {error && <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">{error}</div>}
-    </div>
-  );
-}
-
-function SlotPatternGenerator({ onPatternSave, clinicServices }: { onPatternSave?: (pattern: any) => void, clinicServices: { id: string, name: string }[] }) {
+function SlotPatternGenerator({ clinicServices }: { clinicServices: { id: string, name: string }[] }) {
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
   const [slotsByDay, setSlotsByDay] = useState<{ [day: string]: { [time: string]: number } }>({});
@@ -1194,7 +1019,6 @@ function SlotPatternGenerator({ onPatternSave, clinicServices }: { onPatternSave
     }
     setSlotsByDay(newSlotsByDay);
     setOffDays(newOffDays);
-    if (onPatternSave) onPatternSave({ slotsByDay: newSlotsByDay, averageServiceTime, offDays: newOffDays, option, selectedService });
   };
 
   return (
