@@ -279,7 +279,7 @@ const SlotManagementSystem = () => {
   };
 
   // Handle bulk slot creation submission
-  const submitBulkSlots =async () => {
+  const submitBulkSlots = async () => {
     let payload;
     if (bulkModalType === 'PHYSICAL_OR_VIDEO') {
       payload = {
