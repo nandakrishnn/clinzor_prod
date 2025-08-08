@@ -17,6 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import MapPicker from './MapPicker';
+import { useSession } from 'next-auth/react';
 
 // Type definitions
 interface ClinicData {
@@ -62,6 +63,8 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
 }
 
 const ClinicSettingsDashboard = () => {
+  const {data: user, status } = useSession()
+console.log(user,"clinic data")
   const [clinicData, setClinicData] = useState<ClinicData>({
     name: 'Prime Healthcare Clinic',
     email: 'contact@primehealthcare.com',

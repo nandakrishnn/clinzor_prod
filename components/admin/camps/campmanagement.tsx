@@ -41,14 +41,40 @@ interface Camp {
   completed?: boolean;
 }
 
+const Notification = ({ type, message, onClose }: {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: -50, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -50, scale: 0.9 }}
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+        'bg-yellow-50 border-yellow-200 text-yellow-800'
+      }`}
+  >
+    <div className="flex items-center justify-between">
+      <p className="font-medium">{message}</p>
+      <button
+        onClick={onClose}
+        className="ml-4 text-gray-400 hover:text-gray-600"
+      >
+        ×
+      </button>
+    </div>
+  </motion.div>
+);
+
 const CampManagement = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
 
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterCompletion, setFilterCompletion] = useState("all");
-  const [viewMode, setViewMode] = useState("grid");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCompletion, setFilterCompletion] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
   const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
@@ -58,18 +84,19 @@ const CampManagement = () => {
 
   useEffect(() => {
     const fectchCamps = async () => {
-      setLoading(true);
+      setLoading(true)
       try {
         const data = await getAllCamps();
-        setCamps(data);
+        setCamps(data)
       } catch (error) {
+
       } finally {
         setLoading(false);
       }
-    };
+    }
     fectchCamps();
-  }, []);
-  console.log(camps, "data");
+  }, [])
+  console.log(camps, "data")
 
   // Approve/Reject handlers
   const handleApprove = () => {
@@ -95,29 +122,27 @@ const CampManagement = () => {
     setLoadingCampId(campId);
 
     // Optimistically update the UI
-    setCamps((prev) =>
-      prev.map((c) => (c.uuid === campId ? { ...c, completed: true } : c))
-    );
+    setCamps(prev => prev.map(c =>
+      c.uuid === campId ? { ...c, status: 'COMPLETED' } : c
+    ));
 
     try {
-      // Call the API to mark as complete
-      await toggleCompletion(campId, { is_completed: true });
+      // Call the API to mark as complete with only COMPLETED status
+      await toggleCompletion(campId, { status: 'COMPLETED' });
 
       setNotification({
-        type: "success",
-        message: "Camp marked as completed successfully"
+        type: 'success',
+        message: 'Camp marked as completed successfully'
       });
     } catch (error: any) {
       // Revert the UI change if the API call fails
-      setCamps((prev) =>
-        prev.map((c) => (c.uuid === campId ? { ...c, completed: false } : c))
-      );
+      setCamps(prev => prev.map(c =>
+        c.uuid === campId ? { ...c, status: 'PENDING' } : c
+      ));
 
       setNotification({
-        type: "error",
-        message: `Failed to mark camp as complete: ${
-          error.response?.data?.message || error.message
-        }`
+        type: 'error',
+        message: `Failed to mark camp as complete: ${error.response?.data?.message || error.message}`
       });
     } finally {
       setLoadingCampId(null);
@@ -125,21 +150,21 @@ const CampManagement = () => {
   };
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "APPROVED":
+      case 'APPROVED':
         return {
-          color: "bg-gradient-to-r from-emerald-500 to-green-600 text-white",
+          color: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white',
           icon: CheckCircle,
           glow: "shadow-emerald-500/25"
         };
-      case "REJECTED":
+      case 'REJECTED':
         return {
-          color: "bg-gradient-to-r from-red-500 to-rose-600 text-white",
+          color: 'bg-gradient-to-r from-red-500 to-rose-600 text-white',
           icon: AlertCircle,
           glow: "shadow-red-500/25"
         };
       default:
         return {
-          color: "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
+          color: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white',
           icon: Clock,
           glow: "shadow-amber-500/25"
         };
@@ -163,16 +188,11 @@ const CampManagement = () => {
     if (source?.includes("instagram")) return <Instagram className="w-4 h-4" />;
     return <MapPin className="w-4 h-4" />;
   };
-
-  const filteredCamps = camps.filter((camp) => {
-    const matchesSearch =
-      camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredCamps = camps.filter(camp => {
+    const matchesSearch = camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === "all" || camp.status === filterStatus;
-    const matchesCompletion =
-      filterCompletion === "all" ||
-      (filterCompletion === "COMPLETED" ? camp.completed : !camp.completed);
+    const matchesFilter = filterStatus === 'all' || camp.status === filterStatus;
+    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'COMPLETED' ? camp.completed : !camp.completed);
     return matchesSearch && matchesFilter && matchesCompletion;
   });
 
@@ -295,11 +315,7 @@ const CampManagement = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Priority Indicator */}
-                <div
-                  className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(
-                    camp.priority
-                  )}`}
-                ></div>
+                <div className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(camp.priority)}`}></div>
 
                 {/* Hover Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
@@ -337,12 +353,7 @@ const CampManagement = () => {
                       <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                         <Calendar className="w-4 h-4 mr-2 text-purple-500" />
                         <div>
-                          <p className="font-medium">
-                            {new Date(camp.preferred_date).toLocaleDateString(
-                              "en",
-                              { month: "short", day: "numeric" }
-                            )}
-                          </p>
+                          <p className="font-medium">{new Date(camp.preferred_date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</p>
                           <p className="text-xs text-gray-500">preferred</p>
                         </div>
                       </div>
@@ -635,6 +646,18 @@ const CampManagement = () => {
           </div>
         </div>
       )}
+
+
+      {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

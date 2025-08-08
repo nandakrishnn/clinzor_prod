@@ -40,7 +40,7 @@ useEffect(() => {
   if (status === "authenticated") {
     // Check if user has EXPERT role
     if (session?.user?.role === "CLINIC") {
-      router.replace("/clinic");
+      router.replace("/clinicportal");
     }
    
   }

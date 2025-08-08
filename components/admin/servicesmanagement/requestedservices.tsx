@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Search, 
   Filter, 
@@ -26,10 +26,14 @@ import {
   FileText,
   Image as ImageIcon
 } from 'lucide-react';
+import { approveOrRejectClinicService, GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ServiceRequest {
-  id: string;
+  uuid: string;
   clinic: string;
+  clinic_name: string;
+  service_name: string;
   service: string;
   consultation_charge_video_call: number | null;
   consultation_charge_home_visit: number | null;
@@ -48,88 +52,114 @@ interface ServiceRequest {
   requestedDate: string;
 }
 
+const Notification = ({ type, message, onClose }: {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: -50, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -50, scale: 0.9 }}
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+        'bg-yellow-50 border-yellow-200 text-yellow-800'
+      }`}
+  >
+    <div className="flex items-center justify-between">
+      <p className="font-medium">{message}</p>
+      <button
+        onClick={onClose}
+        className="ml-4 text-gray-400 hover:text-gray-600"
+      >
+        ×
+      </button>
+    </div>
+  </motion.div>
+);
+
 const ClinicServiceRequests: React.FC = () => {
   const [requests, setRequests] = useState<ServiceRequest[]>([
-    {
-      id: '1',
-      clinic: '5a1f8f39-ca38-464c-93c5-ea8edbd6c03f',
-      service: '4ffadff3-c90f-4fb4-b798-3c6fcab21020',
-      consultation_charge_video_call: 400,
-      consultation_charge_home_visit: 200,
-      treatment_charge_video_call: 800,
-      treatment_charge_physical_visit: 500,
-      consultation_charge_physical_visit: 200,
-      treatment_charge_home_visit: 600,
-      is_video_call: true,
-      is_home_service: false,
-      is_clinic_visit: true,
-      clinic_provided_name: 'Podiatric Treatment',
-      description: 'Assessment, diagnosis, and treatment of conditions affecting the feet and lower limbs',
-      image: 'https://clinzor.s3.ap-south-1.amazonaws.com/clinic_images/0abd6f91-ab5f-437d-9020-ea074a56ae04_cardiology.jpeg',
-      status: 'PENDING',
-      rejectionReason: null,
-      requestedDate: '2024-06-25',
-    },
-    {
-      id: '2',
-      clinic: 'clinic-2',
-      service: 'service-2',
-      consultation_charge_video_call: 300,
-      consultation_charge_home_visit: null,
-      treatment_charge_video_call: 700,
-      treatment_charge_physical_visit: 400,
-      consultation_charge_physical_visit: 150,
-      treatment_charge_home_visit: null,
-      is_video_call: true,
-      is_home_service: false,
-      is_clinic_visit: true,
-      clinic_provided_name: 'Dermatology',
-      description: 'Skin care and treatment for various dermatological conditions.',
-      image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop',
-      status: 'APPROVED',
-      rejectionReason: null,
-      requestedDate: '2024-06-28',
-    },
-    {
-      id: '3',
-      clinic: 'clinic-3',
-      service: 'service-3',
-      consultation_charge_video_call: 250,
-      consultation_charge_home_visit: 100,
-      treatment_charge_video_call: 500,
-      treatment_charge_physical_visit: 300,
-      consultation_charge_physical_visit: 100,
-      treatment_charge_home_visit: 400,
-      is_video_call: false,
-      is_home_service: true,
-      is_clinic_visit: true,
-      clinic_provided_name: 'General Medicine',
-      description: 'Routine checkups, vaccinations, and treatment of common illnesses.',
-      image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400&h=300&fit=crop',
-      status: 'REJECTED',
-      rejectionReason: 'Insufficient documentation provided. Please submit proper medical certifications and facility photos.',
-      requestedDate: '2024-06-20',
-    },
-    {
-      id: '4',
-      clinic: 'clinic-4',
-      service: 'service-4',
-      consultation_charge_video_call: 600,
-      consultation_charge_home_visit: null,
-      treatment_charge_video_call: 900,
-      treatment_charge_physical_visit: 800,
-      consultation_charge_physical_visit: 400,
-      treatment_charge_home_visit: null,
-      is_video_call: true,
-      is_home_service: false,
-      is_clinic_visit: true,
-      clinic_provided_name: 'Orthopedic Surgery',
-      description: 'Joint replacement, sports medicine, spine surgery, and trauma care.',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop',
-      status: 'PENDING',
-      rejectionReason: null,
-      requestedDate: '2024-06-29',
-    }
+    // {
+    //   id: '1',
+    //   clinic: '5a1f8f39-ca38-464c-93c5-ea8edbd6c03f',
+    //   service: '4ffadff3-c90f-4fb4-b798-3c6fcab21020',
+    //   consultation_charge_video_call: 400,
+    //   consultation_charge_home_visit: 200,
+    //   treatment_charge_video_call: 800,
+    //   treatment_charge_physical_visit: 500,
+    //   consultation_charge_physical_visit: 200,
+    //   treatment_charge_home_visit: 600,
+    //   is_video_call: true,
+    //   is_home_service: false,
+    //   is_clinic_visit: true,
+    //   clinic_provided_name: 'Podiatric Treatment',
+    //   description: 'Assessment, diagnosis, and treatment of conditions affecting the feet and lower limbs',
+    //   image: 'https://clinzor.s3.ap-south-1.amazonaws.com/clinic_images/0abd6f91-ab5f-437d-9020-ea074a56ae04_cardiology.jpeg',
+    //   status: 'PENDING',
+    //   rejectionReason: null,
+    //   requestedDate: '2024-06-25',
+    // },
+    // {
+    //   id: '2',
+    //   clinic: 'clinic-2',
+    //   service: 'service-2',
+    //   consultation_charge_video_call: 300,
+    //   consultation_charge_home_visit: null,
+    //   treatment_charge_video_call: 700,
+    //   treatment_charge_physical_visit: 400,
+    //   consultation_charge_physical_visit: 150,
+    //   treatment_charge_home_visit: null,
+    //   is_video_call: true,
+    //   is_home_service: false,
+    //   is_clinic_visit: true,
+    //   clinic_provided_name: 'Dermatology',
+    //   description: 'Skin care and treatment for various dermatological conditions.',
+    //   image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop',
+    //   status: 'APPROVED',
+    //   rejectionReason: null,
+    //   requestedDate: '2024-06-28',
+    // },
+    // {
+    //   id: '3',
+    //   clinic: 'clinic-3',
+    //   service: 'service-3',
+    //   consultation_charge_video_call: 250,
+    //   consultation_charge_home_visit: 100,
+    //   treatment_charge_video_call: 500,
+    //   treatment_charge_physical_visit: 300,
+    //   consultation_charge_physical_visit: 100,
+    //   treatment_charge_home_visit: 400,
+    //   is_video_call: false,
+    //   is_home_service: true,
+    //   is_clinic_visit: true,
+    //   clinic_provided_name: 'General Medicine',
+    //   description: 'Routine checkups, vaccinations, and treatment of common illnesses.',
+    //   image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400&h=300&fit=crop',
+    //   status: 'REJECTED',
+    //   rejectionReason: 'Insufficient documentation provided. Please submit proper medical certifications and facility photos.',
+    //   requestedDate: '2024-06-20',
+    // },
+    // {
+    //   id: '4',
+    //   clinic: 'clinic-4',
+    //   service: 'service-4',
+    //   consultation_charge_video_call: 600,
+    //   consultation_charge_home_visit: null,
+    //   treatment_charge_video_call: 900,
+    //   treatment_charge_physical_visit: 800,
+    //   consultation_charge_physical_visit: 400,
+    //   treatment_charge_home_visit: null,
+    //   is_video_call: true,
+    //   is_home_service: false,
+    //   is_clinic_visit: true,
+    //   clinic_provided_name: 'Orthopedic Surgery',
+    //   description: 'Joint replacement, sports medicine, spine surgery, and trauma care.',
+    //   image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop',
+    //   status: 'PENDING',
+    //   rejectionReason: null,
+    //   requestedDate: '2024-06-29',
+    // }
   ]);
 
   const [viewingRequest, setViewingRequest] = useState<ServiceRequest | null>(null);
@@ -140,7 +170,27 @@ const ClinicServiceRequests: React.FC = () => {
   const [itemsPerPage] = useState<number>(6);
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [showRejectionModal, setShowRejectionModal] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
 
+
+  const fectchSercicve = async () => {
+    try {
+      const data = await GetAllClinicService()
+      setRequests(data)
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      throw error;
+      
+    }
+  }
+  useEffect(() => {
+    fectchSercicve();
+  }, [])
+  console.log("service",requests)
+  
   const getServiceIcon = (name: string) => {
     const serviceLower = name.toLowerCase();
     if (serviceLower.includes('cardio') || serviceLower.includes('heart')) {
@@ -180,41 +230,104 @@ const ClinicServiceRequests: React.FC = () => {
     }
   };
 
-  const handleApprove = (id: string) => {
+const handleApprove = async (id: string) => {
+  try {
+    // Update UI optimistically
     setRequests(requests.map(request =>
-      request.id === id
+      request.uuid === id
         ? { ...request, status: 'APPROVED' as const, rejectionReason: null }
         : request
     ));
-  };
+    
+    // Call API to persist the change
+    await approveOrRejectClinicService(id, { status: 'APPROVED' });
+    
+    // Optional: Show success notification
+    setNotification({
+      type: 'success',
+      message: 'Request approved successfully'
+    });
+  } catch (error) {
+    // Revert UI change if API call fails
+    setRequests(requests);
+    setNotification({
+      type: 'error',
+      message: 'Failed to approve request'
+    });
+    console.error('Approval error:', error);
+  }
+};
 
-  const handleReject = (id: string, reason: string) => {
+const handleReject = async (id: string, reason: string) => {
+  try {
+    // Update UI optimistically
     setRequests(requests.map(request =>
-      request.id === id
+      request.uuid === id
         ? { ...request, status: 'REJECTED' as const, rejectionReason: reason }
         : request
     ));
     setShowRejectionModal(null);
     setRejectionReason('');
-  };
+    
+    // Call API to persist the change
+    await approveOrRejectClinicService(id, { status: 'REJECTED' });
+    
+    // Optional: Show success notification
+    setNotification({
+      type: 'success',
+      message: 'Request rejected successfully'
+    });
+  } catch (error) {
+    // Revert UI change if API call fails
+    setRequests(requests);
+    setNotification({
+      type: 'error',
+      message: 'Failed to reject request'
+    });
+    console.error('Rejection error:', error);
+  }
+};
 
-  const handleStatusChange = (id: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED') => {
-    const request = requests.find(r => r.id === id);
-    if (!request) return;
-    // Prevent changing from REJECTED to APPROVED
-    if (request.status === 'REJECTED' && newStatus === 'APPROVED') {
-      return;
-    }
-    if (newStatus === 'REJECTED') {
-      setShowRejectionModal(id);
-      return;
-    }
+const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+  const request = requests.find(r => r.uuid === id);
+  if (!request) return;
+  
+  // Prevent changing from REJECTED to APPROVED
+  if (request.status === 'REJECTED' && newStatus === 'APPROVED') {
+    return;
+  }
+  
+  if (newStatus === 'REJECTED') {
+    setShowRejectionModal(id);
+    return;
+  }
+  
+  try {
+    // Update UI optimistically
     setRequests(requests.map(request =>
-      request.id === id
+      request.uuid === id
         ? { ...request, status: newStatus, rejectionReason: newStatus === 'APPROVED' ? null : request.rejectionReason }
         : request
     ));
-  };
+    
+    // Call API to persist the change
+    await approveOrRejectClinicService(id, { status: newStatus });
+    
+    // Optional: Show success notification
+    setNotification({
+      type: 'success',
+      message: `Request status changed to ${newStatus.toLowerCase()}`
+    });
+  } catch (error) {
+    // Revert UI change if API call fails
+    setRequests(requests);
+    setNotification({
+      type: 'error',
+      message: 'Failed to update request status'
+    });
+    console.error('Status change error:', error);
+  }
+};
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
@@ -331,15 +444,15 @@ const ClinicServiceRequests: React.FC = () => {
         {/* Requests Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {currentRequests.map((request) => (
-            <div key={request.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
+            <div key={request.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    {getServiceIcon(request.service)}
+                    {getServiceIcon(request.service_name)}
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">{request.service}</h3>
-                      <p className="text-sm text-gray-600">{request.clinic}</p>
+                      <h3 className="font-semibold text-gray-900 text-lg">{request.service_name}</h3>
+                      <p className="text-sm text-gray-600">{request.clinic_name}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
@@ -354,7 +467,7 @@ const ClinicServiceRequests: React.FC = () => {
                   <div className="mb-4 rounded-lg overflow-hidden">
                     <img 
                       src={request.image} 
-                      alt={request.service}
+                      alt={request.service_name}
                       className="w-full h-48 object-cover"
                     />
                   </div>
@@ -428,14 +541,14 @@ const ClinicServiceRequests: React.FC = () => {
                   {request.status === 'PENDING' && (
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleApprove(request.id)}
+                        onClick={() => handleApprove(request.uuid)}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Approve</span>
                       </button>
                       <button
-                        onClick={() => setShowRejectionModal(request.id)}
+                        onClick={() => setShowRejectionModal(request.uuid)}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                       >
                         <XCircle className="w-4 h-4" />
@@ -448,7 +561,7 @@ const ClinicServiceRequests: React.FC = () => {
                     <div className="flex space-x-2">
                       {request.status !== 'REJECTED' && (
                         <button
-                          onClick={() => handleStatusChange(request.id, 'PENDING')}
+                          onClick={() => handleStatusChange(request.uuid, 'PENDING')}
                           className="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                         >
                           Mark as Pending
@@ -456,7 +569,7 @@ const ClinicServiceRequests: React.FC = () => {
                       )}
                       {request.status === 'APPROVED' && (
                         <button
-                          onClick={() => handleStatusChange(request.id, 'REJECTED')}
+                          onClick={() => handleStatusChange(request.uuid, 'REJECTED')}
                           className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                         >
                           Reject
@@ -574,8 +687,8 @@ const ClinicServiceRequests: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-                  {getServiceIcon(viewingRequest.service)}
-                  {viewingRequest.service}
+                  {getServiceIcon(viewingRequest.service_name)}
+                  {viewingRequest.service_name}
                 </h2>
                 <button
                   onClick={() => setViewingRequest(null)}
@@ -605,7 +718,7 @@ const ClinicServiceRequests: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2 text-sm">
                         <Building className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-900">{viewingRequest.clinic}</span>
+                        <span className="text-gray-900">{viewingRequest.clinic_name}</span>
                       </div>
                       <div className="flex items-center space-x-2 text-sm">
                         <MapPin className="w-4 h-4 text-gray-500" />
@@ -708,7 +821,7 @@ const ClinicServiceRequests: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => {
-                            handleApprove(viewingRequest.id);
+                            handleApprove(viewingRequest.uuid);
                             setViewingRequest(null);
                           }}
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
@@ -718,7 +831,7 @@ const ClinicServiceRequests: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            setShowRejectionModal(viewingRequest.id);
+                            setShowRejectionModal(viewingRequest.uuid);
                             setViewingRequest(null);
                           }}
                           className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1"
@@ -765,6 +878,17 @@ const ClinicServiceRequests: React.FC = () => {
           </div>
         </div>
       )}
+
+            {/* Notification */}
+            <AnimatePresence>
+              {notification && (
+                <Notification
+                  type={notification.type}
+                  message={notification.message}
+                  onClose={() => setNotification(null)}
+                />
+              )}
+            </AnimatePresence>
     </div>
   );
 };

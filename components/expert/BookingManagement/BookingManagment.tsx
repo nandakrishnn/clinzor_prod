@@ -4,6 +4,7 @@ import {
   AlertCircle, User, Video, Phone, MessageSquare, Eye, Edit, Trash2, 
   ChevronLeft, ChevronRight, Clock, DollarSign, AlertTriangle, Save, Plus, X, PhoneOff
 } from 'lucide-react';
+import { GetAllExpertBooking } from '@/service/expert/bookingMangementService';
 
 // Types
 interface Booking {
@@ -490,6 +491,21 @@ const ExpertBookingManager: React.FC = () => {
     { value: 'status_asc', label: 'Status (A-Z)' },
     { value: 'status_desc', label: 'Status (Z-A)' }
   ];
+
+  const fetchBooking = async () => {
+    try {
+      const data = await GetAllExpertBooking()
+      setBookings(data.data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setNotification({ message: 'Failed to fetch bookings', type: 'error' });
+      
+    }
+  }
+  useEffect(() => {
+    fetchBooking();
+  }, []);
+  console.log("Bookings fetched:", bookings); 
 
   // Update the filteredBookings logic to include sorting
   const filteredBookings = useMemo(() => {

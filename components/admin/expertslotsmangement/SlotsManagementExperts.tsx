@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  ChevronDown, 
-  Eye, 
+import {
+  Users,
+  Plus,
+  Search,
+  ChevronDown,
+  Eye,
   RefreshCw,
   User,
   Mail,
@@ -19,6 +19,10 @@ import {
   Trash2,
   Settings
 } from 'lucide-react';
+import { approveOrRejectExpert, createExpert, GetAllExpert } from '@/service/admin/expertManagementService';
+import { getAllBookings, getAllSlots } from '@/service/admin/bookingManagementService';
+import { getAllClinic } from '@/service/admin/clinicManagentService';
+import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
 
 // Types
 type Expert = {
@@ -28,40 +32,82 @@ type Expert = {
   phone_number: string;
   gender: 'MALE' | 'FEMALE';
   enabled: boolean;
-  specialization?: string;
+  status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'DRAFT';
+  specializaton?: string;
   experience?: string;
   rating?: number;
   totalBookings?: number;
   joinedDate?: string;
+  clinic_service?: string; // Added clinic_service to match the API
+  education?: string; // Added education to match the API
 };
 
 type Booking = {
-  id: string;
+  uuid: string;
   patientName: string;
   patientEmail: string;
   date: string;
   time: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
-  type: 'CONSULTATION' | 'FOLLOW_UP' | 'EMERGENCY';
+  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'CANCELED'; // Added 'CANCELED'
+  type: 'CONSULTATION' | 'FOLLOW_UP' | 'EMERGENCY' | string;
+  booking_type?: string;
+  session_type?: string;
+  clinic_name?: string;
 };
 
+// Add Slot type
+type Slot = {
+  uuid: string;
+  start_time: string;
+  end_time: string;
+  available_slots: number;
+  max_bookings: number;
+  status: string;
+  clinic_name: string;
+  slot_type: string;
+};
 // Components
-const StatusBadge = ({ enabled }: { enabled: boolean }) => (
-  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-    enabled 
-      ? 'bg-green-100 text-green-800 border-green-200' 
-      : 'bg-red-100 text-red-800 border-red-200'
-  }`}>
-    {enabled ? 'Enabled' : 'Disabled'}
-  </span>
-);
+const StatusBadge = ({ enabled }: { enabled: 'APPROVED' | 'PENDING' | 'REJECTED' | 'DRAFT' }) => {
+  const statusConfig = {
+    APPROVED: {
+      text: 'Approved',
+      bg: 'bg-green-100',
+      textColor: 'text-green-800',
+      border: 'border-green-200'
+    },
+    PENDING: {
+      text: 'Pending',
+      bg: 'bg-yellow-100',
+      textColor: 'text-yellow-800',
+      border: 'border-yellow-200'
+    },
+    REJECTED: {
+      text: 'Rejected',
+      bg: 'bg-red-100',
+      textColor: 'text-red-800',
+      border: 'border-red-200'
+    },
+    DRAFT: {
+      text: 'Draft',
+      bg: 'bg-gray-100',
+      textColor: 'text-gray-800',
+      border: 'border-gray-200'
+    }
+  };
 
+  const config = statusConfig[enabled]; // Changed from `status` to `enabled`
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config?.bg} ${config.textColor} ${config.border}`}>
+      {config.text}
+    </span>
+  );
+};
 const GenderBadge = ({ gender }: { gender: string }) => (
-  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-    gender === 'MALE' 
-      ? 'bg-blue-100 text-blue-800' 
-      : 'bg-pink-100 text-pink-800'
-  }`}>
+  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${gender === 'MALE'
+    ? 'bg-blue-100 text-blue-800'
+    : 'bg-pink-100 text-pink-800'
+    }`}>
     {gender}
   </span>
 );
@@ -72,7 +118,7 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
     PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     CANCELLED: 'bg-red-100 text-red-800 border-red-200'
   };
-  
+
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colors[status as keyof typeof colors]}`}>
       {status}
@@ -80,20 +126,19 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const Notification = ({ type, message, onClose }: { 
-  type: 'success' | 'error' | 'warning'; 
-  message: string; 
-  onClose: () => void; 
+const Notification = ({ type, message, onClose }: {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: -50, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -50, scale: 0.9 }}
-    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${
-      type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
       type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-      'bg-yellow-50 border-yellow-200 text-yellow-800'
-    }`}
+        'bg-yellow-50 border-yellow-200 text-yellow-800'
+      }`}
   >
     <div className="flex items-center justify-between">
       <p className="font-medium">{message}</p>
@@ -107,17 +152,17 @@ const Notification = ({ type, message, onClose }: {
   </motion.div>
 );
 
-const ModernModal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  size = 'md' 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  title: string; 
-  children: React.ReactNode; 
+const ModernModal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md'
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) => {
   if (!isOpen) return null;
@@ -161,12 +206,12 @@ const ModernModal = ({
   );
 };
 
-const InputField = ({ 
-  label, 
-  type = 'text', 
-  value, 
-  onChange, 
-  placeholder, 
+const InputField = ({
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
   required = false,
   error = '',
   icon: Icon
@@ -191,9 +236,8 @@ const InputField = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-          error ? 'border-red-300' : 'border-gray-200'
-        }`}
+        className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${error ? 'border-red-300' : 'border-gray-200'
+          }`}
         required={required}
       />
     </div>
@@ -204,148 +248,150 @@ const InputField = ({
 export default function ExpertManagement() {
   // Mock data
   const [experts, setExperts] = useState<Expert[]>([
-    {
-      uuid: 'exp-1',
-      name: 'Dr. Sarah Johnson',
-      email: 'sarah.johnson@example.com',
-      phone_number: '1234567890',
-      gender: 'FEMALE',
-      enabled: true,
-      specialization: 'Cardiology',
-      experience: '8 years',
-      rating: 4.8,
-      totalBookings: 156,
-      joinedDate: '2022-01-15'
-    },
-    {
-      uuid: 'exp-2',
-      name: 'Dr. Michael Chen',
-      email: 'michael.chen@example.com',
-      phone_number: '2345678901',
-      gender: 'MALE',
-      enabled: true,
-      specialization: 'Neurology',
-      experience: '12 years',
-      rating: 4.9,
-      totalBookings: 203,
-      joinedDate: '2021-08-22'
-    },
-    {
-      uuid: 'exp-3',
-      name: 'Dr. Emily Rodriguez',
-      email: 'emily.rodriguez@example.com',
-      phone_number: '3456789012',
-      gender: 'FEMALE',
-      enabled: false,
-      specialization: 'Dermatology',
-      experience: '6 years',
-      rating: 4.6,
-      totalBookings: 89,
-      joinedDate: '2023-03-10'
-    },
-    {
-      uuid: 'exp-4',
-      name: 'Dr. James Wilson',
-      email: 'james.wilson@example.com',
-      phone_number: '4567890123',
-      gender: 'MALE',
-      enabled: true,
-      specialization: 'Orthopedics',
-      experience: '15 years',
-      rating: 4.7,
-      totalBookings: 278,
-      joinedDate: '2020-11-05'
-    },
-    {
-      uuid: 'exp-5',
-      name: 'Dr. Lisa Thompson',
-      email: 'lisa.thompson@example.com',
-      phone_number: '5678901234',
-      gender: 'FEMALE',
-      enabled: false,
-      specialization: 'Pediatrics',
-      experience: '10 years',
-      rating: 4.9,
-      totalBookings: 145,
-      joinedDate: '2022-06-18'
-    }
+    // {
+    //   uuid: 'exp-1',
+    //   name: 'Dr. Sarah Johnson',
+    //   email: 'sarah.johnson@example.com',
+    //   phone_number: '1234567890',
+    //   gender: 'FEMALE',
+    //   enabled: true,
+    //   specialization: 'Cardiology',
+    //   experience: '8 years',
+    //   rating: 4.8,
+    //   totalBookings: 156,
+    //   joinedDate: '2022-01-15'
+    // },
+    // {
+    //   uuid: 'exp-2',
+    //   name: 'Dr. Michael Chen',
+    //   email: 'michael.chen@example.com',
+    //   phone_number: '2345678901',
+    //   gender: 'MALE',
+    //   enabled: true,
+    //   specialization: 'Neurology',
+    //   experience: '12 years',
+    //   rating: 4.9,
+    //   totalBookings: 203,
+    //   joinedDate: '2021-08-22'
+    // },
+    // {
+    //   uuid: 'exp-3',
+    //   name: 'Dr. Emily Rodriguez',
+    //   email: 'emily.rodriguez@example.com',
+    //   phone_number: '3456789012',
+    //   gender: 'FEMALE',
+    //   enabled: false,
+    //   specialization: 'Dermatology',
+    //   experience: '6 years',
+    //   rating: 4.6,
+    //   totalBookings: 89,
+    //   joinedDate: '2023-03-10'
+    // },
+    // {
+    //   uuid: 'exp-4',
+    //   name: 'Dr. James Wilson',
+    //   email: 'james.wilson@example.com',
+    //   phone_number: '4567890123',
+    //   gender: 'MALE',
+    //   enabled: true,
+    //   specialization: 'Orthopedics',
+    //   experience: '15 years',
+    //   rating: 4.7,
+    //   totalBookings: 278,
+    //   joinedDate: '2020-11-05'
+    // },
+    // {
+    //   uuid: 'exp-5',
+    //   name: 'Dr. Lisa Thompson',
+    //   email: 'lisa.thompson@example.com',
+    //   phone_number: '5678901234',
+    //   gender: 'FEMALE',
+    //   enabled: false,
+    //   specialization: 'Pediatrics',
+    //   experience: '10 years',
+    //   rating: 4.9,
+    //   totalBookings: 145,
+    //   joinedDate: '2022-06-18'
+    // }
   ]);
 
-  // Mock upcoming bookings
-  const mockBookings: { [key: string]: Booking[] } = {
-    'exp-1': [
-      {
-        id: 'book-1',
-        patientName: 'John Doe',
-        patientEmail: 'john.doe@email.com',
-        date: '2025-07-01',
-        time: '10:00 AM',
-        status: 'CONFIRMED',
-        type: 'CONSULTATION'
-      },
-      {
-        id: 'book-2',
-        patientName: 'Jane Smith',
-        patientEmail: 'jane.smith@email.com',
-        date: '2025-07-01',
-        time: '2:30 PM',
-        status: 'PENDING',
-        type: 'FOLLOW_UP'
-      }
-    ],
-    'exp-2': [
-      {
-        id: 'book-3',
-        patientName: 'Robert Johnson',
-        patientEmail: 'robert.j@email.com',
-        date: '2025-07-02',
-        time: '9:00 AM',
-        status: 'CONFIRMED',
-        type: 'CONSULTATION'
-      }
-    ]
-  };
+  // // Mock upcoming bookings
+  // const mockBookings: { [key: string]: Booking[] } = {
+  //   'exp-1': [
+  //     {
+  //       id: 'book-1',
+  //       patientName: 'John Doe',
+  //       patientEmail: 'john.doe@email.com',
+  //       date: '2025-07-01',
+  //       time: '10:00 AM',
+  //       status: 'CONFIRMED',
+  //       type: 'CONSULTATION'
+  //     },
+  //     {
+  //       id: 'book-2',
+  //       patientName: 'Jane Smith',
+  //       patientEmail: 'jane.smith@email.com',
+  //       date: '2025-07-01',
+  //       time: '2:30 PM',
+  //       status: 'PENDING',
+  //       type: 'FOLLOW_UP'
+  //     }
+  //   ],
+  //   'exp-2': [
+  //     {
+  //       id: 'book-3',
+  //       patientName: 'Robert Johnson',
+  //       patientEmail: 'robert.j@email.com',
+  //       date: '2025-07-02',
+  //       time: '9:00 AM',
+  //       status: 'CONFIRMED',
+  //       type: 'CONSULTATION'
+  //     }
+  //   ]
+  // };
 
-  // Add mock slot data
-  const mockSlots: { [key: string]: { date: string; slots: { time: string; booked: boolean }[] }[] } = {
-    'exp-1': [
-      { date: '2025-07-01', slots: [
-        { time: '10:00 AM', booked: true },
-        { time: '11:00 AM', booked: false },
-        { time: '2:30 PM', booked: true },
-        { time: '4:00 PM', booked: false },
-      ] },
-      { date: '2025-07-02', slots: [
-        { time: '9:00 AM', booked: false },
-        { time: '10:00 AM', booked: false },
-      ] },
-    ],
-    'exp-2': [
-      { date: '2025-07-02', slots: [
-        { time: '9:00 AM', booked: true },
-        { time: '10:00 AM', booked: false },
-      ] },
-    ],
-  };
-
+  // // Add mock slot data
+  // const mockSlots: { [key: string]: { date: string; slots: { time: string; booked: boolean }[] }[] } = {
+  //   'exp-1': [
+  //     { date: '2025-07-01', slots: [
+  //       { time: '10:00 AM', booked: true },
+  //       { time: '11:00 AM', booked: false },
+  //       { time: '2:30 PM', booked: true },
+  //       { time: '4:00 PM', booked: false },
+  //     ] },
+  //     { date: '2025-07-02', slots: [
+  //       { time: '9:00 AM', booked: false },
+  //       { time: '10:00 AM', booked: false },
+  //     ] },
+  //   ],
+  //   'exp-2': [
+  //     { date: '2025-07-02', slots: [
+  //       { time: '9:00 AM', booked: true },
+  //       { time: '10:00 AM', booked: false },
+  //     ] },
+  //   ],
+  // };
+  const [slots, setSlots] = useState<{ date: string; slots: { time: string; booked: boolean }[] }[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredExperts, setFilteredExperts] = useState<Expert[]>(experts);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'ENABLED' | 'DISABLED'>('ALL');
   const [selectedGender, setSelectedGender] = useState<'ALL' | 'MALE' | 'FEMALE'>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
   const [expertBookings, setExpertBookings] = useState<Booking[]>([]);
-  
+  const [clinicServices, setClinicServices] = useState([]);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
+
 
   // Add Expert Form State
   const [newExpert, setNewExpert] = useState({
@@ -355,7 +401,10 @@ export default function ExpertManagement() {
     phone_number: '',
     gender: 'MALE' as 'MALE' | 'FEMALE',
     specialization: '',
-    experience: ''
+    experience: '',
+    clinic_service: "",
+    education: '',
+    specializaton: "",
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -363,14 +412,68 @@ export default function ExpertManagement() {
     email: '',
     password: '',
     phone_number: '',
-    specialization: ''
+    specialization: '',
+    clinic_service: "",
+    education: '',
+    specializaton: "",
   });
 
   // Confirmation modal state
-  const [confirmModal, setConfirmModal] = useState<{ 
-    type: 'enable' | 'disable' | 'delete'; 
-    expert: Expert | null 
+  const [confirmModal, setConfirmModal] = useState<{
+    type: 'enable' | 'disable' | 'delete';
+    expert: Expert | null
   } | null>(null);
+
+  const fetchdata = async () => {
+    try {
+      const [expertsResponse, slotsResponse, bookingsResponse, clinicServiceResponse] = await Promise.all([
+        GetAllExpert(),
+        getAllSlots(),
+        getAllBookings(),
+        GetAllClinicService()
+      ]);
+
+      // Transform experts data if needed
+      setExperts(expertsResponse);
+      setClinicServices(clinicServiceResponse);
+      // Transform slots data
+      // const transformedSlots = slotsResponse.map(slot => ({
+      //   uuid: slot.uuid,
+      //   start_time: slot.start_time,
+      //   end_time: slot.end_time,
+      //   available_slots: slot.available_slots,
+      //   max_bookings: slot.max_bookings,
+      //   status: slot.status,
+      //   clinic_name: slot.clinic_name,
+      //   slot_type: slot.slot_type
+      // }));
+      // setSlots(transformedSlots);
+
+      // // Transform bookings data
+      // const transformedBookings = bookingsResponse.map(booking => ({
+      //   uuid: booking.uuid,
+      //   patientName: booking.patient_name,
+      //   patientEmail: booking.patient_email,
+      //   date: new Date(booking.start_time).toLocaleDateString(),
+      //   time: new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      //   status: booking.booking_status === 'CANCELED' ? 'CANCELLED' : booking.booking_status,
+      //   type: booking.session_type || 'CONSULTATION',
+      //   booking_type: booking.booking_type,
+      //   session_type: booking.session_type,
+      //   clinic_name: booking.clinic_name
+      // }));
+      // setBookings(transformedBookings);
+
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
+  }
+  
+  useEffect(() => {
+    fetchdata();
+  }, []);
+  console.log("Experts:", experts);
+  console.log("clinicServices:", clinicServices);
 
   // Add state and filter logic for bookings modal
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
@@ -386,26 +489,26 @@ export default function ExpertManagement() {
   // Filter experts
   useEffect(() => {
     let filtered = [...experts];
-    
+
     if (searchQuery) {
-      filtered = filtered.filter(expert => 
+      filtered = filtered.filter(expert =>
         expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expert.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        expert?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expert.phone_number.includes(searchQuery) ||
-        expert.specialization?.toLowerCase().includes(searchQuery.toLowerCase())
+        expert.specializaton?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     if (selectedStatus !== 'ALL') {
-      filtered = filtered.filter(expert => 
+      filtered = filtered.filter(expert =>
         selectedStatus === 'ENABLED' ? expert.enabled : !expert.enabled
       );
     }
-    
+
     if (selectedGender !== 'ALL') {
       filtered = filtered.filter(expert => expert.gender === selectedGender);
     }
-    
+
     setFilteredExperts(filtered);
     setCurrentPage(1);
   }, [experts, searchQuery, selectedStatus, selectedGender]);
@@ -417,7 +520,7 @@ export default function ExpertManagement() {
 
   const stats = {
     total: experts.length,
-    enabled: experts.filter(e => e.enabled).length,
+    enabled: experts.filter(e => e.status).length,
     disabled: experts.filter(e => !e.enabled).length,
     male: experts.filter(e => e.gender === 'MALE').length,
     female: experts.filter(e => e.gender === 'FEMALE').length
@@ -430,44 +533,44 @@ export default function ExpertManagement() {
 
   const handleViewBookings = (expert: Expert) => {
     setSelectedExpert(expert);
-    setExpertBookings(mockBookings[expert.uuid] || []);
+    setExpertBookings(bookings[expert?.uuid] || []);
     setIsBookingsModalOpen(true);
   };
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '' };
-    
+    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '' ,  clinic_service: '',};
+
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
       valid = false;
     }
-    
+
     if (!newExpert.email.match(/^\S+@\S+\.\S+$/)) {
       errors.email = 'Please enter a valid email address';
       valid = false;
     }
-    
+
     if (newExpert.password.length < 6) {
       errors.password = 'Password must be at least 6 characters';
       valid = false;
     }
-    
+
     if (!newExpert.phone_number.match(/^\d{10}$/)) {
       errors.phone_number = 'Phone number must be 10 digits';
       valid = false;
     }
-    
+
     if (!newExpert.specialization.trim()) {
       errors.specialization = 'Specialization is required';
       valid = false;
     }
-    
+
     setFormErrors(errors);
     return valid;
   };
 
-  const handleAddExpert = () => {
+  const handleAddExpert = async () => {
     if (!validateForm()) {
       setNotification({
         type: 'error',
@@ -476,48 +579,80 @@ export default function ExpertManagement() {
       return;
     }
 
-    const expert: Expert = {
-      uuid: `exp-${Date.now()}`,
-      name: newExpert.name,
-      email: newExpert.email,
-      phone_number: newExpert.phone_number,
-      gender: newExpert.gender,
-      enabled: true,
-      specialization: newExpert.specialization,
-      experience: newExpert.experience || '0 years',
-      rating: 0,
-      totalBookings: 0,
-      joinedDate: new Date().toISOString().split('T')[0]
-    };
+    try {
+      const expertData = {
+        name: newExpert.name,
+        email: newExpert.email,
+        phone_number: newExpert.phone_number,
+        gender: newExpert.gender,
+        specializaton: newExpert.specialization,
+        experience: newExpert.experience || '0 years',
+        clinic_service: newExpert.clinic_service,
+        education: newExpert.education,
+ 
+      };
 
-    setExperts(prev => [...prev, expert]);
-    setNewExpert({
-      name: '',
-      email: '',
-      password: '',
-      phone_number: '',
-      gender: 'MALE',
-      specialization: '',
-      experience: ''
-    });
-    setFormErrors({ name: '', email: '', password: '', phone_number: '', specialization: '' });
-    setIsAddModalOpen(false);
-    setNotification({
-      type: 'success',
-      message: 'Expert added successfully'
-    });
+      // Call API to create expert
+      const createdExpert = await createExpert(expertData);
+
+      // Update local state with the expert returned from API
+      setExperts(prev => [...prev, {
+        ...createdExpert,
+        // Include any necessary transformations here
+      }]);
+
+      // Reset form
+      setNewExpert({
+        name: '',
+        email: '',
+        password: '',
+        phone_number: '',
+        gender: 'MALE',
+        specialization: '',
+        experience: '',
+        clinic_service: "",
+        education: '',
+        specializaton: "",
+      });
+      setFormErrors({ name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' });
+      setIsAddModalOpen(false);
+
+      setNotification({
+        type: 'success',
+        message: 'Expert added successfully'
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: 'Failed to add expert. Please try again.'
+      });
+      console.error('Error adding expert:', error);
+    }
   };
 
-  const handleToggleExpert = (expert: Expert) => {
-    setExperts(prev => prev.map(e => 
-      e.uuid === expert.uuid ? { ...e, enabled: !e.enabled } : e
-    ));
-    setNotification({
-      type: 'success',
-      message: `Expert "${expert.name}" ${expert.enabled ? 'disabled' : 'enabled'} successfully`
-    });
-  };
+  const handleToggleExpert = async (expert: Expert) => {
+    try {
+      const newStatus = expert.status === "APPROVED" ? "REJECTED" : "APPROVED";
 
+      // Update backend
+      await approveOrRejectExpert(expert.uuid, { status: newStatus });
+
+      // Update local state
+      setExperts(prev => prev.map(e =>
+        e.uuid === expert.uuid ? { ...e, status: newStatus } : e
+      ));
+
+      setNotification({
+        type: 'success',
+        message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: `Failed to update expert status`
+      });
+    }
+  };
   const handleDeleteExpert = (expert: Expert) => {
     setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
     setNotification({
@@ -530,7 +665,7 @@ export default function ExpertManagement() {
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row md:items-center justify-between mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -542,16 +677,16 @@ export default function ExpertManagement() {
             </h1>
             <p className="text-gray-600 mt-1">Manage and monitor medical experts</p>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
             </button>
-            <button 
+            <button
               onClick={() => setIsAddModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
@@ -560,10 +695,10 @@ export default function ExpertManagement() {
             </button>
           </div>
         </motion.div>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
-          <motion.div 
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -578,8 +713,8 @@ export default function ExpertManagement() {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -595,8 +730,8 @@ export default function ExpertManagement() {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -612,8 +747,8 @@ export default function ExpertManagement() {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -629,8 +764,8 @@ export default function ExpertManagement() {
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -647,9 +782,9 @@ export default function ExpertManagement() {
             </div>
           </motion.div>
         </div>
-        
+
         {/* Filters and Search */}
-        <motion.div 
+        <motion.div
           className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -666,7 +801,7 @@ export default function ExpertManagement() {
                 className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
               />
             </div>
-            
+
             {/* Status Filter */}
             <div className="relative">
               <select
@@ -680,7 +815,7 @@ export default function ExpertManagement() {
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
-            
+
             {/* Gender Filter */}
             <div className="relative">
               <select
@@ -718,7 +853,7 @@ export default function ExpertManagement() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{expert.name}</h3>
                   <p className="text-sm text-gray-600 mb-2">{expert.specialization}</p>
                   <div className="flex items-center gap-2 mb-2">
-                    <StatusBadge enabled={expert.enabled} />
+                    <StatusBadge enabled={expert.status} />
                     <GenderBadge gender={expert.gender} />
                   </div>
                 </div>
@@ -739,7 +874,7 @@ export default function ExpertManagement() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <Mail size={14} className="mr-2" />
@@ -754,14 +889,14 @@ export default function ExpertManagement() {
                   {expert.experience} experience
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">{expert.totalBookings}</span> bookings
                 </div>
-                
+
                 <div className="flex gap-2">
-                  {expert.enabled ? (
+                  {expert.status === "APPROVED" ? (
                     <button
                       onClick={() => setConfirmModal({ type: 'disable', expert })}
                       className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200 transition-colors"
@@ -795,11 +930,10 @@ export default function ExpertManagement() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-4 py-2 rounded-lg ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-2 rounded-lg ${currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 {page}
               </button>
@@ -866,6 +1000,35 @@ export default function ExpertManagement() {
               <option value="FEMALE">Female</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Clinic Service <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={newExpert.clinic_service}
+              onChange={(e) => setNewExpert({ ...newExpert, clinic_service: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="">Select a service</option>
+              {clinicServices.map((service) => (
+                <option key={service.uuid} value={service.uuid}>
+                  {service.clinic_name}
+                </option>
+              ))}
+            </select>
+            {formErrors.clinic_service && (
+              <p className="mt-1 text-sm text-red-500">{formErrors.clinic_service}</p>
+            )}
+          </div>
+          <InputField
+            label="Education"
+            value={newExpert.education}
+            onChange={(e) => setNewExpert({ ...newExpert, education: e.target.value })}
+            placeholder="Enter education"
+            required
+            error={formErrors.education}
+          />
           <InputField
             label="Specialization"
             value={newExpert.specialization}
@@ -945,7 +1108,7 @@ export default function ExpertManagement() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                <StatusBadge enabled={selectedExpert.enabled} />
+                <StatusBadge enabled={selectedExpert.status} />
               </div>
             </div>
           </div>
@@ -1022,9 +1185,9 @@ export default function ExpertManagement() {
           {/* Day-wise Slot Details */}
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4">Day-wise Slot Details</h3>
-            {selectedExpert && mockSlots[selectedExpert.uuid] ? (
+            {selectedExpert && slots[selectedExpert.uuid] ? (
               <div className="space-y-4">
-                {mockSlots[selectedExpert.uuid].map((slotDay) => (
+                {slots[selectedExpert.uuid].map((slotDay) => (
                   <div key={slotDay.date} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
                     <div className="font-medium text-gray-700 mb-2">{slotDay.date}</div>
                     <div className="flex flex-wrap gap-2">
@@ -1052,13 +1215,12 @@ export default function ExpertManagement() {
         <ModernModal
           isOpen={true}
           onClose={() => setConfirmModal(null)}
-          title={`${
-            confirmModal.type === 'enable'
-              ? 'Enable'
-              : confirmModal.type === 'disable'
+          title={`${confirmModal.type === 'enable'
+            ? 'Enable'
+            : confirmModal.type === 'disable'
               ? 'Disable'
               : 'Delete'
-          } Expert`}
+            } Expert`}
           size="sm"
         >
           <div className="space-y-4">
@@ -1084,13 +1246,12 @@ export default function ExpertManagement() {
                   }
                   setConfirmModal(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-white transition-colors ${
-                  confirmModal.type === 'delete'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : confirmModal.type === 'enable'
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${confirmModal.type === 'delete'
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : confirmModal.type === 'enable'
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-red-600 hover:bg-red-700'
-                }`}
+                  }`}
               >
                 Confirm
               </button>
