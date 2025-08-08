@@ -183,7 +183,7 @@ export default function BookingManagement() {
   ];
 
  const [bookings, setBookings] = useState<Booking[]>([]);
-const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>(bookings);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<Booking['booking_status'] | 'ALL'>('ALL');
