@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut, useSession } from 'next-auth/react';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -77,15 +78,26 @@ export default function ClinicSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('/clinicportal/dashboard');
-  
+    const { data: session, status } = useSession();
+    const userData = session?.user
+    console.log(session?.user ,"user data ")
   // Example user data - in a real app, this would come from your authentication system
-  const [user] = useState<UserProfile>({
+  const [user ,setUser] = useState<UserProfile>({
     name: 'Dr. Sarah Chen',
     email: 'sarah.chen@clinicportal.com',
     role: 'Clinic Administrator',
     avatar: '/api/placeholder/32/32' // This is a placeholder, replace with actual avatar URL in production
   });
-  
+    useEffect(() => {
+      if (session?.user) {
+        setUser({
+          name: session.user.full_name || '',
+          email: session.user.email || '',
+          role: session.user.role || '',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
+        });
+      }
+    }, [session]);
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -134,6 +146,7 @@ export default function ClinicSidebar() {
   
   const handleLogout = () => {
     // Handle logout logic here
+        signOut({ callbackUrl: "/auth/clinicportallogin" });
     console.log('Logging out...');
     // e.g., redirect to login page or call logout API
   };
@@ -192,7 +205,7 @@ export default function ClinicSidebar() {
         </motion.nav>
       </div>
       
-      {!collapsed && (
+      {/* {!collapsed && (
         <motion.div 
           className="px-5 pt-2 mb-4"
           initial={{ opacity: 0, y: 20 }}
@@ -209,7 +222,7 @@ export default function ClinicSidebar() {
             </a>
           </div>
         </motion.div>
-      )}
+      )} */}
       
       {/* User Profile Section */}
       <div className={`px-3 py-3 border-t border-gray-100 ${collapsed ? 'flex justify-center' : ''}`}>
