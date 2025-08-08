@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Search, 
   Plus, 
@@ -22,8 +22,20 @@ import {
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { createDoctor, deleteDoctor, editDoctor, GetAllDoctor } from '@/service/clinic/doctorManagementService';
+import { GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 // Types
+interface Service {
+  uuid: string;
+  created_by: string;
+  service_name: string;
+  description: string;
+  tags: string;
+  image: string | null;
+  status: 'APPROVED' | 'PENDING' | 'REJECTED';
+}
+
 interface Doctor {
   uuid: string;
   clinic_service: string;
@@ -56,109 +68,19 @@ interface NewDoctor {
   additional_info?: string;
   profile_pic_file?: File | null;
   govt_verification_doc_files?: File[];
+  extra_info?: string;
 }
 
-// Sample clinic services data
-const sampleServices = [
-  { uuid: "a1bc0d8e-544e-4f20-8e2f-dbcfddbabc54", name: "General Medicine" },
-  { uuid: "b1338479-5d8a-450d-940d-7a0b12ab7119", name: "Cardiology" },
-  { uuid: "c2449580-6e9b-561f-951e-8b1c23bc8220", name: "Orthopedics" },
-  { uuid: "d3550691-7f0c-672g-062f-9c2d34cd9331", name: "Dermatology" }
-];
-
-// Sample doctors data
-const sampleDoctors: Doctor[] = [
-  {
-    uuid: "bf1460af-b799-4022-b1a1-2c13b709413f",
-    clinic_service: "a1bc0d8e-544e-4f20-8e2f-dbcfddbabc54",
-    created_by: "admin@gmail.com",
-    name: "Dr. Sarah Johnson",
-    dob: "1985-03-15",
-    gender: "FEMALE",
-    specializaton: "cardiologist",
-    experience: 8,
-    phone_number: "9876543210",
-    email: "sarah.johnson@clinic.com",
-    status: "APPROVED",
-    profile_pic: null,
-    reason_for_rejection: null,
-    education: "MBBS, MD",
-    govt_verification_docs: [
-      { name: "govt-id-image.jpg", url: "https://via.placeholder.com/300x200.png?text=Govt+ID+Image" },
-      { name: "govt-certificate.pdf", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ],
-    additional_info: "More about experience, specialization, etc."
-  },
-  {
-    uuid: "ff4c16b8-f781-4cde-b2fc-3b9e896c81f5",
-    clinic_service: "b1338479-5d8a-450d-940d-7a0b12ab7119",
-    created_by: "admin@gmail.com",
-    name: "Dr. Michael Chen",
-    dob: "1980-07-22",
-    gender: "MALE",
-    specializaton: "nephrologist",
-    experience: 12,
-    phone_number: "9876543211",
-    email: "michael.chen@clinic.com",
-    status: "APPROVED",
-    profile_pic: null,
-    reason_for_rejection: null,
-    education: "MBBS, MD",
-    govt_verification_docs: [
-      { name: "govt-id-image2.jpg", url: "https://via.placeholder.com/300x200.png?text=Govt+ID+2" }
-    ],
-    additional_info: "More about experience, specialization, etc."
-  },
-  {
-    uuid: "8f9de2cb-e687-4a99-b0e1-c676e8ccc4f6",
-    clinic_service: "c2449580-6e9b-561f-951e-8b1c23cd9220",
-    created_by: "admin@gmail.com",
-    name: "Dr. Priya Sharma",
-    dob: "1990-11-08",
-    gender: "FEMALE",
-    specializaton: "gynaecologist",
-    experience: 5,
-    phone_number: "9876543212",
-    email: "priya.sharma@clinic.com",
-    status: "PENDING",
-    profile_pic: null,
-    reason_for_rejection: null,
-    education: "MBBS, MD",
-    govt_verification_docs: [
-      { name: "govt-certificate.pdf", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ],
-    additional_info: "More about experience, specialization, etc."
-  },
-  {
-    uuid: "6f322c0e-00e4-4b66-b4e9-eec0dd620130",
-    clinic_service: "d3550691-7f0c-672g-062f-9c2d34cd9331",
-    created_by: "clinicuser@gmail.com",
-    name: "Dr. Ramesh Kumar",
-    dob: "1975-05-30",
-    gender: "MALE",
-    specializaton: "ENT",
-    experience: 15,
-    phone_number: "9000000009",
-    email: "ramesh.kumar@clinic.com",
-    status: "REJECTED",
-    profile_pic: null,
-    reason_for_rejection: "Incomplete documentation",
-    education: "MBBS, MD",
-    govt_verification_docs: [
-      { name: "govt-id-image3.jpg", url: "https://via.placeholder.com/300x200.png?text=Govt+ID+3" },
-      { name: "govt-certificate2.pdf", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ],
-    additional_info: "More about experience, specialization, etc."
-  }
-];
+// remove mock/sample data – real backend data is used
 
 const MAX_GOVT_DOC_FILES = 5;
 
 const DoctorManagement: React.FC = () => {
   // State management
-  const [doctors, setDoctors] = useState<Doctor[]>(sampleDoctors);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const doctorsPerPage = 6;
+  const doctorsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,7 +88,7 @@ const DoctorManagement: React.FC = () => {
   const [serviceFilter, setServiceFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState('');
-
+// totalPages moved up
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
@@ -193,10 +115,36 @@ const DoctorManagement: React.FC = () => {
   const [imageError, setImageError] = useState<string>('');
   const [govtDocError, setGovtDocError] = useState<string>('');
   const [govtDocHelper, setGovtDocHelper] = useState<string>('You can upload up to 5 files.');
-
+  const [services, setServices] = useState<Service[]>([])
   // Preview state
   const [previewDoc, setPreviewDoc] = useState<{ url: string; type: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
+  const fetchDoctor = async (page = 1) => {
+    try {
+     const [DoctorData, allServicesData] = await Promise.all([
+       GetAllDoctor(page, doctorsPerPage),
+          GetAllClinicService(),
+        ]);
+        
+        // Set states with the responses
+         setTotalPages(DoctorData.data.total_pages || Math.ceil((DoctorData.count || 0) / doctorsPerPage) || 1);
+      setDoctors(DoctorData.data.data)
+      setServices(allServicesData.data )
+    } catch (error) {
+      console.error("Error to fetch Data",error);
+    }
+  }
+
+  useEffect(() => {
+    fetchDoctor(currentPage)
+  }, [currentPage])
+  
+console.log(doctors,"data")
   // Helper functions
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -224,7 +172,7 @@ const DoctorManagement: React.FC = () => {
   };
 
   const getServiceName = (serviceId: string) => {
-    return sampleServices.find(s => s.uuid === serviceId)?.name || 'Unknown Service';
+    return services.find(s => s.uuid === serviceId)?.service_name || 'Unknown Service';
   };
 
   const calculateAge = (dob: string | null) => {
@@ -247,9 +195,8 @@ const DoctorManagement: React.FC = () => {
     return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage);
-  const paginatedDoctors = filteredDoctors.slice((currentPage - 1) * doctorsPerPage, currentPage * doctorsPerPage);
+  // Backend paginates; render the page as delivered and keep client filters if needed
+  const paginatedDoctors = filteredDoctors;
 
   // Statistics
   const totalDoctors = doctors.length;
@@ -293,6 +240,15 @@ const DoctorManagement: React.FC = () => {
     handleCreateDoctor();
   };
 
+  // Enhanced handleUpdateDoctor with validation
+  const handleUpdateDoctorEnhanced = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errors = validateForm();
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    handleUpdateDoctor();
+  };
+
   // Enhanced resetForm to clear errors
   const resetFormEnhanced = () => {
     resetForm();
@@ -300,51 +256,79 @@ const DoctorManagement: React.FC = () => {
   };
 
   // CRUD operations
-  const handleCreateDoctor = () => {
-    const doctor: Doctor = {
-      uuid: `doctor-${Date.now()}`,
-      ...newDoctor,
-      experience: newDoctor.experience ? parseInt(newDoctor.experience) : null,
-      status: 'PENDING',
-      profile_pic: newDoctor.profile_pic_file ? URL.createObjectURL(newDoctor.profile_pic_file) : null,
-      reason_for_rejection: null,
-      created_by: 'admin@clinic.com',
-      education: newDoctor.education || '',
-      govt_verification_docs: (newDoctor.govt_verification_doc_files || []).map(file => ({ name: file.name, url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined })),
-      additional_info: newDoctor.additional_info || '',
+const handleCreateDoctor = async () => {
+  try {
+    const payload = {
+      clinic_service: newDoctor.clinic_service,
+      name: newDoctor.name,
+      dob: newDoctor.dob,
+      gender: newDoctor.gender,
+      specializaton: newDoctor.specializaton,
+      experience: newDoctor.experience,
+      phone_number: newDoctor.phone_number,
+      email: newDoctor.email,
+      education: newDoctor.education,
+      additional_info: newDoctor.additional_info,
+      profile_pic_file: newDoctor.profile_pic_file,
+      govt_verification_doc_files: newDoctor.govt_verification_doc_files,
     };
-    
-    setDoctors([doctor, ...doctors]);
+
+    const createdDoctor = await createDoctor(payload);
+
+    // Update local state (createdDoctor already in API shape)
+    setDoctors([createdDoctor, ...doctors]);
     resetForm();
     setShowCreateModal(false);
-  };
+    showToast('Doctor created successfully!', 'success');
+  } catch (error) {
+    console.error("Error creating doctor:", error);
+    showToast('Failed to create doctor', 'error');
+  }
+};
 
-  const handleUpdateDoctor = () => {
-    if (!selectedDoctor) return;
-    setDoctors(doctors.map(d =>
-      d.uuid === selectedDoctor.uuid
-        ? {
-            ...d,
-            ...newDoctor,
-            experience: newDoctor.experience ? parseInt(newDoctor.experience) : null,
-            profile_pic: newDoctor.profile_pic_file ? URL.createObjectURL(newDoctor.profile_pic_file) : d.profile_pic,
-            education: newDoctor.education || '',
-            govt_verification_docs: (newDoctor.govt_verification_doc_files || []).length > 0
-              ? (newDoctor.govt_verification_doc_files || []).map(file => ({ name: file.name, url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined }))
-              : d.govt_verification_docs,
-            additional_info: newDoctor.additional_info || '',
-          }
-        : d
-    ));
+const handleUpdateDoctor = async () => {
+  if (!selectedDoctor) return;
+
+  try {
+    const payload = {
+      name: newDoctor.name,
+      dob: newDoctor.dob,
+      gender: newDoctor.gender,
+      specializaton: newDoctor.specializaton,
+      experience: newDoctor.experience,
+      phone_number: newDoctor.phone_number,
+      email: newDoctor.email,
+      education: newDoctor.education,
+      additional_info: newDoctor.additional_info,
+    };
+
+    await editDoctor(selectedDoctor.uuid, payload as any);
+    await fetchDoctor();
+   
     closeModal();
-  };
+    showToast('Doctor updated successfully!', 'success');
+  } catch (error) {
+    console.error("Error updating doctor:", error);
+    showToast('Failed to update doctor', 'error');
+  }
+};
 
-  const handleDeleteDoctor = () => {
-    if (!selectedDoctor) return;
+const handleDeleteDoctor = async () => {
+  if (!selectedDoctor) return;
+
+  try {
+    // Call API
+    await deleteDoctor(selectedDoctor.uuid);
+
+    // Update local state
     setDoctors(doctors.filter(d => d.uuid !== selectedDoctor.uuid));
     closeModal();
-  };
-
+    showToast('Doctor deleted successfully!', 'success');
+  } catch (error) {
+    console.error("Error deleting doctor:", error);
+    showToast('Failed to delete doctor', 'error');
+  }
+};
   // Modal handlers
   const handleViewDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -553,16 +537,16 @@ const DoctorManagement: React.FC = () => {
 
               {/* Service Filter */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
+                 <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
                 <select
                   value={serviceFilter}
                   onChange={(e) => setServiceFilter(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                 >
-                  <option value="">All Services</option>
-                  {sampleServices.map(service => (
-                    <option key={service.uuid} value={service.uuid}>{service.name}</option>
-                  ))}
+                   <option value="">All Services</option>
+                   {services.map(service => (
+                     <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
+                   ))}
                 </select>
               </div>
 
@@ -737,24 +721,30 @@ const DoctorManagement: React.FC = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+               <button
+                 onClick={() => {
+                   const next = Math.max(1, currentPage - 1);
+                   if (next !== currentPage) setCurrentPage(next);
+                 }}
                 disabled={currentPage === 1}
                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
               >
                 Prev
               </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
+               {Array.from({ length: totalPages }, (_, i) => (
+                 <button
+                   key={i}
+                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
                 >
                   {i + 1}
                 </button>
               ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+               <button
+                 onClick={() => {
+                   const next = Math.min(totalPages, currentPage + 1);
+                   if (next !== currentPage) setCurrentPage(next);
+                 }}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
               >
@@ -936,7 +926,7 @@ const DoctorManagement: React.FC = () => {
                       {modalMode === 'edit' ? 'Update doctor information' : 'Fill in the details to add a new doctor'}
                     </p>
                   </div>
-                  <form onSubmit={modalMode === 'edit' ? handleUpdateDoctor : handleCreateDoctorEnhanced}>
+                  <form onSubmit={modalMode === 'edit' ? handleUpdateDoctorEnhanced : handleCreateDoctorEnhanced}>
                     {/* Personal Info Section */}
                     <div className="mb-4">
                       <h3 className="text-lg font-semibold text-blue-700 mb-2">Personal Information</h3>
@@ -1112,8 +1102,8 @@ const DoctorManagement: React.FC = () => {
                             className={`w-full px-4 py-3 bg-white/80 border ${formErrors.clinic_service ? 'border-red-400' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400`}
                           >
                             <option value="">Select a clinic service</option>
-                            {sampleServices.map(service => (
-                              <option key={service.uuid} value={service.uuid}>{service.name}</option>
+                            {services.map(service => (
+                              <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                             ))}
                           </select>
                           {formErrors.clinic_service && <p className="text-xs text-red-500 mt-1">{formErrors.clinic_service}</p>}
