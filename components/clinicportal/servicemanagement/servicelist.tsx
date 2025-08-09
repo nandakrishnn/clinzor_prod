@@ -541,7 +541,7 @@ console.log(clinicUser, "clinic user data"  )
   // CRUD operations
   const handleCreateClinicService = async () => {
     console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
-    
+
     const errors = validateClinicServiceForm();
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -588,7 +588,7 @@ console.log(clinicUser, "clinic user data"  )
       };
 
       console.log('Sending requestBody to backend:', requestBody);
-      
+
       // Call the API
       const response = await createClinicService(requestBody);
 
