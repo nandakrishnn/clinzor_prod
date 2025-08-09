@@ -178,7 +178,7 @@ const ClinicServiceRequests: React.FC = () => {
 
   const fectchSercicve = async () => {
     try {
-      const data = await GetAllClinicService()
+      const data = await GetAllClinicService(undefined, 'approved')
       setRequests(data)
     } catch (error) {
       console.error("Error fetching services:", error);

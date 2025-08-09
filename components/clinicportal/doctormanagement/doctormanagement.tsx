@@ -23,7 +23,7 @@ import {
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createDoctor, deleteDoctor, editDoctor, GetAllDoctor } from '@/service/clinic/doctorManagementService';
-import { GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 // Types
 interface Service {
@@ -126,9 +126,11 @@ const DoctorManagement: React.FC = () => {
 
   const fetchDoctor = async (page = 1) => {
     try {
+      const clinicUserData = await Clinic_by_clinic_user();
+      const clinicId = clinicUserData?.uuid as string;
      const [DoctorData, allServicesData] = await Promise.all([
        GetAllDoctor(page, doctorsPerPage),
-          GetAllClinicService(),
+          GetAllClinicService(clinicId, 'approved'),
         ]);
         
         // Set states with the responses

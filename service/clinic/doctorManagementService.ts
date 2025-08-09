@@ -62,7 +62,7 @@ export const deleteDoctor = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
 
-export const GetAllDoctor = async (page: number, page_size?: number) => {
+export const GetAllDoctor = async (page: number, page_size?: number): Promise<any> => {
   try {
     const params: Record<string, any> = { page };
     if (page_size) params.page_size = page_size;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   Filter,
-  Edit3, 
-  Eye, 
-  Trash2, 
+  Edit3,
+  Eye,
+  Trash2,
   MoreHorizontal,
   Settings,
   CheckCircle,
@@ -36,7 +36,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
-import { createClinicService, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, createClinicService, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 // Types
 interface Service {
@@ -70,7 +70,7 @@ interface ClinicService {
   image: string | null;
   description: string | null;
   reason_for_rejection: string | null;
-display_date: string
+  display_date: string
 }
 
 interface NewClinicService {
@@ -93,6 +93,12 @@ interface NewClinicService {
   description: string;
   start_time: string;
   max_bookings: number;
+}
+
+// Minimal shape for clinic returned by Clinic_by_clinic_user
+interface ClinicUserMinimal {
+  uuid: string;
+  [key: string]: any;
 }
 // Sample data
 const sampleClinics = [
@@ -322,8 +328,9 @@ const sampleClinics = [
 const ServiceManagement: React.FC = () => {
   // Session management
   const { data: session } = useSession();
-  
+
   // State management
+  const [clinicUser, setClinicuser] = useState<ClinicUserMinimal | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -339,7 +346,7 @@ const ServiceManagement: React.FC = () => {
   const [showRequestServiceModal, setShowRequestServiceModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClinicService | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'delete' | 'edit-rank' | null>(null);
-  
+
   // Service search states
   const [serviceSearchTerm, setServiceSearchTerm] = useState('');
   const [allServices, setAllServices] = useState<Service[]>([]);
@@ -398,41 +405,45 @@ const ServiceManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-const fetchService = async () => {
-  try {
-    // Call both APIs concurrently using Promise.all
-    const [clinicServicesData, allServicesData] = await Promise.all([
-      GetAllServiceForClinic(),
-      GetAllClinicService()
-    ]);
-    
-    // Set states with the responses
-    setServices(clinicServicesData.data);
-    setClinicServices(allServicesData.data);
-    setAllServices(clinicServicesData.data); // Set allServices with the API data
-    
-  } catch (error) {
-    console.error("Error fetching data", error);
-  }
-}
-useEffect(() => {
-fetchService()
-}, [])
+  const fetchService = async () => {
+    try {
+      // Get clinic for current user first, then fetch services in parallel using clinic id
+      const clinicUserData = await Clinic_by_clinic_user();
+      const clinicId = clinicUserData?.uuid as string;
+      const [servicesData, clinicServicesData] = await Promise.all([
+        GetAllServiceForClinic(),
+         GetAllClinicService(clinicId, 'approved')
+      ]);
 
-// Set clinic ID when session is available
-useEffect(() => {
-  if (session?.user?.uuid) {
-    setNewClinicService(prev => ({
-      ...prev,
-      clinic: session.user.uuid
-    }));
-    console.log('Clinic ID set from session:', session.user.uuid);
-  }
-}, [session]);
+      setClinicuser(clinicUserData);
+      // "services" and "allServices" represent the catalog to choose from
+      setServices(servicesData.data || []) ;
+      setAllServices(servicesData.data || []);
+      // clinicServices are the services already attached to this clinic
+      setClinicServices(clinicServicesData.data || []);
 
-console.log(services,"service data")
-console.log(clinicServices,"service with data")
-console.log('Current session:', session);
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
+  }
+  useEffect(() => {
+    fetchService()
+  }, [])
+console.log(clinicUser, "clinic user data"  )
+  // Set clinic ID when clinicUser is available
+  useEffect(() => {
+    if (clinicUser?.uuid) {
+      setNewClinicService(prev => ({
+        ...prev,
+        clinic: clinicUser.uuid
+      }));
+      console.log('Clinic ID set from clinicUser:', clinicUser.uuid);
+    }
+  }, [clinicUser]);
+
+  console.log(services, "service data")
+  console.log(clinicServices, "service with data")
+  console.log('Current session:', session);
 
   // Helper functions
   const getStatusConfig = (status: string) => {
@@ -482,13 +493,13 @@ console.log('Current session:', session);
     if (clinicService.status !== 'APPROVED') {
       return false;
     }
-    
+
     // Apply search filter
     const matchesSearch = clinicService.service_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (clinicService.clinic_provided_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-                         clinicService.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getClinicName(clinicService.clinic).toLowerCase().includes(searchTerm.toLowerCase());
-    
+      (clinicService.clinic_provided_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      clinicService.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getClinicName(clinicService.clinic).toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesSearch;
   });
 
@@ -509,7 +520,7 @@ console.log('Current session:', session);
     // Remove clinic validation since we're removing the dropdown
     if (!newClinicService.service) errors.service = 'Service is required.';
     if (!newClinicService.rank || isNaN(Number(newClinicService.rank))) errors.rank = 'Valid rank is required.';
-    
+
     // Validate charges based on enabled services
     if (newClinicService.is_video_call) {
       if (!newClinicService.consultation_charge_video_call) errors.consultation_charge_video_call = 'Video consultation charge is required.';
@@ -523,92 +534,109 @@ console.log('Current session:', session);
       if (!newClinicService.consultation_charge_home_visit) errors.consultation_charge_home_visit = 'Home consultation charge is required.';
       if (!newClinicService.treatment_charge_home_visit) errors.treatment_charge_home_visit = 'Home treatment charge is required.';
     }
-    
+
     return errors;
   };
 
   // CRUD operations
-const handleCreateClinicService = async () => {
-  console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
-  console.log('Current session user:', session?.user);
-  console.log('Clinic field value:', newClinicService.clinic);
-  
-  const errors = validateClinicServiceForm();
-  setFormErrors(errors);
-  if (Object.keys(errors).length > 0) {
-    console.log('Validation errors:', errors);
-    return;
-  }
+  const handleCreateClinicService = async () => {
+    console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
+    
+    const errors = validateClinicServiceForm();
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      console.log('Validation errors:', errors);
+      return;
+    }
 
-  try {
-    // Prepare the API request body
-    const requestBody: NewClinicService = {
-      clinic: newClinicService.clinic,
-      service: newClinicService.service,
-      clinic_provided_name: newClinicService.clinic_provided_name || '',
-      description: newClinicService.description || '',
-      image: newClinicService.image || '',
-      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-      is_video_call: newClinicService.is_video_call,
-      is_home_service: newClinicService.is_home_service,
-      is_clinic_visit: newClinicService.is_clinic_visit,
-      is_home_visit: newClinicService.is_home_service,
-      is_physical_visit: newClinicService.is_clinic_visit,
-      rank: newClinicService.rank,
-      start_time: newClinicService.start_time || '',
-      max_bookings: newClinicService.max_bookings || 0,
-    };
+    try {
+      // Check if this service already exists for the clinic
+      const existingService = clinicServices.find(
+        cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
+      );
 
-    console.log('Sending requestBody to backend:', requestBody);
-    console.log('Service UUID being sent:', requestBody.service);
+      if (existingService) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+        return;
+      }
 
-    // Call the API
-    const response = await createClinicService(requestBody);
+      if (!clinicUser?.uuid) {
+        showToast('Clinic not loaded. Please try again.', 'error');
+        return;
+      }
 
-    // Create the local clinic service object for state update
-    const clinicService: ClinicService = {
-      uuid: response.data.uuid || `clinic-service-${Date.now()}`,
-      service: newClinicService.service,
-      clinic: newClinicService.clinic,
-      service_name: getServiceName(newClinicService.service),
-      created_by: 'admin@clinic.com',
-      clinic_provided_name: newClinicService.clinic_provided_name || null,
-      rank: parseInt(newClinicService.rank || '0'),
-      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-      status: 'PENDING',
-      is_video_call: newClinicService.is_video_call,
-      is_home_visit: newClinicService.is_home_service,
-      is_physical_visit: newClinicService.is_clinic_visit,
-      image: newClinicService.image || null,
-      description: newClinicService.description || null,
-      reason_for_rejection: null,
-      display_date: new Date().toISOString(),
-    };
+      const requestBody: NewClinicService = {
+        clinic: clinicUser.uuid,
+        service: newClinicService.service,
+        clinic_provided_name: newClinicService.clinic_provided_name || '',
+        description: newClinicService.description || '',
+        image: newClinicService.image || '',
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        is_video_call: newClinicService.is_video_call,
+        is_home_service: newClinicService.is_home_service,
+        is_clinic_visit: newClinicService.is_clinic_visit,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        rank: newClinicService.rank,
+        start_time: newClinicService.start_time || '',
+        max_bookings: newClinicService.max_bookings || 0,
+      };
 
-    // Update state and UI
-    setClinicServices([clinicService, ...clinicServices]);
-    resetClinicServiceForm();
-    setShowCreateModal(false);
-    showToast('Clinic service added successfully!', 'success');
+      console.log('Sending requestBody to backend:', requestBody);
+      
+      // Call the API
+      const response = await createClinicService(requestBody);
 
-  } catch (error) {
-    console.error("Error creating clinic service:", error);
-    showToast('Failed to create clinic service', 'error');
-  }
-};
+      // Create the local clinic service object for state update
+      const clinicService: ClinicService = {
+        uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
+        service: newClinicService.service,
+        clinic: clinicUser.uuid,
+        service_name: getServiceName(newClinicService.service),
+        created_by: session?.user?.email || 'unknown',
+        clinic_provided_name: newClinicService.clinic_provided_name || null,
+        rank: parseInt(newClinicService.rank || '0'),
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        status: 'PENDING',
+        is_video_call: newClinicService.is_video_call,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        image: newClinicService.image || null,
+        description: newClinicService.description || null,
+        reason_for_rejection: null,
+        display_date: new Date().toISOString(),
+      };
+
+      // Update state and UI
+      setClinicServices([clinicService, ...clinicServices]);
+      resetClinicServiceForm();
+      setShowCreateModal(false);
+      showToast('Clinic service added successfully!', 'success');
+
+    } catch (error: any) {
+      console.error("Error creating clinic service:", error);
+      
+      if (error.response?.data?.non_field_errors?.includes("unique set")) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+      } else {
+        showToast('Failed to create clinic service. Please try again.', 'error');
+      }
+    }
+  };
+
   const handleDelete = () => {
     if (!selectedItem) return;
-    
+
     setClinicServices(clinicServices.filter(cs => cs.uuid !== selectedItem.uuid));
     showToast('Clinic service deleted successfully!', 'success');
     closeModal();
@@ -640,7 +668,7 @@ const handleCreateClinicService = async () => {
 
   const resetClinicServiceForm = () => {
     console.log('Resetting clinic service form');
-    const currentClinicId = session?.user?.uuid || '';
+    const currentClinicId = clinicUser?.uuid || '';
     setNewClinicService({
       clinic: currentClinicId,
       service: '',
@@ -975,7 +1003,7 @@ const handleCreateClinicService = async () => {
                                         </div>
                                       </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center space-x-2">
                                       <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
                                         <StatusIcon className="w-3 h-3 mr-1" />
@@ -1045,25 +1073,25 @@ const handleCreateClinicService = async () => {
                                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                     <div />
                                     <div className="flex items-center space-x-1">
-                                      <button 
+                                      <button
                                         onClick={() => handleView(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
                                         <Eye className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleEdit(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
                                         <Edit3 className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleDeleteConfirm(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleEditRank(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
@@ -1182,7 +1210,7 @@ const handleCreateClinicService = async () => {
                                 );
                               })()}
                             </div>
-                            
+
                             {/* Service Info */}
                             <div className="flex-1 min-w-0 text-center sm:text-left">
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2">
@@ -1203,7 +1231,7 @@ const handleCreateClinicService = async () => {
                                   return selectedService?.description || 'No description available';
                                 })()}
                               </p>
-                              
+
                               {/* Service Tags */}
                               <div className="flex flex-wrap gap-1 justify-center sm:justify-start">
                                 {(() => {
@@ -1256,7 +1284,7 @@ const handleCreateClinicService = async () => {
                     placeholder="(Optional) Custom name for this service at the clinic"
                   />
                 </div>
-                
+
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Description</label>
@@ -1268,7 +1296,7 @@ const handleCreateClinicService = async () => {
                     rows={3}
                   />
                 </div>
-                
+
                 {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Image</label>
@@ -1529,7 +1557,7 @@ const handleCreateClinicService = async () => {
                                 );
                               })()}
                             </div>
-                            
+
                             {/* Service Info */}
                             <div className="flex-1 min-w-0">
                               <h4 className="font-semibold text-slate-900 mb-1">
@@ -1542,7 +1570,7 @@ const handleCreateClinicService = async () => {
                                 })()}
                               </p>
                             </div>
-                            
+
                             {/* Change Button */}
                             <button
                               type="button"
@@ -1850,7 +1878,7 @@ const handleCreateClinicService = async () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Search Bar */}
             <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="relative max-w-2xl mx-auto">
@@ -1891,7 +1919,7 @@ const handleCreateClinicService = async () => {
                   </div>
                   <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-3">No services found</h3>
                   <p className="text-slate-500 text-base sm:text-lg mb-8 max-w-md mx-auto">
-                    {serviceSearchTerm 
+                    {serviceSearchTerm
                       ? `No services match "${serviceSearchTerm}". Try different keywords or request a new service.`
                       : "No services available. Request a new service to get started."
                     }
@@ -1930,7 +1958,7 @@ const handleCreateClinicService = async () => {
                       </button>
                     ))}
                   </div>
-                  
+
                   {/* Services Grid */}
                   <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                     {filteredAllServices.map((service, idx) => {
@@ -1995,8 +2023,8 @@ const handleCreateClinicService = async () => {
                               )}
                               {/* Select Button */}
                               <div className="flex items-center justify-center">
-                                <button 
-                                  onClick={() => handleSelectService(service)} 
+                                <button
+                                  onClick={() => handleSelectService(service)}
                                   className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm font-semibold shadow-lg"
                                 >
                                   <CheckCircle className="w-4 h-4 mr-2" /> Select Service

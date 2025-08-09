@@ -77,9 +77,27 @@ export const GetAllServiceForClinic = async () => {
     throw error;
   }
 };
-export const GetAllClinicService = async () => {
+export const GetAllClinicService = async (
+  clinicId?: string,
+  status?: string // Pass this if you want status filtering
+) => {
   try {
-    const response = await axiosPrivate.get(`clinic/clinic-service-lc/?clinic=5a1f8f39-ca38-464c-93c5-ea8edbd6c03f&status=approved`);
+    const params: string[] = [];
+    if (clinicId) params.push(`clinic=${encodeURIComponent(clinicId)}`);
+    if (status && status !== 'all') params.push(`status=${encodeURIComponent(status)}`);
+
+    const queryString = params.length ? `?${params.join('&')}` : '';
+    const response = await axiosPrivate.get(`/clinic/clinic-service-lc/${queryString}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch clinic services", error);
+    throw error;
+  }
+};
+
+export const Clinic_by_clinic_user = async () => {
+  try {
+    const response = await axiosPrivate.get(`clinic/get-clinic-by-user/`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);

@@ -430,7 +430,7 @@ export default function ExpertManagement() {
         GetAllExpert(),
         getAllSlots(),
         getAllBookings(),
-        GetAllClinicService()
+        GetAllClinicService(undefined, 'approved')
       ]);
 
       // Transform experts data if needed
