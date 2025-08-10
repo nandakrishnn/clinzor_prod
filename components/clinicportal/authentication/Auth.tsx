@@ -78,7 +78,7 @@ useEffect(() => {
           redirect: false,
           email: formState.email,
           password: formState.password,
-          callbackUrl: '/clinic', // Redirect after successful login
+          callbackUrl: '/clinicportal', // Redirect after successful login
         });
     
         if (result?.error) {
@@ -94,7 +94,7 @@ useEffect(() => {
       }
     
     setTimeout(() => {
-      alert(`Welcome to Clinzor Portal!\n\nLogin Details:\n${JSON.stringify(formState, null, 2)}`);
+      // alert(`Welcome to Clinzor Portal!\n\nLogin Details:\n${JSON.stringify(formState, null, 2)}`);
       setIsLoading(false);
     }, 1500);
   };

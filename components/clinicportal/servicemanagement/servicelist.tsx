@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Plus, 
+import { useSession } from 'next-auth/react';
+import {
+  Search,
+  Plus,
   Filter,
-  Edit3, 
-  Eye, 
-  Trash2, 
+  Edit3,
+  Eye,
+  Trash2,
   MoreHorizontal,
   Settings,
   CheckCircle,
@@ -35,6 +36,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
+import { Clinic_by_clinic_user, createClinicService, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 // Types
 interface Service {
@@ -68,7 +70,7 @@ interface ClinicService {
   image: string | null;
   description: string | null;
   reason_for_rejection: string | null;
-  display_date?: string; // ISO string for display date
+  display_date: string
 }
 
 interface NewClinicService {
@@ -84,11 +86,20 @@ interface NewClinicService {
   is_video_call: boolean;
   is_home_service: boolean;
   is_clinic_visit: boolean;
+  is_home_visit: boolean;
+  is_physical_visit: boolean;
   clinic_provided_name: string;
   image: string;
   description: string;
+  start_time: string;
+  max_bookings: number;
 }
 
+// Minimal shape for clinic returned by Clinic_by_clinic_user
+interface ClinicUserMinimal {
+  uuid: string;
+  [key: string]: any;
+}
 // Sample data
 const sampleClinics = [
   { uuid: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f", name: "City General Hospital" },
@@ -98,229 +109,230 @@ const sampleClinics = [
   { uuid: "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0", name: "Lakeside Health Center" }
 ];
 
-const sampleServices: Service[] = [
-  {
-    uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-    created_by: "admin@gmail.com",
-    name: "cardiologist",
-    description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
-    tags: "heart,cardiology,blood pressure,ECG,chest pain",
-    image: null,
-    status: "APPROVED"
-  },
-  {
-    uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-    created_by: "admin@gmail.com",
-    name: "heart speciality",
-    description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
-    tags: "heart",
-    image: null,
-    status: "APPROVED"
-  },
-  {
-    uuid: "62111833-4927-4060-acdf-f2d857e9d688",
-    created_by: "admin@gmail.com",
-    name: "neurologist",
-    description: "Specialist in diagnosing and treating nervous system disorders.",
-    tags: "brain,neurology,headache,seizure,stroke",
-    image: null,
-    status: "PENDING"
-  },
-  {
-    uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
-    created_by: "admin@gmail.com",
-    name: "physician",
-    description: "General medical practitioner providing comprehensive healthcare.",
-    tags: "general,medicine,primary care,checkup",
-    image: null,
-    status: "REJECTED"
-  },
-  {
-    uuid: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
-    created_by: "admin@gmail.com",
-    name: "dermatologist",
-    description: "Expert in skin, hair, and nail disorders.",
-    tags: "skin,acne,eczema,psoriasis,allergy",
-    image: null,
-    status: "APPROVED"
-  },
-  {
-    uuid: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
-    created_by: "admin@gmail.com",
-    name: "orthopedic",
-    description: "Specialist in bones, joints, and muscles.",
-    tags: "bones,joints,fracture,arthritis,orthopedics",
-    image: null,
-    status: "PENDING"
-  },
-  {
-    uuid: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
-    created_by: "admin@gmail.com",
-    name: "pediatrician",
-    description: "Child health and development expert.",
-    tags: "children,childcare,pediatrics,immunization,growth",
-    image: null,
-    status: "APPROVED"
-  },
-  {
-    uuid: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
-    created_by: "admin@gmail.com",
-    name: "psychiatrist",
-    description: "Mental health and behavioral specialist.",
-    tags: "mental health,psychiatry,therapy,depression,anxiety",
-    image: null,
-    status: "REJECTED"
-  }
-];
+// const sampleServices: Service[] = [
+//   {
+//     uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
+//     created_by: "admin@gmail.com",
+//     name: "cardiologist",
+//     description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
+//     tags: "heart,cardiology,blood pressure,ECG,chest pain",
+//     image: null,
+//     status: "APPROVED"
+//   },
+//   {
+//     uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
+//     created_by: "admin@gmail.com",
+//     name: "heart speciality",
+//     description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
+//     tags: "heart",
+//     image: null,
+//     status: "APPROVED"
+//   },
+//   {
+//     uuid: "62111833-4927-4060-acdf-f2d857e9d688",
+//     created_by: "admin@gmail.com",
+//     name: "neurologist",
+//     description: "Specialist in diagnosing and treating nervous system disorders.",
+//     tags: "brain,neurology,headache,seizure,stroke",
+//     image: null,
+//     status: "PENDING"
+//   },
+//   {
+//     uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
+//     created_by: "admin@gmail.com",
+//     name: "physician",
+//     description: "General medical practitioner providing comprehensive healthcare.",
+//     tags: "general,medicine,primary care,checkup",
+//     image: null,
+//     status: "REJECTED"
+//   },
+//   {
+//     uuid: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
+//     created_by: "admin@gmail.com",
+//     name: "dermatologist",
+//     description: "Expert in skin, hair, and nail disorders.",
+//     tags: "skin,acne,eczema,psoriasis,allergy",
+//     image: null,
+//     status: "APPROVED"
+//   },
+//   {
+//     uuid: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
+//     created_by: "admin@gmail.com",
+//     name: "orthopedic",
+//     description: "Specialist in bones, joints, and muscles.",
+//     tags: "bones,joints,fracture,arthritis,orthopedics",
+//     image: null,
+//     status: "PENDING"
+//   },
+//   {
+//     uuid: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
+//     created_by: "admin@gmail.com",
+//     name: "pediatrician",
+//     description: "Child health and development expert.",
+//     tags: "children,childcare,pediatrics,immunization,growth",
+//     image: null,
+//     status: "APPROVED"
+//   },
+//   {
+//     uuid: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
+//     created_by: "admin@gmail.com",
+//     name: "psychiatrist",
+//     description: "Mental health and behavioral specialist.",
+//     tags: "mental health,psychiatry,therapy,depression,anxiety",
+//     image: null,
+//     status: "REJECTED"
+//   }
+// ];
 
-const sampleClinicServices: ClinicService[] = [
-  {
-    uuid: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-    service: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-    clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-    service_name: "cardiology",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: "Advanced Cardiology Care",
-    rank: 1,
-    consultation_charge_video_call: "400.00",
-    consultation_charge_physical_visit: "200.00",
-    consultation_charge_home_visit: "200.00",
-    treatment_charge_video_call: "600.00",
-    treatment_charge_physical_visit: "500.00",
-    treatment_charge_home_visit: "800.00",
-    status: "APPROVED",
-    is_video_call: true,
-    is_home_visit: false,
-    is_physical_visit: true,
-    image: null,
-    description: "Premium cardiology services with experienced specialists",
-    reason_for_rejection: null,
-    display_date: new Date().toISOString(),
-  },
-  {
-    uuid: "269f4738-76fc-51c3-c646-48dcc7646cb9",
-    service: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-    clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
-    service_name: "heart speciality",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: null,
-    rank: 2,
-    consultation_charge_video_call: "350.00",
-    consultation_charge_physical_visit: "180.00",
-    consultation_charge_home_visit: "250.00",
-    treatment_charge_video_call: "550.00",
-    treatment_charge_physical_visit: "450.00",
-    treatment_charge_home_visit: "700.00",
-    status: "PENDING",
-    is_video_call: true,
-    is_home_visit: true,
-    is_physical_visit: true,
-    image: null,
-    description: null,
-    reason_for_rejection: null,
-    display_date: new Date().toISOString(),
-  },
-  {
-    uuid: "379e3627-65eb-40b2-b535-37cbb6535ab9",
-    service: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
-    clinic: "d4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
-    service_name: "dermatologist",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: "Skin Wellness Center",
-    rank: 3,
-    consultation_charge_video_call: "300.00",
-    consultation_charge_physical_visit: "250.00",
-    consultation_charge_home_visit: "350.00",
-    treatment_charge_video_call: "500.00",
-    treatment_charge_physical_visit: "450.00",
-    treatment_charge_home_visit: "600.00",
-    status: "APPROVED",
-    is_video_call: true,
-    is_home_visit: false,
-    is_physical_visit: true,
-    image: null,
-    description: "Comprehensive skin care and treatment.",
-    reason_for_rejection: null,
-    display_date: new Date().toISOString()
-  },
-  {
-    uuid: "489f4738-76fc-51c3-c646-48dcc7646cb8",
-    service: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
-    clinic: "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
-    service_name: "orthopedic",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: "Bone & Joint Clinic",
-    rank: 4,
-    consultation_charge_video_call: "400.00",
-    consultation_charge_physical_visit: "350.00",
-    consultation_charge_home_visit: "400.00",
-    treatment_charge_video_call: "700.00",
-    treatment_charge_physical_visit: "600.00",
-    treatment_charge_home_visit: "800.00",
-    status: "PENDING",
-    is_video_call: true,
-    is_home_visit: true,
-    is_physical_visit: true,
-    image: null,
-    description: "Bone, joint, and muscle care.",
-    reason_for_rejection: null,
-    display_date: new Date().toISOString()
-  },
-  {
-    uuid: "591e3627-65eb-40b2-b535-37cbb6535ab1",
-    service: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
-    clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-    service_name: "pediatrician",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: "Child Health Center",
-    rank: 5,
-    consultation_charge_video_call: "350.00",
-    consultation_charge_physical_visit: "300.00",
-    consultation_charge_home_visit: "400.00",
-    treatment_charge_video_call: "600.00",
-    treatment_charge_physical_visit: "550.00",
-    treatment_charge_home_visit: "700.00",
-    status: "APPROVED",
-    is_video_call: true,
-    is_home_visit: false,
-    is_physical_visit: true,
-    image: null,
-    description: "Pediatric care and immunizations.",
-    reason_for_rejection: null,
-    display_date: new Date().toISOString()
-  },
-  {
-    uuid: "6a9e3627-65eb-40b2-b535-37cbb6535ab2",
-    service: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
-    clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
-    service_name: "psychiatrist",
-    created_by: "admin@gmail.com",
-    clinic_provided_name: "Mind Wellness Center",
-    rank: 6,
-    consultation_charge_video_call: "500.00",
-    consultation_charge_physical_visit: "400.00",
-    consultation_charge_home_visit: "500.00",
-    treatment_charge_video_call: "800.00",
-    treatment_charge_physical_visit: "700.00",
-    treatment_charge_home_visit: "900.00",
-    status: "REJECTED",
-    is_video_call: true,
-    is_home_visit: true,
-    is_physical_visit: true,
-    image: null,
-    description: "Mental health and therapy services.",
-    reason_for_rejection: "Incomplete documentation.",
-    display_date: new Date().toISOString()
-  }
-];
+// const sampleClinicServices: ClinicService[] = [
+//   {
+//     uuid: "159e3627-65eb-40b2-b535-37cbb6535ab8",
+//     service: "d7afe788-af8b-4fd4-b65b-bab700df841a",
+//     clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
+//     service_name: "cardiology",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: "Advanced Cardiology Care",
+//     rank: 1,
+//     consultation_charge_video_call: "400.00",
+//     consultation_charge_physical_visit: "200.00",
+//     consultation_charge_home_visit: "200.00",
+//     treatment_charge_video_call: "600.00",
+//     treatment_charge_physical_visit: "500.00",
+//     treatment_charge_home_visit: "800.00",
+//     status: "APPROVED",
+//     is_video_call: true,
+//     is_home_visit: false,
+//     is_physical_visit: true,
+//     image: null,
+//     description: "Premium cardiology services with experienced specialists",
+//     reason_for_rejection: null,
+//     display_date: new Date().toISOString(),
+//   },
+//   {
+//     uuid: "269f4738-76fc-51c3-c646-48dcc7646cb9",
+//     service: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
+//     clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
+//     service_name: "heart speciality",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: null,
+//     rank: 2,
+//     consultation_charge_video_call: "350.00",
+//     consultation_charge_physical_visit: "180.00",
+//     consultation_charge_home_visit: "250.00",
+//     treatment_charge_video_call: "550.00",
+//     treatment_charge_physical_visit: "450.00",
+//     treatment_charge_home_visit: "700.00",
+//     status: "PENDING",
+//     is_video_call: true,
+//     is_home_visit: true,
+//     is_physical_visit: true,
+//     image: null,
+//     description: null,
+//     reason_for_rejection: null,
+//     display_date: new Date().toISOString(),
+//   },
+//   {
+//     uuid: "379e3627-65eb-40b2-b535-37cbb6535ab9",
+//     service: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
+//     clinic: "d4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
+//     service_name: "dermatologist",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: "Skin Wellness Center",
+//     rank: 3,
+//     consultation_charge_video_call: "300.00",
+//     consultation_charge_physical_visit: "250.00",
+//     consultation_charge_home_visit: "350.00",
+//     treatment_charge_video_call: "500.00",
+//     treatment_charge_physical_visit: "450.00",
+//     treatment_charge_home_visit: "600.00",
+//     status: "APPROVED",
+//     is_video_call: true,
+//     is_home_visit: false,
+//     is_physical_visit: true,
+//     image: null,
+//     description: "Comprehensive skin care and treatment.",
+//     reason_for_rejection: null,
+//     display_date: new Date().toISOString()
+//   },
+//   {
+//     uuid: "489f4738-76fc-51c3-c646-48dcc7646cb8",
+//     service: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
+//     clinic: "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
+//     service_name: "orthopedic",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: "Bone & Joint Clinic",
+//     rank: 4,
+//     consultation_charge_video_call: "400.00",
+//     consultation_charge_physical_visit: "350.00",
+//     consultation_charge_home_visit: "400.00",
+//     treatment_charge_video_call: "700.00",
+//     treatment_charge_physical_visit: "600.00",
+//     treatment_charge_home_visit: "800.00",
+//     status: "PENDING",
+//     is_video_call: true,
+//     is_home_visit: true,
+//     is_physical_visit: true,
+//     image: null,
+//     description: "Bone, joint, and muscle care.",
+//     reason_for_rejection: null,
+//     display_date: new Date().toISOString()
+//   },
+//   {
+//     uuid: "591e3627-65eb-40b2-b535-37cbb6535ab1",
+//     service: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
+//     clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
+//     service_name: "pediatrician",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: "Child Health Center",
+//     rank: 5,
+//     consultation_charge_video_call: "350.00",
+//     consultation_charge_physical_visit: "300.00",
+//     consultation_charge_home_visit: "400.00",
+//     treatment_charge_video_call: "600.00",
+//     treatment_charge_physical_visit: "550.00",
+//     treatment_charge_home_visit: "700.00",
+//     status: "APPROVED",
+//     is_video_call: true,
+//     is_home_visit: false,
+//     is_physical_visit: true,
+//     image: null,
+//     description: "Pediatric care and immunizations.",
+//     reason_for_rejection: null,
+//     display_date: new Date().toISOString()
+//   },
+//   {
+//     uuid: "6a9e3627-65eb-40b2-b535-37cbb6535ab2",
+//     service: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
+//     clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
+//     service_name: "psychiatrist",
+//     created_by: "admin@gmail.com",
+//     clinic_provided_name: "Mind Wellness Center",
+//     rank: 6,
+//     consultation_charge_video_call: "500.00",
+//     consultation_charge_physical_visit: "400.00",
+//     consultation_charge_home_visit: "500.00",
+//     treatment_charge_video_call: "800.00",
+//     treatment_charge_physical_visit: "700.00",
+//     treatment_charge_home_visit: "900.00",
+//     status: "REJECTED",
+//     is_video_call: true,
+//     is_home_visit: true,
+//     is_physical_visit: true,
+//     image: null,
+//     description: "Mental health and therapy services.",
+//     reason_for_rejection: "Incomplete documentation.",
+//     display_date: new Date().toISOString()
+//   }
+// ];
 
 const ServiceManagement: React.FC = () => {
+  // Session management
+  const { data: session } = useSession();
+
   // State management
-  const [services, setServices] = useState<Service[]>(sampleServices);
-  const [clinicServices, setClinicServices] = useState<ClinicService[]>(sampleClinicServices.map(cs => ({
-    ...cs,
-    display_date: cs.display_date || new Date().toISOString(),
-  })));
+  const [clinicUser, setClinicuser] = useState<ClinicUserMinimal | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'clinic-services'>('clinic-services');
   const itemsPerPage = 6;
@@ -334,7 +346,7 @@ const ServiceManagement: React.FC = () => {
   const [showRequestServiceModal, setShowRequestServiceModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClinicService | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'delete' | 'edit-rank' | null>(null);
-  
+
   // Service search states
   const [serviceSearchTerm, setServiceSearchTerm] = useState('');
   const [allServices, setAllServices] = useState<Service[]>([]);
@@ -374,9 +386,13 @@ const ServiceManagement: React.FC = () => {
     is_video_call: false,
     is_home_service: false,
     is_clinic_visit: true,
+    is_home_visit: false,
+    is_physical_visit: false,
     clinic_provided_name: '',
     image: '',
-    description: ''
+    description: '',
+    start_time: '',
+    max_bookings: 0
   });
 
   // Validation state
@@ -388,6 +404,46 @@ const ServiceManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const fetchService = async () => {
+    try {
+      // Get clinic for current user first, then fetch services in parallel using clinic id
+      const clinicUserData = await Clinic_by_clinic_user();
+      const clinicId = clinicUserData?.uuid as string;
+      const [servicesData, clinicServicesData] = await Promise.all([
+        GetAllServiceForClinic(),
+         GetAllClinicService(clinicId, 'approved')
+      ]);
+
+      setClinicuser(clinicUserData);
+      // "services" and "allServices" represent the catalog to choose from
+      setServices(servicesData.data || []) ;
+      setAllServices(servicesData.data || []);
+      // clinicServices are the services already attached to this clinic
+      setClinicServices(clinicServicesData.data || []);
+
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
+  }
+  useEffect(() => {
+    fetchService()
+  }, [])
+console.log(clinicUser, "clinic user data"  )
+  // Set clinic ID when clinicUser is available
+  useEffect(() => {
+    if (clinicUser?.uuid) {
+      setNewClinicService(prev => ({
+        ...prev,
+        clinic: clinicUser.uuid
+      }));
+      console.log('Clinic ID set from clinicUser:', clinicUser.uuid);
+    }
+  }, [clinicUser]);
+
+  console.log(services, "service data")
+  console.log(clinicServices, "service with data")
+  console.log('Current session:', session);
 
   // Helper functions
   const getStatusConfig = (status: string) => {
@@ -431,77 +487,19 @@ const ServiceManagement: React.FC = () => {
     return services.find(s => s.uuid === serviceId)?.name || 'Unknown Service';
   };
 
-  // Mock data for all services from backend
-  const mockAllServices: Service[] = [
-    {
-      uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-      created_by: "admin@gmail.com",
-      name: "Cardiology",
-      description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
-      tags: "heart,cardiology,blood pressure,ECG,chest pain",
-      image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    },
-    {
-      uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-      created_by: "admin@gmail.com",
-      name: "Neurology",
-      description: "Specialist in diagnosing and treating nervous system disorders.",
-      tags: "brain,neurology,headache,seizure,stroke",
-      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    },
-    {
-      uuid: "62111833-4927-4060-acdf-f2d857e9d688",
-      created_by: "admin@gmail.com",
-      name: "Dermatology",
-      description: "Specialist in diagnosing and treating skin conditions.",
-      tags: "skin,dermatology,acne,eczema,psoriasis",
-      image: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    },
-    {
-      uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
-      created_by: "admin@gmail.com",
-      name: "Orthopedics",
-      description: "Specialist in diagnosing and treating bone and joint conditions.",
-      tags: "bones,joints,orthopedics,fracture,arthritis",
-      image: "https://images.unsplash.com/photo-1559757172-9b3c5a9c0b5a?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    },
-    {
-      uuid: "7c8e9f0a-1b2c-3d4e-5f6g-7h8i9j0k1l2m",
-      created_by: "admin@gmail.com",
-      name: "Pediatrics",
-      description: "Specialist in diagnosing and treating children's health conditions.",
-      tags: "children,pediatrics,childcare,development",
-      image: "https://images.unsplash.com/photo-1559757173-9b3c5a9c0b5b?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    },
-    {
-      uuid: "8d9e0f1b-2c3d-4e5f-6g7h-8i9j0k1l2m3n",
-      created_by: "admin@gmail.com",
-      name: "Psychiatry",
-      description: "Specialist in diagnosing and treating mental health conditions.",
-      tags: "mental health,psychiatry,depression,anxiety,therapy",
-      image: "https://images.unsplash.com/photo-1559757174-9b3c5a9c0b5c?w=400&h=400&fit=crop",
-      status: "APPROVED"
-    }
-  ];
-
   // Filtering logic
   const filteredClinicServices = clinicServices.filter(clinicService => {
     // Only show approved services
     if (clinicService.status !== 'APPROVED') {
       return false;
     }
-    
+
     // Apply search filter
     const matchesSearch = clinicService.service_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (clinicService.clinic_provided_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-                         clinicService.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getClinicName(clinicService.clinic).toLowerCase().includes(searchTerm.toLowerCase());
-    
+      (clinicService.clinic_provided_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      clinicService.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getClinicName(clinicService.clinic).toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesSearch;
   });
 
@@ -522,7 +520,7 @@ const ServiceManagement: React.FC = () => {
     // Remove clinic validation since we're removing the dropdown
     if (!newClinicService.service) errors.service = 'Service is required.';
     if (!newClinicService.rank || isNaN(Number(newClinicService.rank))) errors.rank = 'Valid rank is required.';
-    
+
     // Validate charges based on enabled services
     if (newClinicService.is_video_call) {
       if (!newClinicService.consultation_charge_video_call) errors.consultation_charge_video_call = 'Video consultation charge is required.';
@@ -536,49 +534,109 @@ const ServiceManagement: React.FC = () => {
       if (!newClinicService.consultation_charge_home_visit) errors.consultation_charge_home_visit = 'Home consultation charge is required.';
       if (!newClinicService.treatment_charge_home_visit) errors.treatment_charge_home_visit = 'Home treatment charge is required.';
     }
-    
+
     return errors;
   };
 
   // CRUD operations
-  const handleCreateClinicService = () => {
+  const handleCreateClinicService = async () => {
+    console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
+
     const errors = validateClinicServiceForm();
     setFormErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      console.log('Validation errors:', errors);
+      return;
+    }
 
-    const clinicService: ClinicService = {
-      uuid: `clinic-service-${Date.now()}`,
-      service: newClinicService.service,
-      clinic: newClinicService.clinic,
-      service_name: getServiceName(newClinicService.service),
-      created_by: 'admin@clinic.com',
-      clinic_provided_name: newClinicService.clinic_provided_name || null,
-      rank: parseInt(newClinicService.rank),
-      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-      status: 'PENDING',
-      is_video_call: newClinicService.is_video_call,
-      is_home_visit: newClinicService.is_home_service,
-      is_physical_visit: newClinicService.is_clinic_visit,
-      image: newClinicService.image || null,
-      description: newClinicService.description || null,
-      reason_for_rejection: null,
-      display_date: new Date().toISOString(),
-    };
-    
-    setClinicServices([clinicService, ...clinicServices]);
-    resetClinicServiceForm();
-    setShowCreateModal(false);
-    showToast('Clinic service added successfully!', 'success');
+    try {
+      // Check if this service already exists for the clinic
+      const existingService = clinicServices.find(
+        cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
+      );
+
+      if (existingService) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+        return;
+      }
+
+      if (!clinicUser?.uuid) {
+        showToast('Clinic not loaded. Please try again.', 'error');
+        return;
+      }
+
+      const requestBody: NewClinicService = {
+        clinic: clinicUser.uuid,
+        service: newClinicService.service,
+        clinic_provided_name: newClinicService.clinic_provided_name || '',
+        description: newClinicService.description || '',
+        image: newClinicService.image || '',
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        is_video_call: newClinicService.is_video_call,
+        is_home_service: newClinicService.is_home_service,
+        is_clinic_visit: newClinicService.is_clinic_visit,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        rank: newClinicService.rank,
+        start_time: newClinicService.start_time || '',
+        max_bookings: newClinicService.max_bookings || 0,
+      };
+
+      console.log('Sending requestBody to backend:', requestBody);
+
+      // Call the API
+      const response = await createClinicService(requestBody);
+
+      // Create the local clinic service object for state update
+      const clinicService: ClinicService = {
+        uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
+        service: newClinicService.service,
+        clinic: clinicUser.uuid,
+        service_name: getServiceName(newClinicService.service),
+        created_by: session?.user?.email || 'unknown',
+        clinic_provided_name: newClinicService.clinic_provided_name || null,
+        rank: parseInt(newClinicService.rank || '0'),
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        status: 'PENDING',
+        is_video_call: newClinicService.is_video_call,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        image: newClinicService.image || null,
+        description: newClinicService.description || null,
+        reason_for_rejection: null,
+        display_date: new Date().toISOString(),
+      };
+
+      // Update state and UI
+      setClinicServices([clinicService, ...clinicServices]);
+      resetClinicServiceForm();
+      setShowCreateModal(false);
+      showToast('Clinic service added successfully!', 'success');
+
+    } catch (error: any) {
+      console.error("Error creating clinic service:", error);
+      
+      if (error.response?.data?.non_field_errors?.includes("unique set")) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+      } else {
+        showToast('Failed to create clinic service. Please try again.', 'error');
+      }
+    }
   };
 
   const handleDelete = () => {
     if (!selectedItem) return;
-    
+
     setClinicServices(clinicServices.filter(cs => cs.uuid !== selectedItem.uuid));
     showToast('Clinic service deleted successfully!', 'success');
     closeModal();
@@ -609,8 +667,10 @@ const ServiceManagement: React.FC = () => {
   };
 
   const resetClinicServiceForm = () => {
+    console.log('Resetting clinic service form');
+    const currentClinicId = clinicUser?.uuid || '';
     setNewClinicService({
-      clinic: '',
+      clinic: currentClinicId,
       service: '',
       rank: '1',
       consultation_charge_video_call: '',
@@ -622,9 +682,13 @@ const ServiceManagement: React.FC = () => {
       is_video_call: false,
       is_home_service: false,
       is_clinic_visit: true,
+      is_home_visit: false,
+      is_physical_visit: false,
       clinic_provided_name: '',
       image: '',
-      description: ''
+      description: '',
+      start_time: '',
+      max_bookings: 0
     });
   };
 
@@ -650,15 +714,20 @@ const ServiceManagement: React.FC = () => {
 
   // Service search functions
   const handleOpenServiceSearch = () => {
-    setAllServices(mockAllServices);
+    // allServices is already populated from the API in fetchService
     setShowServiceSearchModal(true);
   };
 
   const handleSelectService = (service: Service) => {
-    setNewClinicService(prev => ({
-      ...prev,
-      service: service.uuid
-    }));
+    console.log('Service selected:', service);
+    setNewClinicService(prev => {
+      const updated = {
+        ...prev,
+        service: service.uuid
+      };
+      console.log('Updated newClinicService:', updated);
+      return updated;
+    });
     setShowServiceSearchModal(false);
     setServiceSearchTerm('');
   };
@@ -934,7 +1003,7 @@ const ServiceManagement: React.FC = () => {
                                         </div>
                                       </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center space-x-2">
                                       <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
                                         <StatusIcon className="w-3 h-3 mr-1" />
@@ -1004,25 +1073,25 @@ const ServiceManagement: React.FC = () => {
                                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                     <div />
                                     <div className="flex items-center space-x-1">
-                                      <button 
+                                      <button
                                         onClick={() => handleView(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
                                         <Eye className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleEdit(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
                                         <Edit3 className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleDeleteConfirm(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={() => handleEditRank(clinicService)}
                                         className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                                       >
@@ -1117,7 +1186,7 @@ const ServiceManagement: React.FC = () => {
                             {/* Service Image */}
                             <div className="flex-shrink-0 mx-auto sm:mx-0">
                               {(() => {
-                                const selectedService = mockAllServices.find(s => s.uuid === newClinicService.service);
+                                const selectedService = allServices.find(s => s.uuid === newClinicService.service);
                                 return selectedService?.image ? (
                                   <div className="relative">
                                     <img
@@ -1141,7 +1210,7 @@ const ServiceManagement: React.FC = () => {
                                 );
                               })()}
                             </div>
-                            
+
                             {/* Service Info */}
                             <div className="flex-1 min-w-0 text-center sm:text-left">
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2">
@@ -1158,15 +1227,15 @@ const ServiceManagement: React.FC = () => {
                               </div>
                               <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
                                 {(() => {
-                                  const selectedService = mockAllServices.find(s => s.uuid === newClinicService.service);
+                                  const selectedService = allServices.find(s => s.uuid === newClinicService.service);
                                   return selectedService?.description || 'No description available';
                                 })()}
                               </p>
-                              
+
                               {/* Service Tags */}
                               <div className="flex flex-wrap gap-1 justify-center sm:justify-start">
                                 {(() => {
-                                  const selectedService = mockAllServices.find(s => s.uuid === newClinicService.service);
+                                  const selectedService = allServices.find(s => s.uuid === newClinicService.service);
                                   return selectedService?.tags.split(',').slice(0, 2).map((tag, idx) => (
                                     <span key={idx} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
                                       #{tag.trim()}
@@ -1215,7 +1284,7 @@ const ServiceManagement: React.FC = () => {
                     placeholder="(Optional) Custom name for this service at the clinic"
                   />
                 </div>
-                
+
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Description</label>
@@ -1227,7 +1296,7 @@ const ServiceManagement: React.FC = () => {
                     rows={3}
                   />
                 </div>
-                
+
                 {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Image</label>
@@ -1474,7 +1543,7 @@ const ServiceManagement: React.FC = () => {
                             {/* Service Image */}
                             <div className="flex-shrink-0">
                               {(() => {
-                                const selectedService = mockAllServices.find(s => s.uuid === newClinicService.service);
+                                const selectedService = services.find(s => s.uuid === newClinicService.service);
                                 return selectedService?.image ? (
                                   <img
                                     src={selectedService.image}
@@ -1488,7 +1557,7 @@ const ServiceManagement: React.FC = () => {
                                 );
                               })()}
                             </div>
-                            
+
                             {/* Service Info */}
                             <div className="flex-1 min-w-0">
                               <h4 className="font-semibold text-slate-900 mb-1">
@@ -1496,12 +1565,12 @@ const ServiceManagement: React.FC = () => {
                               </h4>
                               <p className="text-sm text-slate-600 line-clamp-2">
                                 {(() => {
-                                  const selectedService = mockAllServices.find(s => s.uuid === newClinicService.service);
+                                  const selectedService = services.find(s => s.uuid === newClinicService.service);
                                   return selectedService?.description || 'No description available';
                                 })()}
                               </p>
                             </div>
-                            
+
                             {/* Change Button */}
                             <button
                               type="button"
@@ -1809,7 +1878,7 @@ const ServiceManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Search Bar */}
             <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="relative max-w-2xl mx-auto">
@@ -1850,7 +1919,7 @@ const ServiceManagement: React.FC = () => {
                   </div>
                   <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-3">No services found</h3>
                   <p className="text-slate-500 text-base sm:text-lg mb-8 max-w-md mx-auto">
-                    {serviceSearchTerm 
+                    {serviceSearchTerm
                       ? `No services match "${serviceSearchTerm}". Try different keywords or request a new service.`
                       : "No services available. Request a new service to get started."
                     }
@@ -1889,15 +1958,13 @@ const ServiceManagement: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                  
+
                   {/* Services Grid */}
                   <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {paginatedData.map((clinicService, idx) => {
-                      const statusConfig = getStatusConfig(clinicService.status);
-                      const StatusIcon = statusConfig.icon;
-                      const ServiceIcon = getServiceIcon(clinicService.service_name);
+                    {filteredAllServices.map((service, idx) => {
+                      const ServiceIcon = getServiceIcon(service.name);
                       return (
-                        <div key={clinicService.uuid} className="group relative">
+                        <div key={service.uuid} className="group relative">
                           <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 shadow-sm hover:shadow-2xl overflow-hidden">
                             <div className="p-6">
                               {/* Header */}
@@ -1905,10 +1972,10 @@ const ServiceManagement: React.FC = () => {
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-3 mb-2 sm:mb-3">
                                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
-                                      {clinicService.image ? (
+                                      {service.image ? (
                                         <img
-                                          src={clinicService.image}
-                                          alt={clinicService.service_name}
+                                          src={service.image}
+                                          alt={service.name}
                                           className="w-full h-full object-cover"
                                         />
                                       ) : (
@@ -1919,76 +1986,48 @@ const ServiceManagement: React.FC = () => {
                                     </div>
                                     <div>
                                       <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors capitalize">
-                                        {clinicService.clinic_provided_name || clinicService.service_name}
+                                        {service.name}
                                       </h3>
                                       <p className="text-sm text-slate-600">
-                                        {getClinicName(clinicService.clinic)}
+                                        Service ID: {service.uuid}
                                       </p>
                                     </div>
                                   </div>
-                                  <div className={`inline-flex items-center px-2 py-1 rounded-lg border text-xs font-semibold ${statusConfig.color} space-x-2`}>
-                                    <span className={`w-2 h-2 rounded-full ${statusConfig.dot}`}></span>
-                                    <StatusIcon className="w-4 h-4" />
-                                    <span>{clinicService.status}</span>
+                                  <div className={`inline-flex items-center px-2 py-1 rounded-lg border text-xs font-semibold bg-green-50 text-green-700 border-green-200 space-x-2`}>
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>{service.status}</span>
                                   </div>
                                 </div>
                               </div>
                               {/* Description */}
-                              {clinicService.description && (
+                              {service.description && (
                                 <div className="mb-4">
                                   <p className="text-slate-700 text-sm line-clamp-3">
-                                    {clinicService.description}
+                                    {service.description}
                                   </p>
                                 </div>
                               )}
-                              {/* Charges */}
-                              <div className="mb-4">
-                                <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                                  {clinicService.is_video_call && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-blue-50 rounded-lg">
-                                      <Video className="w-4 h-4 mr-1 text-blue-500" />
-                                      Video: ₹{clinicService.consultation_charge_video_call} / ₹{clinicService.treatment_charge_video_call}
-                                    </span>
-                                  )}
-                                  {clinicService.is_physical_visit && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-green-50 rounded-lg">
-                                      <Home className="w-4 h-4 mr-1 text-green-500" />
-                                      Physical: ₹{clinicService.consultation_charge_physical_visit} / ₹{clinicService.treatment_charge_physical_visit}
-                                    </span>
-                                  )}
-                                  {clinicService.is_home_visit && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-amber-50 rounded-lg">
-                                      <Building className="w-4 h-4 mr-1 text-amber-500" />
-                                      Home: ₹{clinicService.consultation_charge_home_visit} / ₹{clinicService.treatment_charge_home_visit}
-                                    </span>
-                                  )}
+                              {/* Tags */}
+                              {service.tags && (
+                                <div className="mb-4">
+                                  <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                                    {service.tags.split(',').map((tag, index) => (
+                                      <span key={index} className="inline-flex items-center px-2 py-1 bg-slate-50 rounded-lg">
+                                        <Tag className="w-4 h-4 mr-1 text-slate-500" />
+                                        {tag.trim()}
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                              {/* Actions */}
-                              <div className="flex items-center justify-between">
-                                <button onClick={() => handleView(clinicService)} className="inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all text-xs font-semibold">
-                                  <Eye className="w-4 h-4 mr-1" /> View
-                                </button>
-                                <div className="flex space-x-2">
-                                  <button onClick={() => handleEdit(clinicService)} className="inline-flex items-center px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all text-xs font-semibold">
-                                    <Edit3 className="w-4 h-4 mr-1" /> Edit
-                                  </button>
-                                  <button onClick={() => handleDeleteConfirm(clinicService)} className="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-all text-xs font-semibold">
-                                    <Trash2 className="w-4 h-4 mr-1" /> Delete
-                                  </button>
-                                  <button onClick={() => handleEditRank(clinicService)} className="inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all text-xs font-semibold">
-                                    <Edit3 className="w-4 h-4 mr-1" /> Edit Rank
-                                  </button>
-                                </div>
-                              </div>
-                              {/* Display Date (manual edit) */}
-                              <div className="mt-2 mb-2 flex items-center gap-2">
-                                <span className="text-xs text-slate-500">Display Date:</span>
+                              )}
+                              {/* Select Button */}
+                              <div className="flex items-center justify-center">
                                 <button
-                                  className="px-2 py-1 rounded bg-slate-100 hover:bg-blue-100 text-xs font-semibold border border-slate-200 transition-all"
-                                  onClick={() => setDatePickerModal({ open: true, uuid: clinicService.uuid, date: clinicService.display_date ? new Date(clinicService.display_date) : new Date() })}
+                                  onClick={() => handleSelectService(service)}
+                                  className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm font-semibold shadow-lg"
                                 >
-                                  {clinicService.display_date ? new Date(clinicService.display_date).toLocaleDateString() : 'Set Date'}
+                                  <CheckCircle className="w-4 h-4 mr-2" /> Select Service
                                 </button>
                               </div>
                             </div>

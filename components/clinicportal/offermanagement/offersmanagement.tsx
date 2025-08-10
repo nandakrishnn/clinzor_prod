@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Calendar, Percent, Tag, Clock, Edit3, Trash2, Eye, Search, Filter, MoreHorizontal, TrendingUp, Users, DollarSign } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { createClinicOffers, deleteClinicOffers, editClinicOffers, GetAllClinicOffers } from '@/service/clinic/clinicOfferManagementService';
+import { Clinic_by_clinic_user, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 // Type definitions for offer and status
 interface Offer {
@@ -19,11 +21,11 @@ interface Offer {
   usage_count: number;
   total_savings: number;
 }
-
 // Service type for dropdown
 interface Service {
   uuid: string;
-  name: string;
+  clinic: string;
+  service_name: string;
 }
 
 // Add NewOffer type for form state
@@ -37,198 +39,16 @@ interface NewOffer {
 }
 
 // Sample services for dropdown (replace with API data as needed)
-const sampleServices: Service[] = [
-  { uuid: '1', name: 'Cardiology Consultation' },
-  { uuid: '2', name: 'Heart Surgery' },
-  { uuid: '3', name: 'Neurology Consultation' },
-  { uuid: '4', name: 'General Medicine' },
-];
+// const sampleServices: Service[] = [
+//   { uuid: '1', name: 'Cardiology Consultation' },
+//   { uuid: '2', name: 'Heart Surgery' },
+//   { uuid: '3', name: 'Neurology Consultation' },
+//   { uuid: '4', name: 'General Medicine' },
+// ];
 
 const ClinicOffersManager = () => {
-  const [offers, setOffers] = useState([
-    {
-      uuid: "d2fbb990-b835-4d72-b1dd-79144fb65a97",
-      title: "Summer Wellness Special",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "Get 20% off on all wellness consultations and preventive care services",
-      valid_from: "2025-06-23T12:00:00Z",
-      valid_to: "2025-06-30T22:00:00Z",
-      discount_percentage: "20.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "1",
-      usage_count: 47,
-      total_savings: 2340
-    },
-    {
-      uuid: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-      title: "New Patient Welcome",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "Special 30% discount for first-time patients on initial consultation",
-      valid_from: "2025-06-20T00:00:00Z",
-      valid_to: "2025-07-20T23:59:59Z",
-      discount_percentage: "30.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "2",
-      usage_count: 23,
-      total_savings: 1150
-    },
-    // 10 more mock offers for pagination and testing
-    {
-      uuid: "offer-3",
-      title: "Family Health Pack",
-      offer_type: "CLINIC",
-      status: "DRAFT",
-      description: "Bundle checkups for the whole family at 25% off.",
-      valid_from: "2025-07-01T00:00:00Z",
-      valid_to: "2025-07-31T23:59:59Z",
-      discount_percentage: "25.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "3",
-      usage_count: 10,
-      total_savings: 500
-    },
-    {
-      uuid: "offer-4",
-      title: "Senior Citizen Special",
-      offer_type: "CLINIC",
-      status: "EXPIRED",
-      description: "40% off for patients above 60 years old.",
-      valid_from: "2025-05-01T00:00:00Z",
-      valid_to: "2025-05-31T23:59:59Z",
-      discount_percentage: "40.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "4",
-      usage_count: 5,
-      total_savings: 200
-    },
-    {
-      uuid: "offer-5",
-      title: "Children's Health Week",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "15% off on pediatric consultations.",
-      valid_from: "2025-06-15T00:00:00Z",
-      valid_to: "2025-06-22T23:59:59Z",
-      discount_percentage: "15.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "1",
-      usage_count: 12,
-      total_savings: 300
-    },
-    {
-      uuid: "offer-6",
-      title: "Women's Wellness Month",
-      offer_type: "CLINIC",
-      status: "DRAFT",
-      description: "Special 35% discount on all gynecology services.",
-      valid_from: "2025-08-01T00:00:00Z",
-      valid_to: "2025-08-31T23:59:59Z",
-      discount_percentage: "35.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "2",
-      usage_count: 0,
-      total_savings: 0
-    },
-    {
-      uuid: "offer-7",
-      title: "Diabetes Care Camp",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "Flat 500 off on diabetes management packages.",
-      valid_from: "2025-06-10T00:00:00Z",
-      valid_to: "2025-06-25T23:59:59Z",
-      discount_percentage: "0.00",
-      flat_discount_amt: "500.00",
-      reason_for_rejection: '',
-      clinic_service: "3",
-      usage_count: 8,
-      total_savings: 400
-    },
-    {
-      uuid: "offer-8",
-      title: "Monsoon Immunity Boost",
-      offer_type: "CLINIC",
-      status: "EXPIRED",
-      description: "20% off on immunity booster shots.",
-      valid_from: "2025-04-01T00:00:00Z",
-      valid_to: "2025-04-30T23:59:59Z",
-      discount_percentage: "20.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "4",
-      usage_count: 3,
-      total_savings: 90
-    },
-    {
-      uuid: "offer-9",
-      title: "Annual Checkup Bonanza",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "Book your annual checkup and get 10% off.",
-      valid_from: "2025-06-01T00:00:00Z",
-      valid_to: "2025-06-30T23:59:59Z",
-      discount_percentage: "10.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "1",
-      usage_count: 18,
-      total_savings: 540
-    },
-    {
-      uuid: "offer-10",
-      title: "Mother's Day Special",
-      offer_type: "CLINIC",
-      status: "EXPIRED",
-      description: "Special 50% off for all mothers on Mother's Day.",
-      valid_from: "2025-05-10T00:00:00Z",
-      valid_to: "2025-05-10T23:59:59Z",
-      discount_percentage: "50.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "2",
-      usage_count: 2,
-      total_savings: 100
-    },
-    {
-      uuid: "offer-11",
-      title: "Wellness Wednesday",
-      offer_type: "CLINIC",
-      status: "DRAFT",
-      description: "Every Wednesday, get 18% off on select services.",
-      valid_from: "2025-07-01T00:00:00Z",
-      valid_to: "2025-07-31T23:59:59Z",
-      discount_percentage: "18.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "3",
-      usage_count: 0,
-      total_savings: 0
-    },
-    {
-      uuid: "offer-12",
-      title: "Back to School Health",
-      offer_type: "CLINIC",
-      status: "ACTIVE",
-      description: "Kids get 22% off on school health checkups.",
-      valid_from: "2025-06-05T00:00:00Z",
-      valid_to: "2025-06-20T23:59:59Z",
-      discount_percentage: "22.00",
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: "4",
-      usage_count: 7,
-      total_savings: 154
-    }
-  ]);
-
+const [offers, setOffers] = useState<Offer[]>([]);
+ const [services, setServices] = useState<Service[]>([]);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const offersPerPage = 10;
@@ -262,6 +82,28 @@ const ClinicOffersManager = () => {
     const validTo = new Date(offer.valid_to);
     return now >= validFrom && now <= validTo && offer.status === 'ACTIVE';
   };
+
+const fetchOffers = async () => {
+  try {
+    const clinicUser = await Clinic_by_clinic_user();
+    const clinicId = clinicUser?.uuid;
+    const [serviceData, offersResponse] = await Promise.all([
+      GetAllClinicService(clinicId,'approved'),
+      GetAllClinicOffers()
+    ]);
+    
+    setOffers(offersResponse.data || []);
+    setServices(serviceData.data || []);
+  } catch (error) {
+    console.error("Failed to fetch offers:", error);
+  }
+};
+console.log(services, "data")
+console.log(offers, "offers data")
+useEffect(() => {
+  fetchOffers();
+}, []);
+
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -313,24 +155,42 @@ const ClinicOffersManager = () => {
   const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
   const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
 
-  const handleCreateOffer = () => {
-    const offer = {
-      uuid: `offer-${Date.now()}`,
+const handleCreateOffer = async () => {
+  try {
+    // Get clinic ID (you might need to fetch this from your state or context)
+    const clinicUser = await Clinic_by_clinic_user();
+    if (!clinicUser?.uuid) {
+      throw new Error("Clinic not found");
+    }
+
+    // Prepare the offer data for the backend
+    const offerData = {
       title: newOffer.title,
       offer_type: "CLINIC",
-      status: "DRAFT",
       description: newOffer.description,
       valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
       valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      discount_percentage: newOffer.discount_percentage,
-      flat_discount_amt: '',
-      reason_for_rejection: '',
-      clinic_service: newOffer.clinic_service,
-      usage_count: 0,
-      total_savings: 0
+      flat_discount_amt: newOffer.discount_percentage, // Assuming this is the discount amount
+      clinic:newOffer.clinic_service ,
+      // // Add clinic_service if you're associating with a specific service
+      // ...(newOffer.clinic_service && { clinic_service:newOffer.clinic_service  })
     };
-    
-    setOffers([...offers, offer]);
+
+    // Call the API
+    const createdOffer = await createClinicOffers(offerData);
+
+    // Update local state with the response from the backend
+    setOffers([...offers, {
+      ...createdOffer,
+      uuid: createdOffer.uuid || `offer-${Date.now()}`,
+      status: "DRAFT", // Or whatever status the backend returns
+      usage_count: 0,
+      total_savings: 0,
+      discount_percentage: newOffer.discount_percentage,
+      reason_for_rejection: ''
+    }]);
+
+    // Reset form and close modal
     setNewOffer({
       title: '',
       description: '',
@@ -340,7 +200,12 @@ const ClinicOffersManager = () => {
       clinic_service: ''
     });
     setShowCreateModal(false);
-  };
+
+  } catch (error) {
+    console.error("Failed to create offer:", error);
+    // You might want to show an error message to the user here
+  }
+};
 
   // Modal open handlers
   const handleViewOffer = (offer: Offer) => {
@@ -378,23 +243,51 @@ const ClinicOffersManager = () => {
   };
 
   // Edit offer handler
-  const handleUpdateOffer = () => {
-    if (!selectedOffer) return;
+const handleUpdateOffer = async () => {
+  if (!selectedOffer) return;
+  
+  try {
+    // Prepare the data for API call
+    const offerData = {
+      ...newOffer,
+      valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
+      valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : ''
+    };
+    
+    // Call the API to update the offer
+    await editClinicOffers(selectedOffer.uuid, offerData);
+    
+    // Update local state if API call succeeds
     setOffers(offers.map((o: Offer) =>
       o.uuid === selectedOffer.uuid
         ? { ...o, ...newOffer, valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '', valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '' }
         : o
     ));
     closeModal();
-  };
+  } catch (error) {
+    console.error("Failed to update offer:", error);
+    // You might want to show an error message to the user here
+  }
+};
 
-  // Delete offer handler
-  const handleConfirmDelete = () => {
-    if (!selectedOffer) return;
+
+
+// Delete offer handler
+const handleConfirmDelete = async () => {
+  if (!selectedOffer) return;
+  
+  try {
+    // Call the API to delete the offer
+    await deleteClinicOffers(selectedOffer.uuid);
+    
+    // Update local state if API call succeeds
     setOffers(offers.filter((o: Offer) => o.uuid !== selectedOffer.uuid));
     closeModal();
-  };
-
+  } catch (error) {
+    console.error("Failed to delete offer:", error);
+    // You might want to show an error message to the user here
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
@@ -492,8 +385,8 @@ const ClinicOffersManager = () => {
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
               >
                 <option value="">All Services</option>
-                {sampleServices.map(service => (
-                  <option key={service.uuid} value={service.uuid}>{service.name}</option>
+                {services.map(service => (
+                  <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                 ))}
               </select>
             </div>
@@ -843,8 +736,8 @@ const ClinicOffersManager = () => {
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
                   >
                     <option value="">Select a service</option>
-                    {sampleServices.map(service => (
-                      <option key={service.uuid} value={service.uuid}>{service.name}</option>
+                    {services.map(service => (
+                      <option key={service.uuid} value={service.clinic}>{service.service_name}</option>
                     ))}
                   </select>
                 </div>
@@ -893,7 +786,7 @@ const ClinicOffersManager = () => {
                 <div><span className="font-bold">Valid From:</span> {formatDate(selectedOffer.valid_from)}</div>
                 <div><span className="font-bold">Valid To:</span> {formatDate(selectedOffer.valid_to)}</div>
                 <div><span className="font-bold">Status:</span> {selectedOffer.status}</div>
-                <div><span className="font-bold">Service:</span> {sampleServices.find(s => s.uuid === selectedOffer.clinic_service)?.name || selectedOffer.clinic_service}</div>
+                <div><span className="font-bold">Service:</span> {services.find(s => s.uuid === selectedOffer.clinic_service)?.service_name || selectedOffer.clinic_service}</div>
                 <div><span className="font-bold">Usage Count:</span> {selectedOffer.usage_count}</div>
                 <div><span className="font-bold">Total Savings:</span> ${selectedOffer.total_savings}</div>
               </div>
@@ -991,8 +884,8 @@ const ClinicOffersManager = () => {
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
                   >
                     <option value="">Select a service</option>
-                    {sampleServices.map(service => (
-                      <option key={service.uuid} value={service.uuid}>{service.name}</option>
+                    {services.map(service => (
+                      <option key={service.uuid} value={service.clinic}>{service.service_name}</option>
                     ))}
                   </select>
                 </div>
