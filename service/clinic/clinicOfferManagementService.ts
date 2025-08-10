@@ -6,13 +6,25 @@ interface Slot {
 }
 
 interface NewClinicOffer {
-  title: string;
-  offer_type: string;
-  description: string;
-  valid_from: string;
-  valid_to: string;
-  flat_discount_amt: string;
-  clinic: string;// Optional if you want to associate with a specific service
+  name: string;
+  email: string;
+  phone: string;
+  type: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  about: string;
+  insuranceNetworks: string[];
+  specialties: string[];
+  location: {
+    lat: number;
+    lng: number;
+  };
+  // Add any additional fields from your backend
+  landmark?: string;
+  gstNo?: string;
+  foundedOn?: string | null;
 }
 // Clinic-Service Management Api
 export const createClinicOffers = async (body: NewClinicOffer) => {
