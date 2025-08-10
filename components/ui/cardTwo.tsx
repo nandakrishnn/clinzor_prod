@@ -15,7 +15,7 @@ const CardTwo: React.FC<CardProps> = ({ className, icon, title, content }) => {
   return (
     <div
       className={cn(
-        "rounded-[8px] p-6 pb-10 flex flex-col items-center justify-center",
+        "rounded-[8px] p-6 pb-10 flex flex-col items-center justify-center ",
         className
       )}
     >

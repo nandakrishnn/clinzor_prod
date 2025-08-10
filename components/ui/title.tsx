@@ -45,7 +45,7 @@ const Title: React.FC<TitleProps> = ({
             {description ||
               "Lorem Ipsum is simply dummy text "}
           </h2>
-          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[45%]">
+          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[50%]">
             {subtitle}
           </p>
         </div>

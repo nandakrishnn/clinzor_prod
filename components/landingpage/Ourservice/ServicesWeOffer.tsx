@@ -6,11 +6,12 @@ import {
   IconUserCheck,
   IconHospital
 } from "@tabler/icons-react";
-import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
+
 import CardTwo from "@/components/ui/cardTwo";
 import Title from "@/components/ui/title";
+import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 
 export default function ServicesWeProvide() {
   const services = [
