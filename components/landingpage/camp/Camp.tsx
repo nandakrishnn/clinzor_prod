@@ -36,11 +36,11 @@ const Camp = () => {
           viewport={{ once: true, amount: 0.3 }}
           variants={headingVariants}
         >
-          <div className="text-start flex flex-col items-start">
+          <div className="text-start flex flex-col items-start justify-center">
             <h3 className="text-primaryColor font-semibold text-[18px] italic ">
               {"Clinic Camp"}
             </h3>
-            <h2 className="w-full text-2xl md:text-4xl font-bold text-start pt-2 text-primaryColor leading-7">
+            <h2 className="w-full text-2xl md:text-4xl text-start font-bold pt-2 text-primaryColor leading-7">
               {"Lorem Ipsum is simply dummy text"}
             </h2>
             <p className="mt-4 text-[#4B5563] md:text-[16px] ">

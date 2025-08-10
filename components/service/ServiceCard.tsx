@@ -22,11 +22,11 @@ const ServiceCard = () => {
         </div>
 
         {/* Rating overlay */}
-        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
+        {/* <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
           <span className="text-sm font-medium">4.9</span>
           <span className="text-xs text-gray-500">(128)</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Card content */}
@@ -62,7 +62,7 @@ const ServiceCard = () => {
             href="#"
             className="flex-1 bg-primaryColor hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-sm text-center transition-colors flex items-center justify-center gap-1"
           >
-            Book Now
+            View clinic
             <ArrowRight className="w-4 h-4" />
           </Link>
           {/* <Link

@@ -2,7 +2,6 @@ import React from "react";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import { PlatformIntro } from "@/components/aboutus/PlatformIntro";
 import { HowItWorks } from "@/components/aboutus/HowItWorks";
-import { StatsSection } from "@/components/aboutus/StatsSection";
 import { VideoConsultation } from "@/components/aboutus/VideoConsultation";
 
 import FAQsTwo from "@/components/landingpage/faq/Faq";

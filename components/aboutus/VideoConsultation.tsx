@@ -9,8 +9,7 @@ export const VideoConsultation = () => (
       {/* Heading */}
       <Title
         title="  Experience beauty transform through"
-        subtitle=" Watch real patient stories, expert insights, and behind-the-scenes
-          moments that showcase our commitment to natural beauty"
+        subtitle=" Watch real patient stories, expert insights, and behind-the-scenes."
       />
 
       {/* Video */}
