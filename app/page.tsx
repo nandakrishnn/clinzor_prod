@@ -63,8 +63,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAQs */}
+        {/* Blogs */}
         <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
+          <div className="max-w-screen-xl mx-auto relative mt-20">
+            {/* <BlogCard /> */}
+          </div>
+        </section>
+
+        {/* FAQs */}
+        <section className="bg-white py-10 sm:py-14 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-20">
             <FAQsTwo />
           </div>
