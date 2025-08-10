@@ -170,10 +170,28 @@ const handleCreateOffer = async () => {
       description: newOffer.description,
       valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
       valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      flat_discount_amt: newOffer.discount_percentage, // Assuming this is the discount amount
-      clinic:newOffer.clinic_service ,
-      // // Add clinic_service if you're associating with a specific service
-      // ...(newOffer.clinic_service && { clinic_service:newOffer.clinic_service  })
+      flat_discount_amt: newOffer.discount_percentage,
+      clinic: newOffer.clinic_service,
+      // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
+      name: "",
+      email: "",
+      phone: "",
+      type: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "",
+      pincode: "",
+      gst_number: "",
+      pan_number: "",
+      website: "",
+      logo: "",
+      // Add missing required fields for NewClinicOffer
+      postalCode: "",
+      about: "",
+      insuranceNetworks: [],
+      specialties: [],
+      location: { lat: 0, lng: 0 },
     };
 
     // Call the API
@@ -247,11 +265,35 @@ const handleUpdateOffer = async () => {
   if (!selectedOffer) return;
   
   try {
-    // Prepare the data for API call
+    // Prepare the data for API call (include all required fields for NewClinicOffer)
     const offerData = {
-      ...newOffer,
+      title: newOffer.title,
+      offer_type: "CLINIC",
+      description: newOffer.description,
       valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
-      valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : ''
+      valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
+      flat_discount_amt: newOffer.discount_percentage,
+      clinic: newOffer.clinic_service,
+      // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
+      name: "",
+      email: "",
+      phone: "",
+      type: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "",
+      pincode: "",
+      gst_number: "",
+      pan_number: "",
+      website: "",
+      logo: "",
+      // Add missing required fields for NewClinicOffer
+      postalCode: "",
+      about: "",
+      insuranceNetworks: [],
+      specialties: [],
+      location: { lat: 0, lng: 0 },
     };
     
     // Call the API to update the offer

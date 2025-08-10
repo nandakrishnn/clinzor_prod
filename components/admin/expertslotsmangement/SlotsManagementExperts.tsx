@@ -371,7 +371,7 @@ export default function ExpertManagement() {
   //     ] },
   //   ],
   // };
-  const [slots, setSlots] = useState<{ date: string; slots: { time: string; booked: boolean }[] }[]>([]);
+  const [slots, setSlots] = useState<{ [expertUuid: string]: { date: string; slots: { time: string; booked: boolean }[] }[] }>({});
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredExperts, setFilteredExperts] = useState<Expert[]>(experts);
   const [searchQuery, setSearchQuery] = useState('');
@@ -386,7 +386,8 @@ export default function ExpertManagement() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
   const [expertBookings, setExpertBookings] = useState<Booking[]>([]);
-  const [clinicServices, setClinicServices] = useState([]);
+  type ClinicService = { uuid: string; clinic_name: string };
+  const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
@@ -533,13 +534,13 @@ export default function ExpertManagement() {
 
   const handleViewBookings = (expert: Expert) => {
     setSelectedExpert(expert);
-    setExpertBookings(bookings[expert?.uuid] || []);
+    setExpertBookings(bookings.filter(b => b.uuid === expert?.uuid));
     setIsBookingsModalOpen(true);
   };
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '' ,  clinic_service: '',};
+    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' };
 
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
@@ -580,20 +581,22 @@ export default function ExpertManagement() {
     }
 
     try {
-      const expertData = {
-        name: newExpert.name,
-        email: newExpert.email,
-        phone_number: newExpert.phone_number,
-        gender: newExpert.gender,
-        specializaton: newExpert.specialization,
-        experience: newExpert.experience || '0 years',
-        clinic_service: newExpert.clinic_service,
-        education: newExpert.education,
- 
-      };
+const expertData = {
+  uuid: '', // Placeholder, backend should generate this
+  name: newExpert.name,
+  email: newExpert.email,
+  phone_number: newExpert.phone_number,
+  gender: newExpert.gender,
+  specializaton: newExpert.specialization,
+  experience: newExpert.experience || '0 years',
+  clinic_service: newExpert.clinic_service,
+  education: newExpert.education,
+  enabled: true, // Default enabled status
+  status: 'PENDING' as 'PENDING', // Default status for new expert
+};
 
-      // Call API to create expert
-      const createdExpert = await createExpert(expertData);
+// Call API to create expert
+const createdExpert = await createExpert(expertData);
 
       // Update local state with the expert returned from API
       setExperts(prev => [...prev, {
@@ -851,7 +854,7 @@ export default function ExpertManagement() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{expert.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{expert.specialization}</p>
+                  <p className="text-sm text-gray-600 mb-2">{expert.specializaton}</p>
                   <div className="flex items-center gap-2 mb-2">
                     <StatusBadge enabled={expert.status} />
                     <GenderBadge gender={expert.gender} />
@@ -1088,7 +1091,7 @@ export default function ExpertManagement() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Specialization</h4>
-                <p className="mt-1 text-lg">{selectedExpert.specialization}</p>
+                <p className="mt-1 text-lg">{selectedExpert.specializaton}</p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Experience</h4>
@@ -1151,7 +1154,7 @@ export default function ExpertManagement() {
             ) : (
               filteredBookings.map((booking) => (
                 <div
-                  key={booking.id}
+                  key={booking.uuid}
                   className="bg-white border border-gray-100 rounded-xl p-6"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
