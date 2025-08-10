@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Building2, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Download, 
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Building2,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Edit,
+  Mail,
+  Phone,
+  Calendar,
+  Download,
   Plus,
   MapPin,
   Clock,
@@ -28,13 +28,19 @@ import {
   Building,
   Lock,
   Check
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { sampleBookings } from '../dues/dueslist';
-import { approveOrRejectClinic, createClinic, deleteClinic, getAllClinic, toggleActiveClinic } from '@/service/admin/clinicManagentService';
-import { Call } from '@mui/icons-material';
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  approveOrRejectClinic,
+  createClinic,
+  deleteClinic,
+  getAllClinic,
+  toggleActiveClinic
+} from "@/service/admin/clinicManagentService";
+import { Call } from "@mui/icons-material";
+import { sampleBookings } from "@/components/clinicportal/dues/duesmanagement";
 
 interface Clinic {
   uuid: string;
@@ -42,8 +48,8 @@ interface Clinic {
   address: string;
   city: string;
   pincode: string;
-  status: 'APPROVED' | 'Draft' | 'Pending' | 'REJECTED';
-  paymentStatus: 'Paid' | 'Pending' | 'No Dues' | 'Overdue';
+  status: "APPROVED" | "Draft" | "Pending" | "REJECTED";
+  paymentStatus: "Paid" | "Pending" | "No Dues" | "Overdue";
   dueAmount: string;
   hours: string;
   workingDays: string[];
@@ -66,7 +72,7 @@ interface ModalProps {
 }
 
 interface NotificationProps {
-  type: 'success' | 'error' | 'warning';
+  type: "success" | "error" | "warning";
   message: string;
   onClose: () => void;
 }
@@ -75,15 +81,25 @@ type ModernModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  size?: 'sm' | 'lg';
+  size?: "sm" | "lg";
   children: React.ReactNode;
 };
 
-const ModernModal = ({ isOpen, onClose, title, size = "lg", children }: ModernModalProps) => {
+const ModernModal = ({
+  isOpen,
+  onClose,
+  title,
+  size = "lg",
+  children
+}: ModernModalProps) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-2xl shadow-2xl ${size === 'lg' ? 'max-w-4xl w-full' : 'max-w-md w-full'} max-h-[90vh] overflow-y-auto`}>
+      <div
+        className={`bg-white rounded-2xl shadow-2xl ${
+          size === "lg" ? "max-w-4xl w-full" : "max-w-md w-full"
+        } max-h-[90vh] overflow-y-auto`}
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
           <button
@@ -93,9 +109,7 @@ const ModernModal = ({ isOpen, onClose, title, size = "lg", children }: ModernMo
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-        <div className="p-6">
-          {children}
-        </div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -107,23 +121,31 @@ type TimePickerProps = {
   placeholder?: string;
 };
 
-const TimePicker = ({ value, onChange, placeholder = "Select time" }: TimePickerProps) => {
+const TimePicker = ({
+  value,
+  onChange,
+  placeholder = "Select time"
+}: TimePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const generateTimeOptions = () => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute of [0, 30]) {
-        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const time24 = `${hour.toString().padStart(2, "0")}:${minute
+          .toString()
+          .padStart(2, "0")}`;
         const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const time12 = `${hour12}:${minute
+          .toString()
+          .padStart(2, "0")} ${ampm}`;
         times.push({ value: time24, label: time12 });
       }
     }
     return times;
   };
   const timeOptions = generateTimeOptions();
-  const selectedTime = timeOptions.find(t => t.value === value);
+  const selectedTime = timeOptions.find((t) => t.value === value);
   return (
     <div className="relative">
       <div
@@ -145,7 +167,9 @@ const TimePicker = ({ value, onChange, placeholder = "Select time" }: TimePicker
                 setIsOpen(false);
               }}
               className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors ${
-                value === time.value ? 'bg-blue-100 text-blue-800 font-medium' : 'text-gray-700'
+                value === time.value
+                  ? "bg-blue-100 text-blue-800 font-medium"
+                  : "text-gray-700"
               }`}
             >
               {time.label}
@@ -168,20 +192,33 @@ type InputFieldProps = {
   icon?: React.ElementType;
 };
 
-function InputField({ label, type = "text", value, onChange, placeholder, required = false, error, icon: Icon }: InputFieldProps) {
+function InputField({
+  label,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  required = false,
+  error,
+  icon: Icon
+}: InputFieldProps) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
-        {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />}
+        {Icon && (
+          <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        )}
         <input
           type={type}
           value={value}
           onChange={onChange}
-          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-            error ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+          className={`w-full ${
+            Icon ? "pl-10" : "pl-4"
+          } pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+            error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
           }`}
           placeholder={placeholder}
           required={required}
@@ -195,23 +232,23 @@ function InputField({ label, type = "text", value, onChange, placeholder, requir
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <CheckCircle className="h-5 w-5 text-green-400" />;
-      case 'error':
+      case "error":
         return <XCircle className="h-5 w-5 text-red-400" />;
-      case 'warning':
+      case "warning":
         return <AlertCircle className="h-5 w-5 text-yellow-400" />;
     }
   };
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-50';
-      case 'error':
-        return 'bg-red-50';
-      case 'warning':
-        return 'bg-yellow-50';
+      case "success":
+        return "bg-green-50";
+      case "error":
+        return "bg-red-50";
+      case "warning":
+        return "bg-yellow-50";
     }
   };
 
@@ -236,49 +273,57 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
   );
 };
 
-const StatusBadge = ({ status }: { status: Clinic['status'] }) => {
+const StatusBadge = ({ status }: { status: Clinic["status"] }) => {
   const statusConfig = {
-    APPROVED: { 
-      color: 'bg-green-100 text-green-700', 
+    APPROVED: {
+      color: "bg-green-100 text-green-700",
       icon: CheckCircle // Make sure this is imported correctly
     },
-    Draft: { 
-      color: 'bg-gray-100 text-gray-700', 
+    Draft: {
+      color: "bg-gray-100 text-gray-700",
       icon: Edit // Make sure this is imported correctly
     },
-    Pending: { 
-      color: 'bg-yellow-100 text-yellow-700', 
+    Pending: {
+      color: "bg-yellow-100 text-yellow-700",
       icon: Clock // Make sure this is imported correctly
     },
-    REJECTED: { 
-      color: 'bg-red-100 text-red-700', 
+    REJECTED: {
+      color: "bg-red-100 text-red-700",
       icon: XCircle // Make sure this is imported correctly
     }
   };
-  
+
   const config = statusConfig[status];
   const Icon = config?.icon;
-  
+
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}
+    >
       {Icon && <Icon size={12} className="mr-1" />}
       {status}
     </span>
   );
 };
 
-const PaymentStatusBadge = ({ status }: { status: Clinic['paymentStatus'] }) => {
+const PaymentStatusBadge = ({
+  status
+}: {
+  status: Clinic["paymentStatus"];
+}) => {
   const statusConfig = {
-    'Paid': { color: 'bg-green-100 text-green-700' },
-    'Pending': { color: 'bg-yellow-100 text-yellow-700' },
-    'No Dues': { color: 'bg-blue-100 text-blue-700' },
-    'Overdue': { color: 'bg-red-100 text-red-700' }
+    Paid: { color: "bg-green-100 text-green-700" },
+    Pending: { color: "bg-yellow-100 text-yellow-700" },
+    "No Dues": { color: "bg-blue-100 text-blue-700" },
+    Overdue: { color: "bg-red-100 text-red-700" }
   };
-  
+
   const config = statusConfig[status];
-  
+
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config?.color}`}
+    >
       {status}
     </span>
   );
@@ -485,108 +530,122 @@ export default function ClinicManagement() {
 
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>(clinics);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<Clinic['status'] | 'ALL'>('ALL');
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<Clinic['paymentStatus'] | 'ALL'>('ALL');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<
+    Clinic["status"] | "ALL"
+  >("ALL");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<
+    Clinic["paymentStatus"] | "ALL"
+  >("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
+
   const [notification, setNotification] = useState<{
-    type: 'success' | 'error' | 'warning';
+    type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
 
   // Add Clinic Form State
   const [newClinic, setNewClinic] = useState({
-    name: '',
-    city: '',
-    phone: '',
-    email: '',
-    password: '',
-    address: '',
-    mapLink: '',
-    gpsCoordinates: '',
-    openingTime: '',
-    closingTime: '',
+    name: "",
+    city: "",
+    phone: "",
+    email: "",
+    password: "",
+    address: "",
+    mapLink: "",
+    gpsCoordinates: "",
+    openingTime: "",
+    closingTime: "",
     workingDays: [] as string[]
   });
 
   // Add state for confirmation modals
-  const [confirmModal, setConfirmModal] = useState<{ type: 'active' | 'inactive' | 'delete'; clinic: Clinic | null } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    type: "active" | "inactive" | "delete";
+    clinic: Clinic | null;
+  } | null>(null);
 
   const workingDayOptions = [
-    { value: 'Mon', label: 'Monday' },
-    { value: 'Tue', label: 'Tuesday' },
-    { value: 'Wed', label: 'Wednesday' },
-    { value: 'Thu', label: 'Thursday' },
-    { value: 'Fri', label: 'Friday' },
-    { value: 'Sat', label: 'Saturday' },
-    { value: 'Sun', label: 'Sunday' }
+    { value: "Mon", label: "Monday" },
+    { value: "Tue", label: "Tuesday" },
+    { value: "Wed", label: "Wednesday" },
+    { value: "Thu", label: "Thursday" },
+    { value: "Fri", label: "Friday" },
+    { value: "Sat", label: "Saturday" },
+    { value: "Sun", label: "Sunday" }
   ];
 
   const clinicsListRef = useRef<HTMLDivElement>(null);
-const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const [showDeactivated, setShowDeactivated] = useState(false);
 
-  const [selectedHeader, setSelectedHeader] = useState<'ALL' | 'Approved' | 'Pending' | 'Active' | 'Deactivated'>('Approved');
+  const [selectedHeader, setSelectedHeader] = useState<
+    "ALL" | "Approved" | "Pending" | "Active" | "Deactivated"
+  >("Approved");
 
   useEffect(() => {
-   const fetchClinecs = async ()=>{
-    setLoading(true);
-    try {
-      const data = await getAllClinic()
-      setClinics(data)
-      
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: 'Failed to load bookings',
-      });
-    }finally{
-      setLoading(false)
-    }
-
-   }
-   fetchClinecs();
-  }, [])
-  console.log("clinics data", clinics)
+    const fetchClinecs = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllClinic();
+        setClinics(data);
+      } catch (error) {
+        setNotification({
+          type: "error",
+          message: "Failed to load bookings"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClinecs();
+  }, []);
+  console.log("clinics data", clinics);
   // Filter clinics
   useEffect(() => {
     let filtered = [...clinics];
-    
+
     if (searchQuery) {
-      filtered = filtered.filter(clinic => 
-        clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        clinic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        clinic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        clinic.phone.includes(searchQuery)
+      filtered = filtered.filter(
+        (clinic) =>
+          clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          clinic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          clinic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          clinic.phone.includes(searchQuery)
       );
     }
-    
-    if (selectedStatus !== 'ALL') {
-      filtered = filtered.filter(clinic => clinic.status === selectedStatus);
+
+    if (selectedStatus !== "ALL") {
+      filtered = filtered.filter((clinic) => clinic.status === selectedStatus);
     }
-    
-    if (selectedPaymentStatus !== 'ALL') {
-      filtered = filtered.filter(clinic => clinic.paymentStatus === selectedPaymentStatus);
+
+    if (selectedPaymentStatus !== "ALL") {
+      filtered = filtered.filter(
+        (clinic) => clinic.paymentStatus === selectedPaymentStatus
+      );
     }
-    
+
     setFilteredClinics(filtered);
     setCurrentPage(1);
   }, [clinics, searchQuery, selectedStatus, selectedPaymentStatus]);
 
   // Filter for header selection
   let clinicsToShow = filteredClinics;
-  if (selectedHeader === 'Approved') clinicsToShow = filteredClinics.filter(c => c.status === 'APPROVED');
-  else if (selectedHeader === 'Pending') clinicsToShow = filteredClinics.filter(c => c.status === 'Pending');
-  else if (selectedHeader === 'Active') clinicsToShow = filteredClinics.filter(c => c.isActive);
-  else if (selectedHeader === 'Deactivated') clinicsToShow = filteredClinics.filter(c => !c.isActive);
+  if (selectedHeader === "Approved")
+    clinicsToShow = filteredClinics.filter((c) => c.status === "APPROVED");
+  else if (selectedHeader === "Pending")
+    clinicsToShow = filteredClinics.filter((c) => c.status === "Pending");
+  else if (selectedHeader === "Active")
+    clinicsToShow = filteredClinics.filter((c) => c.isActive);
+  else if (selectedHeader === "Deactivated")
+    clinicsToShow = filteredClinics.filter((c) => !c.isActive);
   // Pagination
   const totalPages = Math.ceil(clinicsToShow.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -598,227 +657,280 @@ const [loadingId, setLoadingId] = useState<string | null>(null);
   };
 
   const handleWorkingDayToggle = (day: string) => {
-    setNewClinic(prev => ({
+    setNewClinic((prev) => ({
       ...prev,
       workingDays: prev.workingDays.includes(day)
-        ? prev.workingDays.filter(d => d !== day)
+        ? prev.workingDays.filter((d) => d !== day)
         : [...prev.workingDays, day]
     }));
   };
 
   const handleSelectAllDays = () => {
-    setNewClinic(prev => ({
+    setNewClinic((prev) => ({
       ...prev,
-      workingDays: workingDayOptions.map(day => day.value)
+      workingDays: workingDayOptions.map((day) => day.value)
     }));
   };
 
   const handleSelectWeekdays = () => {
-    setNewClinic(prev => ({
+    setNewClinic((prev) => ({
       ...prev,
-      workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+      workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"]
     }));
   };
 
   const handleClearAllDays = () => {
-    setNewClinic(prev => ({
+    setNewClinic((prev) => ({
       ...prev,
       workingDays: []
     }));
   };
 
-const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const handleAddClinic = async () => {
-  if (!newClinic.name || !newClinic.city || !newClinic.email || !newClinic.password) {
-    setNotification({
-      type: 'error',
-      message: 'Please fill in all required fields'
-    });
-    return;
-  }
+  const handleAddClinic = async () => {
+    if (
+      !newClinic.name ||
+      !newClinic.city ||
+      !newClinic.email ||
+      !newClinic.password
+    ) {
+      setNotification({
+        type: "error",
+        message: "Please fill in all required fields"
+      });
+      return;
+    }
 
-  if (newClinic.workingDays.length === 0) {
-    setNotification({
-      type: 'error',
-      message: 'Please select at least one working day'
-    });
-    return;
-  }
+    if (newClinic.workingDays.length === 0) {
+      setNotification({
+        type: "error",
+        message: "Please select at least one working day"
+      });
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const clinicData = {
-      name: newClinic.name,
-      email: newClinic.email,
-     phone: newClinic.phone,
-      password: newClinic.password,
-      city: newClinic.city,
-      address: newClinic.address,
-      map_link: newClinic.mapLink,
-      gps_coordinates: newClinic.gpsCoordinates,
-      opening_time: newClinic.openingTime,
-      closing_time: newClinic.closingTime,
-      working_days: newClinic.workingDays
-    };
+    try {
+      const clinicData = {
+        name: newClinic.name,
+        email: newClinic.email,
+        phone: newClinic.phone,
+        password: newClinic.password,
+        city: newClinic.city,
+        address: newClinic.address,
+        map_link: newClinic.mapLink,
+        gps_coordinates: newClinic.gpsCoordinates,
+        opening_time: newClinic.openingTime,
+        closing_time: newClinic.closingTime,
+        working_days: newClinic.workingDays
+      };
 
-    const createdClinic = await createClinic(clinicData);
+      const createdClinic = await createClinic(clinicData);
 
-    setClinics(prev => [...prev, {
-      ...createdClinic,
-      status: 'Draft',
-      paymentStatus: 'No Dues',
-      dueAmount: '₹0',
-      hours: newClinic.openingTime && newClinic.closingTime ? 
-        `${formatTime(newClinic.openingTime)} - ${formatTime(newClinic.closingTime)}` : '',
-      isActive: false,
-      submissionDate: new Date().toISOString().split('T')[0],
-      documents: []
-    }]);
+      setClinics((prev) => [
+        ...prev,
+        {
+          ...createdClinic,
+          status: "Draft",
+          paymentStatus: "No Dues",
+          dueAmount: "₹0",
+          hours:
+            newClinic.openingTime && newClinic.closingTime
+              ? `${formatTime(newClinic.openingTime)} - ${formatTime(
+                  newClinic.closingTime
+                )}`
+              : "",
+          isActive: false,
+          submissionDate: new Date().toISOString().split("T")[0],
+          documents: []
+        }
+      ]);
 
-    setNewClinic({
-      name: '',
-      city: '',
-      phone: "",
-      email: '',
-      password: '',
-      address: '',
-      mapLink: '',
-      gpsCoordinates: '',
-      openingTime: '',
-      closingTime: '',
-      workingDays: []
-    });
+      setNewClinic({
+        name: "",
+        city: "",
+        phone: "",
+        email: "",
+        password: "",
+        address: "",
+        mapLink: "",
+        gpsCoordinates: "",
+        openingTime: "",
+        closingTime: "",
+        workingDays: []
+      });
 
-    setIsAddModalOpen(false);
-    setNotification({
-      type: 'success',
-      message: 'Clinic added successfully'
-    });
-  } catch (error :any) {
-    setNotification({
-      type: 'error',
-      message: `Failed to add clinic: ${ error.message}`
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      setIsAddModalOpen(false);
+      setNotification({
+        type: "success",
+        message: "Clinic added successfully"
+      });
+    } catch (error: any) {
+      setNotification({
+        type: "error",
+        message: `Failed to add clinic: ${error.message}`
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-// Helper function to format time
-const formatTime = (time24: string) => {
-  if (!time24) return '';
-  const [hours, minutes] = time24.split(':');
-  const hourNum = parseInt(hours, 10);
-  const ampm = hourNum >= 12 ? 'PM' : 'AM';
-  const hour12 = hourNum % 12 || 12;
-  return `${hour12}:${minutes} ${ampm}`;
-};
+  // Helper function to format time
+  const formatTime = (time24: string) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(":");
+    const hourNum = parseInt(hours, 10);
+    const ampm = hourNum >= 12 ? "PM" : "AM";
+    const hour12 = hourNum % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
 
   const stats = {
     total: clinics.length,
-    approved: clinics.filter(c => c.status === 'APPROVED').length,
-    pending: clinics.filter(c => c.status === 'Pending').length,
-    active: clinics.filter(c => c.isActive).length,
-    deactivated: clinics.filter(c => !c.isActive).length
+    approved: clinics.filter((c) => c.status === "APPROVED").length,
+    pending: clinics.filter((c) => c.status === "Pending").length,
+    active: clinics.filter((c) => c.isActive).length,
+    deactivated: clinics.filter((c) => !c.isActive).length
   };
 
-function handleApprove(clinic: Clinic) {
-  // Optimistically update the UI
-  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: 'APPROVED' } : c));
-  
-  // Call the API
-  approveOrRejectClinic(clinic.uuid.toString(), { status:"APPROVED"})
-    .then(() => {
-      setNotification({ type: 'success', message: `Clinic "${clinic.name}" approved!` });
-    })
-    .catch(error => {
-      // Revert the UI change if the API call fails
-      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c));
-      setNotification({ 
-        type: 'error', 
-        message: `Failed to approve clinic "${clinic.name}". ${error.response?.data?.message || ''}` 
-      });
-    });
-}
+  function handleApprove(clinic: Clinic) {
+    // Optimistically update the UI
+    setClinics((prev) =>
+      prev.map((c) =>
+        c.uuid === clinic.uuid ? { ...c, status: "APPROVED" } : c
+      )
+    );
 
-function handleReject(clinic: Clinic) {
-  // Optimistically update the UI
-  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: 'REJECTED' } : c));
-  
-  // Call the API
-  approveOrRejectClinic(clinic.uuid.toString(), { status: "REJECTED" })
-    .then(() => {
-      setNotification({ type: 'error', message: `Clinic "${clinic.name}" rejected.` });
-    })
-    .catch(error => {
-      // Revert the UI change if the API call fails
-      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c));
-      setNotification({ 
-        type: 'error', 
-        message: `Failed to reject clinic "${clinic.name}". ${error.response?.data?.message || ''}` 
+    // Call the API
+    approveOrRejectClinic(clinic.uuid.toString(), { status: "APPROVED" })
+      .then(() => {
+        setNotification({
+          type: "success",
+          message: `Clinic "${clinic.name}" approved!`
+        });
+      })
+      .catch((error) => {
+        // Revert the UI change if the API call fails
+        setClinics((prev) =>
+          prev.map((c) =>
+            c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c
+          )
+        );
+        setNotification({
+          type: "error",
+          message: `Failed to approve clinic "${clinic.name}". ${
+            error.response?.data?.message || ""
+          }`
+        });
       });
-    });
-}
+  }
 
+  function handleReject(clinic: Clinic) {
+    // Optimistically update the UI
+    setClinics((prev) =>
+      prev.map((c) =>
+        c.uuid === clinic.uuid ? { ...c, status: "REJECTED" } : c
+      )
+    );
 
-
-function handleToggleActive(clinic: Clinic) {
-  setLoadingId(clinic.uuid);
-  
-  // Optimistically update the UI
-  setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, isActive: !c.isActive } : c));
-  
-  // Call the API
-  toggleActiveClinic(clinic.uuid, { is_active: !clinic.isActive })
-    .then(() => {
-      setNotification({ 
-        type: 'success', 
-        message: `Clinic "${clinic.name}" is now ${!clinic.isActive ? 'active' : 'inactive'}.` 
+    // Call the API
+    approveOrRejectClinic(clinic.uuid.toString(), { status: "REJECTED" })
+      .then(() => {
+        setNotification({
+          type: "error",
+          message: `Clinic "${clinic.name}" rejected.`
+        });
+      })
+      .catch((error) => {
+        // Revert the UI change if the API call fails
+        setClinics((prev) =>
+          prev.map((c) =>
+            c.uuid === clinic.uuid ? { ...c, status: clinic.status } : c
+          )
+        );
+        setNotification({
+          type: "error",
+          message: `Failed to reject clinic "${clinic.name}". ${
+            error.response?.data?.message || ""
+          }`
+        });
       });
-    })
-    .catch(error => {
-      // Revert the UI change if the API call fails
-      setClinics(prev => prev.map(c => c.uuid === clinic.uuid ? { ...c, isActive: clinic.isActive } : c));
-      setNotification({ 
-        type: 'error', 
-        message: `Failed to ${clinic.isActive ? 'deactivate' : 'activate'} clinic "${clinic.name}". ${error.response?.data?.message || ''}`
+  }
+
+  function handleToggleActive(clinic: Clinic) {
+    setLoadingId(clinic.uuid);
+
+    // Optimistically update the UI
+    setClinics((prev) =>
+      prev.map((c) =>
+        c.uuid === clinic.uuid ? { ...c, isActive: !c.isActive } : c
+      )
+    );
+
+    // Call the API
+    toggleActiveClinic(clinic.uuid, { is_active: !clinic.isActive })
+      .then(() => {
+        setNotification({
+          type: "success",
+          message: `Clinic "${clinic.name}" is now ${
+            !clinic.isActive ? "active" : "inactive"
+          }.`
+        });
+      })
+      .catch((error) => {
+        // Revert the UI change if the API call fails
+        setClinics((prev) =>
+          prev.map((c) =>
+            c.uuid === clinic.uuid ? { ...c, isActive: clinic.isActive } : c
+          )
+        );
+        setNotification({
+          type: "error",
+          message: `Failed to ${
+            clinic.isActive ? "deactivate" : "activate"
+          } clinic "${clinic.name}". ${error.response?.data?.message || ""}`
+        });
+      })
+      .finally(() => {
+        setLoadingId(null);
       });
-    })
-    .finally(() => {
-      setLoadingId(null);
-    });
-}
+  }
 
   function handleDeleteClinic(clinic: Clinic) {
-    setClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
+    setClinics((prev) => prev.filter((c) => c.uuid !== clinic.uuid));
     deleteClinic(clinic.uuid)
-    .then(()=>{
-
-      setNotification({ type: 'success', message: `Clinic "${clinic.name}" deleted Successfully.` });
-    })
-    .catch(error => {
-      setNotification({
-        type:"error",
-        message: `Failed to delete clinic "${clinic.name}". ${error.response?.data?.message || ''}`
+      .then(() => {
+        setNotification({
+          type: "success",
+          message: `Clinic "${clinic.name}" deleted Successfully.`
+        });
       })
-    })
-    .finally(()=>{
-      setLoadingId(null);
-    })
+      .catch((error) => {
+        setNotification({
+          type: "error",
+          message: `Failed to delete clinic "${clinic.name}". ${
+            error.response?.data?.message || ""
+          }`
+        });
+      })
+      .finally(() => {
+        setLoadingId(null);
+      });
   }
 
   // Calculate bookings per clinic (by name)
   const getBookingCount = (clinicName: string) => {
-    return sampleBookings.filter((b: any) => b.clinic_name === clinicName).length;
+    return sampleBookings.filter((b: any) => b.clinic_name === clinicName)
+      .length;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row md:items-center justify-between mb-8 bg-white rounded-xl shadow-lg p-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -828,18 +940,20 @@ function handleToggleActive(clinic: Clinic) {
               <Building2 className="mr-3 text-blue-600" size={32} />
               Clinic Management
             </h1>
-            <p className="text-gray-600 mt-1">Manage and monitor clinic registrations</p>
+            <p className="text-gray-600 mt-1">
+              Manage and monitor clinic registrations
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
             </button>
-            <button 
+            <button
               onClick={() => setIsAddModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
@@ -848,12 +962,16 @@ function handleToggleActive(clinic: Clinic) {
             </button>
           </div>
         </motion.div>
-        
+
         {/* Deactivated Clinics Header/Toggle */}
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">All Clinics</h2>
           <button
-            className={`px-4 py-2 rounded-lg font-medium transition ${showDeactivated ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              showDeactivated
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
             onClick={() => setShowDeactivated(!showDeactivated)}
           >
             Deactivated Clinics
@@ -867,91 +985,134 @@ function handleToggleActive(clinic: Clinic) {
             </button>
           )}
         </div>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
-          <motion.div 
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === 'ALL' ? 'ring-2 ring-blue-500' : ''}`}
+          <motion.div
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
+              selectedHeader === "ALL" ? "ring-2 ring-blue-500" : ""
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => { setSelectedHeader('ALL'); setSelectedStatus('ALL'); setShowDeactivated(false); }}
+            onClick={() => {
+              setSelectedHeader("ALL");
+              setSelectedStatus("ALL");
+              setShowDeactivated(false);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Clinics</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Clinics
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Building2 size={24} className="text-blue-600" />
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === 'Approved' ? 'ring-2 ring-blue-500' : ''}`}
+
+          <motion.div
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
+              selectedHeader === "Approved" ? "ring-2 ring-blue-500" : ""
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            onClick={() => { setSelectedHeader('Approved'); setSelectedStatus('ALL'); setShowDeactivated(false); }}
+            onClick={() => {
+              setSelectedHeader("Approved");
+              setSelectedStatus("ALL");
+              setShowDeactivated(false);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.approved}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.approved}
+                </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <CheckCircle size={24} className="text-green-600" />
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === 'Pending' ? 'ring-2 ring-blue-500' : ''}`}
+
+          <motion.div
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
+              selectedHeader === "Pending" ? "ring-2 ring-blue-500" : ""
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            onClick={() => { router.push('/admin/pending'); }}
+            onClick={() => {
+              router.push("/admin/pending");
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.pending}
+                </p>
               </div>
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <Clock size={24} className="text-yellow-600" />
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === 'Active' ? 'ring-2 ring-blue-500' : ''}`}
+
+          <motion.div
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
+              selectedHeader === "Active" ? "ring-2 ring-blue-500" : ""
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            onClick={() => { setSelectedHeader('Active'); setSelectedStatus('ALL'); setShowDeactivated(false); }}
+            onClick={() => {
+              setSelectedHeader("Active");
+              setSelectedStatus("ALL");
+              setShowDeactivated(false);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.active}
+                </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <CheckCircle size={24} className="text-purple-600" />
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === 'Deactivated' ? 'ring-2 ring-blue-500' : ''}`}
+
+          <motion.div
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
+              selectedHeader === "Deactivated" ? "ring-2 ring-blue-500" : ""
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            onClick={() => { setSelectedHeader('Deactivated'); setSelectedStatus('ALL'); setShowDeactivated(true); setTimeout(() => { clinicsListRef.current?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+            onClick={() => {
+              setSelectedHeader("Deactivated");
+              setSelectedStatus("ALL");
+              setShowDeactivated(true);
+              setTimeout(() => {
+                clinicsListRef.current?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Deactivated</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.deactivated}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.deactivated}
+                </p>
               </div>
               <div className="p-3 bg-gray-100 rounded-lg">
                 <XCircle size={24} className="text-gray-500" />
@@ -959,9 +1120,9 @@ function handleToggleActive(clinic: Clinic) {
             </div>
           </motion.div>
         </div>
-        
+
         {/* Filters and Search */}
-        <motion.div 
+        <motion.div
           className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -969,7 +1130,10 @@ function handleToggleActive(clinic: Clinic) {
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 placeholder="Search by name, city, email, or phone..."
@@ -978,12 +1142,14 @@ function handleToggleActive(clinic: Clinic) {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
+
             {/* Status Filter */}
             <div className="relative">
               <select
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as Clinic['status'] | 'ALL')}
+                onChange={(e) =>
+                  setSelectedStatus(e.target.value as Clinic["status"] | "ALL")
+                }
                 className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">All Status</option>
@@ -992,14 +1158,21 @@ function handleToggleActive(clinic: Clinic) {
                 <option value="Pending">Pending</option>
                 <option value="Rejected">Rejected</option>
               </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
             </div>
-            
+
             {/* Payment Status Filter */}
             <div className="relative">
               <select
                 value={selectedPaymentStatus}
-                onChange={(e) => setSelectedPaymentStatus(e.target.value as Clinic['paymentStatus'] | 'ALL')}
+                onChange={(e) =>
+                  setSelectedPaymentStatus(
+                    e.target.value as Clinic["paymentStatus"] | "ALL"
+                  )
+                }
                 className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">All Payments</option>
@@ -1008,7 +1181,10 @@ function handleToggleActive(clinic: Clinic) {
                 <option value="No Dues">No Dues</option>
                 <option value="Overdue">Overdue</option>
               </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
             </div>
           </div>
         </motion.div>
@@ -1016,7 +1192,9 @@ function handleToggleActive(clinic: Clinic) {
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600">
-            Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredClinics.length)} of {filteredClinics.length} clinics
+            Showing {(currentPage - 1) * itemsPerPage + 1}-
+            {Math.min(currentPage * itemsPerPage, filteredClinics.length)} of{" "}
+            {filteredClinics.length} clinics
           </p>
         </div>
 
@@ -1064,32 +1242,40 @@ function handleToggleActive(clinic: Clinic) {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar size={14} />
-                      <span>{clinic?.workingDays?.join(', ')}</span>
+                      <span>{clinic?.workingDays?.join(", ")}</span>
                     </div>
                   </div>
                   {clinic.submissionDate && (
                     <div className="text-xs text-gray-500">
-                      Submitted on: {new Date(clinic.submissionDate).toLocaleDateString()}
+                      Submitted on:{" "}
+                      {new Date(clinic.submissionDate).toLocaleDateString()}
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
                     <PaymentStatusBadge status={clinic.paymentStatus} />
-                    {clinic.dueAmount !== '₹0' && <span className="text-rose-600">Due: {clinic.dueAmount}</span>}
+                    {clinic.dueAmount !== "₹0" && (
+                      <span className="text-rose-600">
+                        Due: {clinic.dueAmount}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
-                  <Link href={`/admin/allclinics/${clinic.uuid}`} legacyBehavior>
+                  <Link
+                    href={`/admin/allclinics/${clinic.uuid}`}
+                    legacyBehavior
+                  >
                     <a
                       className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
                       aria-label="Review details"
-                      onClick={e => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Eye size={16} />
                       <span className="hidden sm:inline">Review</span>
                     </a>
                   </Link>
-                  {clinic.status !== 'APPROVED' && (
+                  {clinic.status !== "APPROVED" && (
                     <button
                       onClick={() => handleApprove(clinic)}
                       className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
@@ -1098,18 +1284,21 @@ function handleToggleActive(clinic: Clinic) {
                       <span className="hidden sm:inline">Approve</span>
                     </button>
                   )}
-                  {clinic.status !== 'REJECTED' && clinic.status !== 'APPROVED' && (
-                    <button
-                      onClick={() => handleReject(clinic)}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                    >
-                      <X size={16} />
-                      <span className="hidden sm:inline">Reject</span>
-                    </button>
-                  )}
+                  {clinic.status !== "REJECTED" &&
+                    clinic.status !== "APPROVED" && (
+                      <button
+                        onClick={() => handleReject(clinic)}
+                        className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                      >
+                        <X size={16} />
+                        <span className="hidden sm:inline">Reject</span>
+                      </button>
+                    )}
                   {clinic.isActive ? (
                     <button
-                      onClick={() => setConfirmModal({ type: 'inactive', clinic })}
+                      onClick={() =>
+                        setConfirmModal({ type: "inactive", clinic })
+                      }
                       className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
                     >
                       <XCircle size={16} />
@@ -1117,7 +1306,9 @@ function handleToggleActive(clinic: Clinic) {
                     </button>
                   ) : (
                     <button
-                      onClick={() => setConfirmModal({ type: 'active', clinic })}
+                      onClick={() =>
+                        setConfirmModal({ type: "active", clinic })
+                      }
                       className="flex items-center gap-2 px-4 py-2 text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
                     >
                       <CheckCircle size={16} />
@@ -1125,7 +1316,7 @@ function handleToggleActive(clinic: Clinic) {
                     </button>
                   )}
                   <button
-                    onClick={() => setConfirmModal({ type: 'delete', clinic })}
+                    onClick={() => setConfirmModal({ type: "delete", clinic })}
                     className="flex items-center gap-2 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
                   >
                     <X size={16} />
@@ -1139,19 +1330,19 @@ function handleToggleActive(clinic: Clinic) {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <motion.div 
+          <motion.div
             className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === 1 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                 }`}
               >
                 Previous
@@ -1160,28 +1351,37 @@ function handleToggleActive(clinic: Clinic) {
                 Page {currentPage} of {totalPages}
               </span>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                   currentPage === totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                 }`}
               >
                 Next
               </button>
             </div>
             <div className="text-sm text-gray-500">
-              Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredClinics.length)} of {filteredClinics.length} clinics
+              Showing {(currentPage - 1) * itemsPerPage + 1}-
+              {Math.min(currentPage * itemsPerPage, filteredClinics.length)} of{" "}
+              {filteredClinics.length} clinics
             </div>
           </motion.div>
         )}
 
         {/* Add Clinic Modal */}
         {isAddModalOpen && (
-          <ModernModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Clinic" size="lg">
+          <ModernModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            title="Add New Clinic"
+            size="lg"
+          >
             <form
-              onSubmit={e => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 handleAddClinic();
               }}
@@ -1196,7 +1396,9 @@ function handleToggleActive(clinic: Clinic) {
                   <InputField
                     label="Clinic Name"
                     value={newClinic.name}
-                    onChange={e => setNewClinic({ ...newClinic, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewClinic({ ...newClinic, name: e.target.value })
+                    }
                     placeholder="Enter clinic name"
                     required
                     icon={Building}
@@ -1204,7 +1406,9 @@ function handleToggleActive(clinic: Clinic) {
                   <InputField
                     label="City"
                     value={newClinic.city}
-                    onChange={e => setNewClinic({ ...newClinic, city: e.target.value })}
+                    onChange={(e) =>
+                      setNewClinic({ ...newClinic, city: e.target.value })
+                    }
                     placeholder="Enter city"
                     required
                     icon={MapPin}
@@ -1221,7 +1425,9 @@ function handleToggleActive(clinic: Clinic) {
                     label="Email"
                     type="email"
                     value={newClinic.email}
-                    onChange={e => setNewClinic({ ...newClinic, email: e.target.value })}
+                    onChange={(e) =>
+                      setNewClinic({ ...newClinic, email: e.target.value })
+                    }
                     placeholder="Enter clinic email"
                     required
                     icon={Mail}
@@ -1230,22 +1436,29 @@ function handleToggleActive(clinic: Clinic) {
                     label="Temporary Password"
                     type="password"
                     value={newClinic.password}
-                    onChange={e => setNewClinic({ ...newClinic, password: e.target.value })}
+                    onChange={(e) =>
+                      setNewClinic({ ...newClinic, password: e.target.value })
+                    }
                     placeholder="Enter temporary password (min 6 chars)"
                     required
                     icon={Lock}
                   />
-                   <InputField
+                  <InputField
                     label="Contact Number"
                     type="number"
                     value={newClinic.phone}
-                    onChange={e => setNewClinic({ ...newClinic, phone: e.target.value })}
+                    onChange={(e) =>
+                      setNewClinic({ ...newClinic, phone: e.target.value })
+                    }
                     placeholder="Enter clinic Contact number"
                     required
                     icon={Call}
                   />
                 </div>
-                <span className="text-xs text-gray-500 block mt-2">This email and password will be used as the clinic's login credentials.</span>
+                <span className="text-xs text-gray-500 block mt-2">
+                  This email and password will be used as the clinic's login
+                  credentials.
+                </span>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -1254,10 +1467,14 @@ function handleToggleActive(clinic: Clinic) {
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Address
+                    </label>
                     <textarea
                       value={newClinic.address}
-                      onChange={e => setNewClinic({ ...newClinic, address: e.target.value })}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, address: e.target.value })
+                      }
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       rows={3}
                       placeholder="Enter full address"
@@ -1268,13 +1485,20 @@ function handleToggleActive(clinic: Clinic) {
                       label="Google Maps Link"
                       type="url"
                       value={newClinic.mapLink}
-                      onChange={e => setNewClinic({ ...newClinic, mapLink: e.target.value })}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, mapLink: e.target.value })
+                      }
                       placeholder="https://maps.google.com/..."
                     />
                     <InputField
                       label="Coordinates"
                       value={newClinic.gpsCoordinates}
-                      onChange={e => setNewClinic({ ...newClinic, gpsCoordinates: e.target.value })}
+                      onChange={(e) =>
+                        setNewClinic({
+                          ...newClinic,
+                          gpsCoordinates: e.target.value
+                        })
+                      }
                       placeholder="POINT(longitude latitude)"
                     />
                   </div>
@@ -1293,7 +1517,9 @@ function handleToggleActive(clinic: Clinic) {
                       </label>
                       <TimePicker
                         value={newClinic.openingTime}
-                        onChange={value => setNewClinic({ ...newClinic, openingTime: value })}
+                        onChange={(value) =>
+                          setNewClinic({ ...newClinic, openingTime: value })
+                        }
                         placeholder="Select opening time"
                       />
                     </div>
@@ -1303,7 +1529,9 @@ function handleToggleActive(clinic: Clinic) {
                       </label>
                       <TimePicker
                         value={newClinic.closingTime}
-                        onChange={value => setNewClinic({ ...newClinic, closingTime: value })}
+                        onChange={(value) =>
+                          setNewClinic({ ...newClinic, closingTime: value })
+                        }
                         placeholder="Select closing time"
                       />
                     </div>
@@ -1313,22 +1541,45 @@ function handleToggleActive(clinic: Clinic) {
                       Working Days <span className="text-red-500">*</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {workingDayOptions.map(day => (
-                        <label key={day.value} className="flex items-center gap-2 cursor-pointer">
+                      {workingDayOptions.map((day) => (
+                        <label
+                          key={day.value}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
                           <input
                             type="checkbox"
                             checked={newClinic.workingDays.includes(day.value)}
                             onChange={() => handleWorkingDayToggle(day.value)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                           />
-                          <span className="text-sm text-gray-700">{day.label}</span>
+                          <span className="text-sm text-gray-700">
+                            {day.label}
+                          </span>
                         </label>
                       ))}
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <button type="button" className="text-xs text-blue-600 underline" onClick={handleSelectAllDays}>All</button>
-                      <button type="button" className="text-xs text-blue-600 underline" onClick={handleSelectWeekdays}>Weekdays</button>
-                      <button type="button" className="text-xs text-blue-600 underline" onClick={handleClearAllDays}>Clear</button>
+                      <button
+                        type="button"
+                        className="text-xs text-blue-600 underline"
+                        onClick={handleSelectAllDays}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs text-blue-600 underline"
+                        onClick={handleSelectWeekdays}
+                      >
+                        Weekdays
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs text-blue-600 underline"
+                        onClick={handleClearAllDays}
+                      >
+                        Clear
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1369,42 +1620,62 @@ function handleToggleActive(clinic: Clinic) {
             isOpen={!!confirmModal}
             onClose={() => setConfirmModal(null)}
             title={
-              confirmModal.type === 'delete'
-                ? 'Delete Clinic'
-                : confirmModal.type === 'active'
-                ? 'Activate Clinic'
-                : 'Deactivate Clinic'
+              confirmModal.type === "delete"
+                ? "Delete Clinic"
+                : confirmModal.type === "active"
+                ? "Activate Clinic"
+                : "Deactivate Clinic"
             }
             size="sm"
           >
             <div className="space-y-4">
               <p className="text-gray-700 text-base">
-                {confirmModal.type === 'delete' && `Are you sure you want to delete "${confirmModal.clinic.name}"? This action cannot be undone.`}
-                {confirmModal.type === 'active' && `Are you sure you want to activate "${confirmModal.clinic.name}"?`}
-                {confirmModal.type === 'inactive' && `Are you sure you want to deactivate "${confirmModal.clinic.name}"?`}
+                {confirmModal.type === "delete" &&
+                  `Are you sure you want to delete "${confirmModal.clinic.name}"? This action cannot be undone.`}
+                {confirmModal.type === "active" &&
+                  `Are you sure you want to activate "${confirmModal.clinic.name}"?`}
+                {confirmModal.type === "inactive" &&
+                  `Are you sure you want to deactivate "${confirmModal.clinic.name}"?`}
               </p>
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                 <button
                   onClick={() => setConfirmModal(null)}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
-                >Cancel</button>
-                {confirmModal.type === 'delete' && (
+                >
+                  Cancel
+                </button>
+                {confirmModal.type === "delete" && (
                   <button
-                    onClick={() => { handleDeleteClinic(confirmModal.clinic!); setConfirmModal(null); }}
+                    onClick={() => {
+                      handleDeleteClinic(confirmModal.clinic!);
+                      setConfirmModal(null);
+                    }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
-                  >Delete</button>
+                  >
+                    Delete
+                  </button>
                 )}
-                {confirmModal.type === 'active' && (
+                {confirmModal.type === "active" && (
                   <button
-                    onClick={() => { handleToggleActive(confirmModal.clinic!); setConfirmModal(null); }}
+                    onClick={() => {
+                      handleToggleActive(confirmModal.clinic!);
+                      setConfirmModal(null);
+                    }}
                     className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all"
-                  >Activate</button>
+                  >
+                    Activate
+                  </button>
                 )}
-                {confirmModal.type === 'inactive' && (
+                {confirmModal.type === "inactive" && (
                   <button
-                    onClick={() => { handleToggleActive(confirmModal.clinic!); setConfirmModal(null); }}
+                    onClick={() => {
+                      handleToggleActive(confirmModal.clinic!);
+                      setConfirmModal(null);
+                    }}
                     className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all"
-                  >Deactivate</button>
+                  >
+                    Deactivate
+                  </button>
                 )}
               </div>
             </div>
