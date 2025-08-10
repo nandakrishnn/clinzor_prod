@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Plus,
   Calendar,
   Users,
   Mail,
@@ -8,10 +8,8 @@ import {
   Instagram,
   Building2,
   Search,
-  Filter,
   MoreHorizontal,
   Sparkles,
-  TrendingUp,
   Eye,
   CheckCircle,
   Clock,

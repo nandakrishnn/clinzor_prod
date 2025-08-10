@@ -1,4 +1,3 @@
-import Title from "@/components/ui/title";
 import Image from "next/image";
 import React from "react";
 import { motion, Variants } from "framer-motion";
