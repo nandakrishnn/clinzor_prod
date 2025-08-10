@@ -18,9 +18,26 @@ import {
 } from 'lucide-react';
 import MapPicker from './MapPicker';
 import { useSession } from 'next-auth/react';
+import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
+import { editClinicODetails } from '@/service/clinic/profileService';
+
+
+// API Interface
+interface NewClinic {
+  title: string;
+  offer_type: string;
+  description: string;
+  valid_from: string;
+  valid_to: string;
+  flat_discount_amt: string;
+  clinic: string;
+}
+
+
 
 // Type definitions
 interface ClinicData {
+  uuid?: string;
   name: string;
   email: string;
   phone: string;
@@ -36,6 +53,10 @@ interface ClinicData {
     lat: number;
     lng: number;
   };
+  // Add any additional fields from your backend
+  landmark?: string;
+  gstNo?: string;
+  foundedOn?: string | null;
 }
 
 interface OperatingHour {
@@ -54,6 +75,40 @@ interface OperatingHours {
   sunday: OperatingHour;
 }
 
+// Backend clinic type based on your useEffect
+interface BackendClinic {
+  name?: string;
+  email?: string;
+  contact_number?: string;
+  address?: string;
+  city?: string;
+  pincode?: number;
+  about_clinic?: string;
+  coordinates?: string;
+}
+
+// Nominatim API response types
+interface NominatimAddress {
+  city?: string;
+  town?: string;
+  village?: string;
+  state?: string;
+  postcode?: string;
+}
+
+interface NominatimResult {
+  place_id: string;
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: NominatimAddress;
+}
+
+interface NominatimReverseResult {
+  display_name?: string;
+  address?: NominatimAddress;
+}
+
 function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
@@ -63,25 +118,98 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
 }
 
 const ClinicSettingsDashboard = () => {
-  const {data: user, status } = useSession()
-console.log(user,"clinic data")
+  const { data: user, status } = useSession();
+
   const [clinicData, setClinicData] = useState<ClinicData>({
-    name: 'Prime Healthcare Clinic',
-    email: 'contact@primehealthcare.com',
-    phone: '9876543210',
+    name: '',
+    email: '',
+    phone: '',
     type: 'General Practice',
-    address: '123 Medical Center Drive',
-    city: 'Kozhikode',
-    state: 'Kerala',
-    postalCode: '673001',
-    about: 'We are a leading healthcare provider committed to delivering exceptional medical services with compassion and expertise.',
-    insuranceNetworks: ['Aetna', 'Blue Cross Blue Shield', 'Cigna'],
-    specialties: ['General Medicine', 'Cardiology', 'Pediatrics'],
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    about: '',
+    insuranceNetworks: [],
+    specialties: [],
     location: {
-      lat: 11.2588,
-      lng: 75.7804,
-    },
+      lat: 0,
+      lng: 0,
+    }
   });
+
+  const { clinic } = useClinicByUser() as { clinic: (BackendClinic & { uuid?: string }) | null };
+  console.log(clinic, "clinic data");
+
+  // Helper function to parse coordinates safely
+  const parseCoordinates = (coordinatesString?: string): { lat: number; lng: number } => {
+    if (!coordinatesString) {
+      return { lat: 0, lng: 0 };
+    }
+
+    try {
+      // Handle different possible coordinate formats
+      // Format 1: "POINT(lng lat)" - PostGIS format
+      if (coordinatesString.includes('POINT')) {
+        const match = coordinatesString.match(/POINT\(([^)]+)\)/);
+        if (match) {
+          const coords = match[1].split(' ');
+          const lng = parseFloat(coords[0]);
+          const lat = parseFloat(coords[1]);
+          
+          if (!isNaN(lat) && !isNaN(lng)) {
+            return { lat, lng };
+          }
+        }
+      }
+      
+      // Format 2: "lng lat" - space separated
+      const coords = coordinatesString.trim().split(/\s+/);
+      if (coords.length >= 2) {
+        const lng = parseFloat(coords[0]);
+        const lat = parseFloat(coords[1]);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng };
+        }
+      }
+      
+      // Format 3: "lat,lng" - comma separated
+      const commaCoords = coordinatesString.split(',');
+      if (commaCoords.length === 2) {
+        const lat = parseFloat(commaCoords[0].trim());
+        const lng = parseFloat(commaCoords[1].trim());
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng };
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing coordinates:', error);
+    }
+    
+    // Default fallback coordinates (you can change these to your preferred default location)
+    return { lat: 8.5241, lng: 76.9366 }; // Thiruvananthapuram coordinates as fallback
+  };
+
+  useEffect(() => {
+    if (clinic) {
+      const backendClinic = clinic as BackendClinic;
+      const coordinates = parseCoordinates(backendClinic?.coordinates);
+      
+      setClinicData(prev => ({
+        ...prev,
+        name: backendClinic?.name || '',
+        email: backendClinic?.email || '',
+        phone: backendClinic?.contact_number || '',
+        address: backendClinic?.address || '',
+        city: backendClinic?.city || '',
+        postalCode: backendClinic?.pincode?.toString() || '',
+        about: backendClinic?.about_clinic || '',
+        location: coordinates
+      }));
+    }
+  }, [clinic]);
 
   const [operatingHours, setOperatingHours] = useState<OperatingHours>({
     monday: { open: '09:00', close: '18:00', closed: false },
@@ -97,7 +225,7 @@ console.log(user,"clinic data")
   const [newSpecialty, setNewSpecialty] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -191,22 +319,34 @@ console.log(user,"clinic data")
     }));
   };
 
-  const handleSave = async () => {
-    setSaveStatus('saving');
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Saving clinic data:', clinicData);
-    console.log('Saving operating hours:', operatingHours);
-      setSaveStatus('saved');
-    setIsEditMode(false);
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error) {
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
-  };
+const handleSave = async () => {
+  setSaveStatus('saving');
+  try {
+    const requestData = {
+      name: clinicData.name,
+      email: clinicData.email,
+      contact_number: clinicData.phone,
+      address: clinicData.address,
+      city: clinicData.city,
+      pincode: clinicData.postalCode,
+      about_clinic: clinicData.about,
+      coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`
+    };
 
+    const clinicId = clinic?.uuid || ''; // Use the actual ID field from your clinic data
+    
+    await editClinicODetails(clinicId, requestData);
+    
+    console.log('Clinic details updated successfully');
+    setSaveStatus('saved');
+    setIsEditMode(false);
+    setTimeout(() => setSaveStatus('idle'), 3000);
+  } catch (error) {
+    console.error('Failed to update clinic details:', error);
+    setSaveStatus('error');
+    setTimeout(() => setSaveStatus('idle'), 3000);
+  }
+};
   // Geocoding
   const fetchSearchResults = debounce(async (query: string) => {
     if (!query) {
@@ -219,7 +359,7 @@ console.log(user,"clinic data")
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`
       );
-      const data = await res.json();
+      const data: NominatimResult[] = await res.json();
       setSearchResults(data);
     } catch (err) {
       setSearchError('Failed to fetch suggestions');
@@ -233,14 +373,14 @@ console.log(user,"clinic data")
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
       );
-      const data = await res.json();
+      const data: NominatimReverseResult = await res.json();
       if (data && data.address) {
         setClinicData(prev => ({
           ...prev,
           address: data.display_name || '',
-          city: data.address.city || data.address.town || data.address.village || '',
-          state: data.address.state || '',
-          postalCode: data.address.postcode || '',
+          city: data.address?.city || data.address?.town || data.address?.village || '',
+          state: data.address?.state || '',
+          postalCode: data.address?.postcode || '',
         }));
       }
     } catch (err) {
@@ -270,7 +410,7 @@ console.log(user,"clinic data")
     }
   };
 
-  const handleSearchSelect = (result: any) => {
+  const handleSearchSelect = (result: NominatimResult) => {
     setClinicData(prev => ({
       ...prev,
       location: {
@@ -317,7 +457,7 @@ console.log(user,"clinic data")
   }, []);
 
   // Close dropdown on outside click
-  React.useEffect(() => {
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
@@ -377,30 +517,30 @@ console.log(user,"clinic data")
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl mb-6 shadow-xl">
               <Building2 className="w-10 h-10 text-white" />
-              </div>
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                  Clinic Settings
-                </h1>
+              Clinic Settings
+            </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Manage your clinic information and customize your practice settings
             </p>
-            </div>
+          </div>
             
           <div className="flex items-center justify-center space-x-4">
-              <button
-                onClick={() => setIsEditMode(!isEditMode)}
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
               className={`inline-flex items-center px-6 py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 ${
                 isEditMode
                   ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg hover:shadow-xl'
               }`}
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                {isEditMode ? 'Cancel' : 'Edit Profile'}
-              </button>
+            >
+              <Edit3 className="w-4 h-4 mr-2" />
+              {isEditMode ? 'Cancel' : 'Edit Profile'}
+            </button>
             
-              <button
-                onClick={handleSave}
+            <button
+              onClick={handleSave}
               disabled={saveStatus === 'saving'}
               className={`inline-flex items-center px-8 py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                 saveStatus === 'saved'
@@ -411,7 +551,7 @@ console.log(user,"clinic data")
               }`}
             >
               {getSaveButtonContent()}
-              </button>
+            </button>
           </div>
         </div>
       </div>
@@ -428,21 +568,21 @@ console.log(user,"clinic data")
                 <h2 className="text-2xl font-bold text-gray-900">Clinic Information</h2>
                 <p className="text-gray-500">Basic details about your clinic</p>
               </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Clinic Name</label>
-              <input
-                type="text"
-                value={clinicData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                disabled={!isEditMode}
-                  className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-              />
             </div>
 
-            <div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Clinic Name</label>
+                <input
+                  type="text"
+                  value={clinicData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={!isEditMode}
+                  className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Clinic Type</label>
                 <div className="relative">
                   <select
@@ -461,30 +601,30 @@ console.log(user,"clinic data")
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Email Address</label>
-              <div className="relative">
+                <div className="relative">
                   <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={clinicData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  disabled={!isEditMode}
+                  <input
+                    type="email"
+                    value={clinicData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    disabled={!isEditMode}
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-                />
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
+              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Phone Number</label>
-              <div className="relative">
+                <div className="relative">
                   <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="tel"
-                  value={clinicData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  disabled={!isEditMode}
+                  <input
+                    type="tel"
+                    value={clinicData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    disabled={!isEditMode}
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-                />
-              </div>
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -500,55 +640,55 @@ console.log(user,"clinic data")
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Location</h2>
                 <p className="text-gray-500">Set your clinic's address and location</p>
-        </div>
-          </div>
+              </div>
+            </div>
 
             <div className="space-y-6">
-            <div>
+              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Street Address</label>
-              <input
-                type="text"
-                value={clinicData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                disabled={!isEditMode}
+                <input
+                  type="text"
+                  value={clinicData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  disabled={!isEditMode}
                   className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-              />
-            </div>
+                />
+              </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-              <div>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">City</label>
-                <input
-                  type="text"
-                  value={clinicData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  disabled={!isEditMode}
+                  <input
+                    type="text"
+                    value={clinicData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    disabled={!isEditMode}
                     className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-                />
-              </div>
+                  />
+                </div>
 
-              <div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">State</label>
-                <input
-                  type="text"
-                  value={clinicData.state}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                  disabled={!isEditMode}
+                  <input
+                    type="text"
+                    value={clinicData.state}
+                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    disabled={!isEditMode}
                     className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-                />
-              </div>
+                  />
+                </div>
 
-              <div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">Postal Code</label>
-                <input
-                  type="text"
-                  value={clinicData.postalCode}
-                  onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                  disabled={!isEditMode}
+                  <input
+                    type="text"
+                    value={clinicData.postalCode}
+                    onChange={(e) => handleInputChange('postalCode', e.target.value)}
+                    disabled={!isEditMode}
                     className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"
-                />
+                  />
+                </div>
               </div>
-            </div>
 
               {/* Location Search */}
               {isEditMode && (
@@ -603,20 +743,30 @@ console.log(user,"clinic data")
                     </div>
                   </div>
                   <MapPicker
-                    value={clinicData.location}
+                    value={{
+                      lat: isNaN(clinicData.location.lat) ? 8.5241 : clinicData.location.lat,
+                      lng: isNaN(clinicData.location.lng) ? 76.9366 : clinicData.location.lng
+                    }}
                     onChange={async (coords) => {
-                      setClinicData(prev => ({ ...prev, location: coords }));
-                      await fetchAddressFromCoords(coords.lat, coords.lng);
-                      setMapZoom(13);
+                      // Validate coordinates before setting
+                      if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
+                        setClinicData(prev => ({ ...prev, location: coords }));
+                        await fetchAddressFromCoords(coords.lat, coords.lng);
+                        setMapZoom(13);
+                      }
                     }}
                     disabled={!isEditMode}
                     zoom={mapZoom}
                   />
                   <div className="mt-4 p-4 bg-white rounded-xl">
                     <div className="text-sm text-blue-700">
-                      <span className="font-semibold">Coordinates:</span> {clinicData.location.lat.toFixed(5)}, {clinicData.location.lng.toFixed(5)}
+                      <span className="font-semibold">Coordinates:</span> {
+                        isNaN(clinicData.location.lat) ? '0.00000' : clinicData.location.lat.toFixed(5)
+                      }, {
+                        isNaN(clinicData.location.lng) ? '0.00000' : clinicData.location.lng.toFixed(5)
+                      }
                     </div>
-              </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -718,6 +868,50 @@ console.log(user,"clinic data")
                   placeholder="Describe your clinic, services, and what makes you unique..."
                 />
               </div>
+              
+              {/* Insurance Networks */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block">Insurance Networks</label>
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {clinicData.insuranceNetworks.map((insurance, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                      >
+                        {insurance}
+                        {isEditMode && (
+                          <button
+                            onClick={() => removeInsurance(insurance)}
+                            className="ml-2 text-blue-600 hover:text-blue-800"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                  {isEditMode && (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={newInsurance}
+                        onChange={(e) => setNewInsurance(e.target.value)}
+                        placeholder="Add insurance network..."
+                        className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                        onKeyPress={(e) => e.key === 'Enter' && addInsurance()}
+                      />
+                      <button
+                        onClick={addInsurance}
+                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               {/* Specialties */}
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block">Specialties</label>
