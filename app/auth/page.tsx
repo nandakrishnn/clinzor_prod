@@ -3,6 +3,7 @@
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import Footer from "@/components/landingpage/footer/footer";
 import AuthenticationGateway from "@/components/authentication/login";
+import CommonHeroSection from "@/components/common/CommonHeroSection";
 
 export default function AuthenticationPage() {
   return (
@@ -12,9 +13,13 @@ export default function AuthenticationPage() {
         <NavbarDemo />
       </header>
 
-      
+      {/* Hero section */}
+      <section className="">
+        <CommonHeroSection className="h-[15vh] md:h-[17vh]"/>
+      </section>
+
       {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center px-4 py-12">
+      <main className="flex-grow flex items-center justify-center px-4 pb-12">
         <div className="w-full max-w-md">
           <AuthenticationGateway />
         </div>

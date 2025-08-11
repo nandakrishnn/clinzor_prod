@@ -334,22 +334,21 @@ export const NavbarButton = ({
   | React.ComponentPropsWithoutRef<"a">
   | React.ComponentPropsWithoutRef<"button">
 )) => {
-  const baseStyles =
-    "px-4 py-2 rounded-lg text-sm font-medium relative cursor-pointer transition duration-300 inline-block text-center overflow-hidden z-50";
+  const baseStyles = "px-4 py-2 rounded-lg text-sm font-medium relative cursor-pointer transition duration-300 inline-block text-center overflow-hidden z-50";
 
   const variantStyles = {
     primary:
-      "bg-white/80 text-slate-800 shadow-lg shadow-slate-200/50 backdrop-blur-md border border-slate-200 hover:border-slate-300",
+      "bg-white/80 text-slate-800 shadow-lg shadow-slate-200/50 backdrop-blur-md border border-slate-200 hover:border-slate-300 cursor-pointer",
     secondary:
-      "bg-transparent border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/50",
+      "bg-transparent border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/50 ",
     gradient:
-      "bg-gradient-to-r from-slate-800 to-slate-600 text-white shadow-lg shadow-slate-300/30 hover:shadow-slate-300/40 hover:from-slate-700 hover:to-slate-500"
+      "bg-gradient-to-r from-slate-800 to-slate-600 text-white shadow-lg shadow-slate-300/30 hover:shadow-slate-300/40 hover:from-slate-700 hover:to-slate-500 "
   };
 
   return (
-    <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.98 }}>
+    <motion.div>
       <Tag
-        href={href || undefined}
+        href={href || '/'}
         className={cn(baseStyles, variantStyles[variant], className)}
         {...props}
       >
