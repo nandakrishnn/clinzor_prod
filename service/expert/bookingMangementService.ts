@@ -78,3 +78,7 @@ export const GetAllExpertBooking= async () => {
     throw error;
   }
 };
+
+export const GetAExpertBookingDetails= async (Id: string) => {
+  return await axiosPrivate.delete(`customer/expert_booking_info/${Id}`);
+};
