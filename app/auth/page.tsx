@@ -12,7 +12,7 @@ export default function AuthenticationPage() {
         <NavbarDemo />
       </header>
 
-
+      
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
