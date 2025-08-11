@@ -19,7 +19,7 @@ export function NavbarDemo() {
     { name: "Service", link: "/service" },
     { name: "Blog", link: "/blog" },
     { name: "About us", link: "/aboutus" },
-    { name: "Contact us", link: "/contact-us" },
+    { name: "Contact us", link: "/contact-us" }
   ];
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -28,8 +28,10 @@ export function NavbarDemo() {
       <NavBody>
         <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
-          <NavbarButton>Login</NavbarButton>
-          <NavbarButton variant="primary">Book a call</NavbarButton>
+          <NavbarButton href={"/auth"}>Login</NavbarButton>
+          <NavbarButton href={"/booking"} variant="primary">
+            Book a call
+          </NavbarButton>
         </div>
       </NavBody>
 
@@ -57,10 +59,18 @@ export function NavbarDemo() {
             </a>
           ))}
           <div className="flex w-full flex-col gap-4">
-            <NavbarButton variant="primary" className="w-full">
+            <NavbarButton
+              href={"/auth"}
+              variant="primary"
+              className="w-full cursor-pointer"
+            >
               Login
             </NavbarButton>
-            <NavbarButton variant="primary" className="w-full">
+            <NavbarButton
+              href={"/booking"}
+              variant="primary"
+              className="w-full"
+            >
               Book a call
             </NavbarButton>
           </div>
