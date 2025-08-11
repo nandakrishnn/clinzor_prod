@@ -26,6 +26,7 @@ import {
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { createBlukSlot, createSlot, deleteSlot, editSlot, GetAllSlot } from '@/service/expert/slotManangementService';
+import { set } from 'date-fns';
 
 // Type definitions
 interface ExpertSlot {
@@ -51,6 +52,7 @@ export default function ExpertSlotManagement() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [notification, setNotification] = useState<Notification | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPagesState, setTotalPagesState] = useState(1);
   // const [currentPage, setCurrentPage] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState<ExpertSlot | null>(null);
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -60,6 +62,7 @@ export default function ExpertSlotManagement() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
+   const [totalItemsCount ,setTotalItemsCount] = useState(0);
   const [bulkTemplate, setBulkTemplate] = useState({
     startDate: '',
     endDate: '',
@@ -76,21 +79,27 @@ export default function ExpertSlotManagement() {
     weekdays?: string;
   }>({});
 
-const fectchSlots = async () => {
+const fetchSlots = async (page = 1) => {
+  setIsLoading(true);
   try {
-    const data =await GetAllSlot();
+    const data = await GetAllSlot(page);
     setSlots(data.data);
-    console.log(data,"res")
+    setTotalPagesState(data.total_pages);
+     setTotalItemsCount(data.total_items);
+    console.log(data, "Fetched slots data");
   } catch (error) {
-     console.error("Error fetching dues data:", error);
+    console.error("Error fetching slots data:", error);
+    showNotification('error', 'Failed to fetch slots. Please try again.');
+  } finally {
+    setIsLoading(false);
   }
 }
 
 useEffect(() => {
- fectchSlots();
-}, [])
+  fetchSlots(currentPage);
+}, [currentPage]);
 
-  const itemsPerPage = 9;
+  const itemsPerPage = 10;
 
   // Combined DateTime Picker Component
   const CombinedDateTimePicker = React.memo(({ 
@@ -625,18 +634,17 @@ useEffect(() => {
 
   // Memoized statistics
   const stats = useMemo(() => ({
-    total: slots.length,
+    total: totalItemsCount,
     active: slots.filter(s => s.status === 'ACTIVE').length,
     draft: slots.filter(s => s.status === 'DRAFT').length,
     cancelled: slots.filter(s => s.status === 'CANCELLED').length
   }), [slots]);
 
   // Memoized pagination
-  const { paginatedSlots, totalPages } = useMemo(() => {
-    const total = Math.ceil(filteredSlots.length / itemsPerPage);
-    const paginated = filteredSlots.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-    return { paginatedSlots: paginated, totalPages: total };
-  }, [filteredSlots, currentPage, itemsPerPage]);
+const paginatedSlots = slots; // API already gives the correct page
+const totalPagesMemo = totalPagesState;
+
+
 
   const getStatusConfig = useCallback((status: string) => {
     switch (status) {
@@ -759,7 +767,7 @@ const handleDeleteConfirm = useCallback(async () => {
       message: 'Slot deleted successfully' 
     });
     closeModal();
-    fectchSlots(); // Refresh the slots list
+    fetchSlots(currentPage); // Refresh the slots list
   } catch (error: any) {
     setNotification({ 
       type: 'error', 
@@ -768,7 +776,7 @@ const handleDeleteConfirm = useCallback(async () => {
   } finally {
     setIsLoading(false);
   }
-}, [selectedSlot, closeModal, fectchSlots]);
+}, [selectedSlot, closeModal, fetchSlots]);
 
 // Function to initiate delete (opens confirmation modal)
 const handleDelete = useCallback((slot: ExpertSlot) => {
@@ -914,7 +922,7 @@ const handleSave = useCallback(async () => {
      const response = await createSlot({
   start_time: formatStartTime(formData.start_time)
 });
-      fectchSlots();
+      fetchSlots(currentPage);
       const newSlot: ExpertSlot = {
         uuid: response.uuid || Date.now().toString(),
         start_time: response.start_time,
@@ -928,7 +936,7 @@ const handleSave = useCallback(async () => {
     const response = await editSlot(selectedSlot.uuid || '', {
   start_time: formatStartTime(formData.start_time)
 });
-fectchSlots();
+fetchSlots(currentPage);
       
       const updatedSlot: ExpertSlot = {
         ...selectedSlot,
@@ -956,7 +964,7 @@ fectchSlots();
       // setSlots(prev => [...prev, ...newSlots]);
       setNotification({ type: 'success', message: `Created ${newSlots.length} slots successfully` });
       closeModal();
-      fectchSlots();
+      fetchSlots(currentPage);
     }
   } catch (error: any) {
     setNotification({ 
@@ -1687,7 +1695,7 @@ const DeleteConfirmationModal = () => (
             </table>
           </div>
           {/* Pagination */}
-          {totalPages > 1 && (
+          {totalPagesMemo > 1 && (
             <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-2">
               <p className="text-xs sm:text-sm text-gray-500">
                 Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSlots.length)} of {filteredSlots.length} slots
@@ -1702,8 +1710,8 @@ const DeleteConfirmationModal = () => (
                   <ChevronLeft size={16} />
                 </button>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPagesMemo))}
+                  disabled={currentPage === totalPagesMemo}
                   className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                   aria-label="Next Page"
                 >
