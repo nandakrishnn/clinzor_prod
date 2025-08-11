@@ -26,8 +26,8 @@ const AboutPage = () => {
       </section>
 
       {/* About*/}
-      <section className="bg-white pb-10 md:pb-20">
-        <div className="max-w-screen-[1480px] mx-auto relative mt-10">
+      <section className="bg-white pb-10">
+        <div className="max-w-screen-[1480px] mx-auto relative ">
             <PlatformIntro />
         </div>
       </section>
