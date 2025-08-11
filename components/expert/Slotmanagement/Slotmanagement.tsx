@@ -1698,7 +1698,7 @@ const DeleteConfirmationModal = () => (
           {totalPagesMemo > 1 && (
             <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-2">
               <p className="text-xs sm:text-sm text-gray-500">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSlots.length)} of {filteredSlots.length} slots
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSlots.length)} of {totalItemsCount} slots
               </p>
               <div className="flex items-center gap-2">
                 <button
