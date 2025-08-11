@@ -779,7 +779,7 @@ const handleConfirmDelete = async () => {
                   >
                     <option value="">Select a service</option>
                     {services.map(service => (
-                      <option key={service.uuid} value={service.clinic}>{service.service_name}</option>
+                      <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                     ))}
                   </select>
                 </div>

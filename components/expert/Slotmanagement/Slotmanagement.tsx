@@ -90,7 +90,7 @@ useEffect(() => {
  fectchSlots();
 }, [])
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 9;
 
   // Combined DateTime Picker Component
   const CombinedDateTimePicker = React.memo(({ 
