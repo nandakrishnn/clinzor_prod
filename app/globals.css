@@ -6,7 +6,7 @@
 
 :root {
   --background-start: #e6f2ff; /* very soft light bluish */
-  --background-end: #f8fbff;   /* slightly deeper but still very light */
+  --background-end: #f8fbff; /* slightly deeper but still very light */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -86,7 +86,7 @@
 /* No color change in dark mode anymore */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background-start: #e6f2ff; 
+    --background-start: #e6f2ff;
     --background-end: #ffffff; /* only text color changes */
   }
 }
@@ -132,5 +132,6 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-inter);
   }
 }
