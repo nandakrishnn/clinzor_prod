@@ -105,168 +105,168 @@ interface ChatMessage {
 }
 
 // Update sample data with more realistic bookings
-const sampleBookings: Booking[] = [
-  {
-    uuid: "BK0001",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-20T10:00:00Z",
-    end_time: "2024-03-20T10:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "COMPLETED",
-    room_id: "room_123",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_123?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_001",
-    slot: "slot_001",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0002",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-20T11:00:00Z",
-    end_time: "2024-03-20T11:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "CONFIRMED",
-    room_id: "room_124",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_124?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_002",
-    slot: "slot_002",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0003",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-20T14:00:00Z",
-    end_time: "2024-03-20T14:30:00Z",
-    payment_status: "PENDING",
-    booking_status: "PENDING",
-    room_id: null,
-    expert_meeting_link: null,
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_003",
-    slot: "slot_003",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0004",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-20T15:00:00Z",
-    end_time: "2024-03-20T15:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "CANCELED",
-    room_id: null,
-    expert_meeting_link: null,
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_004",
-    slot: "slot_004",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0005",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-21T09:00:00Z",
-    end_time: "2024-03-21T09:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "CONFIRMED",
-    room_id: "room_125",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_125?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_005",
-    slot: "slot_005",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0006",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-21T10:00:00Z",
-    end_time: "2024-03-21T10:30:00Z",
-    payment_status: "PENDING",
-    booking_status: "PENDING",
-    room_id: null,
-    expert_meeting_link: null,
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_006",
-    slot: "slot_006",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0007",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-21T11:00:00Z",
-    end_time: "2024-03-21T11:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "COMPLETED",
-    room_id: "room_126",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_126?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_007",
-    slot: "slot_007",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0008",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-21T14:00:00Z",
-    end_time: "2024-03-21T14:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "CONFIRMED",
-    room_id: "room_127",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_127?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_008",
-    slot: "slot_008",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0009",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-21T15:00:00Z",
-    end_time: "2024-03-21T15:30:00Z",
-    payment_status: "PENDING",
-    booking_status: "PENDING",
-    room_id: null,
-    expert_meeting_link: null,
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_009",
-    slot: "slot_009",
-    expert: "expert_001"
-  },
-  {
-    uuid: "BK0010",
-    created_by: "expert@clinzor.com",
-    payment_mode: "ONLINE",
-    start_time: "2024-03-22T09:00:00Z",
-    end_time: "2024-03-22T09:30:00Z",
-    payment_status: "COMPLETED",
-    booking_status: "COMPLETED",
-    room_id: "room_128",
-    expert_meeting_link: "https://app.100ms.live/meeting/room_128?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    booking_charge: "150.00",
-    booking_type: "VIDEO_CALL",
-    customer: "patient_010",
-    slot: "slot_010",
-    expert: "expert_001"
-  }
-];
+// const sampleBookings: Booking[] = [
+//   {
+//     uuid: "BK0001",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-20T10:00:00Z",
+//     end_time: "2024-03-20T10:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "COMPLETED",
+//     room_id: "room_123",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_123?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_001",
+//     slot: "slot_001",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0002",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-20T11:00:00Z",
+//     end_time: "2024-03-20T11:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "CONFIRMED",
+//     room_id: "room_124",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_124?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_002",
+//     slot: "slot_002",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0003",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-20T14:00:00Z",
+//     end_time: "2024-03-20T14:30:00Z",
+//     payment_status: "PENDING",
+//     booking_status: "PENDING",
+//     room_id: null,
+//     expert_meeting_link: null,
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_003",
+//     slot: "slot_003",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0004",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-20T15:00:00Z",
+//     end_time: "2024-03-20T15:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "CANCELED",
+//     room_id: null,
+//     expert_meeting_link: null,
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_004",
+//     slot: "slot_004",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0005",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-21T09:00:00Z",
+//     end_time: "2024-03-21T09:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "CONFIRMED",
+//     room_id: "room_125",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_125?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_005",
+//     slot: "slot_005",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0006",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-21T10:00:00Z",
+//     end_time: "2024-03-21T10:30:00Z",
+//     payment_status: "PENDING",
+//     booking_status: "PENDING",
+//     room_id: null,
+//     expert_meeting_link: null,
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_006",
+//     slot: "slot_006",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0007",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-21T11:00:00Z",
+//     end_time: "2024-03-21T11:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "COMPLETED",
+//     room_id: "room_126",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_126?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_007",
+//     slot: "slot_007",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0008",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-21T14:00:00Z",
+//     end_time: "2024-03-21T14:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "CONFIRMED",
+//     room_id: "room_127",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_127?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_008",
+//     slot: "slot_008",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0009",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-21T15:00:00Z",
+//     end_time: "2024-03-21T15:30:00Z",
+//     payment_status: "PENDING",
+//     booking_status: "PENDING",
+//     room_id: null,
+//     expert_meeting_link: null,
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_009",
+//     slot: "slot_009",
+//     expert: "expert_001"
+//   },
+//   {
+//     uuid: "BK0010",
+//     created_by: "expert@clinzor.com",
+//     payment_mode: "ONLINE",
+//     start_time: "2024-03-22T09:00:00Z",
+//     end_time: "2024-03-22T09:30:00Z",
+//     payment_status: "COMPLETED",
+//     booking_status: "COMPLETED",
+//     room_id: "room_128",
+//     expert_meeting_link: "https://app.100ms.live/meeting/room_128?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+//     booking_charge: "150.00",
+//     booking_type: "VIDEO_CALL",
+//     customer: "patient_010",
+//     slot: "slot_010",
+//     expert: "expert_001"
+//   }
+// ];
 
 // Modal Component
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'md' }) => {
@@ -414,11 +414,12 @@ const VideoCallModal: React.FC<VideoCallModalProps> = ({ isOpen, onClose, roomId
 };
 
 const ExpertBookingManager: React.FC = () => {
-  const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalItemsCount ,setTotalItemsCount] = useState(0);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [modalType, setModalType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -495,7 +496,9 @@ const ExpertBookingManager: React.FC = () => {
   const fetchBooking = async () => {
     try {
       const data = await GetAllExpertBooking()
+
       setBookings(data.data);
+      setTotalItemsCount(data.total_items);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setNotification({ message: 'Failed to fetch bookings', type: 'error' });
@@ -596,7 +599,7 @@ const ExpertBookingManager: React.FC = () => {
 
   // Memoize pagination calculations
   const paginationData = useMemo(() => {
-    const totalItems = filteredBookings.length;
+    const totalItems = totalItemsCount;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedBookings = filteredBookings.slice(
       (currentPage - 1) * itemsPerPage,
@@ -614,7 +617,7 @@ const ExpertBookingManager: React.FC = () => {
 
   // Memoize statistics calculations
   const stats = useMemo(() => {
-    const total = filteredBookings.length;
+    const total = totalItemsCount;
     const pending = filteredBookings.filter(b => b.booking_status === 'PENDING').length;
     const confirmed = filteredBookings.filter(b => b.booking_status === 'CONFIRMED').length;
     const completed = filteredBookings.filter(b => b.booking_status === 'COMPLETED').length;
@@ -1131,6 +1134,7 @@ const ExpertBookingManager: React.FC = () => {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Mode</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -1152,6 +1156,11 @@ const ExpertBookingManager: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
                           {statusConfig.icon} {booking.booking_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium`}>
+                           {booking.payment_mode}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

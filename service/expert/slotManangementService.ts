@@ -67,10 +67,10 @@ export const GetASlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/expert-slot-rud/${Id}`);
 };
 
-export const GetAllSlot= async () => {
+export const GetAllSlot= async (page:number) => {
   try {
     const response = await axiosPrivate.get(
-      `clinic/expert-slot-lc/`
+      `clinic/expert-slot-lc/?page=${page}`
     );
     return response.data.data;
   } catch (error) {
