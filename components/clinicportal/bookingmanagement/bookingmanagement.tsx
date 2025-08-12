@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar, Clock, User, Phone, Mail, Video, MapPin, Filter, Search, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Info } from 'lucide-react';
 import { format, isToday, parseISO, addDays, subDays } from 'date-fns';
-import { getAllClinicBookings } from '@/service/clinic/bookingManagmentService';
+import { cancelClinicBookings, getAllClinicBookings } from '@/service/clinic/bookingManagmentService';
 
 // Updated TypeScript types to match the new data structure
 interface Booking {
@@ -17,6 +17,7 @@ interface Booking {
   patient_email: string;
   booking_charge: string;
   clinic_name: string;
+  clinic_meeting_link: string;
   doctor_gender_preference: string;
   payment_status: string;
   service_default_name: string;
@@ -30,27 +31,32 @@ const BookingManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<string>(() => format(new Date(), 'yyyy-MM-dd'));
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const dateObj = useMemo(() => new Date(dateFilter), [dateFilter]);
   const isDateToday = useMemo(() => isToday(dateObj), [dateObj]);
+  const [totalBookings, setTotalBookings] = useState(0);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (page=1) => {
     try {
-      const data = await getAllClinicBookings();
-      setBookings(data);
+      const data = await getAllClinicBookings(page);
+      setTotalBookings(data.total_items);
+      setTotalPages(data.total_pages);
+      setBookings(data.data);
+      console.log(data,"booking data")
     } catch (error) {
       console.error("Error fetching data ", error);
     }
   };
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
-console.log(bookings,"booking data")
-  const itemsPerPage = 10;
+    fetchBookings(currentPage);
+  }, [currentPage]);
+// console.log(bookings,"booking data")
+  const itemsPerPage = 6;
 
   // Status configuration
   const getStatusConfig = (status: string) => {
@@ -93,7 +99,7 @@ console.log(bookings,"booking data")
 
   const [showAll, setShowAll] = useState(false);
   const bookingsToShow = showAll ? bookings : filteredBookings;
-  const totalPages = Math.ceil(bookingsToShow.length / itemsPerPage);
+  // const totalPages = Math.ceil(bookingsToShow.length / itemsPerPage);
   const paginatedBookings = bookingsToShow.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -105,7 +111,7 @@ console.log(bookings,"booking data")
 
   // Header stats
   const stats = useMemo(() => {
-    const total = bookings.length;
+    const total = totalBookings;
     const completed = bookings.filter(b => b.booking_status === 'COMPLETED').length;
     const scheduled = bookings.filter(b => b.booking_status === 'SCHEDULED').length;
     const canceled = bookings.filter(b => b.booking_status === 'CANCELED').length;
@@ -147,7 +153,19 @@ console.log(bookings,"booking data")
       modalRef.current.focus();
     }
   }, [selectedBooking]);
-
+// Add this function to your component
+const handleCancelBooking = async (bookingId: string) => {
+  try {
+    await cancelClinicBookings(bookingId, { booking_status: 'CANCELED' });
+    // Refresh bookings after successful cancellation
+    await fetchBookings();
+    // Close the action menu
+    setShowActionMenu(null);
+  } catch (error) {
+    console.error("Error canceling booking:", error);
+    // You might want to add error handling here (e.g., show a toast notification)
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Sticky Header */}
@@ -369,6 +387,7 @@ console.log(bookings,"booking data")
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center space-x-2">
                           {booking.booking_type === 'VIDEO_CALL' ? (
+                            <a href={booking.clinic_meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
                             <div className="flex items-center space-x-2">
                               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <Video className="w-4 h-4 text-blue-600" />
@@ -378,6 +397,7 @@ console.log(bookings,"booking data")
                                 <div className="text-xs text-slate-500 leading-tight">Video Call</div>
                               </div>
                             </div>
+                            </a>
                           ) : (
                             <div className="flex items-center space-x-2">
                               <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -427,13 +447,17 @@ console.log(bookings,"booking data")
                             tabIndex={-1}
                             aria-label="Action Menu"
                           >
-                            <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                            <button
+                             onClick={() => setSelectedBooking(booking)}
+                             className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               View Details
                             </button>
-                            <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                            {/* <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               Send Message
-                            </button>
-                            <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                            </button> */}
+                            <button 
+                            onClick={() => handleCancelBooking(booking.uuid)}
+                            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               Cancel Booking
                             </button>
                           </div>
@@ -497,8 +521,12 @@ console.log(bookings,"booking data")
                   {showActionMenu === booking.uuid && (
                     <div className="mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
                       <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl">View Details</button>
-                      <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700">Send Message</button>
-                      <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
+                      <button
+                      
+                      className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700">Send Message</button>
+                      <button
+                      onClick={() => handleCancelBooking(booking.uuid)}
+                      className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
                     </div>
                   )}
                 </div>
@@ -510,7 +538,7 @@ console.log(bookings,"booking data")
         {totalPages > 1 && (
           <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
             <div className="text-xs sm:text-sm text-slate-500">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredBookings.length)} of {filteredBookings.length} bookings
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalBookings)} of {totalBookings} bookings
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2">
               <button
