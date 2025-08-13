@@ -59,7 +59,7 @@ const ServiceCard = () => {
         {/* Action buttons */}
         <div className="flex gap-2 w-full">
           <Link
-            href="#"
+            href={`/service/12345`}
             className="flex-1 bg-primaryColor hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-sm text-center transition-colors flex items-center justify-center gap-1"
           >
             View clinic
