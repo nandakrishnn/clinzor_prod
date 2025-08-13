@@ -1,112 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Brain, User, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
-import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
+import { createService, deleteService, editService, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
 
 type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 interface Service {
   uuid: string;
-  clinic_name: string;
+  name: string;
   description: string;
   tags: string;
   status: ServiceStatus;
   image?: string;
 }
 
-const MedicalServicesApp: React.FC = () => {
-  const [services, setServices] = useState<Service[]>([
-    // {
-    //   uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-    //   name: "cardiologist",
-    //   description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
-    //   tags: "heart,cardiology,blood pressure,ECG,chest pain",
-    //   status: "PENDING",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-    //   name: "heart speciality",
-    //   description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
-    //   tags: "heart",
-    //   status: "APPROVED",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "62111833-4927-4060-acdf-f2d857e9d688",
-    //   name: "neurologist",
-    //   description: "Specialist in diagnosing and treating neurological disorders and brain conditions.",
-    //   tags: "brain,neurology,headache,seizures,memory",
-    //   status: "REJECTED",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
-    //   name: "physician",
-    //   description: "General practitioner providing comprehensive healthcare and preventive medicine.",
-    //   tags: "general,healthcare,checkup,prevention,medicine",
-    //   status: "PENDING",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "1234567890",
-    //   name: "dermatologist",
-    //   description: "Specialist in diagnosing and treating skin, hair, and nail conditions.",
-    //   tags: "skin,dermatology,acne,eczema,hair",
-    //   status: "APPROVED",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "0987654321",
-    //   name: "orthopedic surgeon",
-    //   description: "Specialist in treating musculoskeletal system disorders and injuries.",
-    //   tags: "bones,joints,surgery,fractures,sports",
-    //   status: "PENDING",
-    //   image: undefined
-    // },
-    // {
-    //   uuid: "1122334455",
-    //   name: "pediatrician",
-    //   description: "Medical doctor specializing in the care of infants, children, and adolescents.",
-    //   tags: "children,pediatrics,vaccination,growth,development",
-    //   status: "APPROVED",
-    //   image: undefined
-    // }
-  ]);
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 
+const MedicalServicesApp: React.FC = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [viewingService, setViewingService] = useState<Service | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ServiceStatus>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+  const [loading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
-    clinic_name: string;
+    name: string;
     description: string;
     tags: string;
     image: string;
   }>({
-    clinic_name: '',
+    name: '',
     description: '',
     tags: '',
     image: '',
   });
   const [viewMode, setViewMode] = useState<'all' | 'approved'>('all');
 
-  const fectchSercicve = async () => {
+  const fetchService = async (page = 1) => {
+    setLoading(true);
     try {
-      const data = await GetAllClinicService()
-      setServices(data)
+      const data = await GetAllService(page);
+      setServices(data.data);
+      setPaginationData({
+        current_page: data.current_page,
+        total_pages: data.total_pages,
+        total_items: data.total_items,
+        next: data.next,
+        previous: data.previous
+      });
+      console.log("service full", data);
     } catch (error) {
       console.error("Error fetching services:", error);
       throw error;
-      
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
   useEffect(() => {
-    fectchSercicve();
-  }, [])
-  console.log("service",services)
+    fetchService(currentPage);
+  }, [currentPage]);
+
+  console.log("service", services);
 
   const getServiceIcon = (name: string) => {
     const serviceLower = name?.toLowerCase();
@@ -134,37 +105,45 @@ const MedicalServicesApp: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (!formData.clinic_name.trim() || !formData.description.trim() || !formData.tags.trim()) {
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.description.trim() || !formData.tags.trim()) {
       alert('Please fill in all fields');
       return;
     }
-    if (editingService) {
-      setServices(services.map((service) =>
-        service.uuid === editingService.uuid
-          ? { ...service, ...formData }
-          : service
-      ));
-    } else {
-      const newService: Service = {
-        uuid: Date.now().toString(),
-        ...formData,
-        status: 'PENDING',
-      };
-      setServices([...services, newService]);
+
+    setIsSubmitting(true);
+    try {
+      if (editingService) {
+        const updatedService = await editService(editingService.uuid, formData);
+        setServices(services.map((service) =>
+          service.uuid === editingService.uuid
+            ? { ...service, ...updatedService }
+            : service
+        ));
+        fetchService(currentPage);
+      } else {
+        const newService = await createService(formData);
+        fetchService(currentPage);
+        setServices([...services, newService]);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Error saving service:", error);
+      alert('Failed to save service. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    resetForm();
   };
 
   const resetForm = () => {
-    setFormData({ clinic_name: '', description: '', tags: '', image: '' });
+    setFormData({ name: '', description: '', tags: '', image: '' });
     setIsFormOpen(false);
     setEditingService(null);
   };
 
   const handleEdit = (service: Service) => {
     setFormData({
-      clinic_name: service.clinic_name,
+      name: service.name,
       description: service.description,
       tags: service.tags,
       image: service.image || '',
@@ -173,9 +152,23 @@ const MedicalServicesApp: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (uuid: string) => {
+const handleDelete = async (uuid: string) => {
+  if (!window.confirm('Are you sure you want to delete this service?')) {
+    return;
+  }
+
+  setIsDeleting(uuid);
+  try {
+    await deleteService(uuid);
+    // Only remove from state if API call succeeds
     setServices(services.filter((service) => service.uuid !== uuid));
-  };
+  } catch (error) {
+    console.error("Error deleting service:", error);
+    alert('Failed to delete service. Please try again.');
+  } finally {
+    setIsDeleting(null);
+  }
+};
 
   const handleStatusChange = (uuid: string, newStatus: ServiceStatus) => {
     setServices(services.map((service) =>
@@ -187,7 +180,7 @@ const MedicalServicesApp: React.FC = () => {
 
   const getFilteredServices = () => {
     let filtered = services.filter((service) => {
-      const matchesSearch = service.clinic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.tags.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
@@ -203,11 +196,12 @@ const MedicalServicesApp: React.FC = () => {
 
   const filteredServices = getFilteredServices();
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentServices = filteredServices.slice(startIndex, endIndex);
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paginationData.total_pages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
@@ -216,7 +210,7 @@ const MedicalServicesApp: React.FC = () => {
 
   const getStatusCounts = () => {
     return {
-      ALL: services.length,
+      ALL: paginationData.total_items,
       PENDING: services.filter((s) => s.status === 'PENDING').length,
       APPROVED: services.filter((s) => s.status === 'APPROVED').length,
       REJECTED: services.filter((s) => s.status === 'REJECTED').length,
@@ -254,6 +248,42 @@ const MedicalServicesApp: React.FC = () => {
   const handleBackToAll = () => {
     setViewMode('all');
     setStatusFilter('ALL');
+  };
+
+  // Generate page numbers for pagination display
+  const generatePageNumbers = () => {
+    const pages = [];
+    const totalPages = paginationData.total_pages;
+    const current = paginationData.current_page;
+    
+    // Always show first page
+    if (totalPages > 0) {
+      pages.push(1);
+    }
+    
+    // Add ellipsis if needed
+    if (current > 3) {
+      pages.push('...');
+    }
+    
+    // Add pages around current page
+    for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
+      if (!pages.includes(i)) {
+        pages.push(i);
+      }
+    }
+    
+    // Add ellipsis if needed
+    if (current < totalPages - 2) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   return (
@@ -348,102 +378,112 @@ const MedicalServicesApp: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-gray-600">Loading services...</span>
+          </div>
+        )}
+
         {/* Services Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
-          {currentServices.map((service) => (
-            <div key={service.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <div className="p-4 sm:p-6">
-                {service.image && (
-                  <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden">
-                    <img 
-                      src={service.image} 
-                      alt={service.clinic_name} 
-                      className="w-full h-full object-cover"
-                    />
+        {!loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
+            {filteredServices.map((service) => (
+              <div key={service.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="p-4 sm:p-6">
+                  {service.image && (
+                    <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden">
+                      <img 
+                        src={service.image} 
+                        alt={service.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      {getServiceIcon(service?.name)}
+                      <div>
+                        <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.name}</h3>
+                        <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(service.status)}`}>
+                          {service.status === 'PENDING' ? 'Requested' : 
+                           service.status === 'APPROVED' ? 'Newly Added' : 
+                           service.status}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    {getServiceIcon(service?.clinic_name)}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.clinic_name}</h3>
-                      <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(service.status)}`}>
-                        {service.status === 'PENDING' ? 'Requested' : 
-                         service.status === 'APPROVED' ? 'Newly Added' : 
-                         service.status}
+                  <p className="text-gray-600 text-xs sm:text-sm mb-4 line-clamp-3 leading-relaxed">{service.description}</p>
+                  <div className="flex flex-wrap gap-1 mb-4 sm:mb-6">
+                    {service?.tags?.split(',').slice(0, 3).map((tag, index) => (
+                      <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center space-x-1">
+                        <Tag className="w-3 h-3" />
+                        <span>{tag.trim()}</span>
                       </span>
-                    </div>
+                    ))}
+                    {service?.tags?.split(',').length > 3 && (
+                      <span className="text-xs text-gray-400">+{service?.tags?.split(',').length - 3} more</span>
+                    )}
                   </div>
-                </div>
-                <p className="text-gray-600 text-xs sm:text-sm mb-4 line-clamp-3 leading-relaxed">{service.description}</p>
-                <div className="flex flex-wrap gap-1 mb-4 sm:mb-6">
-                  {service?.tags?.split(',').slice(0, 3).map((tag, index) => (
-                    <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center space-x-1">
-                      <Tag className="w-3 h-3" />
-                      <span>{tag.trim()}</span>
-                    </span>
-                  ))}
-                  {service?.tags?.split(',').length > 3 && (
-                    <span className="text-xs text-gray-400">+{service?.tags?.split(',').length - 3} more</span>
-                  )}
-                </div>
-                {/* Action Buttons */}
-                <div className="space-y-2 sm:space-y-3">
-                  {/* Accept/Reject Buttons for Requested Services - Only show in 'all' view */}
-                  {viewMode === 'all' && service.status === 'PENDING' && (
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={() => handleStatusChange(service.uuid, 'APPROVED')}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Accept Service</span>
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(service.uuid, 'REJECTED')}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        <span>Reject Service</span>
-                      </button>
-                    </div>
-                  )}
-                  {/* View/Edit/Delete buttons - Show for approved services in both views */}
-                  {(service.status === 'APPROVED' || (viewMode === 'all' && service.status !== 'PENDING')) && (
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <button
-                        onClick={() => setViewingService(service)}
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>View</span>
-                      </button>
-                      {viewMode === 'all' && (
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleEdit(service)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(service.uuid)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Action Buttons */}
+                  <div className="space-y-2 sm:space-y-3">
+                    {/* Accept/Reject Buttons for Requested Services - Only show in 'all' view */}
+                    {viewMode === 'all' && service.status === 'PENDING' && (
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button
+                          onClick={() => handleStatusChange(service.uuid, 'APPROVED')}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Accept Service</span>
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(service.uuid, 'REJECTED')}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          <span>Reject Service</span>
+                        </button>
+                      </div>
+                    )}
+                    {/* View/Edit/Delete buttons - Show for approved services in both views */}
+                    {(service.status === 'APPROVED' || (viewMode === 'all' && service.status !== 'PENDING')) && (
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <button
+                          onClick={() => setViewingService(service)}
+                          className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>View</span>
+                        </button>
+                        {viewMode === 'all' && (
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleEdit(service)}
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(service.uuid)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredServices.length === 0 && (
+        {!loading && filteredServices.length === 0 && (
           <div className="text-center py-8 sm:py-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Search className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
@@ -468,55 +508,46 @@ const MedicalServicesApp: React.FC = () => {
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+        {/* Server-side Pagination */}
+        {paginationData.total_pages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-4 sm:px-6 py-2 sm:py-4 rounded-xl border border-gray-200 gap-2 sm:gap-0">
             <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-0">
               <span>
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredServices.length)} of {filteredServices.length} results
+                Showing page {paginationData.current_page} of {paginationData.total_pages} ({paginationData.total_items} total items)
               </span>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2">
               <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(paginationData.current_page - 1)}
+                disabled={!paginationData.previous || loading}
                 className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="flex space-x-0.5 sm:space-x-1">
-                {[...Array(totalPages)].map((_, index) => {
-                  const page = index + 1;
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                          currentPage === page
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  } else if (
-                    page === currentPage - 2 ||
-                    page === currentPage + 2
-                  ) {
-                    return <span key={page} className="px-1 sm:px-2 text-gray-400">...</span>;
+                {generatePageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return <span key={index} className="px-1 sm:px-2 text-gray-400">...</span>;
                   }
-                  return null;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page as number)}
+                      disabled={loading}
+                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                        paginationData.current_page === page
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
                 })}
               </div>
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(paginationData.current_page + 1)}
+                disabled={!paginationData.next || loading}
                 className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -537,7 +568,7 @@ const MedicalServicesApp: React.FC = () => {
                 </h2>
                 <button
                   onClick={() => {
-                    setFormData({ clinic_name: '', description: '', tags: '', image: '' });
+                    setFormData({ name: '', description: '', tags: '', image: '' });
                     setIsFormOpen(false);
                     setEditingService(null);
                   }}
@@ -553,8 +584,8 @@ const MedicalServicesApp: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={formData.clinic_name}
-                    onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter service name"
                   />
@@ -579,7 +610,7 @@ const MedicalServicesApp: React.FC = () => {
                     type="text"
                     value={formData.tags}
                     onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-all transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="heart, cardiology, blood pressure"
                   />
                 </div>
@@ -625,7 +656,7 @@ const MedicalServicesApp: React.FC = () => {
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2 sm:pt-4">
                   <button
                     onClick={() => {
-                      setFormData({ clinic_name: '', description: '', tags: '', image: '' });
+                      setFormData({ name: '', description: '', tags: '', image: '' });
                       setIsFormOpen(false);
                       setEditingService(null);
                     }}
@@ -635,10 +666,20 @@ const MedicalServicesApp: React.FC = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:py-3 rounded-xl transition-colors font-medium flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 sm:py-3 rounded-xl transition-colors font-medium flex items-center justify-center space-x-2"
                   >
-                    <Check className="w-4 h-4" />
-                    <span>{editingService ? 'Update' : 'Create'}</span>
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>{editingService ? 'Update' : 'Create'}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -663,14 +704,14 @@ const MedicalServicesApp: React.FC = () => {
                 <div className="mb-6 relative w-full h-64 rounded-xl overflow-hidden">
                   <img 
                     src={viewingService.image} 
-                    alt={viewingService.clinic_name} 
+                    alt={viewingService.name} 
                     className="w-full h-full object-cover"
                   />
                 </div>
               )}
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                {getServiceIcon(viewingService.clinic_name)}
-                <span>{viewingService.clinic_name}</span>
+                {getServiceIcon(viewingService.name)}
+                <span>{viewingService.name}</span>
               </h2>
               <div className="space-y-4">
                 <div>
