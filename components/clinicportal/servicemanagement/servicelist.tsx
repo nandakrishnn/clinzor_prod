@@ -36,7 +36,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
-import { Clinic_by_clinic_user, createClinicService, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, updateRankClinicService } from '@/service/clinic/serviceManagementService';
 
 // Types
 interface Service {
@@ -634,12 +634,25 @@ console.log(clinicUser, "clinic user data"  )
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedItem) return;
 
-    setClinicServices(clinicServices.filter(cs => cs.uuid !== selectedItem.uuid));
-    showToast('Clinic service deleted successfully!', 'success');
-    closeModal();
+    try {
+      // Call the API to delete the service
+      await deleteClinicService(selectedItem.uuid);
+      
+      // Update local state if API call succeeds
+      setClinicServices(clinicServices.filter(cs => cs.uuid !== selectedItem.uuid));
+      
+      // Show success feedback
+      showToast('Clinic service deleted successfully!', 'success');
+      
+      // Close the modal
+      closeModal();
+    } catch (error) {
+      console.error('Error deleting clinic service:', error);
+      showToast('Failed to delete clinic service', 'error');
+    }
   };
 
   // Modal handlers
@@ -703,14 +716,33 @@ console.log(clinicUser, "clinic user data"  )
   };
 
   // Add handler to save rank
-  const handleSaveRank = () => {
-    if (!selectedItem) return;
+const handleSaveRank = async () => {
+  if (!selectedItem) return;
+
+  try {
+    // Prepare the request body in the required format
+    const requestBody = [
+      {
+        clinic_service: selectedItem.uuid,
+        rank: parseInt(rankEditValue)
+      }
+    ];
+
+    // Call the API to update the rank
+    await updateRankClinicService(requestBody);
+
+    // Update local state if API call succeeds
     setClinicServices(clinicServices.map(cs =>
       cs.uuid === selectedItem.uuid ? { ...cs, rank: parseInt(rankEditValue) } : cs
     ));
+
     showToast('Rank updated successfully!', 'success');
     closeModal();
-  };
+  } catch (error) {
+    console.error('Error updating rank:', error);
+    showToast('Failed to update rank', 'error');
+  }
+};
 
   // Service search functions
   const handleOpenServiceSearch = () => {

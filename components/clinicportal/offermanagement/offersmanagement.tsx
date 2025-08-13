@@ -137,8 +137,8 @@ useEffect(() => {
 
   // Filtering logic
   const filteredOffers = offers.filter(offer => {
-    const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         offer.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = offer.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = showLiveOnly ? isOfferLive(offer) : true;
     const matchesStatus = statusFilter ? offer.status === statusFilter : true;
     const matchesDateFrom = dateFrom ? new Date(offer.valid_from) >= new Date(dateFrom) : true;
@@ -170,8 +170,8 @@ const handleCreateOffer = async () => {
       description: newOffer.description,
       valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
       valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      flat_discount_amt: newOffer.discount_percentage,
-      clinic: newOffer.clinic_service,
+      discount_percentage: newOffer.discount_percentage,
+      clinic_service: newOffer.clinic_service,
       // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
       name: "",
       email: "",
@@ -272,8 +272,8 @@ const handleUpdateOffer = async () => {
       description: newOffer.description,
       valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
       valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      flat_discount_amt: newOffer.discount_percentage,
-      clinic: newOffer.clinic_service,
+      discount_percentage: newOffer.discount_percentage,
+      clinic_service: newOffer.clinic_service,
       // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
       name: "",
       email: "",
@@ -927,7 +927,7 @@ const handleConfirmDelete = async () => {
                   >
                     <option value="">Select a service</option>
                     {services.map(service => (
-                      <option key={service.uuid} value={service.clinic}>{service.service_name}</option>
+                      <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                     ))}
                   </select>
                 </div>

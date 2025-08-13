@@ -5,9 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, PhoneOff, Video, Calendar, Clock, Users,
   ChevronLeft, ChevronRight, Play, Mic, MicOff, VideoOff,
-  Phone, Settings, Maximize2, Minimize2, ExternalLink
+  Phone, Settings, Maximize2, Minimize2, ExternalLink,
+  Check
 } from 'lucide-react';
-import { GetAllExpertBooking, GetAExpertBookingDetails } from '@/service/expert/bookingMangementService';
+import { GetAllExpertBooking, GetAExpertBookingDetails, addSuggestion } from '@/service/expert/bookingMangementService';
+import { GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
 
 interface VideoCall {
   uuid: string;
@@ -28,6 +30,8 @@ interface VideoCall {
   booking_charge?: string;
 }
 
+
+
 interface LocalMediaVideoCallProps {
   userName: string;
   onLeave: () => void;
@@ -35,23 +39,61 @@ interface LocalMediaVideoCallProps {
   onToggleFullscreen: () => void;
   expertMeetingLink?: string;
   callTitle?: string;
+  bookingId?: string; // Add bookingId to props
 }
-
+interface Service {
+  uuid: string;
+  name: string;
+  description: string;
+  price: string;
+  duration: string;
+}
 const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
   userName,
   onLeave,
   isFullscreen,
   onToggleFullscreen,
   expertMeetingLink,
-  callTitle
+  callTitle,
+  bookingId
 }) => {
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [showMeetingFrame, setShowMeetingFrame] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoCallRef = useRef<HTMLDivElement>(null);
 
+  // Automatically show meeting frame if expertMeetingLink exists
+  useEffect(() => {
+    if (expertMeetingLink) {
+      setShowMeetingFrame(true);
+    }
+  }, [expertMeetingLink]);
+
+  // Load services when component mounts
+  useEffect(() => {
+    const fetchServices = async () => {
+      setIsLoadingServices(true);
+      try {
+        const response = await GetAllServiceForClinic();
+        setServices(response.data || []);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        setIsLoadingServices(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Initialize media stream
   useEffect(() => {
     let stream: MediaStream;
     (async () => {
@@ -62,6 +104,7 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
           videoRef.current.srcObject = stream;
         }
       } catch (err) {
+        console.error("Error accessing media devices:", err);
         setMediaStream(null);
       }
     })();
@@ -72,33 +115,33 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (videoRef.current && mediaStream) {
-      videoRef.current.srcObject = mediaStream;
-    }
-  }, [mediaStream]);
+  // Handle service selection
+  const handleServiceSelect = (serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId) 
+        : [...prev, serviceId]
+    );
+  };
 
-  useEffect(() => {
-    if (isFullscreen && videoCallRef.current) {
-      if (document.fullscreenElement !== videoCallRef.current) {
-        videoCallRef.current.requestFullscreen?.();
-      }
-    } else if (!isFullscreen && document.fullscreenElement) {
-      if (document.fullscreenElement === videoCallRef.current) {
-        document.exitFullscreen?.();
-      }
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!bookingId || selectedServices.length === 0) return;
+    
+    setIsSubmitting(true);
+    try {
+      const body = {
+        services: selectedServices
+      };
+      await addSuggestion(bookingId, body);
+      setSubmitSuccess(true);
+      setTimeout(() => setSubmitSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error submitting services:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && isFullscreen) {
-        onToggleFullscreen();
-      }
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, [isFullscreen, onToggleFullscreen]);
-
+  };
   const toggleVideo = () => {
     if (mediaStream) {
       mediaStream.getVideoTracks().forEach(track => {
@@ -117,151 +160,206 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
     setIsAudioEnabled(a => !a);
   };
 
-  const handleMeetingLinkClick = () => {
-    if (expertMeetingLink) {
-      setShowMeetingFrame(true);
-    }
-  };
-
   const handleCloseMeetingFrame = () => {
     setShowMeetingFrame(false);
   };
+  // ... rest of your existing useEffect hooks and functions ...
 
   return (
     <div
       ref={videoCallRef}
-      className={`relative bg-gray-900 rounded-2xl overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : 'w-full h-full'}`}
+      className={`relative overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : 'w-full h-full'}`}
       style={isFullscreen ? { width: 'auto', height: 'auto' } : {}}
     >
-      {/* Meeting Link Header - Only show when not in fullscreen */}
-      {!isFullscreen && expertMeetingLink && !showMeetingFrame && (
-        <div className="absolute top-4 left-4 right-4 z-20">
-          <div className="bg-black/70 backdrop-blur-md rounded-xl p-4 border border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-white font-medium text-sm mb-1 truncate">{callTitle}</h3>
-                <p className="text-white/70 text-xs">Expert Meeting Link Available</p>
-              </div>
-              <button
-                onClick={handleMeetingLinkClick}
-                className="ml-3 flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
-                title="Open Expert Meeting Link"
-              >
-                <ExternalLink size={14} className="mr-1" />
-                Open Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Meeting Link Iframe - Full overlay when active */}
-      {showMeetingFrame && expertMeetingLink && (
-        <div className="absolute inset-0 z-30 bg-white rounded-2xl overflow-hidden">
-          {/* Iframe Header */}
-          <div className="bg-gray-900 text-white p-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Video size={16} className="text-blue-400" />
-              <span className="text-sm font-medium truncate">{callTitle}</span>
-            </div>
-            <button
-              onClick={handleCloseMeetingFrame}
-              className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
-              title="Close Meeting"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-
-          {/* Iframe Content */}
-          <iframe
-            src={expertMeetingLink}
-            className="w-full h-full border-0"
-            style={{ height: 'calc(100% - 48px)' }}
-            allow="camera; microphone; fullscreen; speaker; display-capture"
-            allowFullScreen
-            title="Expert Meeting"
-          />
-        </div>
-      )}
-
-      <div className="relative w-full h-full flex items-center justify-center" style={{ minHeight: 400 }}>
-        {mediaStream && !showMeetingFrame ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover rounded-2xl bg-black"
-            style={{ minHeight: 400, maxHeight: isFullscreen ? '90vh' : 400 }}
-          />
-        ) : !showMeetingFrame ? (
-          <div className="flex flex-col items-center justify-center w-full h-full text-white">
-            <VideoOff size={48} className="mb-4 text-white/60" />
-            <p className="text-lg font-medium">Camera or mic not available</p>
-          </div>
-        ) : null}
-
-        {/* Control Bar - Show even when iframe is active */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-          <div className="bg-black/70 backdrop-blur-md rounded-2xl px-6 py-4 flex items-center space-x-4">
-            <button
-              onClick={toggleAudio}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isAudioEnabled
-                  ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
-            >
-              {isAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
-            </button>
-            <button
-              onClick={toggleVideo}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isVideoEnabled
-                  ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
-            >
-              {isVideoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
-            </button>
-
-            {/* Meeting Link Button in Control Bar */}
-            {expertMeetingLink && (
-              <button
-                onClick={showMeetingFrame ? handleCloseMeetingFrame : handleMeetingLinkClick}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${showMeetingFrame
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                title={showMeetingFrame ? "Close Meeting" : "Open Expert Meeting Link"}
-              >
-                {showMeetingFrame ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="flex h-full gap-5">
+        {/* Video/Meeting Container (Left Side) */}
+        <div className={`${showMeetingFrame && expertMeetingLink ? 'w-2/3' : 'w-full'} relative`}>
+          {/* Meeting Link Iframe - Full overlay when active */}
+          {showMeetingFrame && expertMeetingLink && (
+            <div className="absolute inset-0 z-30 bg-white  overflow-hidden">
+              {/* Iframe Header */}
+              <div className="bg-gray-900 text-white p-3 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Video size={16} className="text-blue-400" />
+                  <span className="text-sm font-medium truncate">{callTitle}</span>
+                </div>
+                <button
+                  onClick={() => setShowMeetingFrame(false)}
+                  className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Close Meeting"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
-                ) : (
-                  <ExternalLink size={20} />
-                )}
-              </button>
-            )}
+                </button>
+              </div>
 
-            <button
-              onClick={onLeave}
-              className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all"
-            >
-              <Phone size={20} />
-            </button>
-            <button
-              onClick={onToggleFullscreen}
-              className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-500 text-white flex items-center justify-center transition-all"
-            >
-              {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-            </button>
+              {/* Iframe Content */}
+              <iframe
+                src={expertMeetingLink}
+                className="w-full h-full border-0"
+                style={{ height: 'calc(100% - 48px)' }}
+                allow="camera; microphone; fullscreen; speaker; display-capture"
+                allowFullScreen
+                title="Expert Meeting"
+              />
+            </div>
+          )}
+
+          {/* Local Video Feed */}
+          <div className="relative w-full h-full flex items-center justify-center bg-black">
+            {mediaStream && !showMeetingFrame ? (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+            ) : !showMeetingFrame ? (
+              <div className="flex flex-col items-center justify-center w-full h-full text-white">
+                <VideoOff size={48} className="mb-4 text-white/60" />
+                <p className="text-lg font-medium">Camera or mic not available</p>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Control Bar */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+            <div className="bg-black/70 backdrop-blur-md rounded-2xl px-6 py-4 flex items-center space-x-4">
+              {!showMeetingFrame && (
+                <>
+                  <button
+                    onClick={toggleAudio}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      isAudioEnabled
+                        ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                        : 'bg-red-500 hover:bg-red-600 text-white'
+                    }`}
+                  >
+                    {isAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
+                  </button>
+                  <button
+                    onClick={toggleVideo}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      isVideoEnabled
+                        ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                        : 'bg-red-500 hover:bg-red-600 text-white'
+                    }`}
+                  >
+                    {isVideoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={onLeave}
+                className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all"
+              >
+                <Phone size={20} />
+              </button>
+              <button
+                onClick={onToggleFullscreen}
+                className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-500 text-white flex items-center justify-center transition-all"
+              >
+                {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Services Form (Right Side) - Only shown when meeting is active */}
+        {showMeetingFrame && expertMeetingLink && (
+          <div className="w-1/3 bg-white border-l border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Suggested Services</h3>
+              <p className="text-sm text-gray-500">Select services to recommend to the patient</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {isLoadingServices ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              ) : services.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  No services available
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {services.map(service => (
+                    <div 
+                      key={service.uuid}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        selectedServices.includes(service.uuid)
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                      onClick={() => handleServiceSelect(service.uuid)}
+                    >
+                      <div className="flex items-start">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${
+                          selectedServices.includes(service.uuid)
+                            ? 'bg-blue-500 border-blue-500'
+                            : 'bg-white border-gray-300'
+                        }`}>
+                          {selectedServices.includes(service.uuid) && (
+                            <Check size={14} className="text-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800">{service.name}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-sm font-medium text-blue-600">
+                              ₹{service.price}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {service.duration} mins
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-200">
+              <button
+                onClick={handleSubmit}
+                disabled={selectedServices.length === 0 || isSubmitting}
+                className={`w-full py-2 px-4 rounded-lg flex items-center justify-center ${
+                  selectedServices.length === 0
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                } transition-colors`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : submitSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Submitted Successfully
+                  </>
+                ) : (
+                  <>
+                    <ChevronRight className="w-4 h-4 mr-2" />
+                    Submit Suggestions ({selectedServices.length})
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fullscreen Exit Button */}
@@ -276,6 +374,7 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
     </div>
   );
 };
+
 
 function VideoCallPortalContent() {
   const searchParams = useSearchParams();
@@ -818,6 +917,7 @@ function VideoCallPortalContent() {
                   onToggleFullscreen={handleToggleFullscreen}
                   expertMeetingLink={selectedCall.expert_meeting_link}
                   callTitle={selectedCall.title}
+                   bookingId={selectedCall?.uuid}
                 />
               </div>
             </div>

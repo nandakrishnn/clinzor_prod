@@ -9,7 +9,10 @@ interface Slot {
 interface BulkSlotData {
   slot_list: { start_time: string }[];
 }
+export interface AddSuggestion {
+  services: string[]; // Array of service UUIDs
 
+}
 // Booking Management Api 
 export const createSlot = async (body:Slot) => {
   try {
@@ -81,4 +84,20 @@ export const GetAllExpertBooking= async () => {
 
 export const GetAExpertBookingDetails= async (Id: string) => {
   return await axiosPrivate.delete(`customer/expert_booking_info/${Id}`);
+};
+
+
+export const addSuggestion = async (
+  id: string,
+ body: AddSuggestion) => {
+  try {
+    const response = await axiosPrivate.patch(
+      `clinic/expert-suggestion-create/${id}/`,
+      body
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Expert update error:", error);
+    throw error;
+  }
 };

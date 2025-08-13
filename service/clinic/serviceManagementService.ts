@@ -47,25 +47,25 @@ export const editClinicService = async (id: string, body: Slot) => {
     throw error;
   }
 };
-export const approveOrRejectClinicService = async (
-  id: string,
-  body: {
-    status: string;
-  }
+export const updateRankClinicService = async (
+  body: Array<{
+    clinic_service: string;
+    rank: number;
+  }>
 ) => {
   try {
     const response = await axiosPrivate.patch(
-      `clinic/doctor-approval/${id}/`,
+      `clinic/update-service-rank/`,
       body
     );
     return response.data;
   } catch (error) {
-    console.error("User status update error:", error);
+    console.error("Rank update error:", error);
     throw error;
   }
 };
 export const deleteClinicService = async (Id: string) => {
-  return await axiosPrivate.delete(`clinic/slot-rud/${Id}/`);
+  return await axiosPrivate.delete(`clinic/clinic-service-rud/${Id}/`);
 };
 
 export const GetAllServiceForClinic = async () => {

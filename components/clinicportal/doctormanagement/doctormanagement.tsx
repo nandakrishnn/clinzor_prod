@@ -116,6 +116,7 @@ const DoctorManagement: React.FC = () => {
   const [govtDocError, setGovtDocError] = useState<string>('');
   const [govtDocHelper, setGovtDocHelper] = useState<string>('You can upload up to 5 files.');
   const [services, setServices] = useState<Service[]>([])
+  const [totalitems , setTotalItems] = useState(0);
   // Preview state
   const [previewDoc, setPreviewDoc] = useState<{ url: string; type: string; name: string } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -136,6 +137,8 @@ const DoctorManagement: React.FC = () => {
         // Set states with the responses
          setTotalPages(DoctorData.data.total_pages || Math.ceil((DoctorData.count || 0) / doctorsPerPage) || 1);
       setDoctors(DoctorData.data.data)
+      console.log(DoctorData,'all data')
+      setTotalItems(DoctorData.data.total_items);
       setServices(allServicesData.data )
     } catch (error) {
       console.error("Error to fetch Data",error);
@@ -185,14 +188,14 @@ console.log(doctors,"data")
 
   // Filtering logic
   const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.specializaton.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.phone_number.includes(searchTerm);
+    const matchesSearch = doctor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doctor?.specializaton?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doctor?.phone_number?.includes(searchTerm);
     const matchesStatus = statusFilter ? doctor.status === statusFilter : true;
     const matchesService = serviceFilter ? doctor.clinic_service === serviceFilter : true;
     const matchesGender = genderFilter ? doctor.gender === genderFilter : true;
     const matchesSpecialization = specializationFilter ? 
-      doctor.specializaton.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
+      doctor.specializaton?.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
     
     return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
   });
@@ -201,7 +204,7 @@ console.log(doctors,"data")
   const paginatedDoctors = filteredDoctors;
 
   // Statistics
-  const totalDoctors = doctors.length;
+  const totalDoctors = totalitems;
   const approvedDoctors = doctors.filter(d => d.status === 'APPROVED').length;
   const pendingDoctors = doctors.filter(d => d.status === 'PENDING').length;
   const rejectedDoctors = doctors.filter(d => d.status === 'REJECTED').length;
@@ -282,6 +285,7 @@ const handleCreateDoctor = async () => {
     resetForm();
     setShowCreateModal(false);
     showToast('Doctor created successfully!', 'success');
+    fetchDoctor(currentPage)
   } catch (error) {
     console.error("Error creating doctor:", error);
     showToast('Failed to create doctor', 'error');
@@ -308,6 +312,7 @@ const handleUpdateDoctor = async () => {
     await fetchDoctor();
    
     closeModal();
+    fetchDoctor(currentPage)
     showToast('Doctor updated successfully!', 'success');
   } catch (error) {
     console.error("Error updating doctor:", error);
@@ -326,6 +331,7 @@ const handleDeleteDoctor = async () => {
     setDoctors(doctors.filter(d => d.uuid !== selectedDoctor.uuid));
     closeModal();
     showToast('Doctor deleted successfully!', 'success');
+    fetchDoctor(currentPage)
   } catch (error) {
     console.error("Error deleting doctor:", error);
     showToast('Failed to delete doctor', 'error');
