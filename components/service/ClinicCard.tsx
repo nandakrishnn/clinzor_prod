@@ -11,7 +11,7 @@ interface ClinicCardProps {
 
 const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col ">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden h-full flex flex-col ">
       <div className="relative h-40 w-full flex-shrink-0">
         <Image
           src={clinic.image}
