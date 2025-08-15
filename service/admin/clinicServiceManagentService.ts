@@ -1,30 +1,18 @@
 
 import { axiosPrivate } from "../../axios/axios";
-
-interface Expert {
-  uuid: string;
-  clinic_service: string;
-  created_by: string;
+type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+interface Service {
   name: string;
-  dob: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER"; // Assuming these are the possible values
-  specializaton: string; // Note: There's a typo in "specialization" in your JSON
-  experience: number | null;
-  phone_number: string;
-  email: string | null;
-  profile_pic: string | null;
-  status: "APPROVED" | "REJECTED" | "PENDING"; // Assuming possible statuses
-  reason_for_rejection: string | null;
-  education: string;
-  government_document: string | null;
-  extra_info: string | null;
+  description: string;
+  tags: string;
+  image?: string;
 }
 
 // ClinicService Management Api 
-export const createClinicService = async (body:Expert) => {
+export const createService = async (body:Service) => {
   try {
     const response = await axiosPrivate.post(
-      `clinic/clinic-service-lc/`, // Changed from PUT to POST for creation
+      `clinic/service-lc/`, // Changed from PUT to POST for creation
       body
     );
     return response.data;
@@ -33,12 +21,12 @@ export const createClinicService = async (body:Expert) => {
     throw error;
   }
 };
-export const editClinicService = async (
+export const editService = async (
   id: string,
- body: Expert) => {
+ body: Service) => {
   try {
     const response = await axiosPrivate.put(
-      `clinic/doctor-rud/${id}/`,
+      `clinic/service-rud/${id}/`,
       body
     );
     return response.data;
@@ -58,8 +46,8 @@ export const approveOrRejectClinicService = async (id: string, body: {
     throw error;
   }
 };
-export const deleteClinicService = async (Id: string) => {
-  return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
+export const deleteService = async (Id: string) => {
+  return await axiosPrivate.delete(`clinic/service-rud/${Id}/`);
 };
 export const GetAClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
@@ -71,6 +59,17 @@ export const GetAllClinicService= async () => {
       `clinic/clinic-service-lc/`
     );
     return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};
+export const GetAllService= async (page: number) => {
+  try {
+    const response = await axiosPrivate.get(
+      `clinic/service-lc/?page=${page}`
+    );
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;

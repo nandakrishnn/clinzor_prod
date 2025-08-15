@@ -2,7 +2,6 @@
 import { axiosPrivate } from "../../axios/axios";
 
 type Expert = {
-  uuid: string;
   name: string;
   email: string;
   phone_number: string;
@@ -63,12 +62,12 @@ export const GetAExpert = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllExpert= async () => {
+export const GetAllExpert= async (page:number) => {
   try {
     const response = await axiosPrivate.get(
-      `/clinic/doctor-lc/`
+      `/clinic/doctor-lc/?page=${page}`
     );
-    return response.data.data.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;
