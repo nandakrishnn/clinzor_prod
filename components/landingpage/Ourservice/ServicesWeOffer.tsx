@@ -12,8 +12,10 @@ import { motion } from "framer-motion";
 import CardTwo from "@/components/ui/cardTwo";
 import Title from "@/components/ui/title";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import { useRouter } from "next/navigation";
 
 export default function ServicesWeProvide() {
+  const router = useRouter();
   const services = [
     {
       title: "General Consultation",
@@ -125,6 +127,14 @@ export default function ServicesWeProvide() {
             </motion.div>
           ))}
         </motion.div>
+        <div className="flex items-center justify-center w-full  mt-10">
+          <button
+            onClick={() => router.push("/service")}
+            className="bg-primaryColor p-2.5 text-sm text-white rounded-full px-10"
+          >
+            See More
+          </button>
+        </div>
       </div>
     </section>
   );

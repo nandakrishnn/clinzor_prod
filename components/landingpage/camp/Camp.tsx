@@ -1,6 +1,9 @@
 import Image from "next/image";
 import React from "react";
 import { motion, Variants } from "framer-motion";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const headingVariants = {
   hidden: { opacity: 0, y: -20 },
@@ -16,21 +19,48 @@ const headingVariants = {
   }
 };
 
+// Dummy images for the carousel
+const carouselImages = [
+  "/dummy/banner.webp",
+  "/dummy/banner1.jpg", // assuming you have these images
+  "/dummy/banner2.jpg",
+  "/dummy/banner3.jpg"
+];
+
 const Camp = () => {
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    arrows: false,
+    pauseOnHover: true,
+  };
+
   return (
     <section className="overflow-hidden">
       <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-20 flex flex-col md:flex-row gap-5 md:gap-14">
-        <div className="h-[500px] rounded-2xl overflow-hidden w-full md:w-[60%] bg-red-500 relative">
-          <Image
-            src={"/dummy/banner.webp"}
-            alt=""
-            fill
-            className="object-cover"
-          />
+        <div className="h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg">
+          <Slider {...settings}>
+            {carouselImages.map((image, index) => (
+              <div key={index} className="h-[550px] relative">
+                <Image
+                  src={image}
+                  alt={`Camp image ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
+          </Slider>
         </div>
 
         <motion.div
-          className="text-start w-full md:w-[50%] "
+          className="text-start w-full md:w-[50%] flex flex-col items-center justify-center"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -57,7 +87,7 @@ const Camp = () => {
             </p>
           </div>
 
-          <button className="w-full bg-primaryColor  text-white p-2.5 rounded-lg mt-8">
+          <button className="w-full bg-primaryColor text-white p-2.5 rounded-full mt-8">
             Register Now
           </button>
         </motion.div>

@@ -10,6 +10,8 @@ import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
 import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
+import { BlogCard } from "@/components/blog/BlogCard";
+import BlogComponent from "@/components/blog/BlogComponent";
 
 export default function Home() {
   return (
@@ -66,7 +68,7 @@ export default function Home() {
         {/* Blogs */}
         <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-20">
-            {/* <BlogCard /> */}
+            <BlogComponent />
           </div>
         </section>
 
