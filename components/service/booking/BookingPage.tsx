@@ -7,6 +7,7 @@ import { Calendar } from "./Calendar";
 import { TimeSlotSelector } from "./SlotSelector.tsx";
 import { DoctorSelector } from "./DoctorSelector";
 import { Confirmation } from "./Confirmation";
+import { Cancellation } from "./Cancellation";
 
 const BookingPage = () => {
   const router = useRouter();
@@ -139,7 +140,7 @@ const BookingPage = () => {
             )}
           </>
         ) : (
-          <Confirmation />
+          <Cancellation />
         )}
       </div>
     </div>
