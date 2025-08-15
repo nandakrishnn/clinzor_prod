@@ -26,8 +26,8 @@ interface Clinic {
   address: string;
   city: string;
   pincode: string;
-  status: 'Approved' | 'Draft' | 'Pending' | 'Rejected';
-  paymentStatus: 'Paid' | 'Pending' | 'No Dues' | 'Overdue';
+  status: 'Approved' | 'Draft' | 'PENDING' | 'Rejected';
+  paymentStatus: 'Paid' | 'PENDING' | 'No Dues' | 'Overdue';
   dueAmount: string;
   hours: string;
   workingDays: string[];
@@ -48,7 +48,7 @@ const StatusBadge = ({ status }: { status: Clinic['status'] }) => {
   const getStatusColor = (status: Clinic['status']) => {
     switch (status) {
       case 'Approved': return 'bg-green-100 text-green-700 border-green-200';
-      case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'Draft': return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'Rejected': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
@@ -434,6 +434,7 @@ export default function PendingApprovalPage() {
 const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [pendingClinics, setPendingClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -445,27 +446,29 @@ const [allClinics, setAllClinics] = useState<Clinic[]>([]);
 
   // Filter only pending clinics
   useEffect(() => {
-    const fetchClinics = async () => {
+    const fetchClinics = async (page =1) => {
     try {
       setLoading(true);
-      const data = await getAllClinic(); // Assuming this is your API function
+      const data = await getAllClinic(page); // Assuming this is your API function
       
-setAllClinics(data);
+setAllClinics(data.data);
+console.log(data.data,' fd data')
       // Filter pending clinics after data is fetched
-      const pending = data.filter((clinic: Clinic) => clinic.status === 'Pending');
+      const pending = data.data.filter((clinic: Clinic) => clinic.status === 'PENDING');
       setPendingClinics(pending);
     } catch (error) {
       setNotification({
         type: 'error',
         message: 'Failed to load clinics'
       });
+      console.error("Error fetching clinics:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  fetchClinics();
-  }, []);
+  fetchClinics(currentPage);
+  }, [currentPage]);
 
   // Search functionality
   useEffect(() => {

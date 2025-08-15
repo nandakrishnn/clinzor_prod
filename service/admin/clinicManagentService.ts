@@ -68,10 +68,10 @@ export const getAClinic = async (Id:string) => {
   return await axiosPrivate.get(`/clinic/clinic-rud/${Id}`);
 };
 
-export const getAllClinic = async () => {
+export const getAllClinic = async (page:number) => {
   try {
-    const response = await axiosPrivate.get(`/clinic/`);
-    return response.data.data.data;
+    const response = await axiosPrivate.get(`/clinic/?page=${page}`);
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;
