@@ -33,6 +33,7 @@ import useMedia from '../../../src/hooks/useMedia';
 import { deleteUser, editUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
 import { getAllBookings } from '@/service/admin/bookingManagementService';
 
+
 interface User {
   uuid: string;
   email: string;
@@ -78,7 +79,14 @@ interface NotificationProps {
   onClose: () => void;
 }
 
-// --- Add Booking type for mock bookings (from PatientBookings) ---
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
 type Booking = {
   uuid: string;
   created_by: string;
@@ -95,103 +103,6 @@ type Booking = {
   clinic_name: string;
   clinic_id: string;
   service_type: string;
-};
-
-// --- Generate mock users and bookings together ---
-const clinicNames = [
-  'Sunrise Clinic',
-  'MedCare Center',
-  'City Health Center',
-  'Family Wellness Clinic',
-  'Wellness Point',
-  'Care & Cure',
-  'HealthFirst',
-  'LifeSpring',
-  'Prime Health',
-  'CureWell Hospital'
-];
-const serviceTypes = [
-  'Dermatology',
-  'Cardiology',
-  'ENT',
-  'Orthopedics',
-  'General Medicine',
-  'Pediatrics',
-  'Neurology',
-  'Gynecology',
-  'Ophthalmology',
-  'Dentistry'
-];
-const sessionTypes = ['CONSULTATION', 'SESSION', 'FOLLOWUP'];
-const bookingTypes = ['VIDEO_CALL', 'PHYSICAL_VISIT'];
-const bookingStatuses = ['PENDING', 'SCHEDULED', 'COMPLETED'];
-const paymentStatuses = ['PENDING', 'COMPLETED'];
-
-function randomFromArray<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-const generateMockUsersAndBookings = () => {
-  const users: User[] = [];
-  const bookings: Booking[] = [];
-  const countries = ['91', '1', '44', '61', '49'];
-  const names = [
-    'Gaurav Sahu', 'Priya Sharma', 'Rajesh Kumar', 'Anita Nair', 'Mohammed Ali',
-    'Lakshmi Pillai', 'Arjun Menon', 'Meera Joseph', 'Suresh Nair', 'Ravi Kumar',
-    'Deepika Singh', 'Vikram Reddy', 'Sonia Gupta', 'Amit Patel', 'Kavya Iyer',
-    'Rohit Joshi', 'Sneha Desai', 'Kiran Rao', 'Pooja Agarwal', 'Nikhil Varma'
-  ];
-  for (let index = 0; index < 150; index++) {
-    const name = names[index % names.length];
-    const email = `user${index + 1}@example.com`;
-    const user: User = {
-      uuid: `user-${index + 1}-${Math.random().toString(36).substr(2, 9)}`,
-      email,
-      full_name: name,
-      phone_number: `${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-      country_code: countries[Math.floor(Math.random() * countries.length)],
-      role: 'CUSTOMER',
-      is_active: Math.random() > 0.1,
-      is_staff: false,
-      is_superuser: false,
-      is_blocked: Math.random() > 0.9,
-      last_login: Math.random() > 0.3 ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null,
-      created_by: Math.random() > 0.5 ? 'system' : null,
-      created_at: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      profile_image: `https://images.unsplash.com/photo-${1500000000000 + index}?auto=format&fit=crop&w=64&h=64&q=80`
-    };
-    users.push(user);
-    // Generate 2-5 bookings per user
-    const bookingCount = Math.floor(Math.random() * 4) + 2;
-    for (let b = 0; b < bookingCount; b++) {
-      const clinicIdx = Math.floor(Math.random() * clinicNames.length);
-      const serviceIdx = Math.floor(Math.random() * serviceTypes.length);
-      const daysAgo = Math.floor(Math.random() * 180);
-      const startHour = 9 + Math.floor(Math.random() * 8); // 9am to 5pm
-      const startMinute = Math.random() > 0.5 ? 0 : 30;
-      const start = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-      start.setHours(startHour, startMinute, 0, 0);
-      const end = new Date(start.getTime() + 30 * 60 * 1000);
-      bookings.push({
-        uuid: `b-${user.uuid}-${b}`,
-        created_by: 'admin@clinzor.com',
-        booking_type: randomFromArray(bookingTypes) as 'VIDEO_CALL' | 'PHYSICAL_VISIT',
-        booking_status: randomFromArray(bookingStatuses) as 'PENDING' | 'SCHEDULED' | 'COMPLETED',
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        payment_status: randomFromArray(paymentStatuses) as 'PENDING' | 'COMPLETED',
-        session_type: randomFromArray(sessionTypes),
-        patient_name: name,
-        patient_mobile: user.phone_number,
-        patient_email: email,
-        booking_charge: (Math.floor(Math.random() * 900) + 100).toFixed(2),
-        clinic_name: clinicNames[clinicIdx],
-        clinic_id: `clinic-${clinicIdx + 1}`,
-        service_type: serviceTypes[serviceIdx],
-      });
-    }
-  }
-  return { users, bookings };
 };
 
 const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
@@ -475,35 +386,51 @@ export default function AllUsersPage() {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
   const isMobile = useMedia('(max-width: 640px)');
 
-  // Load users on component mount
-  const loadUsers = async () => {
+  // Load users with pagination
+  const loadUsers = async (page = 1) => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // const { users: mockUsers, bookings: mockBookings } = generateMockUsersAndBookings();
-    const data = await GetAllUsers(15); // Real API
-    const bookingData = await getAllBookings()
-    setUsers(data);
-    console.log(data, "user data ")
-    console.log(bookingData, "booking data ")
-    // setUsers(mockUsers);
-    setBookings(bookingData);
-    setFilteredUsers(data);
-    setLoading(false);
+    try {
+      const data = await GetAllUsers(itemsPerPage, page);
+      const bookingData = await getAllBookings();
+      
+      setUsers(data.data);
+      setBookings(bookingData);
+      setFilteredUsers(data.data);
+      setPaginationData({
+        current_page: data.current_page,
+        total_pages: data.total_pages,
+        total_items: data.total_items,
+        next: data.next,
+        previous: data.previous
+      });
+    } catch (error) {
+      console.error("Failed to load users:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load users. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(currentPage);
+  }, [currentPage, itemsPerPage]);
 
-  // Filter and search users
+  // Filter users based on search and status
   useEffect(() => {
     let filtered = [...users];
 
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(user =>
         user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -512,7 +439,6 @@ export default function AllUsersPage() {
       );
     }
 
-    // Status filter
     if (statusFilter === 'ACTIVE') {
       filtered = filtered.filter(user => user.is_active && !user.is_blocked);
     } else if (statusFilter === 'INACTIVE') {
@@ -548,13 +474,7 @@ export default function AllUsersPage() {
     });
 
     setFilteredUsers(filtered);
-    setCurrentPage(1);
   }, [users, searchQuery, statusFilter, sortBy, sortOrder]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   // Action handlers
   const handleView = (user: User) => {
@@ -612,7 +532,6 @@ export default function AllUsersPage() {
   };
 
   const handleEditSubmit = async () => {
-    // Validate form data
     const validationError = validateEditForm(editFormData);
     if (validationError) {
       setNotification({
@@ -627,7 +546,6 @@ export default function AllUsersPage() {
     setIsSubmitting(true);
 
     try {
-      // Prepare the complete request body with all user fields
       const requestBody = {
         full_name: editFormData.full_name,
         email: editFormData.email,
@@ -638,15 +556,12 @@ export default function AllUsersPage() {
         is_superuser: editFormData.is_superuser
       };
 
-      // Call the API with all user data
       const updatedUser = await editUser(selectedUser.uuid, requestBody);
 
-      // Update local state with the response from backend
       setUsers(prev => prev.map(u =>
         u.uuid === selectedUser.uuid ? { ...u, ...updatedUser } : u
       ));
 
-      // Close modal and show success
       setIsEditModalOpen(false);
       setSelectedUser(null);
       setEditFormData({});
@@ -668,19 +583,15 @@ export default function AllUsersPage() {
     if (!selectedUser) return;
 
     try {
-      // Call the API to delete the user from the backend
       await deleteUser(selectedUser.uuid);
-
-      // Update the UI state only after successful API call
       setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
       setIsDeleteModalOpen(false);
       setSelectedUser(null);
-
       setNotification({
         type: 'success',
         message: 'User deleted successfully'
       });
-      loadUsers();
+      loadUsers(currentPage);
     } catch (error) {
       console.error('Failed to delete user:', error);
       setNotification({
@@ -696,14 +607,11 @@ export default function AllUsersPage() {
     const isBlocking = !selectedUser.is_blocked;
     const requestBody = {
       is_blocked: isBlocking,
-      ...(isBlocking && { reason_for_block: "unauthorized actions" }) // Only include if blocking
+      ...(isBlocking && { reason_for_block: "unauthorized actions" })
     };
 
     try {
-      // Call API to update block status
       await updateUserStatus(selectedUser.uuid, requestBody);
-
-      // Update local state
       setUsers(prev => prev.map(u =>
         u.uuid === selectedUser.uuid ? {
           ...u,
@@ -714,12 +622,11 @@ export default function AllUsersPage() {
 
       setIsBlockModalOpen(false);
       setSelectedUser(null);
-
       setNotification({
         type: 'success',
         message: isBlocking ? 'User blocked successfully' : 'User unblocked successfully'
       });
-      loadUsers();
+      loadUsers(currentPage);
     } catch (error) {
       console.error('Block/Unblock failed:', error);
       setNotification({
@@ -734,10 +641,9 @@ export default function AllUsersPage() {
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    loadUsers(currentPage);
   };
 
-  // Users Display mode: force grid on mobile
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
   if (loading) {
@@ -788,7 +694,7 @@ export default function AllUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{paginationData.total_items}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Users size={24} className="text-blue-600" />
@@ -888,7 +794,7 @@ export default function AllUsersPage() {
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
 
-            {/* View Mode Toggle: hide on mobile */}
+            {/* View Mode Toggle */}
             {!isMobile && (
               <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-auto">
                 <button
@@ -913,7 +819,7 @@ export default function AllUsersPage() {
         {/* Results Count */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
           <p className="text-gray-600 text-sm sm:text-base">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
+            Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, paginationData.total_items)} of {paginationData.total_items} users
           </p>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sort by:</span>
@@ -938,7 +844,7 @@ export default function AllUsersPage() {
         {/* Users Display */}
         {effectiveViewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-            {paginatedUsers.map((user) => (
+            {filteredUsers.slice(0, itemsPerPage).map((user) => (
               <UserCard
                 key={user.uuid}
                 user={user}
@@ -980,7 +886,7 @@ export default function AllUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedUsers.map((user) => (
+                  {filteredUsers.slice(0, itemsPerPage).map((user) => (
                     <UserRow
                       key={user.uuid}
                       user={user}
@@ -997,7 +903,7 @@ export default function AllUsersPage() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {paginationData.total_pages > 1 && (
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-between bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 gap-2"
             initial={{ opacity: 0, y: 20 }}
@@ -1005,25 +911,35 @@ export default function AllUsersPage() {
           >
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => {
+                  const newPage = Math.max(currentPage - 1, 1);
+                  setCurrentPage(newPage);
+                  loadUsers(newPage);
+                }}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
+                  currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
               >
                 Previous
               </button>
               <span className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
+                Page {currentPage} of {paginationData.total_pages}
               </span>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === totalPages
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
+                onClick={() => {
+                  const newPage = Math.min(currentPage + 1, paginationData.total_pages);
+                  setCurrentPage(newPage);
+                  loadUsers(newPage);
+                }}
+                disabled={currentPage === paginationData.total_pages}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
+                  currentPage === paginationData.total_pages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
               >
                 Next
               </button>
@@ -1033,8 +949,10 @@ export default function AllUsersPage() {
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
+                  const newItemsPerPage = Number(e.target.value);
+                  setItemsPerPage(newItemsPerPage);
                   setCurrentPage(1);
+                  loadUsers(1);
                 }}
                 className="text-sm bg-white border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -1116,7 +1034,7 @@ export default function AllUsersPage() {
                 </div>
               </div>
             </div>
-            {/* Bookings Table - show directly in modal */}
+            {/* Bookings Table */}
             <div className="pt-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Bookings</h3>
               {(() => {

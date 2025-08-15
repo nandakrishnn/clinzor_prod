@@ -46,7 +46,7 @@ export const GetAllUsers = async (pageSize: number = 10, page: number = 1) => {
     const response = await axiosPrivate.get(
       `user/user-list/?page_size=${pageSize}&page=${page}`
     );
-    return response.data.data.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;
