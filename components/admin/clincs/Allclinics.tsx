@@ -70,6 +70,13 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
 }
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 
 interface NotificationProps {
   type: "success" | "error" | "warning";
@@ -544,7 +551,13 @@ export default function ClinicManagement() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
+const [paginationData, setPaginationData] = useState({
+  current_page: 1,
+  total_pages: 1,
+  total_items: 0,
+  next: null as string | null,
+  previous: null as string | null
+});
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
@@ -590,24 +603,35 @@ export default function ClinicManagement() {
     "ALL" | "Approved" | "Pending" | "Active" | "Deactivated"
   >("Approved");
 
-  useEffect(() => {
-    const fetchClinecs = async () => {
-      setLoading(true);
-      try {
-        const data = await getAllClinic();
-        setClinics(data);
-      } catch (error) {
-        setNotification({
-          type: "error",
-          message: "Failed to load bookings"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchClinecs();
-  }, []);
-  console.log("clinics data", clinics);
+
+
+const fetchClinics = async (page=1) => {
+  setLoading(true);
+  try {
+    const response = await getAllClinic(page);
+    setClinics(response.data);
+    setPaginationData({
+      current_page: response.current_page,
+      total_pages: response.total_pages,
+      total_items: response.total_items,
+      next: response.next,
+      previous: response.previous
+    });
+  } catch (error) {
+    console.error("Failed to fetch clinics:", error);
+    setNotification({
+      type: "error",
+      message: "Failed to load clinics"
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchClinics(currentPage);
+}, [currentPage]);
+
   // Filter clinics
   useEffect(() => {
     let filtered = [...clinics];
@@ -633,9 +657,15 @@ export default function ClinicManagement() {
     }
 
     setFilteredClinics(filtered);
-    setCurrentPage(1);
+    // setCurrentPage(1);
   }, [clinics, searchQuery, selectedStatus, selectedPaymentStatus]);
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paginationData.total_pages) {
+      setCurrentPage(newPage);
+    }
+  };
+  
   // Filter for header selection
   let clinicsToShow = filteredClinics;
   if (selectedHeader === "Approved")
@@ -646,10 +676,10 @@ export default function ClinicManagement() {
     clinicsToShow = filteredClinics.filter((c) => c.isActive);
   else if (selectedHeader === "Deactivated")
     clinicsToShow = filteredClinics.filter((c) => !c.isActive);
-  // Pagination
-  const totalPages = Math.ceil(clinicsToShow.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  clinicsToShow = clinicsToShow.slice(startIndex, startIndex + itemsPerPage);
+
+  // Use server-side pagination data
+  // clinicsToShow already contains only the clinics for the current page from the API
+  const totalPages = paginationData.total_pages;
 
   const handleView = (clinic: Clinic) => {
     setSelectedClinic(clinic);
@@ -788,7 +818,7 @@ export default function ClinicManagement() {
   };
 
   const stats = {
-    total: clinics.length,
+    total: paginationData.total_items,
     approved: clinics.filter((c) => c.status === "APPROVED").length,
     pending: clinics.filter((c) => c.status === "Pending").length,
     active: clinics.filter((c) => c.isActive).length,
@@ -1192,9 +1222,12 @@ export default function ClinicManagement() {
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600">
-            Showing {(currentPage - 1) * itemsPerPage + 1}-
-            {Math.min(currentPage * itemsPerPage, filteredClinics.length)} of{" "}
-            {filteredClinics.length} clinics
+            Showing {(paginationData.current_page - 1) * itemsPerPage + 1}-
+            {Math.min(
+              paginationData.current_page * itemsPerPage,
+              paginationData.total_items
+            )}{" "}
+            of {paginationData.total_items} clinics
           </p>
         </div>
 
@@ -1329,49 +1362,56 @@ export default function ClinicManagement() {
         </div>
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <motion.div
-            className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                }`}
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === totalPages
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-            <div className="text-sm text-gray-500">
-              Showing {(currentPage - 1) * itemsPerPage + 1}-
-              {Math.min(currentPage * itemsPerPage, filteredClinics.length)} of{" "}
-              {filteredClinics.length} clinics
-            </div>
-          </motion.div>
-        )}
 
+{/* Pagination Controls */}
+{paginationData.total_pages > 1 && (
+  <motion.div
+    className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+  >
+    <div className="flex items-center gap-2">
+<button
+  type="button"
+  onClick={() => handlePageChange(currentPage - 1)}
+  disabled={currentPage === 1}
+  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+    currentPage === 1
+      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+  }`}
+>
+  Previous
+</button>
+
+<span className="text-sm text-gray-600">
+  Page {currentPage} of {paginationData.total_pages}
+</span>
+
+<button
+  type="button"
+  onClick={() => handlePageChange(currentPage + 1)}
+  disabled={currentPage === paginationData.total_pages}
+  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+    currentPage === paginationData.total_pages
+      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+  }`}
+>
+  Next
+</button>
+
+    </div>
+    <div className="text-sm text-gray-500">
+      Showing {(paginationData.current_page - 1) * itemsPerPage + 1}-
+      {Math.min(
+        paginationData.current_page * itemsPerPage,
+        paginationData.total_items
+      )}{" "}
+      of {paginationData.total_items} clinics
+    </div>
+  </motion.div>
+)}
         {/* Add Clinic Modal */}
         {isAddModalOpen && (
           <ModernModal
