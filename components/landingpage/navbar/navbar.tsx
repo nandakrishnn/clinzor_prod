@@ -29,7 +29,7 @@ export function NavbarDemo() {
         <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
           <NavbarButton href={"/auth"}>Login</NavbarButton>
-          <NavbarButton href={"/booking"} variant="primary">
+          <NavbarButton href={"/expert-call"} variant="primary">
             Book a call
           </NavbarButton>
         </div>
@@ -67,7 +67,7 @@ export function NavbarDemo() {
               Login
             </NavbarButton>
             <NavbarButton
-              href={"/booking"}
+              href={"/expert-call"}
               variant="primary"
               className="w-full"
             >

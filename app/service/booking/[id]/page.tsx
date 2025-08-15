@@ -1,0 +1,33 @@
+import CommonHeroSection from "@/components/common/CommonHeroSection";
+import FooterSection from "@/components/landingpage/footer/footer";
+import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
+import BookingPage from "@/components/service/booking/BookingPage";
+import React from "react";
+
+const ServiceBooking = () => {
+  return (
+    <div>
+      {/* Nav bar section */}
+      <nav>
+        <NavbarDemo />
+      </nav>
+
+      {/* Hero section */}
+      <section className="pb-10 md:pb-16">
+        <CommonHeroSection className="h-[15vh]" />
+      </section>
+
+      {/* Available Clinic Section */}
+      <section className="max-w-screen-xl mx-auto pb-10 md:pb-20">
+        <BookingPage />
+      </section>
+
+      {/* Footer */}
+      <section>
+        <FooterSection />
+      </section>
+    </div>
+  );
+};
+
+export default ServiceBooking;

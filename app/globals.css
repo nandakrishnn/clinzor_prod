@@ -135,3 +135,39 @@
     font-family: var(--font-inter);
   }
 }
+
+
+/* Custom dot styles */
+.slick-dots {
+  bottom: 20px !important;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 8px; /* Adjust gap between dots */
+}
+
+.slick-dots li {
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.slick-dots li button {
+  width: 10px !important;
+  height: 10px !important;
+  padding: 0 !important;
+}
+
+.slick-dots li button:before {
+  content: '' !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.5) !important;
+  opacity: 1 !important;
+}
+
+.slick-dots li.slick-active button:before {
+  background: #ffffff !important;
+  opacity: 1 !important;
+}
