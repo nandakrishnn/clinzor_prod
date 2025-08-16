@@ -1,4 +1,5 @@
 // axios.ts
+import { baseUrl } from "@/utils/Endpoint";
 import axios from "axios";
 import { getSession } from "next-auth/react";
 
@@ -6,7 +7,7 @@ const BASE_URL = "http://13.235.72.88:8000"; // Explicitly define your base URL
 
 // Create axios instance with proper defaults
 const privateInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: baseUrl,
   timeout: 10000, // Add timeout
   headers: {
     "Content-Type": "application/json",
