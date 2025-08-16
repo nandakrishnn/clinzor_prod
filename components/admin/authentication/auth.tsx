@@ -33,12 +33,15 @@ export default function () {
   const [error, setError] =useState<string | null>(null);
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === "authenticated") {
+useEffect(() => {
+  if (status === "authenticated") {
+    // Check if user has EXPERT role
+    if (session?.user?.role === "ADMIN") {
       router.replace("/admin/dashboard");
     }
-  }, [status, router]);
-
+   
+  }
+}, [status, router, session?.user?.role]);
   const handleSubmit = async (event: React.FormEvent<SignInFormElement>) => {
     event.preventDefault();
     setIsLoading(true);

@@ -28,13 +28,13 @@ const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials) return null;
-        
+
         const { email, password } = credentials;
-        
+
         try {
           const res = await fetch(`${API_BASE_URL}${login}`, {
             method: "POST",
@@ -43,12 +43,12 @@ const authOptions: NextAuthOptions = {
             },
             body: JSON.stringify({
               email: email,
-              password: password
-            })
+              password: password,
+            }),
           });
 
           const data: ApiResponse = await res.json();
-          
+
           if (res.ok && data.access) {
             return {
               id: data.user.uuid,
@@ -60,7 +60,7 @@ const authOptions: NextAuthOptions = {
               country_code: data.user.country_code,
               role: data.user.role,
               accessToken: data.access,
-              refreshToken: data.refresh
+              refreshToken: data.refresh,
             };
           }
 
@@ -86,6 +86,8 @@ const authOptions: NextAuthOptions = {
       if (user) {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
+        token.role = user.role;
+        token.uuid = user.uuid;
         token.user = {
           id: user.id,
           uuid: user.uuid,
