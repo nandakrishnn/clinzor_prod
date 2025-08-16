@@ -492,12 +492,18 @@ function VideoCallPortalContent() {
   //   }
   // };
 
-  const fetchAllBookings = async () => {
-    try {
-      const response = await GetAllExpertBooking();
-      let bookings = response.data || [];
-      console.log(bookings, "Fetched bookings data");
-      bookings = bookings.map((booking: any) => ({
+const fetchAllBookings = async () => {
+  try {
+    const response = await GetAllExpertBooking();
+    let bookings = response.data || [];
+    console.log(bookings, "Fetched bookings data");
+    
+    // Get current date (set time to 00:00:00 for accurate comparison)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    bookings = bookings
+      .map((booking: any) => ({
         uuid: booking.uuid,
         room_id: booking.room_id,
         title: `Consultation with ${booking.patient_name || 'Patient'}`,
@@ -506,35 +512,38 @@ function VideoCallPortalContent() {
           booking.patient_name || 'Patient'
         ],
         startTime: booking.start_time || new Date().toISOString(),
-        endTime:booking.end_time || new Date(new Date().getTime() + 30 * 60 * 1000).toISOString(),
+        endTime: booking.end_time || new Date(new Date().getTime() + 30 * 60 * 1000).toISOString(),
         booking_status: booking.booking_status,
         expert_meeting_link: booking.expert_meeting_link,
         patient_name: booking.patient_name,
         patient_mobile: booking.patient_mobile,
         patient_email: booking.patient_email,
         patient_address: booking.patient_address,
-        booking_charge: booking.booking_charge
-      }));
+        booking_charge: booking.booking_charge,
+        // Convert booking start time to Date object for comparison
+        bookingDate: booking.start_time ? new Date(booking.start_time) : new Date()
+      }))
+      // Filter to keep only today's and future bookings
+      .filter((booking: any) => booking.bookingDate >= today);
 
-      const updatedBookings = await Promise.all(
-        bookings.map(async (booking: VideoCall) => {
-          return await updateBookingWithRoomDetails(booking);
-        })
-      );
+    const updatedBookings = await Promise.all(
+      bookings.map(async (booking: VideoCall) => {
+        return await updateBookingWithRoomDetails(booking);
+      })
+    );
 
-      setVideoCalls(updatedBookings);
-      setIsLoading(false);
+    setVideoCalls(updatedBookings);
+    setIsLoading(false);
 
-      const activeCall = updatedBookings.find(call => call.booking_status === 'ACTIVE');
-      if (activeCall) {
-        setSelectedCall(activeCall);
-      }
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-      setIsLoading(false);
+    const activeCall = updatedBookings.find(call => call.booking_status === 'ACTIVE');
+    if (activeCall) {
+      setSelectedCall(activeCall);
     }
-  };
-
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     setIsClient(true);
