@@ -85,14 +85,14 @@ export const BlogDetailView = ({
           <div className="flex items-center justify-between bg-white rounded-xl shadow-md p-4 mb-12">
             <div className="flex items-center space-x-4">
               <button
-                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+                className="flex items-center space-x-1 text-gray-700 hover:primaryColor transition-colors"
                 onClick={() => toggleSavePost(post.id)}
               >
                 <Bookmark
                   size={20}
                   className={
                     savedPosts.includes(post.id)
-                      ? "fill-blue-600 text-blue-600"
+                      ? "fill-primaryColor text-primaryColor"
                       : ""
                   }
                 />
@@ -100,17 +100,17 @@ export const BlogDetailView = ({
                   {savedPosts.includes(post.id) ? "Saved" : "Save"}
                 </span>
               </button>
-              <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors">
+              <button className="flex items-center space-x-1 text-gray-700 hover:text-primaryColor transition-colors">
                 <Heart size={20} />
                 <span className="text-sm">Like ({post.likes})</span>
               </button>
-              <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors">
+              <button className="flex items-center space-x-1 text-gray-700 hover:text-primaryColor transition-colors">
                 <Share2 size={20} />
                 <span className="text-sm">Share</span>
               </button>
             </div>
             <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="px-5 p-2.5 bg-primaryColor text-white rounded-full hover:bg-primaryColor transition-colors text-sm "
               onClick={goBack}
             >
               Back to Articles

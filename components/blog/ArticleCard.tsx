@@ -24,7 +24,7 @@ export const ArticleCard = ({
         </div>
         <div className="p-6 md:w-2/3 text-start">
           <div className="flex justify-between items-start">
-            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded mb-2">
+            <span className="inline-block px-2 py-1 bg-blue-100 text-primaryColor text-xs font-medium rounded mb-2">
               {post.category}
             </span>
             <button
@@ -32,21 +32,21 @@ export const ArticleCard = ({
                 e.stopPropagation();
                 onSave(post.id);
               }}
-              className="text-gray-400 hover:text-blue-500"
+              className="text-gray-400 hover:text-primaryColor"
             >
               <Bookmark
-                className={saved ? "fill-blue-500 text-blue-500" : ""}
+                className={saved ? "fill-primaryColor text-primaryColor" : ""}
                 size={18}
               />
             </button>
           </div>
           <h3
-            className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+            className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-primaryColor transition-colors"
             onClick={onClick}
           >
             {post.title}
           </h3>
-          <p className="text-gray-600 mb-4">{post.excerpt}</p>
+          <p className="text-gray-600 mb-4 text-sm">{post.excerpt}</p>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img
