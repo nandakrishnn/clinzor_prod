@@ -262,7 +262,7 @@ export default function AdminSidebar() {
   useEffect(() => {
     if (session?.user) {
       setUser({
-        name: session.user.full_name || '',
+        name: session.user?.name || '',
         email: session.user.email || '',
         role: session.user.role || '',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'

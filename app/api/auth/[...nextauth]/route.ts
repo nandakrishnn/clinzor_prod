@@ -50,6 +50,11 @@ const authOptions: NextAuthOptions = {
           const data: ApiResponse = await res.json();
 
           if (res.ok && data.access) {
+            // Map backend role string to NextAuth accepted role type
+            const allowedRoles = ["ADMIN", "CLINIC", "EXPERT", "CUSTOMER"] as const;
+            const backendRole = (data.user.role || "").toUpperCase();
+            const mappedRole = allowedRoles.includes(backendRole as any) ? backendRole as typeof allowedRoles[number] : undefined;
+
             return {
               id: data.user.uuid,
               uuid: data.user.uuid,
@@ -58,7 +63,7 @@ const authOptions: NextAuthOptions = {
               full_name: data.user.full_name,
               phone_number: data.user.phone_number,
               country_code: data.user.country_code,
-              role: data.user.role,
+              role: mappedRole,
               accessToken: data.access,
               refreshToken: data.refresh,
             };

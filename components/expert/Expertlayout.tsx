@@ -90,7 +90,7 @@ export default function ExpertSidebar() {
       useEffect(() => {
         if (session?.user) {
           setUser({
-            name: session.user.full_name || '',
+            name: session.user.name || '',
             email: session.user.email || '',
             role: session.user.role || '',
             avatar: '/api/placeholder/32/32'
