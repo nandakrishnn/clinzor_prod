@@ -22,7 +22,7 @@ const ServiceDetailed = () => {
 
           <div className="flex items-center mb-3">
             <div className="text-yellow-400 text-xl mr-2">★★★★☆</div>
-            <span className="text-gray-600">428 Reviews</span>
+            <span className="text-gray-600 text-sm">428 Reviews</span>
           </div>
 
           <p className="italic text-gray-700 mb-4">
@@ -46,16 +46,16 @@ const ServiceDetailed = () => {
           </div>
 
           <div className="flex flex-wrap gap-3 mt-4 capitalize">
-            <span className="bg-primaryColor text-blue-100 px-3 py-1 rounded-full text-sm">
+            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
               ✔️ heart
             </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1 rounded-full text-sm">
+            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
               ✔️ cardiology
             </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1 rounded-full text-sm">
+            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
               ✔️ blood pressure
             </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1 rounded-full text-sm">
+            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
               ✔️ chest pain
             </span>
           </div>
