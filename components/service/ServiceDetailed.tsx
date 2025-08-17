@@ -16,7 +16,7 @@ const ServiceDetailed = () => {
           />
         </div>
         <div className="rounded-lg mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 capitalize">
+          <h1 className="text-3xl font-bold text-[#424141] mb-2 capitalize">
             Cardiologist Consultation
           </h1>
 
