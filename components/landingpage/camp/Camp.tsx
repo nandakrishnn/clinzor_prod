@@ -21,10 +21,10 @@ const headingVariants = {
 
 // Dummy images for the carousel
 const carouselImages = [
-  "/dummy/banner.webp",
-  "/dummy/banner1.jpg", // assuming you have these images
-  "/dummy/banner2.jpg",
-  "/dummy/banner3.jpg"
+  "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
+  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280", // assuming you have these images
+  "https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
+  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280"
 ];
 
 const Camp = () => {
@@ -67,11 +67,11 @@ const Camp = () => {
           variants={headingVariants}
         >
           <div className="text-start flex flex-col items-start justify-center">
-            <h3 className="text-primaryColor font-semibold text-[18px] italic ">
+            <h3 className="font-semibold text-[18px] italic ">
               {"Clinic Camp"}
             </h3>
-            <h2 className="w-full text-2xl md:text-4xl text-start font-bold pt-2 text-primaryColor leading-7">
-              {"Lorem Ipsum is simply dummy text"}
+            <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
+              {"Lorem Ipsum is simply dummy"}
             </h2>
             <p className="mt-4 text-[#4B5563] md:text-[16px] ">
               Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -87,7 +87,7 @@ const Camp = () => {
             </p>
           </div>
 
-          <button className="w-full bg-primaryColor text-white p-2.5 rounded-full mt-8">
+          <button className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8">
             Register Now
           </button>
         </motion.div>
