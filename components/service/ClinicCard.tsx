@@ -26,25 +26,27 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
           <span className="text-xs text-gray-500 ml-1">({clinic.reviews})</span>
         </div>
       </div>
-      
+
       <div className="p-4 flex flex-col flex-grow">
-        <h3 className="font-semibold text-lg mb-1 line-clamp-1">{clinic.name}</h3>
-        
-        <div className="flex items-center text-sm text-gray-500 mb-2 flex-wrap">
+        <h3 className="font-semibold  text-md mb-1 line-clamp-1">
+          {clinic.name}
+        </h3>
+
+        <div className="flex items-center text-xs text-gray-500 mb-2 flex-wrap">
           <span className="line-clamp-1">{clinic.distance}</span>
           <span className="mx-2">•</span>
-          <span className="line-clamp-1">{clinic.address.split(',')[0]}</span>
+          <span className="line-clamp-1">{clinic.address.split(",")[0]}</span>
         </div>
-        
+
         {clinic.femaleDoctors && (
-          <div className="bg-pink-50 text-pink-700 text-xs px-2 py-1 rounded-full inline-flex items-center mb-3">
+          <div className="bg-pink-50 text-pink-700 text-xs px-2 py-1 rounded-full inline-flex items-center mb-3 w-fit">
             Female doctors available
           </div>
         )}
-        
+
         <div className="mt-auto flex justify-between items-center">
-          <span className="font-bold ">{clinic.price}</span>
-          <button 
+          <span className="font-semibold">{clinic.price}</span>
+          <button
             onClick={() => onBookNow(clinic)}
             className="bg-primaryColor hover:bg-primaryColor text-white px-5 py-2 text-xs rounded-full transition-colors"
           >

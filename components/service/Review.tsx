@@ -97,7 +97,7 @@ const ReviewSection = () => {
 
         {/* Sticky Review Form */}
         <aside className="md:sticky md:top-28 bg-white p-6 rounded-lg shadow h-fit border">
-          <h3 className="text-xl font-bold mb-4">Write a Review</h3>
+          <h3 className="text-lg font-bold mb-4 text-[#424141]">Write a Review</h3>
           <input
             type="text"
             name="name"
@@ -136,7 +136,7 @@ const ReviewSection = () => {
           />
           <button
             onClick={handleAddReview}
-            className="w-full bg-primaryColor text-white px-4 py-2 rounded-md"
+            className="w-full bg-primaryColor text-white px-5 text-sm p-2.5 rounded-md"
           >
             Submit
           </button>
