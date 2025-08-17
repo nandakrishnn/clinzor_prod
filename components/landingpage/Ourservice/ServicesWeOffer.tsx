@@ -127,7 +127,8 @@ export default function ServicesWeProvide() {
             </motion.div>
           ))}
         </motion.div>
-        <div className="flex items-center justify-center w-full  mt-10">
+
+        <div className="flex items-center justify-center w-full  mt-8">
           <button
             onClick={() => router.push("/service")}
             className="bg-primaryColor p-2.5 text-sm text-white rounded-full px-10"

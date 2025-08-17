@@ -71,7 +71,7 @@ const Offers = () => {
         </div>
 
         {/* CTA Button */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8">
           <button className="px-5 p-2.5 bg-primaryColor hover:bg-primaryColorDark text-white font-medium text-sm rounded-full transition-all duration-300 shadow-lg hover:shadow-xl">
             View All Offers
           </button>

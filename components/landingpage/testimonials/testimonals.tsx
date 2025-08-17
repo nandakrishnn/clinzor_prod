@@ -87,7 +87,7 @@ export default function WallOfLoveSection() {
                     <Card className="shadow bg-white border-none">
                       <CardContent className=" gap-3 py-3">
                         <blockquote className="">
-                          <p className="text-[#4B5563] ">
+                          <p className="text-[#4B5563] text-sm">
                             {quote}
                           </p>
                         </blockquote>
@@ -101,11 +101,11 @@ export default function WallOfLoveSection() {
                             <AvatarFallback>ST</AvatarFallback>
                           </Avatar>
 
-                          <div>
+                          <div className="">
                             <h3 className="font-medium text-[#111827]">
                               {name}
                             </h3>
-                            <span className="text-muted-foreground block text-sm tracking-wide text-[#6B7280]">
+                            <span className="text-muted-foreground block text-sm tracking-wide text-[#6B7280] ">
                               {role}
                             </span>
                           </div>

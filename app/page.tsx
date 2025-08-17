@@ -31,7 +31,7 @@ export default function Home() {
         </section>
 
         {/* Services */}
-        <section className="bg-white py-10 sm:py-14 mb-20  sm:px-6">
+        <section className="bg-white py-10 sm:py-14 mb-20 sm:px-6">
           <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-8">
             <ServicesWeOffer />
           </div>
@@ -67,7 +67,7 @@ export default function Home() {
 
         {/* Blogs */}
         <section className="bg-gray-50 py-10 sm:py-14 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative mt-20">
+          <div className="max-w-screen-xl mx-auto relative my-10">
             <BlogComponent />
           </div>
         </section>
