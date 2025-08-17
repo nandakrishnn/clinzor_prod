@@ -21,17 +21,19 @@ const ServiceDetailPage = () => {
       </section>
 
       {/* Service Detailed */}
-      <section className="max-w-screen-xl mx-auto pb-10 md:pb-20">
+      <section className="max-w-screen-xl mx-auto pb-5 md:pb-20">
         <ServiceDetailed />
       </section>
 
       {/* Available Clinic Section */}
-      <section className="max-w-screen-xl mx-auto pb-10">
-        <AvailableClinics />
-      </section>
+      <div className="w-full bg-gray-50">
+        <section className="max-w-screen-xl mx-auto py-10 md:py-20">
+          <AvailableClinics />
+        </section>
+      </div>
 
       {/* Review Part */}
-      <main className="max-w-screen-xl mx-auto pb-10 md:pb-20">
+      <main className="max-w-screen-xl mx-auto py-10 md:py-20">
         <Review />
       </main>
 
