@@ -36,8 +36,8 @@ const ServiceCard = () => {
             Anti-Aging Facial
           </h3>
           <div className="text-right flex  items-center gap-3">
-            <p className="font-bold text-primary text-xl">₹989</p>
-            <p className="text-sm text-gray-500 line-through">₹1120</p>
+            <p className="text-sm text-gray-500 ">Starting From</p>
+            <p className="font-semibold text-primary text-lg">₹ 989</p>
           </div>
         </div>
 

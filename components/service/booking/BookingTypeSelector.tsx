@@ -66,7 +66,7 @@ export const BookingTypeSelector: React.FC<BookingTypeSelectorProps> = ({
                 height={500}
               /> */}
             </div>
-            <div className="h-[45%] w-full p-5 ">
+            <div className="h-[45%] w-full p-5">
               <h2 className="text-18 md:text-[108x] font-bold capitalize">
                 {item.name}
               </h2>
@@ -76,7 +76,7 @@ export const BookingTypeSelector: React.FC<BookingTypeSelectorProps> = ({
         ))}
       </div>
 
-      <div className="mt-4 md:mt-10 flex items-center">
+      <div className="mt-4 md:mt-6 flex items-center">
         <input
           type="checkbox"
           id="preferFemaleDoctor"
@@ -84,7 +84,7 @@ export const BookingTypeSelector: React.FC<BookingTypeSelectorProps> = ({
           onChange={() => setPreferFemaleDoctor(!preferFemaleDoctor)}
           className="mr-2"
         />
-        <label htmlFor="preferFemaleDoctor" className="text-gray-700">
+        <label htmlFor="preferFemaleDoctor" className="text-gray-700 text-sm">
           Prefer Female Doctor
         </label>
       </div>

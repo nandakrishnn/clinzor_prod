@@ -104,7 +104,7 @@ const ReviewSection = () => {
             placeholder="Your Name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full border p-2 rounded mb-3"
+            className="w-full border p-2 rounded mb-3 text-sm font-medium focus:outline-none"
           />
           <input
             type="text"
@@ -112,13 +112,13 @@ const ReviewSection = () => {
             placeholder="Avatar URL (optional)"
             value={formData.avatar}
             onChange={handleChange}
-            className="w-full border p-2 rounded mb-3"
+            className="w-full border p-2 rounded mb-3 text-sm font-medium focus:outline-none"
           />
           <select
             name="rating"
             value={formData.rating}
             onChange={handleChange}
-            className="w-full border p-2 rounded mb-3"
+            className="w-full border p-2 rounded mb-3 text-sm font-medium focus:outline-none"
           >
             {[5, 4, 3, 2, 1].map((r) => (
               <option key={r} value={r}>
@@ -132,7 +132,7 @@ const ReviewSection = () => {
             value={formData.comment}
             onChange={handleChange}
             rows={4}
-            className="w-full border p-2 rounded mb-3"
+            className="w-full border p-2 rounded mb-3 text-sm font-medium focus:outline-none"
           />
           <button
             onClick={handleAddReview}
