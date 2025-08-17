@@ -50,7 +50,7 @@ const ReviewSection = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 font-inter">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center border-b pb-4">
         <div>
@@ -62,16 +62,16 @@ const ReviewSection = () => {
       </div>
 
       {/* Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 ">
         {/* Reviews List */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 ">
           {Array(3) // number of times you want to repeat
             .fill(undefined)
             .flatMap(() => reviews) // duplicate array
             .map((review, idx) => (
               <div
                 key={`${review.id}-${idx}`} // use idx too, to avoid duplicate keys
-                className="flex items-start border-b pb-4 gap-4"
+                className="flex items-start border-b gap-4 py-8"
               >
                 <img
                   src={review.avatar}
@@ -89,7 +89,7 @@ const ReviewSection = () => {
                       {review.name}
                     </span>
                   </div>
-                  <p className="text-gray-600 mt-1">{review.comment}</p>
+                  <p className="text-gray-600 mt-1 text-sm">{review.comment}</p>
                 </div>
               </div>
             ))}

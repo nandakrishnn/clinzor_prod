@@ -38,7 +38,7 @@ export default function Home() {
         </section>
 
         {/* Offers */}
-        <section className="bg-bgLight py-5 sm:py-14 pb-28 px-4 sm:px-6">
+        <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
             <Offers />
           </div>
@@ -52,7 +52,7 @@ export default function Home() {
         </section>
 
         {/* Dummy Booking */}
-        <section className="bg-bgLight py-5 sm:py-14 pb-28 px-4 sm:px-6">
+        <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
             <Booking />
           </div>
@@ -66,7 +66,7 @@ export default function Home() {
         </section>
 
         {/* Blogs */}
-        <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
+        <section className="bg-gray-50 py-10 sm:py-14 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-20">
             <BlogComponent />
           </div>

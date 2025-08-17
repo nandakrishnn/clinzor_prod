@@ -46,7 +46,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
           <span className="font-bold ">{clinic.price}</span>
           <button 
             onClick={() => onBookNow(clinic)}
-            className="bg-primaryColor hover:bg-primaryColor text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="bg-primaryColor hover:bg-primaryColor text-white px-5 py-2 text-xs rounded-full transition-colors"
           >
             Book Now
           </button>

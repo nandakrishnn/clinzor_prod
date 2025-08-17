@@ -7,7 +7,6 @@ import { Calendar } from "./Calendar";
 import { TimeSlotSelector } from "./SlotSelector.tsx";
 import { DoctorSelector } from "./DoctorSelector";
 import { Confirmation } from "./Confirmation";
-import { Cancellation } from "./Cancellation";
 
 const BookingPage = () => {
   const router = useRouter();
@@ -130,7 +129,7 @@ const BookingPage = () => {
 
                 {selectedSlot && (
                   <button
-                    className="w-full md:w-auto px-6 py-3 bg-primaryColor text-white rounded-lg hover:bg-blue-900 text-lg font-medium"
+                    className="w-full md:w-auto px-6 py-3 bg-primaryColor text-white rounded-full hover:bg-blue-900 font-medium text-md"
                     onClick={handleBookAppointment}
                   >
                     Book Appointment Now
@@ -140,7 +139,7 @@ const BookingPage = () => {
             )}
           </>
         ) : (
-          <Cancellation />
+          <Confirmation />
         )}
       </div>
     </div>

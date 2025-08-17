@@ -25,13 +25,12 @@ const ServicePage = () => {
       </section>
 
       {/* Service List Section */}
-      <section className="pb-10 md:pb-40 max-w-screen-xl mx-auto p-5">
+      <section className="pb-10 md:pb-20 max-w-screen-xl mx-auto p-5">
         <ServiceListSection />
       </section>
 
       {/* why choose us  */}
-      <section className="bg-bgLight py-10 md:py-20">
-        {/* <section className="bg-gradient-to-b from-[#1C3455] to-[#1C3455] py-10 md:py-20"> */}
+      <section className="bg-gray-50 py-10 md:py-20">
         <div className="max-w-screen-xl mx-auto p-5">
           <WhyChooseUs />
         </div>
@@ -45,7 +44,7 @@ const ServicePage = () => {
       </section>
 
       {/* FAQs */}
-      <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
+      <section className="bg-gray-50 py-10 sm:py-14 sm:px-6">
         <div className="max-w-screen-xl mx-auto relative mt-20">
           <FAQsTwo />
         </div>

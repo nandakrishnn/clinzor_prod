@@ -4,7 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { Clinic, clinicData } from "@/types/common";
+
 import ClinicCard from "./ClinicCard";
+import Title from "../ui/title";
 
 const AvailableClinics = () => {
   const router = useRouter();
@@ -59,30 +61,13 @@ const AvailableClinics = () => {
   );
 
   return (
-    <div className="p-4 md:p-6 font-sans max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-          Available at these clinics
-        </h2>
-
-        {totalSlides > 1 && (
-          <div className="flex gap-2">
-            <button
-              onClick={handlePrev}
-              className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-              aria-label="Previous clinics"
-            >
-              <FiChevronLeft className="text-gray-700" />
-            </button>
-            <button
-              onClick={handleNext}
-              className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-              aria-label="Next clinics"
-            >
-              <FiChevronRight className="text-gray-700" />
-            </button>
-          </div>
-        )}
+    <div className="p-4 md:p-6 font-inter max-w-7xl mx-auto">
+      <div className="flex justify-center items-center mb-6 w-full ">
+        <Title
+          title="Select your Clinic"
+          description="Available at these clinics"
+          subtitle=""
+        />
       </div>
 
       <div className="relative overflow-hidden">
@@ -101,8 +86,26 @@ const AvailableClinics = () => {
           ))}
         </div>
       </div>
-
       {totalSlides > 1 && (
+        <div className="flex gap-2 md:gap-5 items-center justify-center mt-5">
+          <button
+            onClick={handlePrev}
+            className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+            aria-label="Previous clinics"
+          >
+            <FiChevronLeft className="text-gray-700" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+            aria-label="Next clinics"
+          >
+            <FiChevronRight className="text-gray-700" />
+          </button>
+        </div>
+      )}
+
+      {/* {totalSlides > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           {Array.from({ length: totalSlides }).map((_, index) => (
             <button
@@ -115,7 +118,7 @@ const AvailableClinics = () => {
             />
           ))}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

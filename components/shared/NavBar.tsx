@@ -41,31 +41,31 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-900 transition-colors ease-in-out duration-500"
             >
               Home
             </Link>
             <Link
               href="/service"
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-900 transition-colors ease-in-out duration-500"
             >
               Services
             </Link>
             <Link
               href="/blog"
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-900 transition-colors ease-in-out duration-500"
             >
               Blog
             </Link>
             <Link
               href="/aboutus"
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-900 transition-colors ease-in-out duration-500"
             >
               About Us
             </Link>
             <Link
               href="/contact-us"
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-900 transition-colors ease-in-out duration-500"
             >
               Contact
             </Link>
@@ -75,7 +75,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Link
               href="/auth"
-              className="px-3 py-2 text-gray-700 rounded-full text-sm  hover:text-white hover:bg-primaryColor transition-colors flex items-center justify-center"
+              className="px-3 py-2 text-gray-700 rounded-full text-sm  hover:text-white hover:bg-primaryColor ease-in-out duration-500 transition-colors flex items-center justify-center"
             >
               <FiUser className="inline mr-1" /> Login
             </Link>

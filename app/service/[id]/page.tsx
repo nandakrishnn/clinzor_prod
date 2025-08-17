@@ -21,12 +21,12 @@ const ServiceDetailPage = () => {
       </section>
 
       {/* Service Detailed */}
-      <section className="max-w-screen-xl mx-auto pb-10 ">
+      <section className="max-w-screen-xl mx-auto pb-10 md:pb-20">
         <ServiceDetailed />
       </section>
 
       {/* Available Clinic Section */}
-      <section className="max-w-screen-xl mx-auto pb-10 md:pb-20">
+      <section className="max-w-screen-xl mx-auto pb-10">
         <AvailableClinics />
       </section>
 

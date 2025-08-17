@@ -3,7 +3,7 @@ import React from "react";
 
 const ServiceDetailed = () => {
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div className="p-4 md:p-6 font-inter">
       {/* Service Header Section */}
       <section className="flex flex-col md:flex-row gap-5 md:gap-10">
         <div className="w-full md:h-[400px] ">

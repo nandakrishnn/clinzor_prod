@@ -2,8 +2,8 @@ import React from "react";
 import { motion, Variants } from "framer-motion";
 
 interface TitleProps {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   variants?: Variants;
   description?: string;
 }
@@ -38,14 +38,14 @@ const Title: React.FC<TitleProps> = ({
         variants={variants}
       >
         <div className="text-center w-full flex flex-col items-center">
-          <h3 className="text-primaryColor font-semibold text-[18px] italic ">
+          <h3 className="font-semibold text-[18px] italic ">
             {title}
           </h3>
-          <h2 className="w-full text-2xl md:text-4xl font-bold text-center pt-2 text-primaryColor leading-7">
+          <h2 className="w-full text-[#424141] text-2xl md:text-3xl font-bold text-center pt-2 leading-7">
             {description ||
               "Lorem Ipsum is simply dummy text "}
           </h2>
-          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[50%]">
+          <p className="mt-4 text-[#4B5563] md:text-lg md:w-[55%]">
             {subtitle}
           </p>
         </div>

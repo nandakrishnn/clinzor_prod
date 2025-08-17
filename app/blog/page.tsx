@@ -27,7 +27,7 @@ export default function BlogPage() {
       </main>
 
       {/* FAQs */}
-      <section className="bg-bgLight py-10 sm:py-14 sm:px-6">
+      <section className="bg-gray-50 py-10 sm:py-14 sm:px-6">
         <div className="max-w-screen-xl mx-auto relative mt-20">
           <FAQsTwo />
         </div>
