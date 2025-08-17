@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Title from "../ui/title";
 
 const ReviewSection = () => {
   const [reviews, setReviews] = useState([
@@ -52,13 +53,12 @@ const ReviewSection = () => {
   return (
     <div className="p-6 font-inter">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center border-b pb-4">
-        <div>
-          <h2 className="text-2xl font-bold">Customers Review</h2>
-          <p className="text-gray-500">
-            What our customers say about holidaykeepers
-          </p>
-        </div>
+      <div className="flex flex-col md:flex-row justify-center items-center  pb-4 md:pb-10">
+        <Title
+          title="Customers Review"
+          description="Customers Review"
+          subtitle=""
+        />
       </div>
 
       {/* Layout */}
