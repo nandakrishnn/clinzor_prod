@@ -46,6 +46,23 @@ type PaymentRecord = {
   paymentDate?: string; // Adding optional field for date handling
 };
 
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
+interface PaymentResponse {
+  data: PaymentRecord[];
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
 const PaymentRecordsDashboard = () => {
   // State management
   const [payment, setPayment] = useState<PaymentRecord[]>([]);
@@ -60,96 +77,92 @@ const PaymentRecordsDashboard = () => {
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const pageSize = 10;
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
 
-  const fetchPayments = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getAllPayment();
-      // Add paymentDate field to each record if not present
-      const recordsWithDates = data.map((record: any) => ({
-        ...record,
-        paymentDate: record.paymentDate || new Date().toISOString() // Fallback to current date if not provided
-      }));
-      setPayment(recordsWithDates);
-    } catch (error) {
-      console.error("Failed to fetch payments:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const fetchPayments = async (page = 1, search = '') => {
+  try {
+    setIsLoading(true);
+    
+    // Prepare query parameters
+    const params = {
+      page: page,
+      search: search,
+      status: statusFilter !== 'ALL' ? statusFilter : undefined,
+      payment_type: paymentMethodFilter !== 'ALL' ? paymentMethodFilter : undefined,
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+      ordering: sortOrder === 'asc' ? sortBy : `-${sortBy}`
+    };
 
+    // Make API call
+    const response = await getAllPayment(params);
+
+    // Process response data
+    const recordsWithDates = response.data.map((record: PaymentRecord) => ({
+      ...record,
+      paymentDate: record.paymentDate || new Date().toISOString()
+    }));
+
+    // Update state
+    setPayment(recordsWithDates);
+    setTotalRecords(response.total_items);
+    setPaginationData({
+      current_page: response.current_page,
+      total_pages: response.total_pages,
+      total_items: response.total_items,
+      next: response.next,
+      previous: response.previous
+    });
+
+  } catch (error) {
+    console.error("Failed to fetch payments:", error);
+    // Optional: Add error state handling here
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  // Debounce search
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchPayments(1, searchTerm);
+    }, 500);
 
-  // Filtered and sorted data
-  const filteredRecords = useMemo(() => {
-    let filtered = payment.filter(record => {
-      const matchesSearch = 
-        record.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.transaction_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.clinic_name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'ALL' || record.status === statusFilter;
-      const matchesPaymentMethod = paymentMethodFilter === 'ALL' || record.payment_type === paymentMethodFilter;
-      
-      const paymentDate = new Date(record.paymentDate || '');
-      const matchesFromDate = !fromDate || paymentDate >= new Date(fromDate);
-      const matchesToDate = !toDate || paymentDate <= new Date(toDate);
-      
-      return matchesSearch && matchesStatus && matchesPaymentMethod && matchesFromDate && matchesToDate;
-    });
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-    // Sort the filtered records
-    filtered.sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
-      
-      if (sortBy === 'amount') {
-        aValue = parseFloat(aValue);
-        bValue = parseFloat(bValue);
-      } else {
-        aValue = aValue?.toLowerCase() || '';
-        bValue = bValue?.toLowerCase() || '';
-      }
-      
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    return filtered;
-  }, [payment, searchTerm, statusFilter, paymentMethodFilter, fromDate, toDate, sortBy, sortOrder]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredRecords.length / pageSize);
-  const paginatedRecords = filteredRecords.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  // Fetch data when filters or sort changes
+  useEffect(() => {
+    fetchPayments(currentPage, searchTerm);
+  }, [statusFilter, paymentMethodFilter, fromDate, toDate, sortBy, sortOrder, currentPage]);
 
   // Statistics
   const stats = useMemo(() => {
-    const total = filteredRecords.length;
-    const completed = filteredRecords.filter(r => r.status === 'COMPLETED').length;
-    const pending = filteredRecords.filter(r => r.status === 'PENDING').length;
-    const failed = filteredRecords.filter(r => r.status === 'FAILED').length;
-    const refunded = filteredRecords.filter(r => r.status === 'REFUNDED').length;
-    const created = filteredRecords.filter(r => r.status === 'CREATED').length;
+    const total = payment.length;
+    const completed = payment.filter(r => r.status === 'COMPLETED').length;
+    const pending = payment.filter(r => r.status === 'PENDING').length;
+    const failed = payment.filter(r => r.status === 'FAILED').length;
+    const refunded = payment.filter(r => r.status === 'REFUNDED').length;
+    const created = payment.filter(r => r.status === 'CREATED').length;
     
-    const totalRevenue = filteredRecords
+    const totalRevenue = payment
       .filter(r => r.status === 'COMPLETED')
       .reduce((sum, r) => sum + parseFloat(r.amount), 0);
     
-    const pendingAmount = filteredRecords
+    const pendingAmount = payment
       .filter(r => r.status === 'PENDING' || r.status === 'CREATED')
       .reduce((sum, r) => sum + parseFloat(r.amount), 0);
 
     return { total, completed, pending, failed, refunded, created, totalRevenue, pendingAmount };
-  }, [filteredRecords]);
+  }, [payment]);
 
   // Utility functions
   const formatCurrency = (amount: string) => {
@@ -198,7 +211,7 @@ const PaymentRecordsDashboard = () => {
   const handleExportData = () => {
     const csvContent = [
       ['Transaction ID', 'Payment Date', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
-      ...filteredRecords.map(record => [
+      ...payment.map(record => [
         record.transaction_id,
         formatDate(record.paymentDate || ''),
         record.patient_name,
@@ -250,7 +263,7 @@ const PaymentRecordsDashboard = () => {
                 Export Data
               </button>
               <button 
-                onClick={fetchPayments}
+                onClick={() => fetchPayments(currentPage, searchTerm)}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <RefreshCw size={16} />
@@ -266,7 +279,7 @@ const PaymentRecordsDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Records</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900">{paginationData.total_items}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-xl">
                 <Receipt size={24} className="text-blue-600" />
@@ -380,7 +393,7 @@ const PaymentRecordsDashboard = () => {
         {/* Results Summary */}
         <div className="flex items-center justify-between">
           <p className="text-gray-600">
-            Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredRecords.length)} of {filteredRecords.length} records
+            Showing {((paginationData.current_page - 1) * 10) + 1}-{Math.min(paginationData.current_page * 10, paginationData.total_items)} of {paginationData.total_items} records
           </p>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sort by:</span>
@@ -390,6 +403,7 @@ const PaymentRecordsDashboard = () => {
                 const [field, order] = e.target.value.split('-');
                 setSortBy(field as any);
                 setSortOrder(order as any);
+                setCurrentPage(1);
               }}
               className="px-3 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -419,7 +433,7 @@ const PaymentRecordsDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedRecords.map((record) => (
+                {payment.map((record) => (
                   <tr key={record.uuid} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -476,7 +490,7 @@ const PaymentRecordsDashboard = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {paginationData.total_pages > 1 && (
           <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-4">
             <div className="flex items-center gap-2">
               <button
@@ -490,24 +504,52 @@ const PaymentRecordsDashboard = () => {
               >
                 <ChevronLeft size={16} />
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: Math.min(5, paginationData.total_pages) }, (_, i) => {
+                // Show first pages, current page with neighbors, and last pages
+                let pageNum;
+                if (paginationData.total_pages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= paginationData.total_pages - 2) {
+                  pageNum = paginationData.total_pages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-1 rounded-lg border ${
+                      currentPage === pageNum
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              {paginationData.total_pages > 5 && currentPage < paginationData.total_pages - 2 && (
+                <span className="px-2">...</span>
+              )}
+              {paginationData.total_pages > 5 && currentPage < paginationData.total_pages - 2 && (
                 <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
+                  onClick={() => setCurrentPage(paginationData.total_pages)}
                   className={`px-3 py-1 rounded-lg border ${
-                    currentPage === page
+                    currentPage === paginationData.total_pages
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  {page}
+                  {paginationData.total_pages}
                 </button>
-              ))}
+              )}
               <button
-                onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(Math.min(currentPage + 1, paginationData.total_pages))}
+                disabled={currentPage === paginationData.total_pages}
                 className={`px-3 py-1 rounded-lg border ${
-                  currentPage === totalPages
+                  currentPage === paginationData.total_pages
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                 }`}
@@ -516,7 +558,7 @@ const PaymentRecordsDashboard = () => {
               </button>
             </div>
             <div className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
+              Page {currentPage} of {paginationData.total_pages}
             </div>
           </div>
         )}

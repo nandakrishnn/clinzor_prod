@@ -22,12 +22,12 @@ export const GetADue = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllDues= async () => {
+export const GetAllDues= async (page:number) => {
   try {
     const response = await axiosPrivate.get(
-      `clinic/list-clinic-dues/?search=`
+      `clinic/list-clinic-dues/?page=${page}`
     );
-    return response.data.data.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;

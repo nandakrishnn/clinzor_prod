@@ -35,6 +35,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: { isOpen: bool
 const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; totalItems: number; itemsPerPage: number }) => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -47,27 +48,65 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
     }
     return pages;
   };
+
   if (totalPages <= 1) return null;
+
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
       <div className="text-sm text-gray-600 font-medium">
         Showing {startItem}–{endItem} of {totalItems}
       </div>
       <div className="flex items-center gap-1 mx-2">
-        <button onClick={() => onPageChange(1)} disabled={currentPage === 1} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200" title="First page"><ChevronsLeft className="w-4 h-4" /></button>
-        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200" title="Previous page"><ChevronLeft className="w-4 h-4" /></button>
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          title="First page"
+        >
+          <ChevronsLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          title="Previous page"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
         <div className="flex items-center gap-1 mx-2">
           {getPageNumbers().map((page) => (
-            <button key={page} onClick={() => onPageChange(page)} className={`min-w-[40px] h-10 rounded-xl font-medium transition-all duration-200 ${currentPage === page ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{page}</button>
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`min-w-[40px] h-10 rounded-xl font-medium transition-all duration-200 ${currentPage === page
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+            >
+              {page}
+            </button>
           ))}
         </div>
-        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200" title="Next page"><ChevronRight className="w-4 h-4" /></button>
-        <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200" title="Last page"><ChevronsRight className="w-4 h-4" /></button>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          title="Next page"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          title="Last page"
+        >
+          <ChevronsRight className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
 };
-
 // Booking type
 type Booking = {
   uuid: string;
@@ -158,7 +197,13 @@ const sampleBookings: Booking[] = [
 const samplePaymentRecords: PaymentRecord[] = [
   // ... (keep your existing sample payment records data)
 ];
-
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 const DueManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -176,11 +221,26 @@ const DueManagement = () => {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-
-  const fetchDuesData = async () => {
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+  const [loading, setLoading] = useState(false);
+  const fetchDuesData = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await GetAllDues();
-      setDuesData(response);
+      const response = await GetAllDues(page);
+      setDuesData(response.data);
+      setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
     } catch (error) {
       console.error("Error fetching dues data:", error);
       setNotification({
@@ -191,10 +251,10 @@ const DueManagement = () => {
   };
 
   useEffect(() => {
-    fetchDuesData();
+    fetchDuesData(currentPage);
     setTimeout(() => setAnimateCards(true), 100);
-  }, []);
-  console.log(duesData ,"due data ")
+  }, [currentPage]);
+  console.log(duesData, "due data ")
 
   // Calculate totals
   const totalDues = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_dues, 0);
@@ -204,12 +264,12 @@ const DueManagement = () => {
   // Filter and search logic
   const filteredClinics = duesData?.filter(clinic => {
     const matchesSearch = clinic.clinic_detail.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (selectedFilter === 'all') return matchesSearch;
     if (selectedFilter === 'outstanding') return matchesSearch && clinic.due_detail.remaining_dues > 0;
     if (selectedFilter === 'paid') return matchesSearch && clinic.due_detail.remaining_dues === 0 && clinic.due_detail.total_paid > 0;
     if (selectedFilter === 'credit') return matchesSearch && clinic.due_detail.remaining_dues < 0;
-    
+
     return matchesSearch;
   });
 
@@ -224,22 +284,22 @@ const DueManagement = () => {
   })();
 
   // Pagination logic
-  const totalPages = Math.ceil(sortedClinics?.length / itemsPerPage);
-  const paginatedClinics = sortedClinics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // const totalPages = Math.ceil(sortedClinics?.length / itemsPerPage);
+  // const paginatedClinics = sortedClinics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getStatusInfo = (remaining: number) => {
-    if (remaining > 0) return { 
-      text: 'Outstanding', 
+    if (remaining > 0) return {
+      text: 'Outstanding',
       color: 'bg-red-50 text-red-700 border-red-200',
       icon: <AlertCircle className="w-3 h-3" />
     };
-    if (remaining < 0) return { 
-      text: 'Credit', 
+    if (remaining < 0) return {
+      text: 'Credit',
       color: 'bg-green-50 text-green-700 border-green-200',
       icon: <CheckCircle className="w-3 h-3" />
     };
-    return { 
-      text: 'Settled', 
+    return {
+      text: 'Settled',
       color: 'bg-gray-50 text-gray-600 border-gray-200',
       icon: <CheckCircle className="w-3 h-3" />
     };
@@ -270,9 +330,10 @@ const DueManagement = () => {
     setSelectedClinic(null);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paginationData.total_pages) {
+      setCurrentPage(newPage);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -299,56 +360,59 @@ const DueManagement = () => {
   };
 
   const handleExport = () => {
-  try {
-    // Create a new workbook
-    const wb = XLSX.utils.book_new();
+    try {
+      // Create a new workbook
+      const wb = XLSX.utils.book_new();
 
-    // 1. Export Dues Management data
-    const duesData = sortedClinics.map(clinic => ({
-      'Clinic Name': clinic.clinic_detail.name,
-      'City': clinic.clinic_detail.city,
-      'Contact': `+${clinic.clinic_detail.country_code} ${clinic.clinic_detail.contact_number}`,
-      'Total Dues': clinic.due_detail.total_dues,
-      'Total Paid': clinic.due_detail.total_paid,
-      'Remaining Dues': clinic.due_detail.remaining_dues,
-      'Status': clinic.due_detail.remaining_dues > 0 ? 'Outstanding' : 
-               clinic.due_detail.remaining_dues < 0 ? 'Credit' : 'Settled'
-    }));
-    const duesWS = XLSX.utils.json_to_sheet(duesData);
-    XLSX.utils.book_append_sheet(wb, duesWS, "Dues Management");
-
-    // 2. Export Payment History data (if activeTab is PAYMENT_HISTORY)
-    if (activeTab === 'PAYMENT_HISTORY') {
-      const paymentData = filteredPaymentRecords.map(record => ({
-        'Transaction ID': record.transactionId,
-        'Payment Date': new Date(record.paymentDate).toLocaleDateString(),
-        'Amount': record.amount,
-        'Status': record.paymentStatus,
-        'Method': record.paymentMethod,
-        'Patient': record.patientName,
-        'Clinic': record.clinicName,
-        'Service': record.serviceName
+      // 1. Export Dues Management data
+      const duesData = sortedClinics.map(clinic => ({
+        'Clinic Name': clinic.clinic_detail.name,
+        'City': clinic.clinic_detail.city,
+        'Contact': `+${clinic.clinic_detail.country_code} ${clinic.clinic_detail.contact_number}`,
+        'Total Dues': clinic.due_detail.total_dues,
+        'Total Paid': clinic.due_detail.total_paid,
+        'Remaining Dues': clinic.due_detail.remaining_dues,
+        'Status': clinic.due_detail.remaining_dues > 0 ? 'Outstanding' :
+          clinic.due_detail.remaining_dues < 0 ? 'Credit' : 'Settled'
       }));
-      const paymentWS = XLSX.utils.json_to_sheet(paymentData);
-      XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
+      const duesWS = XLSX.utils.json_to_sheet(duesData);
+      XLSX.utils.book_append_sheet(wb, duesWS, "Dues Management");
+
+      // 2. Export Payment History data (if activeTab is PAYMENT_HISTORY)
+      if (activeTab === 'PAYMENT_HISTORY') {
+        const paymentData = filteredPaymentRecords.map(record => ({
+          'Transaction ID': record.transactionId,
+          'Payment Date': new Date(record.paymentDate).toLocaleDateString(),
+          'Amount': record.amount,
+          'Status': record.paymentStatus,
+          'Method': record.paymentMethod,
+          'Patient': record.patientName,
+          'Clinic': record.clinicName,
+          'Service': record.serviceName
+        }));
+        const paymentWS = XLSX.utils.json_to_sheet(paymentData);
+        XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
+      }
+
+      // Generate Excel file and trigger download
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `Due_Management_Report_${date}.xlsx`);
+
+      setNotification({
+        type: 'success',
+        message: 'Report exported successfully'
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to export report'
+      });
     }
+  };
+  const totalPages = paginationData.total_pages;
+  const totalItems = paginationData.total_items;
 
-    // Generate Excel file and trigger download
-    const date = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `Due_Management_Report_${date}.xlsx`);
-
-    setNotification({
-      type: 'success',
-      message: 'Report exported successfully'
-    });
-  } catch (error) {
-    console.error('Export error:', error);
-    setNotification({
-      type: 'error',
-      message: 'Failed to export report'
-    });
-  }
-};
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -361,25 +425,23 @@ const DueManagement = () => {
               </h1>
               <p className="text-gray-600 font-medium">Monitor clinic payments and outstanding dues</p>
             </div>
-            
+
             {/* Tab Navigation */}
             <div className="flex items-center bg-gray-100 rounded-2xl p-1">
-              <button 
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                  activeTab === 'DUES' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+              <button
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'DUES'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
-                }`} 
+                  }`}
                 onClick={() => setActiveTab('DUES')}
               >
                 Dues Management
               </button>
-              <button 
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                  activeTab === 'PAYMENT_HISTORY' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+              <button
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'PAYMENT_HISTORY'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
-                }`} 
+                  }`}
                 onClick={() => setActiveTab('PAYMENT_HISTORY')}
               >
                 Payment History
@@ -412,7 +474,7 @@ const DueManagement = () => {
                           <div className="font-semibold text-gray-900">{clinic.clinic_detail.name}</div>
                           <div className="text-sm text-red-600">Outstanding: {formatCurrency(clinic.due_detail.remaining_dues)}</div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleViewDetails(clinic)}
                           className="px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors duration-200"
                         >
@@ -498,9 +560,9 @@ const DueManagement = () => {
                     <option value="highest">Sort: Highest Due</option>
                     <option value="lowest">Sort: Lowest Due</option>
                   </select>
-                  <button 
-                   onClick={handleExport}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                  <button
+                    onClick={handleExport}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Export Report
                   </button>
                 </div>
@@ -509,7 +571,7 @@ const DueManagement = () => {
 
             {/* Clinics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {paginatedClinics.map((clinic, index) => {
+              {duesData.map((clinic, index) => {
                 const statusInfo = getStatusInfo(clinic.due_detail.remaining_dues);
                 const isSelected = selectedClinic && selectedClinic.clinic_detail.uuid === clinic.clinic_detail.uuid && viewModalOpen;
                 return (
@@ -553,19 +615,18 @@ const DueManagement = () => {
                         <span className="text-gray-600 font-medium">Total Dues</span>
                         <span className="font-semibold text-gray-900">{formatCurrency(clinic.due_detail.total_dues)}</span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center py-2">
                         <span className="text-gray-600 font-medium">Paid</span>
                         <span className="font-semibold text-green-600">{formatCurrency(clinic.due_detail.total_paid)}</span>
                       </div>
-                      
+
                       <div className="border-t border-gray-100 pt-4">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-900 font-semibold">Balance</span>
-                          <span className={`font-bold text-lg ${
-                            clinic.due_detail.remaining_dues > 0 ? 'text-red-600' : 
-                            clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
+                          <span className={`font-bold text-lg ${clinic.due_detail.remaining_dues > 0 ? 'text-red-600' :
+                              clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
+                            }`}>
                             {clinic.due_detail.remaining_dues < 0 ? '−' : ''}{formatCurrency(clinic.due_detail.remaining_dues)}
                           </span>
                         </div>
@@ -590,7 +651,7 @@ const DueManagement = () => {
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                         tabIndex={-1}
                         type="button"
@@ -615,7 +676,7 @@ const DueManagement = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
-              totalItems={sortedClinics.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </>
