@@ -349,12 +349,12 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const fetchAdditionalData = async () => {
     try {
       const [slotsResponse, bookingsResponse, clinicServiceResponse] = await Promise.all([
-        getAllSlots(),
-        getAllBookings(),
-        GetAllClinicService()
+        getAllSlots(1),
+        getAllBookings(1),
+        GetAllClinicService(1)
       ]);
 
-      setClinicServices(clinicServiceResponse);
+      setClinicServices(clinicServiceResponse.data);
       // Transform and set other data as needed
     } catch (error) {
       console.error("Failed to fetch additional data:", error);
