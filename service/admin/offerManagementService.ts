@@ -58,13 +58,13 @@ export const deleteOffers = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/offer-rud/${Id}/`);
 };
 
-export const GetAllOffers = async () => {
+export const GetAllOffers = async (page:number) => {
   try {
     const response = await axiosPrivate.get(
-      `clinic/offer-lc/`
+      `clinic/offer-lc/?page=${page}`
     );
-      const data =  response.data.data.data;
-     return Array.isArray(data) ? data : [data];
+      const data =  response.data.data;
+     return data;
   } catch (error) {
     console.error("Failed to fetch Organization", error);
     throw error;

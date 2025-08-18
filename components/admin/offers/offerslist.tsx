@@ -38,6 +38,13 @@ type OfferFormData = {
   clinic: string | null;
 };
 
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
     switch (type) {
@@ -104,43 +111,57 @@ const OfferManagementTable = () => {
     clinic_service: null,
     clinic: null,
   });
-
+  const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-
-  const fetchOffers = async () => {
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+  const fetchOffers = async (page = 1) => {
     try {
-      const data = await GetAllOffers();
-      setOffers(data);
+      const response = await GetAllOffers(page);
+      setOffers(response.data);
+      setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchOffers();
-  }, []);
+    fetchOffers(currentPage);
+  }, [currentPage]);
 
   // Filter and search logic
   const filteredOffers = useMemo(() => {
     return offers.filter(offer => {
-      const matchesViewType = offerViewType === 'ADMIN' 
+      const matchesViewType = offerViewType === 'ADMIN'
         ? offer.offer_type === 'ADMIN' || offer.offer_type === 'SYSTEM'
         : offer.offer_type === 'CLINIC';
       const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           offer.description.toLowerCase().includes(searchTerm.toLowerCase());
+        offer.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || offer.status === statusFilter;
       const matchesType = typeFilter === 'ALL' || offer.offer_type === typeFilter;
       return matchesViewType && matchesSearch && matchesStatus && matchesType;
     });
   }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
-
+  const totalPages = paginationData.total_pages;
+  const totalItems = paginationData.total_items;
   // Pagination logic
-  const totalPages = Math.ceil(filteredOffers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOffers = filteredOffers.slice(startIndex, startIndex + itemsPerPage);
+  // const totalPages = Math.ceil(filteredOffers.length / itemsPerPage);
+  // const startIndex = (currentPage - 1) * itemsPerPage;
+  // const paginatedOffers = filteredOffers.slice(startIndex, startIndex + itemsPerPage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -206,118 +227,118 @@ const OfferManagementTable = () => {
     }));
   };
 
-const handleSubmit = async () => {
-  // Basic validation
-  if (!formData.title || !formData.description || !formData.valid_from || !formData.valid_to) {
-    alert('Please fill in all required fields');
-    return;
-  }
-
-  // Either percentage or flat amount must be provided
-  if (!formData.discount_percentage && !formData.flat_discount_amt) {
-    alert('Please provide either a discount percentage or flat amount');
-    return;
-  }
-
-  try {
-    // Prepare the minimal payload for the API
-    const apiPayload = {
-      title: formData.title,
-      offer_type: formData.offer_type,
-      description: formData.description,
-      valid_from: new Date(formData.valid_from).toISOString(),
-      valid_to: new Date(formData.valid_to).toISOString(),
-      discount_percentage: formData.discount_percentage,
-       max_use_limit: formData.max_use_limit,
-      // Only include flat_discount_amt if discount_percentage is not provided
-      ...(formData.discount_percentage ? {} : { flat_discount_amt: formData.flat_discount_amt })
-    };
-
-    if (editingOffer) {
-      // Edit existing offer
-      const response = await editOffers(editingOffer.uuid, apiPayload);
-      
-      // Update local state with the response from API
-      setOffers(prev => prev.map(offer => 
-        offer.uuid === editingOffer.uuid ? response.data : offer
-      ));
-    } else {
-      // Create new offer
-      const response = await createOffers(apiPayload);
-      
-      // Add the new offer to local state
-      setOffers(prev => [...prev, response.data]);
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!formData.title || !formData.description || !formData.valid_from || !formData.valid_to) {
+      alert('Please fill in all required fields');
+      return;
     }
 
-    // Close modal on success
-    closeModal();
-     setNotification({
-      type: 'success',
-      message: 'Offer saved successfully!'
-    });
-   
-  } catch (error:any) {
-    console.error('Error saving offer:', error);
-    setNotification({
-      type: 'error',
-      message: `Failed to save offer. Please try again ${error.response?.data?.message || error.message}`
-    });
-   
-  }
-};
-const deleteOffer = async (uuid: string) => {
-  try {
-    // Call the delete API
-    await deleteOffers(uuid);
-    
-    // Update local state if API call succeeds
-    setOffers(prev => prev.filter(offer => offer.uuid !== uuid));
-    
-    // Show success feedback
+    // Either percentage or flat amount must be provided
+    if (!formData.discount_percentage && !formData.flat_discount_amt) {
+      alert('Please provide either a discount percentage or flat amount');
+      return;
+    }
+
+    try {
+      // Prepare the minimal payload for the API
+      const apiPayload = {
+        title: formData.title,
+        offer_type: formData.offer_type,
+        description: formData.description,
+        valid_from: new Date(formData.valid_from).toISOString(),
+        valid_to: new Date(formData.valid_to).toISOString(),
+        discount_percentage: formData.discount_percentage,
+        max_use_limit: formData.max_use_limit,
+        // Only include flat_discount_amt if discount_percentage is not provided
+        ...(formData.discount_percentage ? {} : { flat_discount_amt: formData.flat_discount_amt })
+      };
+
+      if (editingOffer) {
+        // Edit existing offer
+        const response = await editOffers(editingOffer.uuid, apiPayload);
+
+        // Update local state with the response from API
+        setOffers(prev => prev.map(offer =>
+          offer.uuid === editingOffer.uuid ? response.data : offer
+        ));
+      } else {
+        // Create new offer
+        const response = await createOffers(apiPayload);
+
+        // Add the new offer to local state
+        setOffers(prev => [...prev, response.data]);
+      }
+
+      // Close modal on success
+      closeModal();
       setNotification({
-      type: 'success',
-      message: 'Offer deleted successfully!'
-    });
-   
-  } catch (error) {
-    console.error('Error deleting offer:', error);
-        setNotification({
-      type: 'error',
-      message: 'Failed to delete offer. Please try again.'
-    });
-   
-  }
-};
+        type: 'success',
+        message: 'Offer saved successfully!'
+      });
 
-const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DRAFT') => {
-  // Optimistically update the UI first
-  setOffers(prev => prev.map(offer => 
-    offer.uuid === uuid ? { ...offer, status: newStatus } : offer
-  ));
+    } catch (error: any) {
+      console.error('Error saving offer:', error);
+      setNotification({
+        type: 'error',
+        message: `Failed to save offer. Please try again ${error.response?.data?.message || error.message}`
+      });
 
-  try {
-    // Call the API to update status
-    await approveOrRejectOffers(uuid, { status: newStatus });
-    
-    // Show success notification
-    setNotification({
-      type: 'success',
-      message: `Offer ${newStatus.toLowerCase()} successfully!`
-    });
-  } catch (error) {
-    console.error('Error updating offer status:', error);
-    
-    // Revert the UI change if the API call fails
-    setOffers(prev => prev.map(offer => 
-      offer.uuid === uuid ? { ...offer, status: offer.status } : offer
+    }
+  };
+  const deleteOffer = async (uuid: string) => {
+    try {
+      // Call the delete API
+      await deleteOffers(uuid);
+
+      // Update local state if API call succeeds
+      setOffers(prev => prev.filter(offer => offer.uuid !== uuid));
+
+      // Show success feedback
+      setNotification({
+        type: 'success',
+        message: 'Offer deleted successfully!'
+      });
+
+    } catch (error) {
+      console.error('Error deleting offer:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to delete offer. Please try again.'
+      });
+
+    }
+  };
+
+  const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DRAFT') => {
+    // Optimistically update the UI first
+    setOffers(prev => prev.map(offer =>
+      offer.uuid === uuid ? { ...offer, status: newStatus } : offer
     ));
-    
-    setNotification({
-      type: 'error',
-      message: `Failed to ${newStatus.toLowerCase()} offer. Please try again.`
-    });
-  }
-};
+
+    try {
+      // Call the API to update status
+      await approveOrRejectOffers(uuid, { status: newStatus });
+
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: `Offer ${newStatus.toLowerCase()} successfully!`
+      });
+    } catch (error) {
+      console.error('Error updating offer status:', error);
+
+      // Revert the UI change if the API call fails
+      setOffers(prev => prev.map(offer =>
+        offer.uuid === uuid ? { ...offer, status: offer.status } : offer
+      ));
+
+      setNotification({
+        type: 'error',
+        message: `Failed to ${newStatus.toLowerCase()} offer. Please try again.`
+      });
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -360,7 +381,11 @@ const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED'
   const getServiceName = (offer: Offer) => {
     return offer.service_name || offer.default_service_name || 'General';
   };
-
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
@@ -454,7 +479,7 @@ const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED'
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {paginatedOffers.length > 0 ? paginatedOffers.map((offer: Offer) => (
+                {offers.length > 0 ? offers.map((offer: Offer) => (
                   <tr key={offer.uuid} className="hover:bg-gray-50/50 transition-all duration-200 group">
                     <td className="py-5 px-6">
                       <div>
@@ -569,51 +594,52 @@ const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED'
             <div className="border-t border-gray-100 bg-gray-50/30 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOffers.length)} of {filteredOffers.length} offers
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} offers
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                   onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  
-                  <div className="flex gap-1">
-                    {[...Array(totalPages)].map((_, index) => {
-                      const page = index + 1;
-                      const isCurrentPage = page === currentPage;
-                      const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                      
-                      if (!showPage && page === 2) {
-                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                      }
-                      
-                      if (!showPage && page === totalPages - 1) {
-                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                      }
-                      
-                      if (!showPage) return null;
-                      
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                            isCurrentPage
-                              ? 'bg-blue-600 text-white shadow-lg'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
+
+                                <div className="flex gap-1">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const page = index + 1;
+                    const isCurrentPage = page === currentPage;
+                    const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                    
+                    if (!showPage && page === 2) {
+                      return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+                    }
+                    
+                    if (!showPage && page === totalPages - 1) {
+                      return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+                    }
+                    
+                    if (!showPage) return null;
+                    
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isCurrentPage
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                   onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -803,15 +829,15 @@ const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED'
         </div>
       )}
       {/* Notifications */}
-            <AnimatePresence>
-              {notification && (
-                <Notification
-                  type={notification.type}
-                  message={notification.message}
-                  onClose={() => setNotification(null)}
-                />
-              )}
-            </AnimatePresence>
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
