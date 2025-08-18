@@ -761,7 +761,7 @@ const handleDeleteConfirm = useCallback(async () => {
   try {
     await deleteSlot(selectedSlot.uuid);
     // Update the slots state by removing the deleted slot
-    setSlots(prev => prev.filter(slot => slot.uuid !== selectedSlot.uuid));
+    // setSlots(prev => prev.filter(slot => slot.uuid !== selectedSlot.uuid));
     setNotification({ 
       type: 'success', 
       message: 'Slot deleted successfully' 
@@ -879,13 +879,17 @@ const handleDelete = useCallback((slot: ExpertSlot) => {
     }
 
     // Check for slots in the past
-    const now = new Date();
-    const pastSlots = slots.filter(slot => new Date(slot.start_time) < now);
-    if (pastSlots.length > 0) {
-      showNotification('error', 'Cannot create slots in the past');
-      return;
-    }
+const now = new Date();
 
+const pastSlots = slots.filter(slot => {
+  const slotTime = new Date(slot.start_time);
+  return slotTime < now; // Slots before current moment
+});
+
+if (pastSlots.length > 0) {
+  showNotification('error', 'Cannot create slots that have already passed');
+  return;
+}
     // Set the bulk form data with the generated slots
     setBulkFormData({ slot_list: slots });
     showNotification('success', `Generated ${slots.length} slots successfully`);
@@ -904,13 +908,35 @@ const handleSave = useCallback(async () => {
       setNotification({ type: 'error', message: 'Start time is required' });
       return;
     }
-    if (modalType === 'add' && slots.some(slot => slot.start_time === formData.start_time)) {
+   // Check for existing slot with the same start time
+    const formattedTime = formatStartTime(formData.start_time);
+    const existingSlot = slots.find(slot => formatStartTime(slot.start_time) === formattedTime);
+    
+    if (modalType === 'add' && existingSlot) {
       setNotification({ type: 'error', message: 'A slot already exists at this time' });
+      return;
+    }
+    
+    if (modalType === 'edit' && existingSlot && existingSlot.uuid !== selectedSlot?.uuid) {
+      setNotification({ type: 'error', message: 'Another slot already exists at this time' });
       return;
     }
   } else if (modalType === 'bulk') {
     if (bulkFormData.slot_list.length === 0) {
       setNotification({ type: 'error', message: 'Please generate slots before saving' });
+      return;
+    }
+    
+    // Check for existing slots in bulk data
+    const existingSlots = bulkFormData.slot_list.filter(slot => {
+      return slots.some(existing => formatStartTime(existing.start_time) === formatStartTime(slot.start_time));
+    });
+    
+    if (existingSlots.length > 0) {
+      setNotification({ 
+        type: 'error', 
+        message: `${existingSlots.length} slots already exist and cannot be created again`
+      });
       return;
     }
   }
@@ -955,21 +981,21 @@ fetchSlots(currentPage);
   }))
 });
 
-      const newSlots: ExpertSlot[] = response.slot_list.map((slot: any) => ({
-        uuid: slot.uuid || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        start_time: slot.start_time,
-        status: 'DRAFT'
-      }));
+      // const newSlots: ExpertSlot[] = response.slot_list.map((slot: any) => ({
+      //   uuid: slot.uuid || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      //   start_time: slot.start_time,
+      //   status: 'DRAFT'
+      // }));
       
       // setSlots(prev => [...prev, ...newSlots]);
-      setNotification({ type: 'success', message: `Created ${newSlots.length} slots successfully` });
-      closeModal();
+      setNotification({ type: 'success', message: `Created  slots successfully` });
       fetchSlots(currentPage);
+      closeModal();
     }
   } catch (error: any) {
     setNotification({ 
       type: 'error', 
-      message: error.response?.data?.message || 'Failed to save slots. Please try again.' 
+      message: error || 'Failed to save slots. Please try again.' 
     });
   } finally {
     setIsLoading(false);
