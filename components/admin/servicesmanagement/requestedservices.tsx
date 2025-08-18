@@ -47,7 +47,7 @@ interface ServiceRequest {
   clinic_provided_name?: string;
   description?: string;
   image?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED';
   rejectionReason?: string | null;
   requestedDate: string;
 }
@@ -161,10 +161,16 @@ const ClinicServiceRequests: React.FC = () => {
     //   requestedDate: '2024-06-29',
     // }
   ]);
-
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
   const [viewingRequest, setViewingRequest] = useState<ServiceRequest | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'DRAFT' | 'APPROVED' | 'REJECTED'>('ALL');
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | 'LOW' | 'MEDIUM' | 'HIGH'>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(6);
@@ -174,21 +180,38 @@ const ClinicServiceRequests: React.FC = () => {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-
-  const fectchSercicve = async () => {
+  const fectchSercicve = async (page=1) => {
     try {
-      const data = await GetAllClinicService()
-      setRequests(data)
+       setIsLoading(true);
+      const response = await GetAllClinicService(page)
+      setRequests(response.data)
+        setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
     } catch (error) {
       console.error("Error fetching services:", error);
       throw error;
       
+    }finally {
+      setIsLoading(false);
     }
   }
   useEffect(() => {
-    fectchSercicve();
-  }, [])
+    fectchSercicve(currentPage);
+  }, [currentPage])
   console.log("service",requests)
   
   const getServiceIcon = (name: string) => {
@@ -288,7 +311,7 @@ const handleReject = async (id: string, reason: string) => {
   }
 };
 
-const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 'REJECTED') => {
   const request = requests.find(r => r.uuid === id);
   if (!request) return;
   
@@ -338,10 +361,12 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRequests = filteredRequests.slice(startIndex, endIndex);
+    const totalPages = paginationData.total_pages;
+  const totalItems = paginationData.total_items;
+  // const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  // const startIndex = (currentPage - 1) * itemsPerPage;
+  // const endIndex = startIndex + itemsPerPage;
+  // const currentRequests = filteredRequests.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
@@ -351,7 +376,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
   const getStatusCounts = () => {
     return {
       ALL: requests.length,
-      PENDING: requests.filter(r => r.status === 'PENDING').length,
+      PENDING: requests.filter(r => r.status === 'DRAFT').length,
       APPROVED: requests.filter(r => r.status === 'APPROVED').length,
       REJECTED: requests.filter(r => r.status === 'REJECTED').length
     };
@@ -388,7 +413,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
           {Object.entries(statusCounts).map(([status, count]) => (
             <div
               key={status}
-              onClick={() => setStatusFilter(status as 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED')}
+              onClick={() => setStatusFilter(status as 'ALL' | 'DRAFT' | 'APPROVED' | 'REJECTED')}
               className={`p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
                 statusFilter === status
                   ? 'border-blue-500 bg-blue-50 shadow-md'
@@ -405,11 +430,11 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                   status === 'APPROVED' ? 'bg-green-100' :
                   status === 'REJECTED' ? 'bg-red-100' :
-                  status === 'PENDING' ? 'bg-orange-100' : 'bg-blue-100'
+                  status === 'DRAFT' ? 'bg-orange-100' : 'bg-blue-100'
                 }`}>
                   {status === 'APPROVED' ? <CheckCircle className="w-5 h-5 text-green-600" /> :
                    status === 'REJECTED' ? <XCircle className="w-5 h-5 text-red-600" /> :
-                   status === 'PENDING' ? <Clock className="w-5 h-5 text-orange-600" /> :
+                   status === 'DRAFT' ? <Clock className="w-5 h-5 text-orange-600" /> :
                    <Building className="w-5 h-5 text-blue-600" />}
                 </div>
               </div>
@@ -443,7 +468,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
 
         {/* Requests Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {currentRequests.map((request) => (
+          {filteredRequests.map((request) => (
             <div key={request.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="p-6">
                 {/* Header */}
@@ -538,7 +563,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  {request.status === 'PENDING' && (
+                  {request.status === 'DRAFT' && (
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleApprove(request.uuid)}
@@ -557,11 +582,11 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
                     </div>
                   )}
                   
-                  {request.status !== 'PENDING' && (
+                  {request.status !== 'DRAFT' && (
                     <div className="flex space-x-2">
                       {request.status !== 'REJECTED' && (
                         <button
-                          onClick={() => handleStatusChange(request.uuid, 'PENDING')}
+                          onClick={() => handleStatusChange(request.uuid, 'DRAFT')}
                           className="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                         >
                           Mark as Pending
@@ -625,7 +650,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
           <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-200">
             <div className="flex items-center text-sm text-gray-500">
               <span>
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredRequests.length)} of {filteredRequests.length} results
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} offers
               </span>
             </div>
             <div className="flex items-center space-x-2 mt-4 sm:mt-0">
@@ -817,7 +842,7 @@ const handleStatusChange = async (id: string, newStatus: 'PENDING' | 'APPROVED' 
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
-                    {viewingRequest.status === 'PENDING' && (
+                    {viewingRequest.status === 'DRAFT' && (
                       <div className="flex space-x-2">
                         <button
                           onClick={() => {
