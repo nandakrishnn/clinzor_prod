@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Calendar, Percent, Tag, Clock, Edit3, Trash2, Eye, Search, Filter, MoreHorizontal, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { Plus, Calendar, Percent, Tag, Clock, Edit3, Trash2, Eye, Search, Filter, MoreHorizontal, TrendingUp, Users, DollarSign, CheckCircle, XCircle, AlertTriangle, X, Loader } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createClinicOffers, deleteClinicOffers, editClinicOffers, GetAllClinicOffers } from '@/service/clinic/clinicOfferManagementService';
 import { Clinic_by_clinic_user, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
-
+import { NotificationProps } from '@/types/user';
+import { motion, AnimatePresence } from 'framer-motion';
 // Type definitions for offer and status
 interface Offer {
   uuid: string;
@@ -45,14 +46,56 @@ interface NewOffer {
 //   { uuid: '3', name: 'Neurology Consultation' },
 //   { uuid: '4', name: 'General Medicine' },
 // ];
+const Notification = ({ type, message, onClose }: NotificationProps) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case 'error':
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case 'warning':
+        return <AlertTriangle className="h-5 w-5 text-yellow-400" />;
+    }
+  };
 
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50';
+      case 'error':
+        return 'bg-red-50';
+      case 'warning':
+        return 'bg-yellow-50';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getBgColor()} border border-gray-200`}
+    >
+      <div className="flex items-center">
+        {getIcon()}
+        <p className="ml-3 text-sm font-medium text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-400 hover:text-gray-500"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 const ClinicOffersManager = () => {
-const [offers, setOffers] = useState<Offer[]>([]);
- const [services, setServices] = useState<Service[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const offersPerPage = 10;
-
+  const [loading, setLoading] = useState(false);
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [showLiveOnly, setShowLiveOnly] = useState(false);
@@ -69,6 +112,10 @@ const [offers, setOffers] = useState<Offer[]>([]);
     valid_to: null,
     clinic_service: ''
   });
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  } | null>(null);
 
   // Modal state
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'delete' | null>(null);
@@ -83,26 +130,26 @@ const [offers, setOffers] = useState<Offer[]>([]);
     return now >= validFrom && now <= validTo && offer.status === 'ACTIVE';
   };
 
-const fetchOffers = async () => {
-  try {
-    const clinicUser = await Clinic_by_clinic_user();
-    const clinicId = clinicUser?.uuid;
-    const [serviceData, offersResponse] = await Promise.all([
-      GetAllClinicService(clinicId,'approved'),
-      GetAllClinicOffers()
-    ]);
-    
-    setOffers(offersResponse.data || []);
-    setServices(serviceData.data || []);
-  } catch (error) {
-    console.error("Failed to fetch offers:", error);
-  }
-};
-console.log(services, "data")
-console.log(offers, "offers data")
-useEffect(() => {
-  fetchOffers();
-}, []);
+  const fetchOffers = async () => {
+    try {
+      const clinicUser = await Clinic_by_clinic_user();
+      const clinicId = clinicUser?.uuid;
+      const [serviceData, offersResponse] = await Promise.all([
+        GetAllClinicService(clinicId, 'approved'),
+        GetAllClinicOffers()
+      ]);
+
+      setOffers(offersResponse.data || []);
+      setServices(serviceData.data || []);
+    } catch (error) {
+      console.error("Failed to fetch offers:", error);
+    }
+  };
+  console.log(services, "data")
+  console.log(offers, "offers data")
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
 
   const formatDate = (dateString: string): string => {
@@ -138,7 +185,7 @@ useEffect(() => {
   // Filtering logic
   const filteredOffers = offers.filter(offer => {
     const matchesSearch = offer.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = showLiveOnly ? isOfferLive(offer) : true;
     const matchesStatus = statusFilter ? offer.status === statusFilter : true;
     const matchesDateFrom = dateFrom ? new Date(offer.valid_from) >= new Date(dateFrom) : true;
@@ -155,75 +202,86 @@ useEffect(() => {
   const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
   const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
 
-const handleCreateOffer = async () => {
-  try {
-    // Get clinic ID (you might need to fetch this from your state or context)
-    const clinicUser = await Clinic_by_clinic_user();
-    if (!clinicUser?.uuid) {
-      throw new Error("Clinic not found");
+  const handleCreateOffer = async () => {
+    try {
+      setLoading(true);
+      // Get clinic ID (you might need to fetch this from your state or context)
+      const clinicUser = await Clinic_by_clinic_user();
+      if (!clinicUser?.uuid) {
+        throw new Error("Clinic not found");
+      }
+
+      // Prepare the offer data for the backend
+      const offerData = {
+        title: newOffer.title,
+        offer_type: "CLINIC",
+        description: newOffer.description,
+        valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
+        valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
+        discount_percentage: newOffer.discount_percentage,
+        clinic_service: newOffer.clinic_service,
+        // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
+        name: "",
+        email: "",
+        phone: "",
+        type: "",
+        address: "",
+        city: "",
+        state: "",
+        country: "",
+        pincode: "",
+        gst_number: "",
+        pan_number: "",
+        website: "",
+        logo: "",
+        // Add missing required fields for NewClinicOffer
+        postalCode: "",
+        about: "",
+        insuranceNetworks: [],
+        specialties: [],
+        location: { lat: 0, lng: 0 },
+      };
+
+      // Call the API
+      const createdOffer = await createClinicOffers(offerData);
+      setNotification({
+        type: 'success',
+        message: 'Offer saved successfully!'
+      });
+
+      // Update local state with the response from the backend
+      setOffers([...offers, {
+        ...createdOffer,
+        uuid: createdOffer.uuid || `offer-${Date.now()}`,
+        status: "DRAFT", // Or whatever status the backend returns
+        usage_count: 0,
+        total_savings: 0,
+        discount_percentage: newOffer.discount_percentage,
+        reason_for_rejection: ''
+      }]);
+
+      // Reset form and close modal
+      setNewOffer({
+        title: '',
+        description: '',
+        discount_percentage: '',
+        valid_from: null,
+        valid_to: null,
+        clinic_service: ''
+      });
+      setShowCreateModal(false);
+      fetchOffers();
+    } catch (error: any) {
+      console.error("Failed to create offer:", error);
+      setNotification({
+        type: 'error',
+        message: `Failed to save offer. Please try again ${error.response.data.non_field_errors || error.message}`
+      });
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
     }
-
-    // Prepare the offer data for the backend
-    const offerData = {
-      title: newOffer.title,
-      offer_type: "CLINIC",
-      description: newOffer.description,
-      valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
-      valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      discount_percentage: newOffer.discount_percentage,
-      clinic_service: newOffer.clinic_service,
-      // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
-      name: "",
-      email: "",
-      phone: "",
-      type: "",
-      address: "",
-      city: "",
-      state: "",
-      country: "",
-      pincode: "",
-      gst_number: "",
-      pan_number: "",
-      website: "",
-      logo: "",
-      // Add missing required fields for NewClinicOffer
-      postalCode: "",
-      about: "",
-      insuranceNetworks: [],
-      specialties: [],
-      location: { lat: 0, lng: 0 },
-    };
-
-    // Call the API
-    const createdOffer = await createClinicOffers(offerData);
-
-    // Update local state with the response from the backend
-    setOffers([...offers, {
-      ...createdOffer,
-      uuid: createdOffer.uuid || `offer-${Date.now()}`,
-      status: "DRAFT", // Or whatever status the backend returns
-      usage_count: 0,
-      total_savings: 0,
-      discount_percentage: newOffer.discount_percentage,
-      reason_for_rejection: ''
-    }]);
-
-    // Reset form and close modal
-    setNewOffer({
-      title: '',
-      description: '',
-      discount_percentage: '',
-      valid_from: null,
-      valid_to: null,
-      clinic_service: ''
-    });
-    setShowCreateModal(false);
-
-  } catch (error) {
-    console.error("Failed to create offer:", error);
-    // You might want to show an error message to the user here
-  }
-};
+  };
 
   // Modal open handlers
   const handleViewOffer = (offer: Offer) => {
@@ -261,75 +319,91 @@ const handleCreateOffer = async () => {
   };
 
   // Edit offer handler
-const handleUpdateOffer = async () => {
-  if (!selectedOffer) return;
-  
-  try {
-    // Prepare the data for API call (include all required fields for NewClinicOffer)
-    const offerData = {
-      title: newOffer.title,
-      offer_type: "CLINIC",
-      description: newOffer.description,
-      valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
-      valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
-      discount_percentage: newOffer.discount_percentage,
-      clinic_service: newOffer.clinic_service,
-      // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
-      name: "",
-      email: "",
-      phone: "",
-      type: "",
-      address: "",
-      city: "",
-      state: "",
-      country: "",
-      pincode: "",
-      gst_number: "",
-      pan_number: "",
-      website: "",
-      logo: "",
-      // Add missing required fields for NewClinicOffer
-      postalCode: "",
-      about: "",
-      insuranceNetworks: [],
-      specialties: [],
-      location: { lat: 0, lng: 0 },
-    };
-    
-    // Call the API to update the offer
-    await editClinicOffers(selectedOffer.uuid, offerData);
-    
-    // Update local state if API call succeeds
-    setOffers(offers.map((o: Offer) =>
-      o.uuid === selectedOffer.uuid
-        ? { ...o, ...newOffer, valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '', valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '' }
-        : o
-    ));
-    closeModal();
-  } catch (error) {
-    console.error("Failed to update offer:", error);
-    // You might want to show an error message to the user here
-  }
-};
+  const handleUpdateOffer = async () => {
+    if (!selectedOffer) return;
+
+    try {
+      setLoading(true);
+      // Prepare the data for API call (include all required fields for NewClinicOffer)
+      const offerData = {
+        title: newOffer.title,
+        offer_type: "CLINIC",
+        description: newOffer.description,
+        valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
+        valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
+        discount_percentage: newOffer.discount_percentage,
+        clinic_service: newOffer.clinic_service,
+        // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
+        name: "",
+        email: "",
+        phone: "",
+        type: "",
+        address: "",
+        city: "",
+        state: "",
+        country: "",
+        pincode: "",
+        gst_number: "",
+        pan_number: "",
+        website: "",
+        logo: "",
+        // Add missing required fields for NewClinicOffer
+        postalCode: "",
+        about: "",
+        insuranceNetworks: [],
+        specialties: [],
+        location: { lat: 0, lng: 0 },
+      };
+
+      // Call the API to update the offer
+      await editClinicOffers(selectedOffer.uuid, offerData);
+      setNotification({
+        type: 'success',
+        message: 'Offer upadate successfully!'
+      });
+      // Update local state if API call succeeds
+      setOffers(offers.map((o: Offer) =>
+        o.uuid === selectedOffer.uuid
+          ? { ...o, ...newOffer, valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '', valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '' }
+          : o
+      ));
+      closeModal();
+    } catch (error: any) {
+      console.error("Failed to update offer:", error);
+      setNotification({
+        type: 'error',
+        message: `Failed to save offer. Please try again ${error.response.data.non_field_errors || error.message}`
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
-// Delete offer handler
-const handleConfirmDelete = async () => {
-  if (!selectedOffer) return;
-  
-  try {
-    // Call the API to delete the offer
-    await deleteClinicOffers(selectedOffer.uuid);
-    
-    // Update local state if API call succeeds
-    setOffers(offers.filter((o: Offer) => o.uuid !== selectedOffer.uuid));
-    closeModal();
-  } catch (error) {
-    console.error("Failed to delete offer:", error);
-    // You might want to show an error message to the user here
-  }
-};
+  // Delete offer handler
+  const handleConfirmDelete = async () => {
+    if (!selectedOffer) return;
+
+    try {
+      // Call the API to delete the offer
+      await deleteClinicOffers(selectedOffer.uuid);
+      setNotification({
+        type: 'success',
+        message: 'Offer delete successfully!'
+      });
+      // Update local state if API call succeeds
+      setOffers(offers.filter((o: Offer) => o.uuid !== selectedOffer.uuid));
+      closeModal();
+    } catch (error: any) {
+      console.error("Failed to delete offer:", error);
+      setNotification({
+        type: 'error',
+        message: `Failed to save offer. Please try again ${error.response.data.non_field_errors || error.message}`
+      });
+      // You might want to show an error message to the user here
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
@@ -343,7 +417,7 @@ const handleConfirmDelete = async () => {
                 </h1>
                 <p className="text-sm text-slate-500 mt-1">Manage your clinic promotions</p>
               </div>
-              
+
               {/* Stats Cards */}
               <div className="hidden lg:flex items-center space-x-6">
                 <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
@@ -385,7 +459,7 @@ const handleConfirmDelete = async () => {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={() => setShowCreateModal(true)}
               className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
@@ -516,8 +590,8 @@ const handleConfirmDelete = async () => {
               {showLiveOnly ? 'No live offers found' : 'No offers match your search'}
             </h3>
             <p className="text-slate-500 text-lg mb-8 max-w-md mx-auto">
-              {showLiveOnly 
-                ? 'Create and activate offers to see them here' 
+              {showLiveOnly
+                ? 'Create and activate offers to see them here'
                 : 'Try adjusting your search terms or create your first offer'}
             </p>
             <button
@@ -533,14 +607,14 @@ const handleConfirmDelete = async () => {
             {paginatedOffers.map((offer) => {
               const statusConfig = getStatusConfig(offer.status);
               const isLive = isOfferLive(offer);
-              
+
               return (
                 <div key={offer.uuid} className="group relative">
                   {/* Glow effect for live offers */}
                   {isLive && (
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   )}
-                  
+
                   <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 overflow-hidden">
                     {/* Live indicator strip */}
                     {isLive && (
@@ -571,7 +645,7 @@ const handleConfirmDelete = async () => {
                           </div>
                           <p className="text-slate-600 leading-relaxed">{offer.description}</p>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2 ml-4 relative">
                           <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
                             <div className={`w-1.5 h-1.5 ${statusConfig.dot} rounded-full mr-2`}></div>
@@ -637,7 +711,7 @@ const handleConfirmDelete = async () => {
                             <p>{formatDate(offer.valid_from)}</p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center text-sm text-slate-600">
                           <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
                             <Clock className="w-4 h-4 text-amber-600" />
@@ -706,14 +780,14 @@ const handleConfirmDelete = async () => {
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Create New Offer</h2>
                 <p className="text-slate-500">Design your next promotion</p>
               </div>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Offer Title</label>
                   <input
                     type="text"
                     value={newOffer.title}
-                    onChange={(e) => setNewOffer({...newOffer, title: e.target.value})}
+                    onChange={(e) => setNewOffer({ ...newOffer, title: e.target.value })}
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                     placeholder="Summer Wellness Special"
                   />
@@ -723,7 +797,7 @@ const handleConfirmDelete = async () => {
                   <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
                   <textarea
                     value={newOffer.description}
-                    onChange={(e) => setNewOffer({...newOffer, description: e.target.value})}
+                    onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 resize-none"
                     rows={3}
                     placeholder="Get amazing discounts on all wellness services..."
@@ -736,7 +810,7 @@ const handleConfirmDelete = async () => {
                     <input
                       type="number"
                       value={newOffer.discount_percentage}
-                      onChange={(e) => setNewOffer({...newOffer, discount_percentage: e.target.value})}
+                      onChange={(e) => setNewOffer({ ...newOffer, discount_percentage: e.target.value })}
                       className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 pr-12"
                       placeholder="20"
                       min="0"
@@ -794,9 +868,15 @@ const handleConfirmDelete = async () => {
                 </button>
                 <button
                   onClick={handleCreateOffer}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"
+                  disabled={loading}
+                  className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"
                 >
-                  Create Offer
+                  {loading ? (
+                    <Loader className="w-5 h-5 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-5 h-5 mr-2" />
+                  )}
+                  <span>Create Offer</span>
                 </button>
               </div>
             </div>
@@ -866,7 +946,7 @@ const handleConfirmDelete = async () => {
                   <input
                     type="text"
                     value={newOffer.title}
-                    onChange={(e) => setNewOffer({...newOffer, title: e.target.value})}
+                    onChange={(e) => setNewOffer({ ...newOffer, title: e.target.value })}
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                     placeholder="Summer Wellness Special"
                   />
@@ -875,7 +955,7 @@ const handleConfirmDelete = async () => {
                   <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
                   <textarea
                     value={newOffer.description}
-                    onChange={(e) => setNewOffer({...newOffer, description: e.target.value})}
+                    onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 resize-none"
                     rows={3}
                     placeholder="Get amazing discounts on all wellness services..."
@@ -887,7 +967,7 @@ const handleConfirmDelete = async () => {
                     <input
                       type="number"
                       value={newOffer.discount_percentage}
-                      onChange={(e) => setNewOffer({...newOffer, discount_percentage: e.target.value})}
+                      onChange={(e) => setNewOffer({ ...newOffer, discount_percentage: e.target.value })}
                       className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 pr-12"
                       placeholder="20"
                       min="0"
@@ -939,11 +1019,17 @@ const handleConfirmDelete = async () => {
                 >
                   Cancel
                 </button>
-                <button
+                 <button
                   onClick={handleUpdateOffer}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"
+                  disabled={loading}
+                  className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"
                 >
-                  Update Offer
+                  {loading ? (
+                    <Loader className="w-5 h-5 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-5 h-5 mr-2" />
+                  )}
+                  <span>  Update Offer</span>
                 </button>
               </div>
             </div>
@@ -988,6 +1074,16 @@ const handleConfirmDelete = async () => {
           </div>
         </div>
       )}
+      {/* Notifications */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
