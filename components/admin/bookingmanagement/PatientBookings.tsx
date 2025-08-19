@@ -488,9 +488,107 @@ export default function BookingManagement() {
         )}
 
         {/* View Modal */}
-        {isViewModalOpen && selectedBooking && (
+       {isViewModalOpen && selectedBooking && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            {/* ... (modal content remains the same) ... */}
+            <motion.div 
+              className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
+                <button 
+                  onClick={() => setIsViewModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">Patient Information</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <User size={16} className="text-gray-400" />
+                        <span className="text-gray-900">{selectedBooking.patient_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail size={16} className="text-gray-400" />
+                        <span className="text-gray-900">{selectedBooking.patient_email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone size={16} className="text-gray-400" />
+                        <span className="text-gray-900">{selectedBooking.patient_mobile}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">Booking Information</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={16} className="text-gray-400" />
+                        <span className="text-gray-900">{formatDate(selectedBooking.start_time)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-gray-400" />
+                        <span className="text-gray-900">
+                          Duration: {new Date(selectedBooking.end_time).getHours() - new Date(selectedBooking.start_time).getHours()} hours
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Building size={16} className="text-gray-400" />
+                        <span className="text-gray-900">{selectedBooking.clinic_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Service Type:</span>
+                        <span className="text-emerald-700 font-medium text-sm bg-emerald-50 px-2 py-1 rounded-full">{selectedBooking.service_type}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Booking Type</h3>
+                      <div className="flex items-center gap-2">
+                        {selectedBooking.booking_type === 'VIDEO_CALL' ? (
+                          <Video size={16} className="text-blue-600" />
+                        ) : (
+                          <MapPin size={16} className="text-green-600" />
+                        )}
+                        <span className="text-gray-900">{selectedBooking.booking_type.replace('_', ' ')}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Status</h3>
+                      <StatusBadge status={selectedBooking.booking_status} />
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Payment</h3>
+                      <div className="flex items-center gap-4">
+                        <PaymentStatusBadge status={selectedBooking.payment_status} />
+                        <span className="text-gray-900 font-medium">₹{selectedBooking.booking_charge}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={() => setIsViewModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
 

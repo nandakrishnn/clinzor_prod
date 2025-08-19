@@ -210,7 +210,7 @@ const fetchPayments = async (page = 1, search = '') => {
 
   const handleExportData = () => {
     const csvContent = [
-      ['Transaction ID', 'Payment Date', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
+      ['Transaction ID', 'Payment Date','Time', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
       ...payment.map(record => [
         record.transaction_id,
         formatDate(record.paymentDate || ''),
