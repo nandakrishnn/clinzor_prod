@@ -581,7 +581,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
                       </button>
                     </div>
                   )}
-                  
+{/*                   
                   {request.status !== 'DRAFT' && (
                     <div className="flex space-x-2">
                       {request.status !== 'REJECTED' && (
@@ -601,7 +601,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
                         </button>
                       )}
                     </div>
-                  )}
+                  )} */}
 
                   <button
                     onClick={() => setViewingRequest(request)}

@@ -180,9 +180,9 @@ const handleDelete = async (uuid: string) => {
 
   const getFilteredServices = () => {
     let filtered = services.filter((service) => {
-      const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.tags.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.tags?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
       return matchesSearch && matchesStatus;
     });

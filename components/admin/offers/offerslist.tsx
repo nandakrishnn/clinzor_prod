@@ -10,7 +10,7 @@ type Offer = {
   created_by: string;
   title: string;
   offer_type: 'ADMIN' | 'CLINIC' | 'PROMOTIONAL' | 'SYSTEM';
-  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'DRAFT'| 'APPROVED' | 'REJECTED';
   description: string;
   valid_from: string;
   valid_to: string;
@@ -45,6 +45,7 @@ interface PaginationData {
   next: string | null;
   previous: string | null;
 }
+
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
     switch (type) {
@@ -98,6 +99,8 @@ const OfferManagementTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');
+  const [rejectionReason, setRejectionReason] = useState<string>('');
+  const [showRejectionModal, setShowRejectionModal] = useState<string | null>(null);
   const [offerViewType, setOfferViewType] = useState<'ADMIN' | 'CLINIC'>('ADMIN');
   const [formData, setFormData] = useState<OfferFormData>({
     title: '',
@@ -123,6 +126,7 @@ const OfferManagementTable = () => {
     next: null,
     previous: null
   });
+  
   const fetchOffers = async (page = 1) => {
     try {
       const response = await GetAllOffers(page);
@@ -156,12 +160,9 @@ const OfferManagementTable = () => {
       return matchesViewType && matchesSearch && matchesStatus && matchesType;
     });
   }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
+  
   const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
-  // Pagination logic
-  // const totalPages = Math.ceil(filteredOffers.length / itemsPerPage);
-  // const startIndex = (currentPage - 1) * itemsPerPage;
-  // const paginatedOffers = filteredOffers.slice(startIndex, startIndex + itemsPerPage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -286,6 +287,7 @@ const OfferManagementTable = () => {
 
     }
   };
+  
   const deleteOffer = async (uuid: string) => {
     try {
       // Call the delete API
@@ -310,15 +312,22 @@ const OfferManagementTable = () => {
     }
   };
 
-  const updateOfferStatus = async (uuid: string, newStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DRAFT') => {
+  const updateOfferStatus = async (uuid: string, newStatus: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'DRAFT', reason?: string) => {
     // Optimistically update the UI first
     setOffers(prev => prev.map(offer =>
-      offer.uuid === uuid ? { ...offer, status: newStatus } : offer
+      offer.uuid === uuid ? { 
+        ...offer, 
+        status: newStatus,
+        ...(newStatus === 'REJECTED' && reason ? { reason_for_rejection: reason } : {})
+      } : offer
     ));
 
     try {
       // Call the API to update status
-      await approveOrRejectOffers(uuid, { status: newStatus });
+      await approveOrRejectOffers(uuid, { 
+        status: newStatus,
+        ...(newStatus === 'REJECTED' && reason ? { reason_for_rejection: reason } : {})
+      });
 
       // Show success notification
       setNotification({
@@ -339,12 +348,18 @@ const OfferManagementTable = () => {
       });
     }
   };
+
+  const handleReject = (uuid: string, reason: string) => {
+    updateOfferStatus(uuid, 'REJECTED', reason);
+    setShowRejectionModal(null);
+    setRejectionReason('');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'DRAFT': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'REJECTED': return 'bg-red-50 text-red-700 border-red-200';
-      case 'DRAFT': return 'bg-gray-50 text-gray-700 border-gray-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
@@ -362,9 +377,8 @@ const OfferManagementTable = () => {
   const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
       case 'APPROVED': return <CheckCircle size={14} className="text-emerald-600" />;
-      case 'PENDING': return <Clock size={14} className="text-amber-600" />;
+      case 'DRAFT': return <Clock size={14} className="text-amber-600" />;
       case 'REJECTED': return <XCircle size={14} className="text-red-600" />;
-      case 'DRAFT': return <FileText size={14} className="text-gray-600" />;
       default: return null;
     }
   };
@@ -381,11 +395,13 @@ const OfferManagementTable = () => {
   const getServiceName = (offer: Offer) => {
     return offer.service_name || offer.default_service_name || 'General';
   };
+  
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
   };
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
@@ -487,6 +503,12 @@ const OfferManagementTable = () => {
                         <p className="text-sm text-gray-500 mt-1 leading-relaxed">{offer.description}</p>
                         <p className="text-xs text-gray-400 mt-2">Created by {offer.created_by}</p>
                         <p className="text-xs text-gray-400">Max uses: {offer.max_use_limit}</p>
+                        {offer.reason_for_rejection && (
+                          <div className="mt-2 p-2 bg-red-50 rounded-lg">
+                            <p className="text-xs text-red-600 font-medium">Rejection Reason:</p>
+                            <p className="text-xs text-red-500">{offer.reason_for_rejection}</p>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="py-5 px-6">
@@ -530,7 +552,7 @@ const OfferManagementTable = () => {
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex items-center justify-end gap-2">
-                        {offer.status === 'PENDING' && (
+                        {offer.status === 'DRAFT' && (
                           <>
                             <button
                               onClick={() => updateOfferStatus(offer.uuid, 'APPROVED')}
@@ -540,7 +562,7 @@ const OfferManagementTable = () => {
                               <CheckCircle size={18} />
                             </button>
                             <button
-                              onClick={() => updateOfferStatus(offer.uuid, 'REJECTED')}
+                              onClick={() => setShowRejectionModal(offer.uuid)}
                               className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
                               title="Reject"
                             >
@@ -548,15 +570,15 @@ const OfferManagementTable = () => {
                             </button>
                           </>
                         )}
-                        {offer.status === 'DRAFT' && (
+                        {/* {offer.status === 'DRAFT' && (
                           <button
-                            onClick={() => updateOfferStatus(offer.uuid, 'PENDING')}
+                            onClick={() => updateOfferStatus(offer.uuid, 'DRAFT')}
                             className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
                             title="Submit for Approval"
                           >
                             <Check size={18} />
                           </button>
-                        )}
+                        )} */}
                         <button
                           onClick={() => openModal(offer)}
                           className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
@@ -824,6 +846,38 @@ const OfferManagementTable = () => {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+         {/* Rejection Modal */}
+      {showRejectionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Offer</h3>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Please provide a reason for rejection..."
+              className="w-full h-32 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+            />
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowRejectionModal(null);
+                  setRejectionReason('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleReject(showRejectionModal, rejectionReason)}
+                disabled={!rejectionReason.trim()}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirm Rejection
+              </button>
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { approveOrRejectExpert, createExpert, deleteExpert, GetAllExpert } from '@/service/admin/expertManagementService';
+import { approveOrRejectExpert, createExpert, deleteExpert, GetAllClinicServiceforDoc, GetAllExpert } from '@/service/admin/expertManagementService';
 import { getAllBookings, getAllSlots } from '@/service/admin/bookingManagementService';
 import { getAllClinic } from '@/service/admin/clinicManagentService';
 import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
@@ -351,7 +351,7 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
       const [slotsResponse, bookingsResponse, clinicServiceResponse] = await Promise.all([
         getAllSlots(1),
         getAllBookings(1),
-        GetAllClinicService(1)
+        GetAllClinicServiceforDoc(1)
       ]);
 
       setClinicServices(clinicServiceResponse.data);
@@ -583,10 +583,10 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
         type: 'success',
         message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
       });
-    } catch (error) {
+    } catch (error:any) {
       setNotification({
         type: 'error',
-        message: `Failed to update expert status`
+        message: `${error.response.data.message} please try again later `||`Failed to update expert status`
       });
     }
   };
