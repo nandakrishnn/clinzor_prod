@@ -400,7 +400,7 @@ export default function AllUsersPage() {
     setLoading(true);
     try {
       const data = await GetAllUsers(itemsPerPage, page);
-      const bookingData = await getAllBookings();
+      const bookingData = await getAllBookings(page);
       
       setUsers(data.data);
       setBookings(bookingData);
