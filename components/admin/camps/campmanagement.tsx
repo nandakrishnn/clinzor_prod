@@ -39,6 +39,13 @@ interface Camp {
   completed?: boolean;
 }
 
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 const Notification = ({ type, message, onClose }: {
   type: 'success' | 'error' | 'warning';
   message: string;
@@ -67,33 +74,48 @@ const Notification = ({ type, message, onClose }: {
 
 const CampManagement = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
-
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCompletion, setFilterCompletion] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
+   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
-
+ const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
   useEffect(() => {
-    const fectchCamps = async () => {
+    
+    const fectchCamps = async (page = 1) => {
       setLoading(true)
       try {
-        const data = await getAllCamps();
-        setCamps(data)
+        const response = await getAllCamps(page);
+        setCamps(response.data)
+        console.log(response,"camp data")
+        setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
       } catch (error) {
 
       } finally {
         setLoading(false);
       }
     }
-    fectchCamps();
-  }, [])
+    fectchCamps(currentPage);
+  }, [currentPage])
   console.log(camps, "data")
 
   // Approve/Reject handlers

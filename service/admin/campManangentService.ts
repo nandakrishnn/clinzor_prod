@@ -68,10 +68,10 @@ export const getACamp = async (Id:string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
-export const getAllCamps = async () => {
+export const getAllCamps = async (page:number) => {
   try {
-    const response = await axiosPrivate.get(`clinic/camp-lc/`);
-    return response.data.data.data;
+    const response = await axiosPrivate.get(`clinic/camp-lc/?page=${page}`);
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;

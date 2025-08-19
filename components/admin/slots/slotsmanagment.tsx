@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Users, Calendar, Check, X, Filter, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, XCircle, Eye, EyeOff, Plus, Building2, MapPin, User, Activity, Settings, RefreshCw, Download, Upload } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { getAllSlots } from '@/service/admin/bookingManagementService';
+import { approveSlot, bulkApproveSlots, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
 
-// Updated Slot type definition to match API response
 interface Slot {
   uuid: string;
   clinic: string;
@@ -13,7 +12,7 @@ interface Slot {
   created_by: string;
   max_bookings: number;
   available_slots: number;
-  status: 'APPROVED' | 'PENDING' | 'REJECTED';
+  status: 'APPROVED' | 'DRAFT' | 'REJECTED';
   reason_for_rejection: string | null;
   is_video_call: boolean;
   is_home_visit: boolean;
@@ -24,6 +23,14 @@ interface Slot {
 }
 
 const PAGE_SIZE = 6;
+
+interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
 
 const SlotManager = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -38,20 +45,40 @@ const SlotManager = () => {
   const [clinicNameSearch, setClinicNameSearch] = useState('');
   const [fromDateObj, setFromDateObj] = useState<Date | null>(null);
   const [toDateObj, setToDateObj] = useState<Date | null>(null);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchSlots = async () => {
+  const fetchSlots = async (page = 1, filters = {}) => {
+    setIsLoading(true);
     try {
-      const data = await getAllSlots();
-      setSlots(data);
+      const response = await getAllSlots(page);
+      
+      setSlots(response.data);
+      console.log(response,'response data')
+      setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
     } catch (error) {
       console.error(error);
       showFeedback('error', 'Failed to fetch slots. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSlots();
-  }, []);
+    fetchSlots(currentPage);
+  }, [currentPage, statusFilter, clinicNameSearch, fromDate, toDate]);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -79,7 +106,7 @@ const SlotManager = () => {
           label: 'Active & Approved',
           description: 'This slot is live and accepting bookings'
         };
-      case 'PENDING':
+      case 'DRAFT':
         return {
           color: 'bg-amber-100 text-amber-800 border-amber-200',
           icon: AlertCircle,
@@ -108,49 +135,81 @@ const SlotManager = () => {
     setTimeout(() => setActionFeedback(null), 4000);
   };
 
-  const handleApprove = (slotId: string) => {
-    setSlots(slots.map(slot =>
-      slot.uuid === slotId
-        ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
-        : slot
-    ));
-    showFeedback('success', 'Slot approved successfully and is now available for booking!');
-  };
-
-  const handleReject = (slotId: string, reason?: string) => {
-    const rejectionReason = reason || prompt('Please provide a detailed reason for rejection:');
-    if (rejectionReason) {
+  const handleApprove = async (slotId: string) => {
+    try {
+      // Call your API to approve the slot
+      await approveSlot(slotId);
       setSlots(slots.map(slot =>
         slot.uuid === slotId
-          ? { ...slot, status: 'REJECTED', reason_for_rejection: rejectionReason }
+          ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
           : slot
       ));
-      showFeedback('success', 'Slot rejected and removed from available bookings.');
+      showFeedback('success', 'Slot approved successfully and is now available for booking!');
+    } catch (error) {
+      showFeedback('error', 'Failed to approve slot. Please try again.');
     }
   };
 
-  const handleBulkApprove = () => {
-    const count = selectedSlots.length;
+  const handleReject = async (slotId: string, reason?: string) => {
+    const rejectionReason = reason || prompt('Please provide a detailed reason for rejection:');
+    if (rejectionReason) {
+      try {
+        // Call your API to reject the slot
+        await rejectSlot(slotId, rejectionReason);
+        setSlots(slots.map(slot =>
+          slot.uuid === slotId
+            ? { ...slot, status: 'REJECTED', reason_for_rejection: rejectionReason }
+            : slot
+        ));
+        showFeedback('success', 'Slot rejected and removed from available bookings.');
+      } catch (error) {
+        showFeedback('error', 'Failed to reject slot. Please try again.');
+      }
+    }
+  };
+
+const handleBulkApprove = async () => {
+  const count = selectedSlots.length;
+  if (count === 0) {
+    showFeedback('error', 'No slots selected for approval');
+    return;
+  }
+
+  try {
+    // Assuming you want to approve as "NORMAL" type
+    // You could make this configurable if needed
+    await bulkApproveSlots("NORMAL", selectedSlots);
+    
+    // Update local state
     setSlots(slots.map(slot =>
       selectedSlots.includes(slot.uuid)
         ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
         : slot
     ));
     setSelectedSlots([]);
-    showFeedback('success', `${count} slot${count > 1 ? 's' : ''} approved and now available for booking!`);
-  };
-
-  const handleBulkReject = () => {
+    
+    showFeedback('success', `${count} slot${count > 1 ? 's' : ''} approved successfully!`);
+  } catch (error) {
+    showFeedback('error', 'Failed to approve slots. Please try again.');
+  }
+};
+  const handleBulkReject = async () => {
     const reason = prompt('Please provide a reason for rejecting these slots:');
     if (reason) {
       const count = selectedSlots.length;
-      setSlots(slots.map(slot =>
-        selectedSlots.includes(slot.uuid)
-          ? { ...slot, status: 'REJECTED', reason_for_rejection: reason }
-          : slot
-      ));
-      setSelectedSlots([]);
-      showFeedback('success', `${count} slot${count > 1 ? 's' : ''} rejected and removed from booking availability.`);
+      try {
+        // Call your API to bulk reject slots
+        // await bulkRejectSlots(selectedSlots, reason);
+        setSlots(slots.map(slot =>
+          selectedSlots.includes(slot.uuid)
+            ? { ...slot, status: 'REJECTED', reason_for_rejection: reason }
+            : slot
+        ));
+        setSelectedSlots([]);
+        showFeedback('success', `${count} slot${count > 1 ? 's' : ''} rejected and removed from booking availability.`);
+      } catch (error) {
+        showFeedback('error', 'Failed to reject slots. Please try again.');
+      }
     }
   };
 
@@ -163,7 +222,7 @@ const SlotManager = () => {
   };
 
   const selectAllVisible = () => {
-    const visibleIds = paginatedSlots.map(slot => slot.uuid);
+    const visibleIds = slots.map(slot => slot.uuid);
     setSelectedSlots(prev => {
       const newSelected = [...prev];
       visibleIds.forEach(id => {
@@ -219,35 +278,6 @@ const SlotManager = () => {
       </div>
     );
   };
-
-  // Filtering logic
-  const filteredSlots = slots.filter(slot => {
-    const matchesStatus = statusFilter === 'ALL' || slot.status === statusFilter;
-    const matchesClinicName = slot.clinic_name.toLowerCase().includes(clinicNameSearch.toLowerCase());
-    let matchesFromDate = true;
-    let matchesToDate = true;
-    
-    if (fromDate) {
-      matchesFromDate = new Date(slot.start_time) >= new Date(fromDate);
-    }
-    if (toDate) {
-      const toDateObj = new Date(toDate);
-      toDateObj.setDate(toDateObj.getDate() + 1);
-      matchesToDate = new Date(slot.start_time) < toDateObj;
-    }
-    
-    return matchesStatus && matchesClinicName && matchesFromDate && matchesToDate;
-  });
-
-  // Pagination logic
-  const totalItems = filteredSlots.length;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-  const paginatedSlots = filteredSlots.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  // Reset page if filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, fromDate, toDate, clinicNameSearch]);
 
   // Get counts for quick stats
   const statusCounts = slots.reduce((acc, slot) => {
@@ -484,7 +514,7 @@ const SlotManager = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-100">
             <h3 className="font-bold text-xl text-gray-900">
-              Appointment Slots ({filteredSlots.length})
+              Appointment Slots ({paginationData.total_items})
             </h3>
             <div className="flex items-center gap-3">
               {selectedSlots.length > 0 && (
@@ -529,9 +559,9 @@ const SlotManager = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                     <input
                       type="checkbox"
-                      checked={selectedSlots.length === paginatedSlots.length && paginatedSlots.length > 0}
+                      checked={selectedSlots.length === slots.length && slots.length > 0}
                       onChange={() => {
-                        if (selectedSlots.length === paginatedSlots.length) {
+                        if (selectedSlots.length === slots.length) {
                           clearSelection();
                         } else {
                           selectAllVisible();
@@ -558,7 +588,15 @@ const SlotManager = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedSlots.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <div className="flex justify-center">
+                        <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+                      </div>
+                    </td>
+                  </tr>
+                ) : slots.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center gap-3">
@@ -569,7 +607,7 @@ const SlotManager = () => {
                     </td>
                   </tr>
                 ) : (
-                  paginatedSlots.map((slot) => {
+                  slots.map((slot) => {
                     const { date, time } = formatDateTime(slot.start_time);
                     const statusConfig = getStatusConfig(slot.status);
                     
@@ -632,7 +670,7 @@ const SlotManager = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-3">
-                            {slot.status === 'PENDING' && (
+                            {slot.status === 'DRAFT' && (
                               <>
                                 <button
                                   onClick={() => handleApprove(slot.uuid)}
@@ -668,20 +706,20 @@ const SlotManager = () => {
           </div>
           
           {/* Pagination */}
-          {paginatedSlots.length > 0 && (
+          {slots.length > 0 && (
             <div className="border-t border-gray-200 px-4 py-3 sm:px-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(currentPage - 1) * PAGE_SIZE + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(currentPage * PAGE_SIZE, totalItems)}</span> of{' '}
-                  <span className="font-medium">{totalItems}</span> slots
+                  Showing <span className="font-medium">{(paginationData.current_page - 1) * PAGE_SIZE + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(paginationData.current_page * PAGE_SIZE, paginationData.total_items)}</span> of{' '}
+                  <span className="font-medium">{paginationData.total_items}</span> slots
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(paginationData.current_page - 1)}
+                    disabled={!paginationData.previous}
                     className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                      currentPage === 1 
+                      !paginationData.previous 
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
@@ -690,16 +728,16 @@ const SlotManager = () => {
                     Previous
                   </button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    {Array.from({ length: Math.min(5, paginationData.total_pages) }, (_, i) => {
                       let pageNum: number;
-                      if (totalPages <= 5) {
+                      if (paginationData.total_pages <= 5) {
                         pageNum = i + 1;
-                      } else if (currentPage <= 3) {
+                      } else if (paginationData.current_page <= 3) {
                         pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
+                      } else if (paginationData.current_page >= paginationData.total_pages - 2) {
+                        pageNum = paginationData.total_pages - 4 + i;
                       } else {
-                        pageNum = currentPage - 2 + i;
+                        pageNum = paginationData.current_page - 2 + i;
                       }
                       
                       return (
@@ -707,7 +745,7 @@ const SlotManager = () => {
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === pageNum
+                            paginationData.current_page === pageNum
                               ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                               : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                           }`}
@@ -718,10 +756,10 @@ const SlotManager = () => {
                     })}
                   </div>
                   <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(paginationData.current_page + 1)}
+                    disabled={!paginationData.next}
                     className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                      currentPage === totalPages
+                      !paginationData.next
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
