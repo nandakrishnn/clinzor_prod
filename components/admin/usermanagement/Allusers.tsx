@@ -403,7 +403,7 @@ export default function AllUsersPage() {
       const bookingData = await getAllBookings(page);
       
       setUsers(data.data);
-      setBookings(bookingData);
+      setBookings(bookingData.data);
       setFilteredUsers(data.data);
       setPaginationData({
         current_page: data.current_page,

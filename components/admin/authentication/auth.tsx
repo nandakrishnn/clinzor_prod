@@ -15,6 +15,7 @@ import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
+import { LockOpenIcon } from '@heroicons/react/24/solid';
 
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -30,18 +31,18 @@ interface SignInFormElement extends HTMLFormElement {
 export default function () {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] =useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
 
-useEffect(() => {
-  if (status === "authenticated") {
-    // Check if user has EXPERT role
-    if (session?.user?.role === "ADMIN") {
-      router.replace("/admin/dashboard");
+  useEffect(() => {
+    if (status === "authenticated") {
+      // Check if user has EXPERT role
+      if (session?.user?.role === "ADMIN") {
+        router.replace("/admin/dashboard");
+      }
+
     }
-   
-  }
-}, [status, router, session?.user?.role]);
+  }, [status, router, session?.user?.role]);
   const handleSubmit = async (event: React.FormEvent<SignInFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -124,9 +125,9 @@ useEffect(() => {
           >
             <Box
               component="header"
-              sx={{ 
-                py: 3, 
-                display: 'flex', 
+              sx={{
+                py: 3,
+                display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
@@ -190,8 +191,14 @@ useEffect(() => {
                         Forgot your password?
                       </Link>
                     </Box>
-                    <Button type="submit" fullWidth>
-                      Sign in
+                    <Button
+                      type="submit"
+                      fullWidth
+                      loading={isLoading}
+                      loadingPosition="start"
+                      startDecorator={isLoading ? undefined : <LockOpenIcon />} // Optional: Add an icon when not loading
+                    >
+                      {isLoading ? 'Signing in...' : 'Sign in'}
                     </Button>
                   </Stack>
                 </form>
@@ -204,7 +211,7 @@ useEffect(() => {
             </Box>
           </Box>
         </Box>
-        
+
         {/* Background image side */}
         <Box
           sx={(theme) => ({
