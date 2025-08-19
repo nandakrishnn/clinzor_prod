@@ -506,7 +506,7 @@ const fetchPayments = async (page = 1, search = '') => {
               </button>
               {Array.from({ length: Math.min(5, paginationData.total_pages) }, (_, i) => {
                 // Show first pages, current page with neighbors, and last pages
-                let pageNum;
+                 let pageNum: number;
                 if (paginationData.total_pages <= 5) {
                   pageNum = i + 1;
                 } else if (currentPage <= 3) {
