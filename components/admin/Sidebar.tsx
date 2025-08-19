@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { signOut, useSession } from 'next-auth/react';
+import { GetAllBlogCount, getAllBookingsCount, getAllCampsCount, getAllClinicCount, GetAllExpertCount, GetAllOffersCount, GetAllServiceCount } from '@/service/admin/sidebarCountService';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -250,7 +251,16 @@ export default function AdminSidebar() {
   console.log(session?.user ,"user data ")
   // Example user data - in a real app, this would come from your authentication system
   // Initialize user state with proper types and session data
-
+  const [counts, setCounts] = useState({
+    clinics: 0,
+    experts: 0,
+    bookings: 0,
+    services: 0,
+    offers: 0,
+    camps: 0,
+    blogs: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserProfile>({
     name: '',
     email: '',
@@ -258,6 +268,43 @@ export default function AdminSidebar() {
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
   });
 
+  // Function to fetch all counts
+  const fetchAllCounts = async () => {
+    try {
+      setLoading(true);
+      const [
+        clinicsCount,
+        expertsCount,
+        bookingsCount,
+        servicesCount,
+        offersCount,
+        campsCount,
+        blogsCount
+      ] = await Promise.all([
+        getAllClinicCount(),
+        GetAllExpertCount(),
+        getAllBookingsCount(),
+        GetAllServiceCount(),
+        GetAllOffersCount(),
+        getAllCampsCount(),
+        GetAllBlogCount()
+      ]);
+
+      setCounts({
+        clinics: clinicsCount || 0,
+        experts: expertsCount || 0,
+        bookings: bookingsCount || 0,
+        services: servicesCount || 0,
+        offers: offersCount || 0,
+        camps: campsCount || 0,
+        blogs: blogsCount || 0
+      });
+    } catch (error) {
+      console.error('Failed to fetch counts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // Update user data when session changes
   useEffect(() => {
     if (session?.user) {
@@ -269,6 +316,15 @@ export default function AdminSidebar() {
       });
     }
   }, [session]);
+    useEffect(() => {
+    fetchAllCounts();
+    
+    // Set up interval to refresh counts periodically (every 5 minutes)
+    const intervalId = setInterval(fetchAllCounts, 5 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
     const handleResize = () => {
@@ -329,11 +385,11 @@ export default function AdminSidebar() {
     {
       icon: <Building2 size={20} strokeWidth={1.5} />,
       label: 'Clinic Management',
-      badge: '48',
+      badge: counts.clinics,
       badgeColor: 'green' as const,
       children: [
         { label: 'All Clinics', href: '/admin/allclinics' },
-        { label: 'Pending Approvals', href: '/admin/pending', badge: '7', badgeColor: 'yellow' as const },
+        { label: 'Pending Approvals', href: '/admin/pending'},
         // { label: 'Clinic Analytics', href: '/admin/clinics/analytics' }
       ]
     },
@@ -351,7 +407,7 @@ export default function AdminSidebar() {
     {
       icon: <Calendar size={20} strokeWidth={1.5} />,
       label: 'Bookings Management',
-      badge: '156',
+       badge: loading ? '...' : counts.bookings,
       badgeColor: 'green' as const,
       children: [
         { label: 'All Bookings', href: '/admin/bookings' },
@@ -379,7 +435,7 @@ export default function AdminSidebar() {
     {
       icon: <Gift size={20} strokeWidth={1.5} />,
       label: 'Offers & Promotions',
-      badge: '8',
+      badge: loading ? '...' : counts.offers,
       badgeColor: 'yellow' as const,
       children: [
         { label: 'Offers List', href: '/admin/offers' },
@@ -388,7 +444,7 @@ export default function AdminSidebar() {
     {
       icon: <Home size={20} strokeWidth={1.5} />,
       label: 'Camp Management',
-      badge: '15',
+       badge: loading ? '...' : counts.camps,
       badgeColor: 'blue' as const,
       children: [
         { label: 'All Camps', href: '/admin/allcamps' },
@@ -398,7 +454,7 @@ export default function AdminSidebar() {
 
   const bottomMenuItems = [
     { icon: <HelpCircle size={20} strokeWidth={1.5} />, label: 'FAQ Management', href: '/admin/faq' },
-    { icon: <FileText size={20} strokeWidth={1.5} />, label: 'Blog Management', href: '/admin/blog', badge: '3', badgeColor: 'blue' as const },
+    { icon: <FileText size={20} strokeWidth={1.5} />, label: 'Blog Management', href: '/admin/blog',  badge: loading ? '...' : counts.blogs, badgeColor: 'blue' as const },
     { icon: <Building2 size={20} strokeWidth={1.5} />, label: 'Organization Management', href: '/admin/org' },
   ];
 
