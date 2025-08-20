@@ -53,9 +53,10 @@ interface Clinic {
   dueAmount: string;
   hours: string;
   workingDays: string[];
-  phone: string;
+  contact_number: string;
+  country_code: string;
   email: string;
-  isActive: boolean;
+  is_active: boolean;
   mapLink?: string;
   gpsCoordinates?: string;
   openingTime?: string;
@@ -631,7 +632,7 @@ const fetchClinics = async (page=1) => {
 useEffect(() => {
   fetchClinics(currentPage);
 }, [currentPage]);
-
+console.log(clinics,"clinics data")
   // Filter clinics
   useEffect(() => {
     let filtered = [...clinics];
@@ -642,7 +643,7 @@ useEffect(() => {
           clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           clinic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
           clinic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          clinic.phone.includes(searchQuery)
+          clinic.contact_number.includes(searchQuery)
       );
     }
 
@@ -673,9 +674,9 @@ useEffect(() => {
   else if (selectedHeader === "Pending")
     clinicsToShow = filteredClinics.filter((c) => c.status === "Pending");
   else if (selectedHeader === "Active")
-    clinicsToShow = filteredClinics.filter((c) => c.isActive);
+    clinicsToShow = filteredClinics.filter((c) => c.is_active);
   else if (selectedHeader === "Deactivated")
-    clinicsToShow = filteredClinics.filter((c) => !c.isActive);
+    clinicsToShow = filteredClinics.filter((c) => !c.is_active);
 
   // Use server-side pagination data
   // clinicsToShow already contains only the clinics for the current page from the API
@@ -821,8 +822,8 @@ useEffect(() => {
     total: paginationData.total_items,
     approved: clinics.filter((c) => c.status === "APPROVED").length,
     pending: clinics.filter((c) => c.status === "Pending").length,
-    active: clinics.filter((c) => c.isActive).length,
-    deactivated: clinics.filter((c) => !c.isActive).length
+    active: clinics.filter((c) => c.is_active).length,
+    deactivated: clinics.filter((c) => !c.is_active).length
   };
 
   function handleApprove(clinic: Clinic) {
@@ -895,17 +896,17 @@ useEffect(() => {
     // Optimistically update the UI
     setClinics((prev) =>
       prev.map((c) =>
-        c.uuid === clinic.uuid ? { ...c, isActive: !c.isActive } : c
+        c.uuid === clinic.uuid ? { ...c, is_active: !c.is_active } : c
       )
     );
 
     // Call the API
-    toggleActiveClinic(clinic.uuid, { is_active: !clinic.isActive })
+    toggleActiveClinic(clinic.uuid, { is_active: !clinic.is_active })
       .then(() => {
         setNotification({
           type: "success",
           message: `Clinic "${clinic.name}" is now ${
-            !clinic.isActive ? "active" : "inactive"
+            !clinic.is_active ? "active" : "inactive"
           }.`
         });
       })
@@ -913,13 +914,13 @@ useEffect(() => {
         // Revert the UI change if the API call fails
         setClinics((prev) =>
           prev.map((c) =>
-            c.uuid === clinic.uuid ? { ...c, isActive: clinic.isActive } : c
+            c.uuid === clinic.uuid ? { ...c, is_active: clinic.is_active } : c
           )
         );
         setNotification({
           type: "error",
           message: `Failed to ${
-            clinic.isActive ? "deactivate" : "activate"
+            clinic.is_active ? "deactivate" : "activate"
           } clinic "${clinic.name}". ${error.response?.data?.message || ""}`
         });
       })
@@ -1267,7 +1268,7 @@ useEffect(() => {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Phone size={14} />
-                      <span>{clinic.phone}</span>
+                      <span>{clinic.country_code}{clinic.contact_number}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Clock size={14} />
@@ -1327,7 +1328,7 @@ useEffect(() => {
                         <span className="hidden sm:inline">Reject</span>
                       </button>
                     )}
-                  {clinic.isActive ? (
+                  {clinic.is_active ? (
                     <button
                       onClick={() =>
                         setConfirmModal({ type: "inactive", clinic })

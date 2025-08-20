@@ -44,7 +44,7 @@ export const GetAUser = async (Id: string) => {
 export const GetAllUsers = async (pageSize: number = 10, page: number = 1) => {
   try {
     const response = await axiosPrivate.get(
-      `user/user-list/?page_size=${pageSize}&page=${page}`
+      `user/user-list/?page_size=${pageSize}&page=${page}&user_role=CUSTOMER`
     );
     return response.data.data;
   } catch (error) {
