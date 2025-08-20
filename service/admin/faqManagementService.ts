@@ -43,14 +43,21 @@ export const GetAFAQ = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/faq-rud/${Id}`);
 };
 
-export const GetAllFAQ = async () => {
+export const GetAllFAQ = async (search?: string) => {
   try {
+    const params: any = {};
+    
+    if (search && search.trim() !== '') {
+      params.search = search.trim();
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(
-      `clinic/faq-lc/`
+      `clinic/faq-lc/${queryString ? `?${queryString}` : ''}`
     );
     return response.data.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch FAQs", error);
     throw error;
   }
 };

@@ -40,14 +40,18 @@ export default function AdminBlogManagement() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const fetchBlogs = async () => {
+    setLoading(true);
     try {
       const data = await GetAllBlog();
       setPosts(data);
       console.log(data, "blog data");
     } catch (error) {
       console.error("fetching Blogs error:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -163,6 +167,17 @@ export default function AdminBlogManagement() {
       setTimeout(() => setMessage(''), 2000);
     }
   };
+
+   if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6">Admin Blog Management</h1>
