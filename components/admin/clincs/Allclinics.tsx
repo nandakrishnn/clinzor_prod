@@ -511,7 +511,7 @@ export default function ClinicManagement() {
 
       const response = await getAllClinic(params);
       setClinics(response.data);
-      console.log(response.data ,"clinics data");
+      console.log(response.data, "clinics data");
       setFilteredClinics(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -1213,14 +1213,20 @@ export default function ClinicManagement() {
                       <Phone size={14} />
                       <span>{clinic.country_code}{clinic.contact_number}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock size={14} />
-                      <span>{clinic.hours}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={14} />
-                      <span>{clinic?.workingDays?.join(", ")}</span>
-                    </div>
+                    {clinic.hours && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Clock size={14} />
+                        <span>{clinic.hours}</span>
+                      </div>
+                    )
+                    }
+                    {clinic?.workingDays && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar size={14} />
+                        <span>{clinic?.workingDays?.join(", ")}</span>
+                      </div>
+                    )}
+
                   </div>
                   {clinic.submissionDate && (
                     <div className="text-xs text-gray-500">
@@ -1228,14 +1234,17 @@ export default function ClinicManagement() {
                       {new Date(clinic.submissionDate).toLocaleDateString()}
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
-                    <PaymentStatusBadge status={clinic.paymentStatus} />
-                    {clinic.dueAmount !== "₹0" && (
-                      <span className="text-rose-600">
-                        Due: {clinic.dueAmount}
-                      </span>
-                    )}
-                  </div>
+                  {clinic.dueAmount && (
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
+                      <PaymentStatusBadge status={clinic.paymentStatus} />
+                      {clinic.dueAmount !== "₹0" && (
+                        <span className="text-rose-600">
+                          Due: {clinic.dueAmount}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
@@ -1272,7 +1281,7 @@ export default function ClinicManagement() {
                       </button>
                     )}
                   {clinic.is_active ? (
-                  <button
+                    <button
                       onClick={() =>
                         setConfirmModal({ type: "active", clinic })
                       }
@@ -1282,7 +1291,7 @@ export default function ClinicManagement() {
                       <span className="hidden sm:inline">Activate</span>
                     </button>
                   ) : (
-                        <button
+                    <button
                       onClick={() =>
                         setConfirmModal({ type: "inactive", clinic })
                       }
@@ -1536,102 +1545,102 @@ export default function ClinicManagement() {
                     </div>
                   </div>
                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Image Upload Section */}
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5" />
-                    Clinic Images
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Upload Clinic Images {selectedImages.length > 0 && `(${selectedImages.length} selected)`}
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
-                          <Upload size={16} />
-                          Select Images
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageSelection}
-                            className="hidden"
-                          />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Image Upload Section */}
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5" />
+                      Clinic Images
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Upload Clinic Images {selectedImages.length > 0 && `(${selectedImages.length} selected)`}
                         </label>
-                        {uploadingFiles && (
-                          <div className="flex items-center gap-2 text-gray-500">
-                            <RefreshCw size={16} className="animate-spin" />
-                            Uploading...
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
+                            <Upload size={16} />
+                            Select Images
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={handleImageSelection}
+                              className="hidden"
+                            />
+                          </label>
+                          {uploadingFiles && (
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <RefreshCw size={16} className="animate-spin" />
+                              Uploading...
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedImages.length > 0 && (
+                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {selectedImages.map((file, index) => (
+                              <div key={index} className="relative group">
+                                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={file.name}
+                                    className="object-cover w-full h-full"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X size={12} />
+                                </button>
+                                <p className="text-xs text-gray-500 truncate mt-1">{file.name}</p>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
-
-                      {selectedImages.length > 0 && (
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {selectedImages.map((file, index) => (
-                            <div key={index} className="relative group">
-                              <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                <img
-                                  src={URL.createObjectURL(file)}
-                                  alt={file.name}
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X size={12} />
-                              </button>
-                              <p className="text-xs text-gray-500 truncate mt-1">{file.name}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-                {/* Registration Certificate Upload Section */}
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Registration Certificate
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Upload Registration Certificate (PDF)
-                        {selectedRegistrationCertificate && ` - ${selectedRegistrationCertificate.name}`}
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
-                          <Upload size={16} />
-                          Select Certificate
-                          <input
-                            type="file"
-                            accept=".pdf,application/pdf"
-                            onChange={handleCertificateSelection}
-                            className="hidden"
-                          />
+                  {/* Registration Certificate Upload Section */}
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Registration Certificate
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Upload Registration Certificate (PDF)
+                          {selectedRegistrationCertificate && ` - ${selectedRegistrationCertificate.name}`}
                         </label>
-                        {selectedRegistrationCertificate && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedRegistrationCertificate(null)}
-                            className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                          >
-                            <X size={16} />
-                            Remove
-                          </button>
-                        )}
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
+                            <Upload size={16} />
+                            Select Certificate
+                            <input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              onChange={handleCertificateSelection}
+                              className="hidden"
+                            />
+                          </label>
+                          {selectedRegistrationCertificate && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRegistrationCertificate(null)}
+                              className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                            >
+                              <X size={16} />
+                              Remove
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5" />

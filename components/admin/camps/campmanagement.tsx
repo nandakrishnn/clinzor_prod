@@ -416,7 +416,7 @@ const CampManagement = () => {
                   </div>
 
                   {/* Mark as Complete Button */}
-                  {!camp.completed && (
+                  {camp.status !==  "COMPLETED" && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -427,7 +427,7 @@ const CampManagement = () => {
                       Mark as Complete
                     </button>
                   )}
-                  {camp.completed && (
+                  {camp.status ==  "COMPLETED"  && (
                     <div className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center">
                       Completed
                     </div>
