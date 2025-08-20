@@ -369,6 +369,12 @@ export default function AdminSidebar() {
     { icon: <BarChart3 size={20} strokeWidth={1.5} />, label: 'Dashboard', href: '/admin/dashboard' },
     { icon: <Users size={20} strokeWidth={1.5} />, label: 'User Management', href: '/admin/allusers' },
   ];
+  const menuItems2 = [
+    { icon: <UserCheck size={20} strokeWidth={1.5} />,
+      label: 'Expert Management',
+      badge: '89',
+      badgeColor: 'blue' as const, href: '/admin/experts' },
+  ];
 
   const nestedMenuItems = [
     // {
@@ -393,17 +399,17 @@ export default function AdminSidebar() {
         // { label: 'Clinic Analytics', href: '/admin/clinics/analytics' }
       ]
     },
-    {
-      icon: <UserCheck size={20} strokeWidth={1.5} />,
-      label: 'Expert Management',
-      badge: '89',
-      badgeColor: 'blue' as const,
-      children: [
-        { label: 'All Experts', href: '/admin/experts' },
-        // { label: 'Pending Verification', href: '/admin/experts/pending', badge: '5', badgeColor: 'yellow' as const },
-        // { label: 'Expert Performance', href: '/admin/experts/performance' }
-      ]
-    },
+    // {
+    //   icon: <UserCheck size={20} strokeWidth={1.5} />,
+    //   label: 'Expert Management',
+    //   badge: '89',
+    //   badgeColor: 'blue' as const,
+    //   children: [
+    //     { label: 'All Experts', href: '/admin/experts' },
+    //     // { label: 'Pending Verification', href: '/admin/experts/pending', badge: '5', badgeColor: 'yellow' as const },
+    //     // { label: 'Expert Performance', href: '/admin/experts/performance' }
+    //   ]
+    // },
     {
       icon: <Calendar size={20} strokeWidth={1.5} />,
       label: 'Bookings Management',
@@ -423,36 +429,48 @@ export default function AdminSidebar() {
         { label: 'Request Service', href: '/admin/requestservice' },
       ]
     },
-    {
-      icon: <DollarSign size={20} strokeWidth={1.5} />,
-      label: 'Dues Management',
-      badge: 'New',
-      badgeColor: 'green' as const,
-      children: [
-        { label: 'Dues List', href: '/admin/dues' },
-      ]
-    },
-    {
-      icon: <Gift size={20} strokeWidth={1.5} />,
-      label: 'Offers & Promotions',
-      badge: loading ? '...' : counts.offers,
-      badgeColor: 'yellow' as const,
-      children: [
-        { label: 'Offers List', href: '/admin/offers' },
-      ]
-    },
-    {
-      icon: <Home size={20} strokeWidth={1.5} />,
-      label: 'Camp Management',
-       badge: loading ? '...' : counts.camps,
-      badgeColor: 'blue' as const,
-      children: [
-        { label: 'All Camps', href: '/admin/allcamps' },
-      ]
-    }
+    // {
+    //   icon: <DollarSign size={20} strokeWidth={1.5} />,
+    //   label: 'Dues Management',
+    //   badge: 'New',
+    //   badgeColor: 'green' as const,
+    //   children: [
+    //     { label: 'Dues List', href: '/admin/dues' },
+    //   ]
+    // },
+    // {
+    //   icon: <Gift size={20} strokeWidth={1.5} />,
+    //   label: 'Offers & Promotions',
+    //   badge: loading ? '...' : counts.offers,
+    //   badgeColor: 'yellow' as const,
+    //   children: [
+    //     { label: 'Offers List', href: '/admin/offers' },
+    //   ]
+    // },
+    // {
+    //   icon: <Home size={20} strokeWidth={1.5} />,
+    //   label: 'Camp Management',
+    //    badge: loading ? '...' : counts.camps,
+    //   badgeColor: 'blue' as const,
+    //   children: [
+    //     { label: 'All Camps', href: '/admin/allcamps' },
+    //   ]
+    // }
   ];
 
   const bottomMenuItems = [
+    {  icon: <DollarSign size={20} strokeWidth={1.5} />,
+      label: 'Dues Management',
+      badge: 'New',
+      badgeColor: 'green' as const, href: '/admin/dues' },
+    {   icon: <Gift size={20} strokeWidth={1.5} />,
+      label: 'Offers & Promotions',
+      badge: loading ? '...' : counts.offers,
+      badgeColor: 'yellow' as const, href: '/admin/offers' },
+    {   icon: <Home size={20} strokeWidth={1.5} />,
+      label: 'Camp Management',
+       badge: loading ? '...' : counts.camps,
+      badgeColor: 'blue' as const, href: '/admin/allcamps' },
     { icon: <HelpCircle size={20} strokeWidth={1.5} />, label: 'FAQ Management', href: '/admin/faq' },
     { icon: <FileText size={20} strokeWidth={1.5} />, label: 'Blog Management', href: '/admin/blog',  badge: loading ? '...' : counts.blogs, badgeColor: 'blue' as const },
     { icon: <Building2 size={20} strokeWidth={1.5} />, label: 'Organization Management', href: '/admin/org' },
@@ -514,7 +532,7 @@ export default function AdminSidebar() {
         </div>
       )}
       
-      <div className="flex-grow overflow-y-auto px-3 sm:px-3">
+      <div className="flex-grow overflow-y-auto hide-scrollbar px-3 sm:px-3">
         <nav className="space-y-0.5 pb-4">
           {/* Regular menu items */}
           {menuItems.map((item) => (
@@ -527,6 +545,19 @@ export default function AdminSidebar() {
               active={activeItem === item.href}
               onClick={() => handleItemClick(item.href)}
             />
+          ))}
+          {menuItems2.map((item) => (
+             <SidebarItem
+                key={item.href}
+                icon={item.icon}
+                label={item.label}
+                href={item.href}
+                collapsed={collapsed}
+                active={activeItem === item.href}
+                badge={item.badge}
+                badgeColor={item.badgeColor}
+                onClick={() => handleItemClick(item.href)}
+              />
           ))}
           
           {/* Nested menu items */}
@@ -546,7 +577,7 @@ export default function AdminSidebar() {
           ))}
           
           {/* Bottom menu items */}
-          <div className="pt-4 border-t border-gray-100 mt-4">
+          <div className=" border-t border-gray-100">
             {bottomMenuItems.map((item) => (
               <SidebarItem
                 key={item.href}

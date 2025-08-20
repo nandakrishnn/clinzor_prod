@@ -17,11 +17,11 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { getAllClinic } from '@/service/admin/clinicManagentService';
+import { approveOrRejectClinic, getAllClinic } from '@/service/admin/clinicManagentService';
 
 // Types
 interface Clinic {
-  id: number;
+  uuid: string;
   name: string;
   address: string;
   city: string;
@@ -236,7 +236,7 @@ const ClinicDetailModal = ({
             </div>
             <div>
               <span className="font-medium text-gray-600">Working Days:</span>
-              <p className="text-gray-900">{clinic.workingDays.join(', ')}</p>
+              <p className="text-gray-900">{clinic?.workingDays?.join(', ')}</p>
             </div>
           </div>
         </div>
@@ -326,11 +326,20 @@ const ClinicDetailModal = ({
 };
 
 // Simulate changed fields for demo
+// Simulate changed fields for demo
 const getChangedFields = (clinic: Clinic) => {
   // In real app, compare with previous approved data
-  // For demo, randomly highlight 'services' and 'doctors' for some clinics
-  if (clinic.id % 2 === 0) return ['services'];
-  if (clinic.id % 3 === 0) return ['doctors'];
+  // For demo, use the clinic's UUID to generate a deterministic but pseudo-random result
+  const uuidLastChar = clinic.uuid.charAt(clinic.uuid.length - 1);
+  
+  // Convert the last character to a number (0-9 or a-f) for decision making
+  const lastCharCode = uuidLastChar.charCodeAt(0);
+  const numericValue = isNaN(parseInt(uuidLastChar)) 
+    ? lastCharCode % 10  // For a-f characters, use char code modulo 10
+    : parseInt(uuidLastChar);
+  
+  if (numericValue % 2 === 0) return ['services'];
+  if (numericValue % 3 === 0) return ['doctors'];
   return [];
 };
 
@@ -444,18 +453,25 @@ const [allClinics, setAllClinics] = useState<Clinic[]>([]);
     message: string;
   } | null>(null);
 
-  // Filter only pending clinics
-  useEffect(() => {
-    const fetchClinics = async (page =1) => {
+// Filter only pending clinics
+useEffect(() => {
+  const fetchClinics = async (page = 1) => {
     try {
       setLoading(true);
-      const data = await getAllClinic(page); // Assuming this is your API function
       
-setAllClinics(data.data);
-console.log(data.data,' fd data')
-      // Filter pending clinics after data is fetched
-      const pending = data.data.filter((clinic: Clinic) => clinic.status === 'PENDING');
-      setPendingClinics(pending);
+      // Pass status=PENDING as a query parameter
+      const params = {
+        page: page,
+        status: 'draft' // Add status filter
+      };
+      
+      const data = await getAllClinic(params); // Pass the params object
+      
+      setAllClinics(data.data);
+      setPendingClinics(data.data); // All data returned should be pending clinics
+      
+      console.log(data.data, 'Pending clinics data');
+      
     } catch (error) {
       setNotification({
         type: 'error',
@@ -468,7 +484,7 @@ console.log(data.data,' fd data')
   };
 
   fetchClinics(currentPage);
-  }, [currentPage]);
+}, [currentPage]);
 
   // Search functionality
   useEffect(() => {
@@ -487,23 +503,57 @@ console.log(data.data,' fd data')
     setFilteredClinics(filtered);
   }, [pendingClinics, searchQuery]);
 
-  const handleApprove = (clinic: Clinic) => {
-    // In real app, this would make an API call
-    setPendingClinics(prev => prev.filter(c => c.id !== clinic.id));
+const handleApprove = async (clinic: Clinic) => {
+  try {
+    // Optimistically update the UI first for better UX
+    setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
+    
+    // Make API call to approve the clinic
+    await approveOrRejectClinic(clinic.uuid, { status: 'APPROVED' });
+    
     setNotification({
       type: 'success',
       message: `${clinic.name} has been approved successfully!`
     });
-  };
+    
+  } catch (error) {
+    // Revert the UI change if the API call fails
+    setPendingClinics(prev => [...prev, clinic]);
+    
+    setNotification({
+      type: 'error',
+      message: `Failed to approve ${clinic.name}. Please try again.`
+    });
+    
+    console.error("Error approving clinic:", error);
+  }
+};
 
-  const handleReject = (clinic: Clinic) => {
-    // In real app, this would make an API call
-    setPendingClinics(prev => prev.filter(c => c.id !== clinic.id));
+const handleReject = async (clinic: Clinic) => {
+  try {
+    // Optimistically update the UI first for better UX
+    setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
+    
+    // Make API call to reject the clinic
+    await approveOrRejectClinic(clinic.uuid, { status: 'REJECTED' });
+    
     setNotification({
       type: 'error',
       message: `${clinic.name} has been rejected.`
     });
-  };
+    
+  } catch (error) {
+    // Revert the UI change if the API call fails
+    setPendingClinics(prev => [...prev, clinic]);
+    
+    setNotification({
+      type: 'error',
+      message: `Failed to reject ${clinic.name}. Please try again.`
+    });
+    
+    console.error("Error rejecting clinic:", error);
+  }
+};
 
   const handleViewDetails = (clinic: Clinic) => {
     setSelectedClinic(clinic);
@@ -518,6 +568,18 @@ console.log(data.data,' fd data')
       message: `${count} clinic(s) have been approved successfully!`
     });
   };
+
+   if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
@@ -626,7 +688,7 @@ console.log(data.data,' fd data')
           <div className="space-y-4">
             {filteredClinics.map((clinic, index) => (
               <motion.div
-                key={clinic.id}
+                key={clinic.uuid}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -661,7 +723,7 @@ console.log(data.data,' fd data')
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
                         <Calendar size={14} />
-                        <span>{clinic.workingDays.join(', ')}</span>
+                        <span>{clinic.workingDays?.join(', ')}</span>
                       </div>
                     </div>
 

@@ -511,6 +511,7 @@ export default function ClinicManagement() {
 
       const response = await getAllClinic(params);
       setClinics(response.data);
+      console.log(response.data ,"clinics data");
       setFilteredClinics(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -1271,17 +1272,7 @@ export default function ClinicManagement() {
                       </button>
                     )}
                   {clinic.is_active ? (
-                    <button
-                      onClick={() =>
-                        setConfirmModal({ type: "inactive", clinic })
-                      }
-                      className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
-                    >
-                      <XCircle size={16} />
-                      <span className="hidden sm:inline">Deactivate</span>
-                    </button>
-                  ) : (
-                    <button
+                  <button
                       onClick={() =>
                         setConfirmModal({ type: "active", clinic })
                       }
@@ -1289,6 +1280,16 @@ export default function ClinicManagement() {
                     >
                       <CheckCircle size={16} />
                       <span className="hidden sm:inline">Activate</span>
+                    </button>
+                  ) : (
+                        <button
+                      onClick={() =>
+                        setConfirmModal({ type: "inactive", clinic })
+                      }
+                      className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
+                    >
+                      <XCircle size={16} />
+                      <span className="hidden sm:inline">Deactivate</span>
                     </button>
                   )}
                   <button

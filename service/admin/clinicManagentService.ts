@@ -107,3 +107,45 @@ export const getAllClinic = async (params: any = {}) => {
 };
 
 
+
+// In your clinicManagentService.ts file
+
+export const GetAllDoctor = async (page: number, clinicId?: string, status?: string) => {
+  try {
+    const params: any = { page };
+    
+    if (clinicId) {
+      params.clinic = clinicId;
+    }
+    if (status) {
+      params.status = status;
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`/clinic/doctor-lc/?${queryString}`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch doctors", error);
+    throw error;
+  }
+};
+
+export const GetAllSpecialties  = async (page: number, clinicId?: string, status?: string) => {
+  try {
+    const params: any = { page };
+    
+    if (clinicId) {
+      params.clinic = clinicId;
+    }
+    if (status) {
+      params.status = status;
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`/clinic/service-lc/?${queryString}`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch services", error);
+    throw error;
+  }
+};

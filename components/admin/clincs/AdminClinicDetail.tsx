@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Star, MapPin, Phone, Clock, ChevronRight, Calendar, Users, Shield, Camera, Heart, Award, CheckCircle } from "lucide-react";
-import { getAClinic } from "@/service/admin/clinicManagentService";
+import { getAClinic, GetAllDoctor, GetAllSpecialties } from "@/service/admin/clinicManagentService";
+
 
 interface Doctor {
   id: string;
@@ -10,6 +11,13 @@ interface Doctor {
   education: string;
   experience: string;
   availability: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
 }
 
 interface Clinic {
@@ -26,43 +34,44 @@ interface Clinic {
   about_clinic?: string;
 }
 
+interface ApiDoctor {
+  uuid: string;
+  name: string;
+  specialty: string;
+  profile_picture?: string;
+  education?: string;
+  experience?: string;
+  availability?: string;
+  // Add other fields as per your API response
+}
+
+interface ApiService {
+  uuid: string;
+  name: string;
+  description: string;
+  category: string;
+  // Add other fields as per your API response
+}
+
 export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
   const [clinic, setClinic] = useState<Clinic | null>(null);
-  
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Static data for sections not provided by API
   const staticData = {
     rating: 4.9,
     openHours: "8:00 AM – 6:00 PM",
     phone: "123-456-7890",
     description: "Welcome to our healthcare facility—your premier healthcare destination. We deliver exceptional patient-centered care with innovative technology and a compassionate approach.",
-    specialty: ["Primary Care", "Family Medicine", "Dermatology", "Cardiology"],
-    services: ["Consultation", "Health Screenings", "Preventive Care", "Diagnostic Services"],
     insurance: ["Apple Health", "Medicare", "Blue Cross", "Aetna"],
     gallery: [
       { imageUrl: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400&h=300&fit=crop", caption: "Modern Reception Area" },
       { imageUrl: "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=400&h=300&fit=crop", caption: "State-of-the-Art Examination Room" },
       { imageUrl: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=300&fit=crop", caption: "Comfortable Waiting Lounge" }
-    ],
-    doctors: [
-      {
-        id: "d1",
-        name: "Dr. Sarah Johnson",
-        specialty: "Family Medicine",
-        imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
-        education: "Harvard Medical School",
-        experience: "12 years",
-        availability: "Mon, Wed, Fri"
-      },
-      {
-        id: "d2",
-        name: "Dr. Michael Chen",
-        specialty: "Cardiology",
-        imageUrl: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-        education: "Stanford University",
-        experience: "15 years",
-        availability: "Tue, Thu"
-      }
     ],
     availableSlots: {
       "2025-05-02": ["09:00", "11:30", "14:00", "16:30"],
@@ -73,19 +82,88 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getAClinic(clinicId);
-        setClinic(data.data.data); // Assuming the API returns { data: Clinic }
-        console.log(data.data.data,"data")
-      } catch (error) {
-        console.error("Failed to fetch clinic data", error);
+        setLoading(true);
+        setError(null);
+
+        // Fetch clinic data
+        const clinicData = await getAClinic(clinicId);
+        setClinic(clinicData.data.data);
+
+        // Fetch doctors for this clinic with query parameters
+        const doctorsResponse = await GetAllDoctor(1, clinicId, "approved");
+        const clinicDoctors = doctorsResponse.map((doctor: ApiDoctor) => ({
+          id: doctor.uuid,
+          name: doctor.name,
+          specialty: doctor.specialty,
+          imageUrl: doctor.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
+          education: doctor.education || "Medical Degree",
+          experience: doctor.experience || "5+ years",
+          availability: doctor.availability || "Mon - Fri"
+        }));
+        setDoctors(clinicDoctors);
+
+        // Fetch services for this clinic with query parameters
+        const servicesResponse = await GetAllSpecialties(1, clinicId, "approved");
+        const clinicServices = servicesResponse.map((service: ApiService) => ({
+          id: service.uuid,
+          name: service.name,
+          description: service.description,
+          category: service.category
+        }));
+        setServices(clinicServices);
+
+      } catch (err) {
+        console.error("Failed to fetch clinic data", err);
+        setError("Failed to load clinic details. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
   }, [clinicId]);
 
-  if (!clinic) {
-    return <div className="min-h-screen flex items-center justify-center">Loading clinic data...</div>;
+  if (loading) {
+     return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
   }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 text-red-700 p-4 rounded-lg max-w-md">
+            <p>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!clinic) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Clinic not found.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract specialties from doctors
+  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -100,14 +178,14 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="h-[50vh] lg:h-[60vh] relative">
-          <img 
-            src={staticData.gallery[0].imageUrl} 
-            alt={clinic.name} 
+          <img
+            src={staticData.gallery[0].imageUrl}
+            alt={clinic.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
         </div>
-        
+
         {/* Floating Hero Card */}
         <div className="absolute -bottom-12 left-4 right-4 max-w-6xl mx-auto">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
@@ -118,6 +196,10 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                     <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
                     <span className="text-xl font-bold text-gray-900">{staticData.rating}</span>
                     <span className="text-gray-600">Excellence Rating</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
+                    <Users className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-gray-900">{doctors.length} Doctors</span>
                   </div>
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
@@ -149,7 +231,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
       {/* Content */}
       <div className="pt-20 pb-16 px-4 lg:px-8 max-w-6xl mx-auto">
-        
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
@@ -163,7 +245,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -171,11 +253,11 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Expert Doctors</h3>
-                <p className="text-gray-600">{staticData.doctors.length} Specialists</p>
+                <p className="text-gray-600">{doctors.length} Specialists</p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -183,7 +265,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Services</h3>
-                <p className="text-gray-600">{staticData.services.length} Available</p>
+                <p className="text-gray-600">{services.length} Available</p>
               </div>
             </div>
           </div>
@@ -200,9 +282,9 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               <h3 className="font-bold text-gray-900 mb-2">Address:</h3>
               <p className="text-gray-600">{clinic.address}</p>
               <p className="text-gray-600">{clinic.city}, PIN: {clinic.pincode}</p>
-              <a 
-                href={clinic.map_link} 
-                target="_blank" 
+              <a
+                href={clinic.map_link}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline mt-2 inline-block"
               >
@@ -213,25 +295,91 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         </section>
 
         {/* Specialties */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {staticData.specialty.map((specialty) => (
-              <div 
-                key={specialty} 
-                className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
-                  <CheckCircle className="w-6 h-6 text-white" />
+        {/* {specialties.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {specialties.map((specialty) => (
+                <div
+                  key={specialty}
+                  className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2">{specialty}</h3>
+                  <p className="text-gray-600 text-sm">Expert care available</p>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">{specialty}</h3>
-                <p className="text-gray-600 text-sm">Expert care available</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </section>
+        )} */}
+        {/* Specialties */}
+        {services.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                   <h3 className="font-bold text-gray-900 text-lg mb-2">{service.name}</h3>
+                  <p className="text-gray-600 text-sm line-clamp-2">{service.description}</p>
+                  {service.category && (
+                    <div className="mt-3">
+                      <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
+                        {service.category}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+         {/* Services Section */}
+        {/* <section className="mb-16">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Heart className="w-6 h-6 text-purple-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Medical Specialties</h2>
           </div>
-        </section>
 
-        {/* Doctors Section - Using static data */}
+          {services.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => (
+                <div key={service.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                    <CheckCircle className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">{service.name}</h3>
+                  <p className="text-gray-600 text-sm truncate">{service.description}</p>
+                  {service.category && (
+                    <div className="mt-3">
+                      <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
+                        {service.category}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-gray-100 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Services Available</h3>
+              <p className="text-gray-500">There are currently no services offered by this clinic.</p>
+            </div>
+          )}
+        </section> */}
+        {/* Doctors Section */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
@@ -239,38 +387,50 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             </div>
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Meet Our Doctors</h2>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {staticData.doctors.map((doctor) => (
-              <div key={doctor.id} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                <div className="flex items-start gap-6">
-                  <div className="relative">
-                    <img 
-                      src={doctor.imageUrl} 
-                      alt={doctor.name} 
-                      className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200"
-                    />
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-white" />
+
+          {doctors.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {doctors.map((doctor) => (
+                <div key={doctor.id} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                  <div className="flex items-start gap-6">
+                    <div className="relative">
+                      <img
+                        src={doctor.imageUrl}
+                        alt={doctor.name}
+                        className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200"
+                      />
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 text-xl mb-1">{doctor.name}</h3>
-                    <p className="text-blue-600 font-semibold mb-2">{doctor.specialty}</p>
-                    <p className="text-gray-600 mb-1">{doctor.education}</p>
-                    <p className="text-gray-500 mb-3">{doctor.experience} experience</p>
-                    <div className="bg-green-50 px-3 py-2 rounded-xl inline-block">
-                      <span className="text-green-700 font-medium text-sm">
-                        Available: {doctor.availability}
-                      </span>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 text-xl mb-1">{doctor.name}</h3>
+                      <p className="text-blue-600 font-semibold mb-2">{doctor.specialty}</p>
+                      <p className="text-gray-600 mb-1">{doctor.education}</p>
+                      <p className="text-gray-500 mb-3">{doctor.experience} experience</p>
+                      <div className="bg-green-50 px-3 py-2 rounded-xl inline-block">
+                        <span className="text-green-700 font-medium text-sm">
+                          Available: {doctor.availability}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-gray-100 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-gray-400" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Doctors Available</h3>
+              <p className="text-gray-500">There are currently no doctors associated with this clinic.</p>
+            </div>
+          )}
         </section>
+       
 
-        {/* Gallery Section - Using static data */}
+        {/* Gallery Section */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -280,8 +440,8 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
             <div className="mb-8">
-              <img 
-                src={staticData.gallery[selectedGalleryIndex].imageUrl} 
+              <img
+                src={staticData.gallery[selectedGalleryIndex].imageUrl}
                 alt={staticData.gallery[selectedGalleryIndex].caption}
                 className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-lg"
               />
@@ -294,14 +454,13 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 <button
                   key={index}
                   onClick={() => setSelectedGalleryIndex(index)}
-                  className={`relative aspect-square rounded-xl overflow-hidden border-3 transition-all duration-200 ${
-                    selectedGalleryIndex === index 
-                      ? 'border-blue-500 scale-95 shadow-lg' 
+                  className={`relative aspect-square rounded-xl overflow-hidden border-3 transition-all duration-200 ${selectedGalleryIndex === index
+                      ? 'border-blue-500 scale-95 shadow-lg'
                       : 'border-gray-200 hover:border-gray-300 hover:scale-105'
-                  }`}
+                    }`}
                 >
-                  <img 
-                    src={image.imageUrl} 
+                  <img
+                    src={image.imageUrl}
                     alt={image.caption}
                     className="w-full h-full object-cover"
                   />
@@ -324,9 +483,9 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                   <h3 className="font-bold text-gray-900 text-xl">Visit Us</h3>
                   <p className="text-gray-600">{clinic.address}</p>
                   <p className="text-gray-600">{clinic.city}, {clinic.pincode}</p>
-                  <a 
-                    href={clinic.map_link} 
-                    target="_blank" 
+                  <a
+                    href={clinic.map_link}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline mt-2 inline-block"
                   >
@@ -335,7 +494,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
