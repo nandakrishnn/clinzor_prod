@@ -41,11 +41,10 @@ export const GetAUser = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
-export const GetAllUsers = async (pageSize: number = 10, page: number = 1) => {
+export const GetAllUsers = async (params: any = {}) => {
   try {
-    const response = await axiosPrivate.get(
-      `user/user-list/?page_size=${pageSize}&page=${page}&user_role=CUSTOMER`
-    );
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`user/user-list/?${queryString}`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
