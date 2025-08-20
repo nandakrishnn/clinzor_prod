@@ -18,10 +18,7 @@ const ServicePage = () => {
 
       {/* Hero section */}
       <section className="pb-10 md:pb-16">
-        <CommonHeroSection
-          title="Our Service"
-          subTitle="We offer a wide range of services to our clients"
-        />
+        <CommonHeroSection className="h-[15vh]" />
       </section>
 
       {/* Service List Section */}
