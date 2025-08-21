@@ -108,7 +108,13 @@ const DoctorManagement: React.FC = () => {
     profile_pic_file: null,
     govt_verification_doc_files: [],
   });
-
+ const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
   // Validation state
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   // Image upload error state
@@ -124,32 +130,118 @@ const DoctorManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-
-  const fetchDoctor = async (page = 1) => {
+  // Add state for search timeout
+  const [loading, setLoading] = useState(true);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+ const fetchDoctor = async (
+    pageNum: number = currentPage,
+    searchText: string = searchTerm,
+    status: string = statusFilter,
+    service: string = serviceFilter,
+    gender: string = genderFilter,
+    specialization: string = specializationFilter
+  ) => {
     try {
+      setLoading(true);
       const clinicUserData = await Clinic_by_clinic_user();
       const clinicId = clinicUserData?.uuid as string;
-     const [DoctorData, allServicesData] = await Promise.all([
-       GetAllDoctor(page, doctorsPerPage),
-          GetAllClinicService(clinicId, 'approved'),
-        ]);
-        
-        // Set states with the responses
-         setTotalPages(DoctorData.data.total_pages || Math.ceil((DoctorData.count || 0) / doctorsPerPage) || 1);
-      setDoctors(DoctorData.data.data)
-      console.log(DoctorData,'all data')
-      setTotalItems(DoctorData.data.total_items);
-      setServices(allServicesData.data )
+      
+      const [DoctorData, allServicesData] = await Promise.all([
+        GetAllDoctor(pageNum, doctorsPerPage, searchText, status, service, gender, specialization),
+        GetAllClinicService(clinicId, 'approved'),
+      ]);
+      
+      // Set states with the responses
+      setPaginationData({
+        current_page: DoctorData.current_page || 1,
+        total_pages: DoctorData.total_pages || 1,
+        total_items: DoctorData.total_items || 0,
+        next: DoctorData.next || null,
+        previous: DoctorData.previous || null
+      });
+      
+      setTotalPages(DoctorData.total_pages || Math.ceil((DoctorData.count || 0) / doctorsPerPage) || 1);
+      setDoctors(DoctorData.data);
+      setTotalItems(DoctorData.total_items || 0);
+      setServices(allServicesData.data);
     } catch (error) {
-      console.error("Error to fetch Data",error);
+      console.error("Error to fetch Data", error);
+    }finally{
+      setLoading(false);
     }
   }
 
+  // Update useEffect to use parameters
   useEffect(() => {
-    fetchDoctor(currentPage)
-  }, [currentPage])
-  
+    fetchDoctor(
+      currentPage, 
+      searchTerm, 
+      statusFilter, 
+      serviceFilter, 
+      genderFilter, 
+      specializationFilter
+    );
+  }, [currentPage, statusFilter, serviceFilter, genderFilter, specializationFilter]);
+
+  // Update search handler to trigger API call with debounce
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for debounced search
+    const timeoutId = setTimeout(() => {
+      fetchDoctor(
+        1, 
+        term, 
+        statusFilter, 
+        serviceFilter, 
+        genderFilter, 
+        specializationFilter
+      );
+      setCurrentPage(1); // Reset to first page when searching
+    }, 500);
+    
+    setSearchTimeout(timeoutId);
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
 console.log(doctors,"data")
+
+  // Update filter handlers to trigger API calls
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handleServiceFilterChange = (service: string) => {
+    setServiceFilter(service);
+    setCurrentPage(1);
+  };
+
+  const handleGenderFilterChange = (gender: string) => {
+    setGenderFilter(gender);
+    setCurrentPage(1);
+  };
+
+  const handleSpecializationFilterChange = (specialization: string) => {
+    setSpecializationFilter(specialization);
+    setCurrentPage(1);
+  };
+
+  
+
   // Helper functions
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -187,21 +279,21 @@ console.log(doctors,"data")
   };
 
   // Filtering logic
-  const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = doctor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor?.specializaton?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor?.phone_number?.includes(searchTerm);
-    const matchesStatus = statusFilter ? doctor.status === statusFilter : true;
-    const matchesService = serviceFilter ? doctor.clinic_service === serviceFilter : true;
-    const matchesGender = genderFilter ? doctor.gender === genderFilter : true;
-    const matchesSpecialization = specializationFilter ? 
-      doctor.specializaton?.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
+  // const filteredDoctors = doctors.filter(doctor => {
+  //   const matchesSearch = doctor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //                        doctor?.specializaton?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //                        doctor?.phone_number?.includes(searchTerm);
+  //   const matchesStatus = statusFilter ? doctor.status === statusFilter : true;
+  //   const matchesService = serviceFilter ? doctor.clinic_service === serviceFilter : true;
+  //   const matchesGender = genderFilter ? doctor.gender === genderFilter : true;
+  //   const matchesSpecialization = specializationFilter ? 
+  //     doctor.specializaton?.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
     
-    return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
-  });
+  //   return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
+  // });
 
   // Backend paginates; render the page as delivered and keep client filters if needed
-  const paginatedDoctors = filteredDoctors;
+  const paginatedDoctors = doctors;
 
   // Statistics
   const totalDoctors = totalitems;
@@ -394,13 +486,19 @@ const handleDeleteDoctor = async () => {
     setGovtDocHelper('');
   };
 
+ // Update resetFilters to reset API calls
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
     setServiceFilter('');
     setGenderFilter('');
     setSpecializationFilter('');
+    setCurrentPage(1);
+    
+    // Fetch with empty filters
+    fetchDoctor(1, '', '', '', '', '');
   };
+
 
   // Image file handler for Doctor Image upload
   function handleImageFile(file: File) {
@@ -440,7 +538,16 @@ const handleDeleteDoctor = async () => {
       return { ...prev, govt_verification_doc_files: [...currentFiles, file] };
     });
   }
-
+if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -522,7 +629,7 @@ const handleDeleteDoctor = async () => {
                     type="text"
                     placeholder="Search by name, specialization, or phone..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                   />
                 </div>
@@ -533,7 +640,7 @@ const handleDeleteDoctor = async () => {
                 <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Status</label>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                   onChange={(e) => handleStatusFilterChange(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                 >
                   <option value="">All Status</option>
@@ -548,7 +655,7 @@ const handleDeleteDoctor = async () => {
                  <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
                 <select
                   value={serviceFilter}
-                  onChange={(e) => setServiceFilter(e.target.value)}
+                  onChange={(e) => handleServiceFilterChange(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                 >
                    <option value="">All Services</option>
@@ -580,7 +687,7 @@ const handleDeleteDoctor = async () => {
                   type="text"
                   placeholder="Filter by specialization..."
                   value={specializationFilter}
-                  onChange={(e) => setSpecializationFilter(e.target.value)}
+                  onChange={(e) => handleSpecializationFilterChange(e.target.value)}
                   className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                 />
               </div>
@@ -597,7 +704,7 @@ const handleDeleteDoctor = async () => {
           </div>
 
           {/* Doctors Grid */}
-          {filteredDoctors.length === 0 ? (
+          {paginatedDoctors.length === 0 ? (
             <div className="text-center py-20">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
@@ -730,10 +837,20 @@ const handleDeleteDoctor = async () => {
           {totalPages > 1 && (
             <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
                <button
-                 onClick={() => {
-                   const next = Math.max(1, currentPage - 1);
-                   if (next !== currentPage) setCurrentPage(next);
-                 }}
+                  onClick={() => {
+                  const nextPage = Math.max(1, currentPage - 1);
+                  if (nextPage !== currentPage) {
+                    setCurrentPage(nextPage);
+                    fetchDoctor(
+                      nextPage, 
+                      searchTerm, 
+                      statusFilter, 
+                      serviceFilter, 
+                      genderFilter, 
+                      specializationFilter
+                    );
+                  }
+                }}
                 disabled={currentPage === 1}
                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
               >
@@ -742,17 +859,37 @@ const handleDeleteDoctor = async () => {
                {Array.from({ length: totalPages }, (_, i) => (
                  <button
                    key={i}
-                   onClick={() => setCurrentPage(i + 1)}
+                    onClick={() => {
+                    setCurrentPage(i + 1);
+                    fetchDoctor(
+                      i + 1, 
+                      searchTerm, 
+                      statusFilter, 
+                      serviceFilter, 
+                      genderFilter, 
+                      specializationFilter
+                    );
+                  }}
                   className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
                 >
                   {i + 1}
                 </button>
               ))}
                <button
-                 onClick={() => {
-                   const next = Math.min(totalPages, currentPage + 1);
-                   if (next !== currentPage) setCurrentPage(next);
-                 }}
+                  onClick={() => {
+                  const nextPage = Math.min(totalPages, currentPage + 1);
+                  if (nextPage !== currentPage) {
+                    setCurrentPage(nextPage);
+                    fetchDoctor(
+                      nextPage, 
+                      searchTerm, 
+                      statusFilter, 
+                      serviceFilter, 
+                      genderFilter, 
+                      specializationFilter
+                    );
+                  }
+                }}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
               >
