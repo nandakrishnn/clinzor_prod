@@ -46,7 +46,7 @@ export const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-16 md:pt-24 ">
+    <section className="">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -105,11 +105,13 @@ export const HowItWorks = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-16 text-center"
+          className="mt-10 text-center"
         >
-          <button className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            Get Started Today
-          </button>
+          <a href="#booking">
+            <button className="px-8 p-2.5 bg-primaryColor text-sm text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
+              Get Started Today
+            </button>
+          </a>
         </motion.div>
       </div>
     </section>

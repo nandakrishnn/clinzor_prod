@@ -7,6 +7,8 @@ import PricingSection from "@/components/expertCall/PricingSection";
 import FooterSection from "@/components/landingpage/footer/footer";
 import BookingFlow from "@/components/expertCall/BookingFlow";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
+import ExpertBenefits from "@/components/expertCall/ExpertBenefits";
+import { HowItWorks } from "@/components/aboutus/HowItWorks";
 
 const ExpertCall = () => {
   return (
@@ -19,11 +21,19 @@ const ExpertCall = () => {
         <ExpertHeroSection />
       </section>
 
-      <section className="pb-16 bg-white">
+      <section className="pb-16 ">
+        <HowItWorks />
+      </section>
+
+      <section className="py-16 bg-gray-50" >
+        <ExpertBenefits />
+      </section>
+
+      <section className="py-16 bg-white" id="booking">
         <BookingFlow />
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16  bg-gray-50">
         <WallOfLoveSection />
       </section>
 
