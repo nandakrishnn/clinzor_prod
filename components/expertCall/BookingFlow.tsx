@@ -191,109 +191,64 @@ const BookingFlow = () => {
 
           {/* Step 2: Date & Time Selection - Combined View */}
           {step === 2 && (
-            <div className="flex flex-col lg:flex-row">
-              {/* Left Sidebar - Time Slots - Hidden on mobile as requested */}
-              <div className="hidden lg:block lg:w-72 border-r border-gray-200 p-4 lg:p-6">
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Select Slot
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Select date and time slot for your appointment.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  {availableTimeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={`w-full flex items-center justify-between p-3 rounded-md border transition-all ${
-                        selectedTime === time
-                          ? "bg-blue-50 border-blue-200 text-primaryColor"
-                          : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <Clock
-                          className={`h-4 w-4 mr-3  ${
-                            selectedTime === time
-                              ? "text-primaryColor"
-                              : "text-gray-400"
-                          }`}
-                        />
-                        <span className="font-medium">{time}</span>
-                      </div>
-                      {selectedTime === time && (
-                        <Check className="h-4 w-4 text-primaryColor" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <div className="">
               {/* Right Side - Calendar */}
-              <div className="flex-1 p-4 lg:p-6">
-                {/* <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {date ? format(date, "MMMM yyyy") : "Select Date"}
-                  </h3>
-                </div> */}
-
+              <div className="flex flex-col lg:flex-row p-4 lg:p-6 gap-6">
                 <CustomCalendar
                   selectedDate={date}
                   onSelect={(selectedDate) => {
                     setDate(selectedDate);
                   }}
                 />
-
-                {/* Selected Time Slots Display */}
-                {date && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Available times for {format(date, "EEEE, MMMM do")}
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                      {availableTimeSlots.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTime(time)}
-                          className={`p-2 text-xs sm:text-sm rounded border transition-all ${
-                            selectedTime === time
-                              ? "bg-primaryColor text-white border-primaryColor"
-                              : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
+                <div className="w-full flex flex-col justify-between">
+                  {/* Selected Time Slots Display */}
+                  {date && (
+                    <div className="">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Available times for {format(date, "EEEE, MMMM do")}
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {availableTimeSlots.map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            className={`p-2 text-xs sm:text-sm rounded border transition-all ${
+                              selectedTime === time
+                                ? "bg-primaryColor text-white border-primaryColor"
+                                : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Navigation Buttons */}
-                <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mt-8">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(1)}
-                    className="px-6 py-2 order-2 sm:order-1"
-                  >
-                    <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                  </Button>
-                  <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+                  {/* Navigation Buttons */}
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mt-8">
                     <Button
                       variant="outline"
-                      className="px-6 py-2 bg-transparent"
+                      onClick={() => setStep(1)}
+                      className="px-6 py-2 order-2 sm:order-1"
                     >
-                      Cancel
+                      <ChevronLeft className="mr-2 h-4 w-4" /> Back
                     </Button>
-                    <Button
-                      onClick={() => setStep(3)}
-                      disabled={!date || !selectedTime}
-                      className="bg-primaryColor hover:bg-primaryColor text-white px-6 py-2"
-                    >
-                      Next <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+                      <Button
+                        variant="outline"
+                        className="px-6 py-2 bg-transparent"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setStep(3)}
+                        disabled={!date || !selectedTime}
+                        className="bg-primaryColor hover:bg-primaryColor text-white px-6 py-2"
+                      >
+                        Next <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

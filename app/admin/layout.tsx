@@ -15,7 +15,6 @@ import AdminSidebar from "@/components/admin/Sidebar";
 import { AdminProvider } from "../Providers";
 
 // Sidebar component
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
