@@ -18,6 +18,8 @@ about_clinic?: string;
     opening_time?: string;
   closing_time?: string;
   working_days: string[];
+  images: string[];
+
 }) => {
   try {
     const response = await axiosPrivate.post('/clinic/', {
@@ -33,7 +35,8 @@ about_clinic?: string;
       about_clinic: clinicData.about_clinic,
         opening_time: clinicData.opening_time,
       closing_time: clinicData.closing_time,
-      working_days: clinicData.working_days
+      working_days: clinicData.working_days,
+      images: clinicData.images
     });
     return response.data;
   } catch (error) {
