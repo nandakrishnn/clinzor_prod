@@ -109,222 +109,6 @@ const sampleClinics = [
   { uuid: "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0", name: "Lakeside Health Center" }
 ];
 
-// const sampleServices: Service[] = [
-//   {
-//     uuid: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-//     created_by: "admin@gmail.com",
-//     name: "cardiologist",
-//     description: "Specialist in diagnosing and treating heart and blood vessel conditions.",
-//     tags: "heart,cardiology,blood pressure,ECG,chest pain",
-//     image: null,
-//     status: "APPROVED"
-//   },
-//   {
-//     uuid: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-//     created_by: "admin@gmail.com",
-//     name: "heart speciality",
-//     description: "Focus on the diagnosis, treatment, and management of heart and blood vessel conditions",
-//     tags: "heart",
-//     image: null,
-//     status: "APPROVED"
-//   },
-//   {
-//     uuid: "62111833-4927-4060-acdf-f2d857e9d688",
-//     created_by: "admin@gmail.com",
-//     name: "neurologist",
-//     description: "Specialist in diagnosing and treating nervous system disorders.",
-//     tags: "brain,neurology,headache,seizure,stroke",
-//     image: null,
-//     status: "PENDING"
-//   },
-//   {
-//     uuid: "5bfffdfc-0af4-4d17-8d0c-08466e2315e5",
-//     created_by: "admin@gmail.com",
-//     name: "physician",
-//     description: "General medical practitioner providing comprehensive healthcare.",
-//     tags: "general,medicine,primary care,checkup",
-//     image: null,
-//     status: "REJECTED"
-//   },
-//   {
-//     uuid: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
-//     created_by: "admin@gmail.com",
-//     name: "dermatologist",
-//     description: "Expert in skin, hair, and nail disorders.",
-//     tags: "skin,acne,eczema,psoriasis,allergy",
-//     image: null,
-//     status: "APPROVED"
-//   },
-//   {
-//     uuid: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
-//     created_by: "admin@gmail.com",
-//     name: "orthopedic",
-//     description: "Specialist in bones, joints, and muscles.",
-//     tags: "bones,joints,fracture,arthritis,orthopedics",
-//     image: null,
-//     status: "PENDING"
-//   },
-//   {
-//     uuid: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
-//     created_by: "admin@gmail.com",
-//     name: "pediatrician",
-//     description: "Child health and development expert.",
-//     tags: "children,childcare,pediatrics,immunization,growth",
-//     image: null,
-//     status: "APPROVED"
-//   },
-//   {
-//     uuid: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
-//     created_by: "admin@gmail.com",
-//     name: "psychiatrist",
-//     description: "Mental health and behavioral specialist.",
-//     tags: "mental health,psychiatry,therapy,depression,anxiety",
-//     image: null,
-//     status: "REJECTED"
-//   }
-// ];
-
-// const sampleClinicServices: ClinicService[] = [
-//   {
-//     uuid: "159e3627-65eb-40b2-b535-37cbb6535ab8",
-//     service: "d7afe788-af8b-4fd4-b65b-bab700df841a",
-//     clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-//     service_name: "cardiology",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: "Advanced Cardiology Care",
-//     rank: 1,
-//     consultation_charge_video_call: "400.00",
-//     consultation_charge_physical_visit: "200.00",
-//     consultation_charge_home_visit: "200.00",
-//     treatment_charge_video_call: "600.00",
-//     treatment_charge_physical_visit: "500.00",
-//     treatment_charge_home_visit: "800.00",
-//     status: "APPROVED",
-//     is_video_call: true,
-//     is_home_visit: false,
-//     is_physical_visit: true,
-//     image: null,
-//     description: "Premium cardiology services with experienced specialists",
-//     reason_for_rejection: null,
-//     display_date: new Date().toISOString(),
-//   },
-//   {
-//     uuid: "269f4738-76fc-51c3-c646-48dcc7646cb9",
-//     service: "661d42bc-4393-49a3-ab8f-c24b6ab17c38",
-//     clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
-//     service_name: "heart speciality",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: null,
-//     rank: 2,
-//     consultation_charge_video_call: "350.00",
-//     consultation_charge_physical_visit: "180.00",
-//     consultation_charge_home_visit: "250.00",
-//     treatment_charge_video_call: "550.00",
-//     treatment_charge_physical_visit: "450.00",
-//     treatment_charge_home_visit: "700.00",
-//     status: "PENDING",
-//     is_video_call: true,
-//     is_home_visit: true,
-//     is_physical_visit: true,
-//     image: null,
-//     description: null,
-//     reason_for_rejection: null,
-//     display_date: new Date().toISOString(),
-//   },
-//   {
-//     uuid: "379e3627-65eb-40b2-b535-37cbb6535ab9",
-//     service: "9a8b7c6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4",
-//     clinic: "d4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
-//     service_name: "dermatologist",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: "Skin Wellness Center",
-//     rank: 3,
-//     consultation_charge_video_call: "300.00",
-//     consultation_charge_physical_visit: "250.00",
-//     consultation_charge_home_visit: "350.00",
-//     treatment_charge_video_call: "500.00",
-//     treatment_charge_physical_visit: "450.00",
-//     treatment_charge_home_visit: "600.00",
-//     status: "APPROVED",
-//     is_video_call: true,
-//     is_home_visit: false,
-//     is_physical_visit: true,
-//     image: null,
-//     description: "Comprehensive skin care and treatment.",
-//     reason_for_rejection: null,
-//     display_date: new Date().toISOString()
-//   },
-//   {
-//     uuid: "489f4738-76fc-51c3-c646-48dcc7646cb8",
-//     service: "8b7c6d5e-4f3g-2h1i-0j9k-8l7m6n5o4p3q",
-//     clinic: "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
-//     service_name: "orthopedic",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: "Bone & Joint Clinic",
-//     rank: 4,
-//     consultation_charge_video_call: "400.00",
-//     consultation_charge_physical_visit: "350.00",
-//     consultation_charge_home_visit: "400.00",
-//     treatment_charge_video_call: "700.00",
-//     treatment_charge_physical_visit: "600.00",
-//     treatment_charge_home_visit: "800.00",
-//     status: "PENDING",
-//     is_video_call: true,
-//     is_home_visit: true,
-//     is_physical_visit: true,
-//     image: null,
-//     description: "Bone, joint, and muscle care.",
-//     reason_for_rejection: null,
-//     display_date: new Date().toISOString()
-//   },
-//   {
-//     uuid: "591e3627-65eb-40b2-b535-37cbb6535ab1",
-//     service: "7c6d5e4f-3g2h-1i0j-9k8l-7m6n5o4p3q2r",
-//     clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-//     service_name: "pediatrician",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: "Child Health Center",
-//     rank: 5,
-//     consultation_charge_video_call: "350.00",
-//     consultation_charge_physical_visit: "300.00",
-//     consultation_charge_home_visit: "400.00",
-//     treatment_charge_video_call: "600.00",
-//     treatment_charge_physical_visit: "550.00",
-//     treatment_charge_home_visit: "700.00",
-//     status: "APPROVED",
-//     is_video_call: true,
-//     is_home_visit: false,
-//     is_physical_visit: true,
-//     image: null,
-//     description: "Pediatric care and immunizations.",
-//     reason_for_rejection: null,
-//     display_date: new Date().toISOString()
-//   },
-//   {
-//     uuid: "6a9e3627-65eb-40b2-b535-37cbb6535ab2",
-//     service: "6d5e4f3g-2h1i-0j9k-8l7m-6n5o4p3q2r1s",
-//     clinic: "b2c8f4d1-4a5b-4c7d-8e9f-1a2b3c4d5e6f",
-//     service_name: "psychiatrist",
-//     created_by: "admin@gmail.com",
-//     clinic_provided_name: "Mind Wellness Center",
-//     rank: 6,
-//     consultation_charge_video_call: "500.00",
-//     consultation_charge_physical_visit: "400.00",
-//     consultation_charge_home_visit: "500.00",
-//     treatment_charge_video_call: "800.00",
-//     treatment_charge_physical_visit: "700.00",
-//     treatment_charge_home_visit: "900.00",
-//     status: "REJECTED",
-//     is_video_call: true,
-//     is_home_visit: true,
-//     is_physical_visit: true,
-//     image: null,
-//     description: "Mental health and therapy services.",
-//     reason_for_rejection: "Incomplete documentation.",
-//     display_date: new Date().toISOString()
-//   }
-// ];
-
 const ServiceManagement: React.FC = () => {
   // Session management
   const { data: session } = useSession();
@@ -397,6 +181,14 @@ const ServiceManagement: React.FC = () => {
 
   // Validation state
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
 
   // Add after state declarations
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -404,33 +196,51 @@ const ServiceManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+// Add state for filters
+  const [statusFilter, setStatusFilter] = useState<string>('approved');
 
-  const fetchService = async () => {
+ // Modify the fetchService function to use parameters
+  const fetchService = async (pageNum: number = currentPage, searchText: string = searchTerm, status: string = statusFilter) => {
     try {
-      // Get clinic for current user first, then fetch services in parallel using clinic id
+      // Get clinic for current user first
+      setLoading(true);
       const clinicUserData = await Clinic_by_clinic_user();
       const clinicId = clinicUserData?.uuid as string;
+      
+      // Fetch services in parallel using clinic id with parameters
       const [servicesData, clinicServicesData] = await Promise.all([
         GetAllServiceForClinic(),
-         GetAllClinicService(clinicId, 'approved')
+        GetAllClinicService(clinicId, status, searchText, pageNum, itemsPerPage)
       ]);
 
       setClinicuser(clinicUserData);
-      // "services" and "allServices" represent the catalog to choose from
-      setServices(servicesData.data || []) ;
+      setServices(servicesData.data || []);
       setAllServices(servicesData.data || []);
-      // clinicServices are the services already attached to this clinic
       setClinicServices(clinicServicesData.data || []);
-
+      
+      setPaginationData({
+        current_page: clinicServicesData.current_page || 1,
+        total_pages: clinicServicesData.total_pages || 1,
+        total_items: clinicServicesData.total_items || 0,
+        next: clinicServicesData.next || null,
+        previous: clinicServicesData.previous || null
+      });
     } catch (error) {
       console.error("Error fetching data", error);
+    }finally{
+      setLoading(false);
     }
+
   }
+
+  // Update useEffect to use parameters
   useEffect(() => {
-    fetchService()
-  }, [])
-console.log(clinicUser, "clinic user data"  )
+    fetchService(1, searchTerm, statusFilter);
+  }, [statusFilter]); // Refetch when status filter changes
+  console.log(clinicUser, "clinic user data")
   // Set clinic ID when clinicUser is available
+
+
   useEffect(() => {
     if (clinicUser?.uuid) {
       setNewClinicService(prev => ({
@@ -445,6 +255,21 @@ console.log(clinicUser, "clinic user data"  )
   console.log(clinicServices, "service with data")
   console.log('Current session:', session);
 
+    const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    // Add debounce to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchService(1, term, statusFilter);
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  };
+
+  // Update pagination handler
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchService(page, searchTerm, statusFilter);
+  };
   // Helper functions
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -504,8 +329,8 @@ console.log(clinicUser, "clinic user data"  )
   });
 
   // Pagination logic
-  const currentData = filteredClinicServices;
-  const totalPages = Math.ceil(currentData.length / itemsPerPage);
+  const currentData = clinicServices;
+  const totalPages = paginationData.total_pages;
   const paginatedData = currentData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Statistics
@@ -625,11 +450,14 @@ console.log(clinicUser, "clinic user data"  )
 
     } catch (error: any) {
       console.error("Error creating clinic service:", error);
-      
+
       if (error.response?.data?.non_field_errors?.includes("unique set")) {
         showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
       } else {
-        showToast('Failed to create clinic service. Please try again.', 'error');
+        showToast(
+          error.response?.data?.message || "Failed to create clinic service. Please try again.",
+          "error"
+        );
       }
     }
   };
@@ -640,13 +468,13 @@ console.log(clinicUser, "clinic user data"  )
     try {
       // Call the API to delete the service
       await deleteClinicService(selectedItem.uuid);
-      
+
       // Update local state if API call succeeds
       setClinicServices(clinicServices.filter(cs => cs.uuid !== selectedItem.uuid));
-      
+
       // Show success feedback
       showToast('Clinic service deleted successfully!', 'success');
-      
+
       // Close the modal
       closeModal();
     } catch (error) {
@@ -716,33 +544,33 @@ console.log(clinicUser, "clinic user data"  )
   };
 
   // Add handler to save rank
-const handleSaveRank = async () => {
-  if (!selectedItem) return;
+  const handleSaveRank = async () => {
+    if (!selectedItem) return;
 
-  try {
-    // Prepare the request body in the required format
-    const requestBody = [
-      {
-        clinic_service: selectedItem.uuid,
-        rank: parseInt(rankEditValue)
-      }
-    ];
+    try {
+      // Prepare the request body in the required format
+      const requestBody = [
+        {
+          clinic_service: selectedItem.uuid,
+          rank: parseInt(rankEditValue)
+        }
+      ];
 
-    // Call the API to update the rank
-    await updateRankClinicService(requestBody);
+      // Call the API to update the rank
+      await updateRankClinicService(requestBody);
 
-    // Update local state if API call succeeds
-    setClinicServices(clinicServices.map(cs =>
-      cs.uuid === selectedItem.uuid ? { ...cs, rank: parseInt(rankEditValue) } : cs
-    ));
+      // Update local state if API call succeeds
+      setClinicServices(clinicServices.map(cs =>
+        cs.uuid === selectedItem.uuid ? { ...cs, rank: parseInt(rankEditValue) } : cs
+      ));
 
-    showToast('Rank updated successfully!', 'success');
-    closeModal();
-  } catch (error) {
-    console.error('Error updating rank:', error);
-    showToast('Failed to update rank', 'error');
-  }
-};
+      showToast('Rank updated successfully!', 'success');
+      closeModal();
+    } catch (error) {
+      console.error('Error updating rank:', error);
+      showToast('Failed to update rank', 'error');
+    }
+  };
 
   // Service search functions
   const handleOpenServiceSearch = () => {
@@ -848,6 +676,16 @@ const handleSaveRank = async () => {
     return () => { document.body.style.overflow = ''; };
   }, [datePickerModal.open]);
 
+if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -940,7 +778,7 @@ const handleSaveRank = async () => {
                     type="text"
                     placeholder="Search by service name, description, or clinic..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                     onChange={(e) => handleSearch(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                   />
                 </div>
@@ -1146,33 +984,33 @@ const handleSaveRank = async () => {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-              >
-                Prev
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
+           {totalPages > 1 && (
+    <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
+      <button
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1 || !paginationData.previous}
+        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+      >
+        Prev
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => handlePageChange(i + 1)}
+          className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
+        >
+          {i + 1}
+        </button>
+      ))}
+      <button
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages || !paginationData.next}
+        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  )}
         </div>
       </div>
 

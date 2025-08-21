@@ -77,14 +77,15 @@ interface OperatingHours {
 
 // Backend clinic type based on your useEffect
 interface BackendClinic {
-  name?: string;
-  email?: string;
-  contact_number?: string;
-  address?: string;
-  city?: string;
-  pincode?: number;
-  about_clinic?: string;
+  name: string;
+  email: string;
+  contact_number: string;
+  address: string;
+  city: string;
+  pincode: string;
+  about_clinic: string;
   coordinates?: string;
+  uuid?: string;
 }
 
 // Nominatim API response types
@@ -138,7 +139,7 @@ const ClinicSettingsDashboard = () => {
     }
   });
 
-  const { clinic } = useClinicByUser() as { clinic: (BackendClinic & { uuid?: string }) | null };
+  const { clinic , loading: isClinicLoading, error: clinicError } = useClinicByUser() 
   console.log(clinic, "clinic data");
 
   // Helper function to parse coordinates safely
@@ -206,7 +207,8 @@ const ClinicSettingsDashboard = () => {
         city: backendClinic?.city || '',
         postalCode: backendClinic?.pincode?.toString() || '',
         about: backendClinic?.about_clinic || '',
-        location: coordinates
+        location: coordinates,
+        uuid : backendClinic?.uuid || '',
       }));
     }
   }, [clinic]);
@@ -234,7 +236,7 @@ const ClinicSettingsDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [mapZoom, setMapZoom] = useState(13);
-
+  const [isLoading, setIsLoading] = useState(false);
   const clinicTypes: string[] = [
     'General Practice',
     'Dental Clinic',
@@ -333,7 +335,8 @@ const handleSave = async () => {
       coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`
     };
 
-    const clinicId = clinic?.uuid || ''; // Use the actual ID field from your clinic data
+// Then use it like this:
+const clinicId = clinic ? (clinic as BackendClinic).uuid || '' : ''; // Use the actual ID field from your clinic data
     
     await editClinicODetails(clinicId, requestData);
     
@@ -506,6 +509,16 @@ const handleSave = async () => {
     }
   };
 
+  if (isClinicLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Floating Navigation */}
