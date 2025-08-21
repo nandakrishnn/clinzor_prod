@@ -28,17 +28,17 @@ const AboutPage = () => {
       {/* About*/}
       <section className="bg-white pb-10">
         <div className="max-w-screen-[1480px] mx-auto relative ">
-            <PlatformIntro />
+          <PlatformIntro />
         </div>
       </section>
       <section className="bg-bgLight pb-10 md:pb-20">
-        <div className="max-w-screen-[1480px] mx-auto relative mt-20">
-            <HowItWorks />
+        <div className="max-w-screen-[1480px] mx-auto relative pt-14 mt-12">
+          <HowItWorks />
         </div>
       </section>
       <section className="bg-white  py-10 md:pb-20 sm:px-6">
         <div className="max-w-screen-[1480px] mx-auto relative mt-20">
-            <VideoConsultation />
+          <VideoConsultation />
         </div>
       </section>
 
