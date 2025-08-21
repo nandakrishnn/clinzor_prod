@@ -58,6 +58,32 @@ export const approveOrRejectExpert = async (id: string, body: {
     throw error;
   }
 };
+
+export const approveExpertSlot = async (slotId: string) => {
+  try {
+    const response = await axiosPrivate.patch(
+      `clinic/expert-slot-approval/${slotId}/`,
+      { status: 'APPROVED', reason_for_rejection: null }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Slot approval error:", error);
+    throw error;
+  }
+};
+
+export const rejectExpertSlot = async (slotId: string, reason: string) => {
+  try {
+    const response = await axiosPrivate.patch(
+      `clinic/expert-slot-approval/${slotId}/`,
+      { status: 'REJECTED', reason_for_rejection: reason }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Slot rejection error:", error);
+    throw error;
+  }
+};
 // doc
 export const createDoc = async (body:Expert) => {
   try {
@@ -103,18 +129,32 @@ export const GetAExpert = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllExpert= async (page:number) => {
+export const GetAllExpert = async (page: number = 1, search?: string, status?: string, gender?: string) => {
   try {
-    const response = await axiosPrivate.get(
-      `clinic/list-experts/?page=${page}`
-    );
+    const params: any = { page };
+    
+    if (search) params.search = search;
+    if (status && status !== 'ALL') params.status = status;
+    if (gender && gender !== 'ALL') params.gender = gender;
+
+    const response = await axiosPrivate.get(`clinic/list-experts/`, { params });
     return response.data;
+  } catch (error) {
+    console.error("Failed to fetch experts", error);
+    throw error;
+  }
+};
+
+
+export const getAllSlotsforExpret = async (params: any) => {
+  try {
+    const response = await axiosPrivate.get(`clinic/expert-slot-lc/`, { params });
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;
   }
 };
-
 export const GetAllClinicServiceforDoc= async (page:number) => {
   try {
     const response = await axiosPrivate.get(
