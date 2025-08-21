@@ -112,12 +112,53 @@ export default function BookingManagement() {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms debounce
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
   // Fetch bookings with pagination
-  const fetchBookings = async (page = 1) => {
+ const fetchBookings = async (
+    page = 1, 
+    search = '', 
+    status = 'ALL', 
+    paymentStatus = 'ALL', 
+    bookingType = 'ALL'
+  ) => {
     setIsLoading(true);
     try {
-      const response = await getAllBookings(page);
+      // Prepare query parameters
+      const params: any = {
+        page: page
+      };
+
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+
+      // Add status filter if provided
+      if (status !== 'ALL') {
+        params.status = status;
+      }
+
+      // Add payment status filter if provided
+      if (paymentStatus !== 'ALL') {
+        params.payment_status = paymentStatus;
+      }
+
+      // Add booking type filter if provided
+      if (bookingType !== 'ALL') {
+        params.booking_type = bookingType;
+      }
+
+      const response = await getAllBookings(params);
       setBookings(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -137,8 +178,14 @@ export default function BookingManagement() {
   };
 
   useEffect(() => {
-    fetchBookings(currentPage);
-  }, [currentPage]);
+    fetchBookings(
+      currentPage, 
+      debouncedSearchQuery, 
+      selectedStatus, 
+      selectedPaymentStatus, 
+      selectedBookingType
+    );
+  }, [currentPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus, selectedBookingType]);
 
   // Filter bookings client-side
   const filteredBookings = bookings.filter(booking => {
@@ -300,6 +347,18 @@ export default function BookingManagement() {
       </div>
     </div>
   );
+
+
+    if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Brain, User, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { createService, deleteService, editService, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
-
+import { uploadFiles } from '@/service/uploadService/uploadService';
+import { motion, AnimatePresence } from "framer-motion";
 type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 interface Service {
@@ -21,6 +22,91 @@ interface PaginationData {
   previous: string | null;
 }
 
+interface NotificationProps {
+  type: "success" | "error" | "warning";
+  message: string;
+  onClose: () => void;
+}
+type ModernModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  size?: "sm" | "lg" | "xl";
+  children: React.ReactNode;
+};
+const Notification = ({ type, message, onClose }: NotificationProps) => {
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case "error":
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case "warning":
+        return <AlertCircle className="h-5 w-5 text-yellow-400" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-50";
+      case "error":
+        return "bg-red-50";
+      case "warning":
+        return "bg-yellow-50";
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getBgColor()} border border-gray-200`}
+    >
+      <div className="flex items-center">
+        {getIcon()}
+        <p className="ml-3 text-sm font-medium text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-400 hover:text-gray-500"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+const ModernModal = ({
+  isOpen,
+  onClose,
+  title,
+  size = "lg",
+  children
+}: ModernModalProps) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div
+        className={`bg-white rounded-2xl shadow-2xl ${size === "lg" ? "max-w-4xl w-full" :
+          size === "xl" ? "max-w-5xl w-full" : "max-w-md w-full"
+          } max-h-[90vh] overflow-y-auto`}
+      >
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+};
 const MedicalServicesApp: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +129,7 @@ const MedicalServicesApp: React.FC = () => {
     name: string;
     description: string;
     tags: string;
-    image: string;
+   image: File | string | null;
   }>({
     name: '',
     description: '',
@@ -51,11 +137,18 @@ const MedicalServicesApp: React.FC = () => {
     image: '',
   });
   const [viewMode, setViewMode] = useState<'all' | 'approved'>('all');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+    const [notification, setNotification] = useState<{
+      type: "success" | "error" | "warning";
+      message: string;
+    } | null>(null);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
 
-  const fetchService = async (page = 1) => {
+  const fetchService = async (page = 1, search = '', status = 'ALL') => {
     setLoading(true);
     try {
-      const data = await GetAllService(page);
+      const data = await GetAllService(page, search, status);
       setServices(data.data);
       setPaginationData({
         current_page: data.current_page,
@@ -72,11 +165,14 @@ const MedicalServicesApp: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchService(currentPage);
-  }, [currentPage]);
+    fetchService(currentPage, searchTerm, statusFilter);
+  }, [currentPage, searchTerm, statusFilter]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
   console.log("service", services);
 
   const getServiceIcon = (name: string) => {
@@ -107,29 +203,61 @@ const MedicalServicesApp: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.description.trim() || !formData.tags.trim()) {
-      alert('Please fill in all fields');
+         setNotification({
+        type: "error",
+        message: "Please fill in all fields"
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
+      let imageUrl = '';
+      
+      // Upload image if a new file is selected
+      if (selectedImageFile) {
+        const imageUrls = await uploadFiles([selectedImageFile]);
+        imageUrl = imageUrls[0]; // Get the first uploaded image URL
+      } else if (typeof formData.image === 'string' && formData.image) {
+        // Use existing image URL if editing and no new image selected
+        imageUrl = formData.image;
+      }
+
+      const serviceData = {
+        name: formData.name,
+        description: formData.description,
+        tags: formData.tags,
+        image: imageUrl
+      };
+
       if (editingService) {
-        const updatedService = await editService(editingService.uuid, formData);
+        const updatedService = await editService(editingService.uuid, serviceData);
         setServices(services.map((service) =>
           service.uuid === editingService.uuid
             ? { ...service, ...updatedService }
             : service
         ));
+        setNotification({
+          type: 'success',
+          message: 'Service updated successfully!'
+        });
         fetchService(currentPage);
       } else {
-        const newService = await createService(formData);
+        const newService = await createService(serviceData);
         fetchService(currentPage);
         setServices([...services, newService]);
+        setNotification({
+          type: 'success',
+          message: 'Service created successfully!'
+        });
       }
       resetForm();
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error saving service:", error);
-      alert('Failed to save service. Please try again.');
+        setNotification({
+        type: 'error',
+        message: `Failed to update user: ${error.response?.data?.message || error.message}`
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -146,29 +274,44 @@ const MedicalServicesApp: React.FC = () => {
       name: service.name,
       description: service.description,
       tags: service.tags,
-      image: service.image || '',
+      image: service.image || null,
     });
     setEditingService(service);
     setIsFormOpen(true);
   };
 
-const handleDelete = async (uuid: string) => {
-  if (!window.confirm('Are you sure you want to delete this service?')) {
-    return;
-  }
+  const handleDelete = async (uuid: string) => {
+    setIsDeleting(uuid);
+    try {
+      await deleteService(uuid);
+      setServices(services.filter((service) => service.uuid !== uuid));
+      setNotification({
+        type: 'success',
+        message: 'Service deleted successfully!'
+      });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to delete service. Please try again.'
+      });
+    } finally {
+      setIsDeleting(null);
+      setDeleteModalOpen(false);
+      setServiceToDelete(null);
+    }
+  };
 
-  setIsDeleting(uuid);
-  try {
-    await deleteService(uuid);
-    // Only remove from state if API call succeeds
-    setServices(services.filter((service) => service.uuid !== uuid));
-  } catch (error) {
-    console.error("Error deleting service:", error);
-    alert('Failed to delete service. Please try again.');
-  } finally {
-    setIsDeleting(null);
-  }
-};
+
+  const openDeleteModal = (service: Service) => {
+    setServiceToDelete(service);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setServiceToDelete(null);
+  };
 
   const handleStatusChange = (uuid: string, newStatus: ServiceStatus) => {
     setServices(services.map((service) =>
@@ -290,39 +433,52 @@ const handleDelete = async (uuid: string) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between h-auto sm:h-20 py-4 sm:py-0 gap-4 sm:gap-0">
-            {viewMode === 'approved' && (
-              <button
-                onClick={handleBackToAll}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
-            )}
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Stethoscope className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {viewMode === 'approved' ? 'All Approved Services' : 'Service Management'}
-              </h1>
-              <p className="text-sm text-gray-500">
-                {viewMode === 'approved' ? 'View all approved services in the database' : 'Manage and monitor medical services'}
-              </p>
-            </div>
+  <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+    <div className="flex items-center justify-between h-auto sm:h-20 py-4">
+      {/* Left Section: Back button + Icon + Title */}
+      <div className="flex items-center gap-4">
+        {viewMode === "approved" && (
+          <button
+            onClick={handleBackToAll}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <Stethoscope className="w-6 h-6 text-white" />
           </div>
-          {viewMode === 'all' && (
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="font-medium">Add Service</span>
-            </button>
-          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {viewMode === "approved"
+                ? "All Approved Services"
+                : "Service Management"}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {viewMode === "approved"
+                ? "View all approved services in the database"
+                : "Manage and monitor medical services"}
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Right Section: Add Service button */}
+      {viewMode === "all" && (
+        <button
+          onClick={() => setIsFormOpen(true)}
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="font-medium">Add Service</span>
+        </button>
+      )}
+    </div>
+  </div>
+</div>
+
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Stats Cards - Only show in 'all' view */}
@@ -466,7 +622,7 @@ const handleDelete = async (uuid: string) => {
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(service.uuid)}
+                               onClick={() => openDeleteModal(service)}
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -614,7 +770,7 @@ const handleDelete = async (uuid: string) => {
                     placeholder="heart, cardiology, blood pressure"
                   />
                 </div>
-                <div>
+                   <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Service Image
                   </label>
@@ -623,9 +779,10 @@ const handleDelete = async (uuid: string) => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={e => {
+                        onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            setSelectedImageFile(file);
                             const reader = new FileReader();
                             reader.onload = (ev) => {
                               setFormData({ ...formData, image: ev.target?.result as string });
@@ -639,12 +796,15 @@ const handleDelete = async (uuid: string) => {
                     {formData.image && (
                       <div className="relative">
                         <img 
-                          src={formData.image} 
+                          src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} 
                           alt="Service Preview" 
                           className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                         />
                         <button
-                          onClick={() => setFormData({ ...formData, image: '' })}
+                          onClick={() => {
+                            setFormData({ ...formData, image: null });
+                            setSelectedImageFile(null);
+                          }}
                           className="absolute -top-2 -right-2 bg-red-100 rounded-full p-1 hover:bg-red-200 transition-colors"
                         >
                           <X className="w-4 h-4 text-red-600" />
@@ -787,6 +947,60 @@ const handleDelete = async (uuid: string) => {
           </div>
         </div>
       )}
+      
+      {/* Delete Confirmation Modal */}
+      <ModernModal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        title="Confirm Delete"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <p className="text-center text-gray-600">
+            Are you sure you want to delete the service{' '}
+            <strong>"{serviceToDelete?.name}"</strong>? This action cannot be undone.
+          </p>
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={closeDeleteModal}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => serviceToDelete && handleDelete(serviceToDelete.uuid)}
+              disabled={isDeleting === serviceToDelete?.uuid}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2"
+            >
+              {isDeleting === serviceToDelete?.uuid ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </ModernModal>
+
+       {/* Notification */}
+              <AnimatePresence>
+                {notification && (
+                  <Notification
+                    type={notification.type}
+                    message={notification.message}
+                    onClose={() => setNotification(null)}
+                  />
+                )}
+              </AnimatePresence>
     </div>
   );
 };

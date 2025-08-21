@@ -37,6 +37,7 @@ export const editService = async (
 };
 export const approveOrRejectClinicService = async (id: string, body: {
   status: string;
+  reason_for_rejection?: string;
 }) => {
   try {
     const response = await axiosPrivate.patch(`clinic/clinic-service-approval/${id}/`, body);
@@ -53,25 +54,60 @@ export const GetAClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllClinicService= async (page:number) => {
+export const GetAllClinicService = async (page: number, search: string = '', status: string = 'ALL', priority: string = 'ALL') => {
   try {
-    const response = await axiosPrivate.get(
-      `clinic/clinic-service-lc/?page=${page}`
-    );
+    // Build query parameters
+    const params: any = {
+      page: page
+    };
+
+    // Add search parameter if provided
+    if (search) {
+      params.search = search;
+    }
+
+    // Add status filter if provided and not 'ALL'
+    if (status !== 'ALL') {
+      params.status = status;
+    }
+
+    // Add priority filter if provided and not 'ALL'
+    if (priority !== 'ALL') {
+      params.priority = priority;
+    }
+
+    const response = await axiosPrivate.get('clinic/clinic-service-lc/', {
+      params: params
+    });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch clinic services", error);
     throw error;
   }
 };
-export const GetAllService= async (page: number) => {
+export const GetAllService = async (page: number, search: string = '', status: string = 'ALL') => {
   try {
-    const response = await axiosPrivate.get(
-      `clinic/service-lc/?page=${page}`
-    );
+    // Build query parameters
+    const params: any = {
+      page: page
+    };
+
+    // Add search parameter if provided
+    if (search) {
+      params.search = search;
+    }
+
+    // Add status filter if provided and not 'ALL'
+    if (status !== 'ALL') {
+      params.status = status;
+    }
+
+    const response = await axiosPrivate.get('clinic/service-lc/', {
+      params: params
+    });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch services", error);
     throw error;
   }
 };

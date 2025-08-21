@@ -23,24 +23,23 @@ export const getABooking= async (Id:string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
-export const getAllBookings = async (page:number) => {
+export const getAllBookings = async (params: any) => {
   try {
-    const response = await axiosPrivate.get(`clinic/admin-list-bookings/?page=${page}`);
+    const response = await axiosPrivate.get(`clinic/admin-list-bookings/`, { params });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch bookings", error);
     throw error;
   }
 };
 
 
 
-
 // Slot management 
 
-export const getAllSlots = async (page:number) => {
+export const getAllSlots = async (params: any) => {
   try {
-    const response = await axiosPrivate.get(`/clinic/slot-lc/?page=${page}`);
+    const response = await axiosPrivate.get(`/clinic/slot-lc/`, { params });
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
