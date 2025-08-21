@@ -67,14 +67,15 @@ export const GetASlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/expert-slot-rud/${Id}`);
 };
 
-export const GetAllSlot= async (page:number) => {
+
+export const GetAllSlot = async (params: any = {}) => {
   try {
-    const response = await axiosPrivate.get(
-      `clinic/expert-slot-lc/?page=${page}`
-    );
+    const response = await axiosPrivate.get('clinic/expert-slot-lc/', {
+      params: params
+    });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch slots", error);
     throw error;
   }
 };

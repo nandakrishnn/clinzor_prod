@@ -316,7 +316,16 @@ interface VideoCallModalProps {
   roomId: string;
   bookingId: string;
 }
-
+interface Filters {
+  booking_status: string;
+  payment_status: string;
+  booking_type: string;
+  payment_mode: string;
+  from_date: string;
+  to_date: string;
+  sort_by: string;
+  quick_date: string;
+}
 // Video Call Modal Component
 const VideoCallModal: React.FC<VideoCallModalProps> = ({ isOpen, onClose, roomId, bookingId }) => {
   const [videoCallUrl, setVideoCallUrl] = useState<string>('');
@@ -451,17 +460,16 @@ const ExpertBookingManager: React.FC = () => {
   });
 
   // Filter states
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     booking_status: 'ALL',
     payment_status: 'ALL',
     booking_type: 'ALL',
+    payment_mode: 'ALL',
     from_date: '',
     to_date: '',
-    payment_mode: 'ALL',
     sort_by: 'date_desc',
     quick_date: 'ALL'
   });
-
   const bookingStatuses = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELED'];
   const paymentStatuses = ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'];
   const bookingTypes = ['VIDEO_CALL', 'PHONE_CALL', 'PHYSICAL_VISIT'];
@@ -474,7 +482,7 @@ const ExpertBookingManager: React.FC = () => {
 
   // Add a counter for booking numbers
   const [bookingCounter, setBookingCounter] = useState(1);
-
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   // Add quick date options
   const quickDateOptions = [
     { value: 'ALL', label: 'All Time' },
@@ -492,119 +500,168 @@ const ExpertBookingManager: React.FC = () => {
     { value: 'status_asc', label: 'Status (A-Z)' },
     { value: 'status_desc', label: 'Status (Z-A)' }
   ];
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
 
-  const fetchBooking = async () => {
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+ const fetchBooking = async (page = 1, search = '', filters: Filters) => {
     try {
-      const data = await GetAllExpertBooking()
+      setIsLoading(true);
+      
+      // Prepare query parameters
+      const params: any = {
+        page: page
+      };
 
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+
+      // Add filter parameters if provided and not 'ALL'
+      if (filters.booking_status !== 'ALL') {
+        params.booking_status = filters.booking_status;
+      }
+      if (filters.payment_status !== 'ALL') {
+        params.payment_status = filters.payment_status;
+      }
+      if (filters.booking_type !== 'ALL') {
+        params.booking_type = filters.booking_type;
+      }
+      if (filters.payment_mode !== 'ALL') {
+        params.payment_mode = filters.payment_mode;
+      }
+      if (filters.from_date) {
+        params.from_date = filters.from_date;
+      }
+      if (filters.to_date) {
+        params.to_date = filters.to_date;
+      }
+      if (filters.sort_by) {
+        params.sort_by = filters.sort_by;
+      }
+      if (filters.quick_date && filters.quick_date !== 'ALL') {
+        params.quick_date = filters.quick_date;
+      }
+
+      const data = await GetAllExpertBooking(params);
       setBookings(data.data);
       setTotalItemsCount(data.total_items);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setNotification({ message: 'Failed to fetch bookings', type: 'error' });
-      
+    } finally {
+      setIsLoading(false);
     }
   }
+
+  // Fetch data when filters change
   useEffect(() => {
-    fetchBooking();
-  }, []);
+    fetchBooking(currentPage, debouncedSearchTerm, filters);
+  }, [currentPage, debouncedSearchTerm, filters]);
+
   console.log("Bookings fetched:", bookings); 
 
   // Update the filteredBookings logic to include sorting
-  const filteredBookings = useMemo(() => {
-    let filtered = bookings.filter(booking => {
-      const searchMatch = !searchTerm || 
-        booking.uuid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.created_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.expert.toLowerCase().includes(searchTerm.toLowerCase());
+  // const filteredBookings = useMemo(() => {
+  //   let filtered = bookings.filter(booking => {
+  //     const searchMatch = !searchTerm || 
+  //       booking.uuid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       booking.created_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       booking.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       booking.expert.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const statusMatch = filters.booking_status === 'ALL' || booking.booking_status === filters.booking_status;
-      const paymentMatch = filters.payment_status === 'ALL' || booking.payment_status === filters.payment_status;
-      const typeMatch = filters.booking_type === 'ALL' || booking.booking_type === filters.booking_type;
-      const modeMatch = filters.payment_mode === 'ALL' || booking.payment_mode === filters.payment_mode;
+  //     const statusMatch = filters.booking_status === 'ALL' || booking.booking_status === filters.booking_status;
+  //     const paymentMatch = filters.payment_status === 'ALL' || booking.payment_status === filters.payment_status;
+  //     const typeMatch = filters.booking_type === 'ALL' || booking.booking_type === filters.booking_type;
+  //     const modeMatch = filters.payment_mode === 'ALL' || booking.payment_mode === filters.payment_mode;
 
-      // Handle quick date filters
-      let dateMatch = true;
-      const bookingDate = new Date(booking.start_time);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+  //     // Handle quick date filters
+  //     let dateMatch = true;
+  //     const bookingDate = new Date(booking.start_time);
+  //     const today = new Date();
+  //     today.setHours(0, 0, 0, 0);
       
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+  //     const tomorrow = new Date(today);
+  //     tomorrow.setDate(tomorrow.getDate() + 1);
       
-      const thisWeekStart = new Date(today);
-      thisWeekStart.setDate(today.getDate() - today.getDay());
+  //     const thisWeekStart = new Date(today);
+  //     thisWeekStart.setDate(today.getDate() - today.getDay());
       
-      const nextWeekStart = new Date(thisWeekStart);
-      nextWeekStart.setDate(thisWeekStart.getDate() + 7);
+  //     const nextWeekStart = new Date(thisWeekStart);
+  //     nextWeekStart.setDate(thisWeekStart.getDate() + 7);
       
-      const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  //     const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-      switch (filters.quick_date) {
-        case 'TODAY':
-          dateMatch = bookingDate.toDateString() === today.toDateString();
-          break;
-        case 'TOMORROW':
-          dateMatch = bookingDate.toDateString() === tomorrow.toDateString();
-          break;
-        case 'THIS_WEEK':
-          dateMatch = bookingDate >= thisWeekStart && bookingDate < nextWeekStart;
-          break;
-        case 'NEXT_WEEK':
-          const nextWeekEnd = new Date(nextWeekStart);
-          nextWeekEnd.setDate(nextWeekStart.getDate() + 7);
-          dateMatch = bookingDate >= nextWeekStart && bookingDate < nextWeekEnd;
-          break;
-        case 'THIS_MONTH':
-          const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          dateMatch = bookingDate >= thisMonthStart && bookingDate <= thisMonthEnd;
-          break;
-        default:
-          if (filters.from_date || filters.to_date) {
-            const fromDate = filters.from_date ? new Date(filters.from_date) : null;
-            const toDate = filters.to_date ? new Date(filters.to_date) : null;
+  //     switch (filters.quick_date) {
+  //       case 'TODAY':
+  //         dateMatch = bookingDate.toDateString() === today.toDateString();
+  //         break;
+  //       case 'TOMORROW':
+  //         dateMatch = bookingDate.toDateString() === tomorrow.toDateString();
+  //         break;
+  //       case 'THIS_WEEK':
+  //         dateMatch = bookingDate >= thisWeekStart && bookingDate < nextWeekStart;
+  //         break;
+  //       case 'NEXT_WEEK':
+  //         const nextWeekEnd = new Date(nextWeekStart);
+  //         nextWeekEnd.setDate(nextWeekStart.getDate() + 7);
+  //         dateMatch = bookingDate >= nextWeekStart && bookingDate < nextWeekEnd;
+  //         break;
+  //       case 'THIS_MONTH':
+  //         const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  //         dateMatch = bookingDate >= thisMonthStart && bookingDate <= thisMonthEnd;
+  //         break;
+  //       default:
+  //         if (filters.from_date || filters.to_date) {
+  //           const fromDate = filters.from_date ? new Date(filters.from_date) : null;
+  //           const toDate = filters.to_date ? new Date(filters.to_date) : null;
 
-            if (fromDate && toDate) {
-              dateMatch = bookingDate >= fromDate && bookingDate <= toDate;
-            } else if (fromDate) {
-              dateMatch = bookingDate >= fromDate;
-            } else if (toDate) {
-              dateMatch = bookingDate <= toDate;
-            }
-          }
-      }
+  //           if (fromDate && toDate) {
+  //             dateMatch = bookingDate >= fromDate && bookingDate <= toDate;
+  //           } else if (fromDate) {
+  //             dateMatch = bookingDate >= fromDate;
+  //           } else if (toDate) {
+  //             dateMatch = bookingDate <= toDate;
+  //           }
+  //         }
+  //     }
 
-      return searchMatch && statusMatch && paymentMatch && typeMatch && modeMatch && dateMatch;
-    });
+  //     return searchMatch && statusMatch && paymentMatch && typeMatch && modeMatch && dateMatch;
+  //   });
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (filters.sort_by) {
-        case 'date_desc':
-          return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
-        case 'date_asc':
-          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-        case 'status_asc':
-          return a.booking_status.localeCompare(b.booking_status);
-        case 'status_desc':
-          return b.booking_status.localeCompare(a.booking_status);
-        default:
-          return 0;
-      }
-    });
+  //   // Apply sorting
+  //   filtered.sort((a, b) => {
+  //     switch (filters.sort_by) {
+  //       case 'date_desc':
+  //         return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+  //       case 'date_asc':
+  //         return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+  //       case 'status_asc':
+  //         return a.booking_status.localeCompare(b.booking_status);
+  //       case 'status_desc':
+  //         return b.booking_status.localeCompare(a.booking_status);
+  //       default:
+  //         return 0;
+  //     }
+  //   });
 
-    return filtered;
-  }, [bookings, searchTerm, filters]);
+  //   return filtered;
+  // }, [bookings, searchTerm, filters]);
 
+  const filteredBookings = bookings;
   // Memoize pagination calculations
   const paginationData = useMemo(() => {
     const totalItems = totalItemsCount;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const paginatedBookings = filteredBookings.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
+    const paginatedBookings = bookings; // API already returns paginated data
 
     return {
       totalItems,
@@ -613,7 +670,7 @@ const ExpertBookingManager: React.FC = () => {
       startIndex: (currentPage - 1) * itemsPerPage + 1,
       endIndex: Math.min(currentPage * itemsPerPage, totalItems)
     };
-  }, [filteredBookings, currentPage, itemsPerPage]);
+  }, [bookings, currentPage, itemsPerPage, totalItemsCount]);
 
   // Memoize statistics calculations
   const stats = useMemo(() => {
