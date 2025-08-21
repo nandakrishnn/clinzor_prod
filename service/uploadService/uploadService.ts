@@ -92,7 +92,12 @@ export const uploadFiles = async (files: File[]): Promise<string[]> => {
     // Wait for all uploads to complete
     const uploadedFileKeys = await Promise.all(uploadPromises);
     
-    return uploadedFileKeys;
+    // Return full URLs (combine upload_url with file_key)
+    // Note: You might need to adjust this based on your S3 bucket URL structure
+    const baseUrl = presignedResponse.data.uploads[0]?.upload_url.split('/').slice(0, 3).join('/');
+    const fullUrls = uploadedFileKeys.map(key => `${baseUrl}/${key}`);
+    
+    return fullUrls;
   } catch (error) {
     console.error("Error in upload process:", error);
     throw error;

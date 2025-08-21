@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, Building2, Calendar, MoreHorizontal, X, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, CreditCard, Eye } from 'lucide-react';
-import { GetAllDues } from '@/service/admin/dueManagementService';
+import { GetAllDues, GetAllPayment } from '@/service/admin/dueManagementService';
+
 import * as XLSX from 'xlsx';
 
 // Modal component with Apple-style design
@@ -107,6 +108,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
     </div>
   );
 };
+
 // Booking type
 type Booking = {
   uuid: string;
@@ -128,31 +130,25 @@ type Booking = {
 
 // PaymentRecord type
 type PaymentRecord = {
-  transactionId: string;
-  bookingId: string;
-  paymentDate: string;
-  amount: number;
+  uuid: string;
+  booking: string;
+  expert_booking: string | null;
+  clinic: string;
+  user: string;
+  created_by: string | null;
+  amount: string;
   currency: string;
-  paymentStatus: 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED';
-  paymentMethod: 'CARD' | 'UPI' | 'NET_BANKING' | 'WALLET' | 'CASH';
-  serviceType: 'VIDEO_CALL' | 'PHYSICAL_VISIT';
-  patientName: string;
-  patientEmail: string;
-  patientMobile: string;
-  clinicName: string;
-  clinicId: string;
-  serviceName: string;
-  sessionDuration: number;
-  doctorName: string;
-  bookingDate: string;
-  processingFee: number;
-  platformFee: number;
-  netAmount: number;
-  refundAmount?: number;
-  refundDate?: string;
-  gatewayTransactionId: string;
-  paymentGateway: 'RAZORPAY' | 'STRIPE' | 'PAYU' | 'CASHFREE';
-  remarks?: string;
+  transaction_id: string;
+  notes: string | null;
+  status: string;
+  payment_type: string;
+  payment_id: string;
+  patient_name: string;
+  service_name: string;
+  clinic_service_name: string | null;
+  clinic_name: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 // Clinic type matching API response
@@ -189,14 +185,6 @@ type Clinic = {
   };
 };
 
-// Sample bookings data
-const sampleBookings: Booking[] = [
-  // ... (keep your existing sample bookings data)
-];
-
-const samplePaymentRecords: PaymentRecord[] = [
-  // ... (keep your existing sample payment records data)
-];
 interface PaginationData {
   current_page: number;
   total_pages: number;
@@ -204,6 +192,7 @@ interface PaginationData {
   next: string | null;
   previous: string | null;
 }
+
 const DueManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -211,12 +200,14 @@ const DueManagement = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const [dueTypeFilter, setDueTypeFilter] = useState('ALL');
   const [activeTab, setActiveTab] = useState('DUES');
   const [sortBy, setSortBy] = useState<'default' | 'highest' | 'lowest'>('default');
   const [modalBookingFilter, setModalBookingFilter] = useState<'ALL' | 'SERVICE' | 'SESSION'>('ALL');
   const [duesData, setDuesData] = useState<Clinic[]>([]);
+  const [paymentData, setPaymentData] = useState<PaymentRecord[]>([]);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
@@ -228,11 +219,34 @@ const DueManagement = () => {
     next: null,
     previous: null
   });
+  const [paymentPaginationData, setPaymentPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
   const [loading, setLoading] = useState(false);
-  const fetchDuesData = async (page = 1) => {
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  // Fetch dues data
+  const fetchDuesData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
     setLoading(true);
     try {
-      const response = await GetAllDues(page);
+      const response = await GetAllDues(page, search, filter, sort);
       setDuesData(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -247,45 +261,49 @@ const DueManagement = () => {
         type: 'error',
         message: 'Failed to fetch dues data'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDuesData(currentPage);
-    setTimeout(() => setAnimateCards(true), 100);
-  }, [currentPage]);
-  console.log(duesData, "due data ")
+  // Fetch payment data
+  const fetchPaymentData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
+    setLoading(true);
+    try {
+      const response = await GetAllPayment(page, search, filter, sort);
+      setPaymentData(response.data);
+      setPaymentPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
+    } catch (error) {
+      console.error("Error fetching payment data:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to fetch payment data'
+      });
+    } finally {
+       setLoading(false);
+    }
+  };
 
-  // Calculate totals
+  // Fetch data when filters change
+  useEffect(() => {
+    if (activeTab === 'DUES') {
+      fetchDuesData(currentPage, debouncedSearchTerm, selectedFilter, sortBy);
+    } else if (activeTab === 'PAYMENT_HISTORY') {
+      fetchPaymentData(paymentCurrentPage, debouncedSearchTerm, selectedFilter, sortBy);
+    }
+    setTimeout(() => setAnimateCards(true), 100);
+  }, [currentPage, paymentCurrentPage, debouncedSearchTerm, selectedFilter, sortBy, activeTab]);
+
+  // Calculate totals for dues
   const totalDues = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_dues, 0);
   const totalPaid = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_paid, 0);
   const totalRemaining = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.remaining_dues, 0);
-
-  // Filter and search logic
-  const filteredClinics = duesData?.filter(clinic => {
-    const matchesSearch = clinic.clinic_detail.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    if (selectedFilter === 'all') return matchesSearch;
-    if (selectedFilter === 'outstanding') return matchesSearch && clinic.due_detail.remaining_dues > 0;
-    if (selectedFilter === 'paid') return matchesSearch && clinic.due_detail.remaining_dues === 0 && clinic.due_detail.total_paid > 0;
-    if (selectedFilter === 'credit') return matchesSearch && clinic.due_detail.remaining_dues < 0;
-
-    return matchesSearch;
-  });
-
-  // Sorting logic for clinics
-  const sortedClinics = (() => {
-    if (sortBy === 'highest') {
-      return [...filteredClinics].sort((a, b) => b.due_detail.remaining_dues - a.due_detail.remaining_dues);
-    } else if (sortBy === 'lowest') {
-      return [...filteredClinics].sort((a, b) => a.due_detail.remaining_dues - b.due_detail.remaining_dues);
-    }
-    return filteredClinics;
-  })();
-
-  // Pagination logic
-  // const totalPages = Math.ceil(sortedClinics?.length / itemsPerPage);
-  // const paginatedClinics = sortedClinics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getStatusInfo = (remaining: number) => {
     if (remaining > 0) return {
@@ -305,12 +323,21 @@ const DueManagement = () => {
     };
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0
-    }).format(Math.abs(amount));
+    }).format(Math.abs(numAmount));
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const handleViewDetails = (clinic: Clinic) => {
@@ -337,35 +364,21 @@ const DueManagement = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Find clinics with overdue payments
-  const now = new Date();
-  const overdueClinics = duesData.filter(clinic => {
-    const bookings = sampleBookings.filter(b => b.clinic_id === clinic.clinic_detail.uuid && b.payment_status === 'PENDING');
-    return bookings.some(b => {
-      const bookingDate = new Date(b.start_time);
-      const diffDays = (now.getTime() - bookingDate.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays > 7;
-    });
-  });
-
-  const clinicIds = duesData.map(c => c.clinic_detail.uuid);
-  const filteredPaymentRecords = samplePaymentRecords.filter(r => clinicIds.includes(r.clinicId));
-
-  // Helper to get bookings for a clinic (with modal filter)
-  const getClinicBookings = (clinicId: string) => {
-    let filtered = sampleBookings.filter(b => b.clinic_id === clinicId);
-    if (modalBookingFilter === 'SERVICE') filtered = filtered.filter(b => b.session_type !== 'SESSION');
-    if (modalBookingFilter === 'SESSION') filtered = filtered.filter(b => b.session_type === 'SESSION');
-    return filtered;
+  const handlePaymentPageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paymentPaginationData.total_pages) {
+      setPaymentCurrentPage(newPage);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleExport = () => {
-    try {
-      // Create a new workbook
-      const wb = XLSX.utils.book_new();
+const handleExport = () => {
+  try {
+    // Create a new workbook
+    const wb = XLSX.utils.book_new();
 
+    if (activeTab === 'DUES') {
       // 1. Export Dues Management data
-      const duesData = sortedClinics.map(clinic => ({
+      const exportDuesData: any[] = duesData.map((clinic: Clinic) => ({
         'Clinic Name': clinic.clinic_detail.name,
         'City': clinic.clinic_detail.city,
         'Contact': `+${clinic.clinic_detail.country_code} ${clinic.clinic_detail.contact_number}`,
@@ -375,43 +388,66 @@ const DueManagement = () => {
         'Status': clinic.due_detail.remaining_dues > 0 ? 'Outstanding' :
           clinic.due_detail.remaining_dues < 0 ? 'Credit' : 'Settled'
       }));
-      const duesWS = XLSX.utils.json_to_sheet(duesData);
+      const duesWS = XLSX.utils.json_to_sheet(exportDuesData);
       XLSX.utils.book_append_sheet(wb, duesWS, "Dues Management");
+    } else if (activeTab === 'PAYMENT_HISTORY') {
+      // 2. Export Payment History data
+      const exportPaymentData: any[] = paymentData.map((record: PaymentRecord) => ({
+        'Transaction ID': record.transaction_id,
+        'Payment Date': record.created_at ? formatDate(record.created_at) : 'N/A',
+        'Amount': record.amount,
+        'Status': record.status,
+        'Patient': record.patient_name || 'N/A',
+        'Clinic': record.clinic_name || 'N/A',
+        'Service': record.service_name || 'N/A',
+        'Payment Type': record.payment_type
+      }));
+      const paymentWS = XLSX.utils.json_to_sheet(exportPaymentData);
+      XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
+    }
 
-      // 2. Export Payment History data (if activeTab is PAYMENT_HISTORY)
-      if (activeTab === 'PAYMENT_HISTORY') {
-        const paymentData = filteredPaymentRecords.map(record => ({
-          'Transaction ID': record.transactionId,
-          'Payment Date': new Date(record.paymentDate).toLocaleDateString(),
-          'Amount': record.amount,
-          'Status': record.paymentStatus,
-          'Method': record.paymentMethod,
-          'Patient': record.patientName,
-          'Clinic': record.clinicName,
-          'Service': record.serviceName
-        }));
-        const paymentWS = XLSX.utils.json_to_sheet(paymentData);
-        XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
-      }
+    // Generate Excel file and trigger download
+    const date = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `${activeTab === 'DUES' ? 'Due' : 'Payment'}_Management_Report_${date}.xlsx`);
 
-      // Generate Excel file and trigger download
-      const date = new Date().toISOString().split('T')[0];
-      XLSX.writeFile(wb, `Due_Management_Report_${date}.xlsx`);
+    setNotification({
+      type: 'success',
+      message: 'Report exported successfully'
+    });
+  } catch (error) {
+    console.error('Export error:', error);
+    setNotification({
+      type: 'error',
+      message: 'Failed to export report'
+    });
+  }
+};
 
-      setNotification({
-        type: 'success',
-        message: 'Report exported successfully'
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      setNotification({
-        type: 'error',
-        message: 'Failed to export report'
-      });
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Completed</span>;
+      case 'PENDING':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Pending</span>;
+      case 'FAILED':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Failed</span>;
+      case 'REFUNDED':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">Refunded</span>;
+      default:
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">{status}</span>;
     }
   };
-  const totalPages = paginationData.total_pages;
-  const totalItems = paginationData.total_items;
+
+   if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -433,7 +469,10 @@ const DueManagement = () => {
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                   }`}
-                onClick={() => setActiveTab('DUES')}
+                onClick={() => {
+                  setActiveTab('DUES');
+                  setCurrentPage(1);
+                }}
               >
                 Dues Management
               </button>
@@ -442,7 +481,10 @@ const DueManagement = () => {
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                   }`}
-                onClick={() => setActiveTab('PAYMENT_HISTORY')}
+                onClick={() => {
+                  setActiveTab('PAYMENT_HISTORY');
+                  setPaymentCurrentPage(1);
+                }}
               >
                 Payment History
               </button>
@@ -454,39 +496,6 @@ const DueManagement = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'DUES' && (
           <>
-            {/* Overdue Alert */}
-            {overdueClinics.length > 0 && (
-              <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-red-100 rounded-xl">
-                    <Clock className="w-5 h-5 text-red-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-red-800">Overdue Payments</h2>
-                    <p className="text-red-600 text-sm">{overdueClinics.length} clinic(s) have payments pending for more than a week</p>
-                  </div>
-                </div>
-                <div className="grid gap-3">
-                  {overdueClinics.slice(0, 3).map(clinic => (
-                    <div key={clinic.clinic_detail.uuid} className="p-4 bg-white rounded-xl border border-red-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold text-gray-900">{clinic.clinic_detail.name}</div>
-                          <div className="text-sm text-red-600">Outstanding: {formatCurrency(clinic.due_detail.remaining_dues)}</div>
-                        </div>
-                        <button
-                          onClick={() => handleViewDetails(clinic)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors duration-200"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className={`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm transform transition-all duration-700 ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
@@ -674,11 +683,106 @@ const DueManagement = () => {
             {/* Pagination */}
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
+              totalPages={paginationData.total_pages}
               onPageChange={handlePageChange}
-              totalItems={totalItems}
+              totalItems={paginationData.total_items}
               itemsPerPage={itemsPerPage}
             />
+          </>
+        )}
+
+        {activeTab === 'PAYMENT_HISTORY' && (
+          <>
+            {/* Search and Filter for Payment History */}
+            <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="relative flex-1 max-w-lg">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search payments..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <select
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
+                    className="px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium"
+                  >
+                    <option value="all">All Payments</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="FAILED">Failed</option>
+                    <option value="REFUNDED">Refunded</option>
+                  </select>
+                  <button
+                    onClick={handleExport}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    Export Report
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment History Table */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-700">
+                      <th className="p-4 text-left font-semibold">Transaction ID</th>
+                      <th className="p-4 text-left font-semibold">Payment Date</th>
+                      <th className="p-4 text-left font-semibold">Amount</th>
+                      <th className="p-4 text-left font-semibold">Status</th>
+                      <th className="p-4 text-left font-semibold">Patient</th>
+                      <th className="p-4 text-left font-semibold">Clinic</th>
+                      <th className="p-4 text-left font-semibold">Service</th>
+                      <th className="p-4 text-left font-semibold">Payment Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentLoading ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                          Loading payment data...
+                        </td>
+                      </tr>
+                    ) : paymentData.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                          No payment records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      paymentData.map((payment) => (
+                        <tr key={payment.uuid} className="border-t hover:bg-blue-50/40 transition">
+                          <td className="p-4 font-medium text-gray-900">{payment.transaction_id}</td>
+                          <td className="p-4">{payment.created_at ? formatDate(payment.created_at) : 'N/A'}</td>
+                          <td className="p-4">{formatCurrency(payment.amount)}</td>
+                          <td className="p-4">{getStatusBadge(payment.status)}</td>
+                          <td className="p-4">{payment.patient_name || 'N/A'}</td>
+                          <td className="p-4">{payment.clinic_name || 'N/A'}</td>
+                          <td className="p-4">{payment.service_name || 'N/A'}</td>
+                          <td className="p-4">{payment.payment_type}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination for Payment History */}
+              <Pagination
+                currentPage={paymentCurrentPage}
+                totalPages={paymentPaginationData.total_pages}
+                onPageChange={handlePaymentPageChange}
+                totalItems={paymentPaginationData.total_items}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
           </>
         )}
       </div>
@@ -743,117 +847,6 @@ const DueManagement = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Bookings Section */}
-            <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Calendar className="w-5 h-5 text-purple-500" />
-                <span className="font-semibold text-gray-900 text-lg">Bookings</span>
-                <select
-                  value={modalBookingFilter}
-                  onChange={e => setModalBookingFilter(e.target.value as any)}
-                  className="ml-auto px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
-                >
-                  <option value="ALL">All</option>
-                  <option value="SERVICE">Service</option>
-                  <option value="SESSION">Session</option>
-                </select>
-              </div>
-              <div className="border-t border-dashed border-gray-200 my-2"></div>
-              {getClinicBookings(selectedClinic.clinic_detail.uuid).length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm border rounded-xl bg-white">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-700">
-                        <th className="p-3 text-left font-semibold">Patient</th>
-                        <th className="p-3 text-left font-semibold">Service</th>
-                        <th className="p-3 text-left font-semibold">Session</th>
-                        <th className="p-3 text-left font-semibold">Date</th>
-                        <th className="p-3 text-left font-semibold">Status</th>
-                        <th className="p-3 text-left font-semibold">Amount</th>
-                        <th className="p-3 text-left font-semibold">Due</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getClinicBookings(selectedClinic.clinic_detail.uuid).map(b => (
-                        <tr key={b.uuid} className="border-t hover:bg-blue-50/40 transition">
-                          <td className="p-3 font-medium text-gray-900">{b.patient_name}</td>
-                          <td className="p-3">{b.service_type}</td>
-                          <td className="p-3">{b.session_type}</td>
-                          <td className="p-3">{new Date(b.start_time).toLocaleDateString()}</td>
-                          <td className="p-3">
-                            {b.payment_status === 'PENDING' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Due</span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Paid</span>
-                            )}
-                          </td>
-                          <td className="p-3">{formatCurrency(Number(b.booking_charge))}</td>
-                          <td className="p-3">
-                            {b.payment_status === 'PENDING' ? (
-                              <AlertCircle className="w-4 h-4 text-red-500 inline" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-green-500 inline" />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 text-sm py-4">No bookings found for this clinic.</div>
-              )}
-            </div>
-
-            {/* Payment History Section */}
-            <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <CreditCard className="w-5 h-5 text-teal-500" />
-                <span className="font-semibold text-gray-900 text-lg">Payment History</span>
-              </div>
-              <div className="border-t border-dashed border-gray-200 my-2"></div>
-              {samplePaymentRecords.filter(r => r.clinicId === selectedClinic.clinic_detail.uuid).length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm border rounded-xl bg-white">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-700">
-                        <th className="p-3 text-left font-semibold">Payment Date</th>
-                        <th className="p-3 text-left font-semibold">Amount</th>
-                        <th className="p-3 text-left font-semibold">Status</th>
-                        <th className="p-3 text-left font-semibold">Transaction ID</th>
-                        <th className="p-3 text-left font-semibold">Payment Method</th>
-                        <th className="p-3 text-left font-semibold">Gateway</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {samplePaymentRecords.filter(r => r.clinicId === selectedClinic.clinic_detail.uuid).map(r => (
-                        <tr key={r.transactionId} className="border-t hover:bg-teal-50/40 transition">
-                          <td className="p-3">{new Date(r.paymentDate).toLocaleDateString()}</td>
-                          <td className="p-3">{formatCurrency(r.amount)}</td>
-                          <td className="p-3">
-                            {r.paymentStatus === 'COMPLETED' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Completed</span>
-                            ) : r.paymentStatus === 'PENDING' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Pending</span>
-                            ) : r.paymentStatus === 'FAILED' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Failed</span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">Refunded</span>
-                            )}
-                          </td>
-                          <td className="p-3">{r.transactionId}</td>
-                          <td className="p-3">{r.paymentMethod}</td>
-                          <td className="p-3">{r.paymentGateway}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 text-sm py-4">No payment records found for this clinic.</div>
-              )}
             </div>
           </div>
         )}

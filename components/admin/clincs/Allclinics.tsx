@@ -633,65 +633,73 @@ export default function ClinicManagement() {
       return;
     }
 
-    setIsSubmitting(true);
-    setUploadingFiles(true);
-    try {
-      // Upload files if any are selected
-      let imageUrls: string[] = [];
-      let certificateUrl = "";
+     setIsSubmitting(true);
+  setUploadingFiles(true);
+  try {
+    // Upload files if any are selected
+    let imageUrls: string[] = [];
+    let certificateUrl = "";
 
-      if (selectedImages.length > 0) {
-        imageUrls = await uploadFiles(selectedImages);
-      }
-
-      if (selectedRegistrationCertificate) {
-        const certificateUrls = await uploadFiles([selectedRegistrationCertificate]);
-        certificateUrl = certificateUrls[0];
-      }
-      const clinicData = {
-        name: newClinic.name,
-        email: newClinic.email,
-        phone: newClinic.phone,
-        city: newClinic.city,
-        address: newClinic.address,
-        pincode: newClinic.pincode,
-        landmark: newClinic.landmark,
-        map_link: newClinic.mapLink,
-        gps_coordinates: newClinic.gpsCoordinates,
-        opening_time: newClinic.openingTime,
-        closing_time: newClinic.closingTime,
-        working_days: newClinic.workingDays,
-        about_clinic: newClinic.about_clinic,
-        gst_no: newClinic.gst_no,
-        images: imageUrls,
-        registration_certificate: certificateUrl
-      };
-
-      const createdClinic = await createClinic(clinicData);
-
-      // Store the created clinic UUID for the next step
-      setNewUser(prev => ({
-        ...prev,
-        clinic: createdClinic.data.uuid,
-        email: newClinic.email // Pre-fill email for user creation
-      }));
-
-      // Move to next step
-      setCurrentStep(1);
-
-      setNotification({
-        type: "success",
-        message: "Clinic created successfully! Now create an admin user."
-      });
-    } catch (error: any) {
-      setNotification({
-        type: "error",
-        message: `Failed to add clinic: ${error.message}`
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (selectedImages.length > 0) {
+      imageUrls = await uploadFiles(selectedImages);
     }
-  };
+
+    if (selectedRegistrationCertificate) {
+      const certificateUrls = await uploadFiles([selectedRegistrationCertificate]);
+      certificateUrl = certificateUrls[0];
+    }
+
+    const clinicData = {
+      name: newClinic.name,
+      email: newClinic.email,
+      phone: newClinic.phone,
+      city: newClinic.city,
+      address: newClinic.address,
+      pincode: newClinic.pincode,
+      landmark: newClinic.landmark,
+      map_link: newClinic.mapLink,
+      gps_coordinates: newClinic.gpsCoordinates,
+      opening_time: newClinic.openingTime,
+      closing_time: newClinic.closingTime,
+      working_days: newClinic.workingDays,
+      about_clinic: newClinic.about_clinic,
+      gst_no: newClinic.gst_no,
+      images: imageUrls, // This should now be an array of full URLs
+      registration_certificate: certificateUrl // This should be a single URL string
+    };
+
+    const createdClinic = await createClinic(clinicData);
+
+    // Clear uploaded files after successful submission
+    setSelectedImages([]);
+    setSelectedRegistrationCertificate(null);
+    setUploadedImageUrls([]);
+    setUploadedCertificateUrl("");
+
+    // Store the created clinic UUID for the next step
+    setNewUser(prev => ({
+      ...prev,
+      clinic: createdClinic.data.uuid,
+      email: newClinic.email // Pre-fill email for user creation
+    }));
+
+    // Move to next step
+    setCurrentStep(1);
+
+    setNotification({
+      type: "success",
+      message: "Clinic created successfully! Now create an admin user."
+    });
+  } catch (error: any) {
+    setNotification({
+      type: "error",
+      message: `Failed to add clinic: ${error.message}`
+    });
+  } finally {
+    setIsSubmitting(false);
+    setUploadingFiles(false);
+  }
+};
 
   const handleAddUserStep2 = async () => {
     if (
@@ -749,7 +757,11 @@ export default function ClinicManagement() {
 
       setIsAddModalOpen(false);
       setCurrentStep(0);
-
+  // Clear uploaded files
+  setSelectedImages([]);
+  setSelectedRegistrationCertificate(null);
+  setUploadedImageUrls([]);
+  setUploadedCertificateUrl("");
       // Refresh clinics list
       fetchClinics();
 

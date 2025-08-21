@@ -53,14 +53,47 @@ const SlotManager = () => {
     previous: null
   });
   const [isLoading, setIsLoading] = useState(false);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(clinicNameSearch);
+    }, 500); // 500ms debounce
 
-  const fetchSlots = async (page = 1, filters = {}) => {
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [clinicNameSearch]);
+  const fetchSlots = async (page = 1, search = '', status = 'ALL', fromDate = '', toDate = '') => {
     setIsLoading(true);
     try {
-      const response = await getAllSlots(page);
+      // Prepare query parameters
+      const params: any = {
+        page: page
+      };
+      
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+      
+      // Add status filter if provided and not 'ALL'
+      if (status !== 'ALL') {
+        params.status = status;
+      }
+      
+      // Add date filters if provided
+      if (fromDate) {
+        params.from_date = fromDate;
+      }
+      
+      if (toDate) {
+        params.to_date = toDate;
+      }
+
+      const response = await getAllSlots(params);
       
       setSlots(response.data);
-      console.log(response,'response data')
       setPaginationData({
         current_page: response.current_page,
         total_pages: response.total_pages,
@@ -76,9 +109,17 @@ const SlotManager = () => {
     }
   };
 
+  // Fetch slots when any filter changes
   useEffect(() => {
-    fetchSlots(currentPage);
-  }, [currentPage, statusFilter, clinicNameSearch, fromDate, toDate]);
+    // Reset to first page when filters change
+    setCurrentPage(1);
+    fetchSlots(1, debouncedSearchQuery, statusFilter, fromDate, toDate);
+  }, [debouncedSearchQuery, statusFilter, fromDate, toDate]);
+
+  // Fetch slots when page changes (but keep filters)
+  useEffect(() => {
+    fetchSlots(currentPage, debouncedSearchQuery, statusFilter, fromDate, toDate);
+  }, [currentPage]);;
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);

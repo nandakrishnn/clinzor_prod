@@ -19,10 +19,11 @@ import {
   Trash2,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Home
 } from 'lucide-react';
-import { approveOrRejectExpert, createExpert, deleteExpert, GetAllClinicServiceforDoc, GetAllExpert } from '@/service/admin/expertManagementService';
-import { getAllBookings, getAllSlots } from '@/service/admin/bookingManagementService';
+import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, rejectExpertSlot } from '@/service/admin/expertManagementService';
+import { approveSlot, getAllBookings, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
 import { getAllClinic } from '@/service/admin/clinicManagentService';
 import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
 
@@ -42,6 +43,8 @@ type Expert = {
   joinedDate?: string;
   clinic_service?: string;
   education?: string;
+  address?: string;
+  dob?: string;
 };
 
 type Booking = {
@@ -50,11 +53,13 @@ type Booking = {
   patientEmail: string;
   date: string;
   time: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'CANCELED';
+  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'CANCELED' | 'SCHEDULED';
   type: 'CONSULTATION' | 'FOLLOW_UP' | 'EMERGENCY' | string;
   booking_type?: string;
   session_type?: string;
   clinic_name?: string;
+  start_time: string;
+  end_time: string;
 };
 
 type Slot = {
@@ -66,6 +71,8 @@ type Slot = {
   status: string;
   clinic_name: string;
   slot_type: string;
+  is_booked: boolean;
+  expert?: string;
 };
 
 interface PaginationData {
@@ -108,8 +115,8 @@ const StatusBadge = ({ enabled }: { enabled: 'APPROVED' | 'PENDING' | 'REJECTED'
   const config = statusConfig[enabled];
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config?.bg} ${config.textColor} ${config.border}`}>
-      {config.text}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config?.bg} ${config?.textColor} ${config?.border}`}>
+      {config?.text}
     </span>
   );
 };
@@ -127,15 +134,26 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
   const colors = {
     CONFIRMED: 'bg-green-100 text-green-800 border-green-200',
     PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    CANCELLED: 'bg-red-100 text-red-800 border-red-200'
+    CANCELLED: 'bg-red-100 text-red-800 border-red-200',
+    CANCELED: 'bg-red-100 text-red-800 border-red-200',
+    SCHEDULED: 'bg-blue-100 text-blue-800 border-blue-200'
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colors[status as keyof typeof colors]}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
       {status}
     </span>
   );
 };
+
+const SlotStatusBadge = ({ is_booked }: { is_booked: boolean }) => (
+  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${is_booked
+    ? 'bg-red-100 text-red-800 border-red-200'
+    : 'bg-green-100 text-green-800 border-green-200'
+    }`}>
+    {is_booked ? 'Booked' : 'Available'}
+  </span>
+);
 
 const Notification = ({ type, message, onClose }: {
   type: 'success' | 'error' | 'warning';
@@ -259,8 +277,6 @@ const InputField = ({
 export default function ExpertManagement() {
   // State
   const [experts, setExperts] = useState<Expert[]>([]);
-  const [slots, setSlots] = useState<{ [expertUuid: string]: { date: string; slots: { time: string; booked: boolean }[] }[] }>({});
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredExperts, setFilteredExperts] = useState<Expert[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'ENABLED' | 'DISABLED'>('ALL');
@@ -280,7 +296,17 @@ export default function ExpertManagement() {
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
-  const [expertBookings, setExpertBookings] = useState<Booking[]>([]);
+  
+  // Add state for slots and bookings data
+  const [expertSlots, setExpertSlots] = useState<{ [expertUuid: string]: Slot[] }>({});
+  const [expertBookings, setExpertBookings] = useState<{ [expertUuid: string]: Booking[] }>({});
+  const [loadingSlots, setLoadingSlots] = useState<{ [expertUuid: string]: boolean }>({});
+  const [loadingBookings, setLoadingBookings] = useState<{ [expertUuid: string]: boolean }>({});
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+const [isSlotActionModalOpen, setIsSlotActionModalOpen] = useState(false);
+const [rejectionReason, setRejectionReason] = useState('');
+const [slotActionType, setSlotActionType] = useState<'approve' | 'reject' | null>(null);
+const [loadingSlotAction, setLoadingSlotAction] = useState(false);
   type ClinicService = { uuid: string; clinic_name: string };
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [notification, setNotification] = useState<{
@@ -295,22 +321,18 @@ export default function ExpertManagement() {
     password: '',
     phone_number: '',
     gender: 'MALE' as 'MALE' | 'FEMALE',
-    specialization: '',
-    experience: '',
-    clinic_service: "",
-    education: '',
-    specializaton: "",
+    dob: '',
+    addresss: "",
   });
-const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState({
     name: '',
     email: '',
     password: '',
     phone_number: '',
-    specialization: '',
-    clinic_service: "",
-    education: '',
-    specializaton: "",
+    dob: '',
+    addresss: "",
   });
 
   // Confirmation modal state
@@ -319,11 +341,35 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     expert: Expert | null
   } | null>(null);
 
-  // Fetch data with pagination
-  const fetchExperts = async (page = 1) => {
+  // Booking filter state
+  const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
+// Fetch data with pagination
+ const fetchExperts = async (page = 1, search = '', status = 'ALL', gender = 'ALL') => {
     setLoading(true);
     try {
-      const expertsResponse = await GetAllExpert(page);
+      // Prepare filter parameters
+      const statusParam = status !== 'ALL' ? status : undefined;
+      const genderParam = gender !== 'ALL' ? gender : undefined;
+      
+      const expertsResponse = await GetAllExpert(
+        page, 
+        search || undefined, 
+        statusParam, 
+        genderParam
+      );
       
       setExperts(expertsResponse.data);
       setPaginationData({
@@ -346,16 +392,83 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     }
   };
 
+  // Fetch data when filters change
+  useEffect(() => {
+    fetchExperts(currentPage, debouncedSearchQuery, selectedStatus, selectedGender);
+  
+  }, [currentPage, debouncedSearchQuery, selectedStatus, selectedGender]);
+  // Function to fetch slots for a specific expert
+  const fetchExpertSlots = async (expertUuid: string) => {
+    setLoadingSlots(prev => ({ ...prev, [expertUuid]: true }));
+    try {
+      const params = { expert: expertUuid };
+      const slotsResponse = await getAllSlotsforExpret(params);
+      
+      // Transform the API response to match our Slot type
+      const transformedSlots = slotsResponse.data.map((slot: any) => ({
+        uuid: slot.uuid,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        available_slots: slot.available_slots || 1,
+        max_bookings: slot.max_bookings || 1,
+        status: slot.status,
+        clinic_name: slot.clinic_name || 'N/A',
+        slot_type: slot.slot_type || 'REGULAR',
+        is_booked: slot.is_booked || false,
+        expert: slot.expert
+      }));
+      
+      setExpertSlots(prev => ({ ...prev, [expertUuid]: transformedSlots }));
+    } catch (error) {
+      console.error("Failed to fetch expert slots:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to fetch expert slots'
+      });
+    } finally {
+      setLoadingSlots(prev => ({ ...prev, [expertUuid]: false }));
+    }
+  };
+
+  // Function to fetch bookings for a specific expert
+  const fetchExpertBookings = async (expertUuid: string) => {
+    setLoadingBookings(prev => ({ ...prev, [expertUuid]: true }));
+    try {
+      const params = { expert: expertUuid };
+      const bookingsResponse = await getAllBookings(params);
+      
+      // Transform the API response to match our Booking type
+      const transformedBookings = bookingsResponse.data.map((booking: any) => ({
+        uuid: booking.uuid,
+        patientName: booking.patient_name,
+        patientEmail: booking.patient_email,
+        date: new Date(booking.start_time).toLocaleDateString(),
+        time: new Date(booking.start_time).toLocaleTimeString(),
+        status: booking.booking_status,
+        type: booking.session_type,
+        booking_type: booking.booking_type,
+        session_type: booking.session_type,
+        clinic_name: booking.clinic_name,
+        start_time: booking.start_time,
+        end_time: booking.end_time
+      }));
+      
+      setExpertBookings(prev => ({ ...prev, [expertUuid]: transformedBookings }));
+    } catch (error) {
+      console.error("Failed to fetch expert bookings:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to fetch expert bookings'
+      });
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, [expertUuid]: false }));
+    }
+  };
+
   const fetchAdditionalData = async () => {
     try {
-      const [slotsResponse, bookingsResponse, clinicServiceResponse] = await Promise.all([
-        getAllSlots(1),
-        getAllBookings(1),
-        GetAllClinicServiceforDoc(1)
-      ]);
-
+      const clinicServiceResponse = await GetAllClinicServiceforDoc(1);
       setClinicServices(clinicServiceResponse.data);
-      // Transform and set other data as needed
     } catch (error) {
       console.error("Failed to fetch additional data:", error);
     }
@@ -369,45 +482,31 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     fetchAdditionalData();
   }, []);
 
-  console.log("Experts:", experts);
-  console.log("clinicServices:", clinicServices);
-
-  // Add state and filter logic for bookings modal
-  const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
-  const today = new Date();
-  const filteredBookings = expertBookings.filter((booking) => {
-    if (bookingFilter === 'all') return true;
-    const bookingDate = new Date(booking.date);
-    if (bookingFilter === 'upcoming') return bookingDate >= today;
-    if (bookingFilter === 'past') return bookingDate < today;
-    return true;
-  });
-
   // Client-side filtering for display (server-side pagination handles the main data)
-  useEffect(() => {
-    let filtered = [...experts];
+  // useEffect(() => {
+  //   let filtered = [...experts];
 
-    if (searchQuery) {
-      filtered = filtered.filter(expert =>
-        expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expert?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expert.phone_number.includes(searchQuery) ||
-        expert.specializaton?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  //   if (searchQuery) {
+  //     filtered = filtered.filter(expert =>
+  //       expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       expert?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       expert.phone_number?.includes(searchQuery) ||
+  //       expert.specializaton?.toLowerCase().includes(searchQuery.toLowerCase())
+  //     );
+  //   }
 
-    if (selectedStatus !== 'ALL') {
-      filtered = filtered.filter(expert =>
-        selectedStatus === 'ENABLED' ? expert.enabled : !expert.enabled
-      );
-    }
+  //   if (selectedStatus !== 'ALL') {
+  //     filtered = filtered.filter(expert =>
+  //       selectedStatus === 'ENABLED' ? expert.enabled : !expert.enabled
+  //     );
+  //   }
 
-    if (selectedGender !== 'ALL') {
-      filtered = filtered.filter(expert => expert.gender === selectedGender);
-    }
+  //   if (selectedGender !== 'ALL') {
+  //     filtered = filtered.filter(expert => expert.gender === selectedGender);
+  //   }
 
-    setFilteredExperts(filtered);
-  }, [experts, searchQuery, selectedStatus, selectedGender]);
+  //   setFilteredExperts(filtered);
+  // }, [experts, searchQuery, selectedStatus, selectedGender]);
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
@@ -460,7 +559,7 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
   };
 
   const stats = {
-    total: paginationData.total_items,
+    total: experts.length,
     enabled: experts.filter(e => e.status === 'APPROVED').length,
     disabled: experts.filter(e => e.status !== 'APPROVED').length,
     male: experts.filter(e => e.gender === 'MALE').length,
@@ -472,15 +571,21 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     setIsViewModalOpen(true);
   };
 
-  const handleViewBookings = (expert: Expert) => {
+  const handleViewBookings = async (expert: Expert) => {
     setSelectedExpert(expert);
-    setExpertBookings(bookings.filter(b => b.uuid === expert?.uuid));
+    
+    // Fetch slots and bookings for this expert
+    await Promise.all([
+      fetchExpertSlots(expert.uuid),
+      fetchExpertBookings(expert.uuid)
+    ]);
+    
     setIsBookingsModalOpen(true);
   };
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' };
+    const errors = { name: '', email: '', password: '', phone_number: '',  dob: '', addresss: "",};
 
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
@@ -502,11 +607,6 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
       valid = false;
     }
 
-    if (!newExpert.specialization.trim()) {
-      errors.specialization = 'Specialization is required';
-      valid = false;
-    }
-
     setFormErrors(errors);
     return valid;
   };
@@ -522,14 +622,13 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     try {
       const expertData = {
-        name: newExpert.name,
+        full_name: newExpert.name,
         email: newExpert.email,
         phone_number: newExpert.phone_number,
         gender: newExpert.gender,
-        specializaton: newExpert.specialization,
-        experience: newExpert.experience || '0 years',
-        clinic_service: newExpert.clinic_service,
-        education: newExpert.education,
+        dob: newExpert.dob,
+        address: newExpert.addresss,
+        password: newExpert.password,
         enabled: true,
         status: 'PENDING' as 'PENDING',
       };
@@ -547,13 +646,10 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
         password: '',
         phone_number: '',
         gender: 'MALE',
-        specialization: '',
-        experience: '',
-        clinic_service: "",
-        education: '',
-        specializaton: "",
+        dob: '',
+        addresss: '',
       });
-      setFormErrors({ name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' });
+      setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "",});
       setIsAddModalOpen(false);
 
       setNotification({
@@ -591,28 +687,110 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     }
   };
 
-const handleDeleteExpert = async (expert: Expert) => {
-  if (!window.confirm(`Are you sure you want to delete expert "${expert.name}"?`)) {
-    return;
-  }
+  const handleDeleteExpert = async (expert: Expert) => {
+    if (!window.confirm(`Are you sure you want to delete expert "${expert.name}"?`)) {
+      return;
+    }
 
-  setIsDeleting(expert.uuid);
-  try {
-    await deleteExpert(expert.uuid);
-    // Only remove from state if API call succeeds
-    setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
-    setNotification({
-      type: 'success',
-      message: `Expert "${expert.name}" deleted successfully`
+    setIsDeleting(expert.uuid);
+    try {
+      await deleteExpert(expert.uuid);
+      // Only remove from state if API call succeeds
+      setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
+      setNotification({
+        type: 'success',
+        message: `Expert "${expert.name}" deleted successfully`
+      });
+    } catch (error) {
+      console.error("Error deleting expert:", error);
+      setNotification({
+        type: 'error',
+        message: `Failed to delete expert "${expert.name}". Please try again.`
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Filter bookings based on selected filter
+  const getFilteredBookings = () => {
+    if (!selectedExpert || !expertBookings[selectedExpert.uuid]) return [];
+    
+    const today = new Date();
+    return expertBookings[selectedExpert.uuid].filter((booking) => {
+      if (bookingFilter === 'all') return true;
+      const bookingDate = new Date(booking.start_time);
+      if (bookingFilter === 'upcoming') return bookingDate >= today;
+      if (bookingFilter === 'past') return bookingDate < today;
+      return true;
     });
-  } catch (error) {
-    console.error("Error deleting expert:", error);
+  };
+const handleApproveSlot = async (slot: Slot) => {
+  setSelectedSlot(slot);
+  setSlotActionType('approve');
+  setIsSlotActionModalOpen(true);
+};
+
+const handleRejectSlot = async (slot: Slot) => {
+  setSelectedSlot(slot);
+  setSlotActionType('reject');
+  setRejectionReason('');
+  setIsSlotActionModalOpen(true);
+};
+
+const confirmSlotAction = async () => {
+  if (!selectedSlot || !slotActionType) return;
+
+  setLoadingSlotAction(true);
+  try {
+    if (slotActionType === 'approve') {
+      await approveExpertSlot(selectedSlot.uuid);
+      setNotification({
+        type: 'success',
+        message: 'Slot approved successfully'
+      });
+    } else {
+      if (!rejectionReason.trim()) {
+        setNotification({
+          type: 'error',
+          message: 'Please provide a reason for rejection'
+        });
+        return;
+      }
+      await rejectExpertSlot(selectedSlot.uuid, rejectionReason);
+      setNotification({
+        type: 'success',
+        message: 'Slot rejected successfully'
+      });
+    }
+
+    // Refresh the slots data
+    if (selectedExpert) {
+      await fetchExpertSlots(selectedExpert.uuid);
+    }
+    
+    setIsSlotActionModalOpen(false);
+    setSelectedSlot(null);
+    setSlotActionType(null);
+    setRejectionReason('');
+
+  } catch (error: any) {
     setNotification({
       type: 'error',
-      message: `Failed to delete expert "${expert.name}". Please try again.`
+      message: error.response?.data?.message || `Failed to ${slotActionType} slot`
     });
   } finally {
-    setIsDeleting(null);
+    setLoadingSlotAction(false);
   }
 };
   return (
@@ -805,7 +983,7 @@ const handleDeleteExpert = async (expert: Expert) => {
         {/* Experts Grid */}
         {!loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-            {filteredExperts.map((expert) => (
+            {experts.map((expert) => (
               <motion.div
                 key={expert.uuid}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
@@ -817,7 +995,9 @@ const handleDeleteExpert = async (expert: Expert) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">{expert.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">{expert.specializaton}</p>
                     <div className="flex items-center gap-2 mb-2">
-                      <StatusBadge enabled={expert.status} />
+                      {expert.status && (
+                        <StatusBadge enabled={expert.status} /> 
+                      )}
                       <GenderBadge gender={expert.gender} />
                     </div>
                   </div>
@@ -841,17 +1021,22 @@ const handleDeleteExpert = async (expert: Expert) => {
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-gray-600">
+                    <Home size={14} className="mr-2" />
+                    {expert.address || 'N/A'}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
                     <Mail size={14} className="mr-2" />
-                    {expert.email}
+                    {expert.email || 'N/A'}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Phone size={14} className="mr-2" />
-                    {expert.phone_number}
+                    {expert.phone_number || 'N/A'}
                   </div>
+                  {expert.experience && (
                   <div className="flex items-center text-sm text-gray-600">
                     <User size={14} className="mr-2" />
                     {expert.experience} experience
-                  </div>
+                  </div> ) }
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -889,7 +1074,7 @@ const handleDeleteExpert = async (expert: Expert) => {
         )}
 
         {/* Empty State */}
-        {!loading && filteredExperts.length === 0 && (
+        {!loading && experts.length === 0 && (
           <div className="text-center py-8 sm:py-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Users className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
@@ -1020,48 +1205,22 @@ const handleDeleteExpert = async (expert: Expert) => {
               <option value="FEMALE">Female</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Clinic Service <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={newExpert.clinic_service}
-              onChange={(e) => setNewExpert({ ...newExpert, clinic_service: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            >
-              <option value="">Select a service</option>
-              {clinicServices.map((service) => (
-                <option key={service.uuid} value={service.uuid}>
-                  {service.clinic_name}
-                </option>
-              ))}
-            </select>
-            {formErrors.clinic_service && (
-              <p className="mt-1 text-sm text-red-500">{formErrors.clinic_service}</p>
-            )}
-          </div>
           <InputField
-            label="Education"
-            value={newExpert.education}
-            onChange={(e) => setNewExpert({ ...newExpert, education: e.target.value })}
-            placeholder="Enter education"
+            label="DOB"
+            value={newExpert.dob}
+            onChange={(e) => setNewExpert({ ...newExpert, dob: e.target.value })}
+            placeholder="Enter dob"
             required
-            error={formErrors.education}
+            type='date'
+            error={formErrors.dob}
           />
           <InputField
-            label="Specialization"
-            value={newExpert.specialization}
-            onChange={(e) => setNewExpert({ ...newExpert, specialization: e.target.value })}
-            placeholder="Enter specialization"
+            label="Address"
+            value={newExpert.addresss}
+            onChange={(e) => setNewExpert({ ...newExpert, addresss: e.target.value })}
+            placeholder="Enter addresss"
             required
-            error={formErrors.specialization}
-          />
-          <InputField
-            label="Experience"
-            value={newExpert.experience}
-            onChange={(e) => setNewExpert({ ...newExpert, experience: e.target.value })}
-            placeholder="Enter years of experience"
+            error={formErrors.addresss}
           />
         </div>
         <div className="mt-8 flex justify-end gap-4">
@@ -1164,17 +1323,22 @@ const handleDeleteExpert = async (expert: Expert) => {
               All
             </button>
           </div>
+          
           {/* Bookings List */}
           <div className="space-y-4">
-            {filteredBookings.length === 0 ? (
-              <p className="text-gray-600 text-center py-8">No bookings found for this expert.</p>
-            ) : (
-              filteredBookings.map((booking) => (
+            <h3 className="text-lg font-semibold">Bookings</h3>
+            {selectedExpert && loadingBookings[selectedExpert.uuid] ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading bookings...</span>
+              </div>
+            ) : selectedExpert && getFilteredBookings().length > 0 ? (
+              getFilteredBookings().map((booking) => (
                 <div
                   key={booking.uuid}
                   className="bg-white border border-gray-100 rounded-xl p-6"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <h4 className="text-sm font-medium text-gray-500">Patient Name</h4>
                       <p className="mt-1">{booking.patientName}</p>
@@ -1185,7 +1349,7 @@ const handleDeleteExpert = async (expert: Expert) => {
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
-                      <p className="mt-1">{booking.date} at {booking.time}</p>
+                      <p className="mt-1">{formatDate(booking.start_time)} at {formatTime(booking.start_time)}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-500">Status</h4>
@@ -1197,36 +1361,97 @@ const handleDeleteExpert = async (expert: Expert) => {
                       <h4 className="text-sm font-medium text-gray-500">Type</h4>
                       <p className="mt-1">{booking.type}</p>
                     </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Clinic</h4>
+                      <p className="mt-1">{booking.clinic_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Booking Type</h4>
+                      <p className="mt-1">{booking.booking_type || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
               ))
-            )}
-          </div>
-          {/* Day-wise Slot Details */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Day-wise Slot Details</h3>
-            {selectedExpert && slots[selectedExpert.uuid] ? (
-              <div className="space-y-4">
-                {slots[selectedExpert.uuid].map((slotDay) => (
-                  <div key={slotDay.date} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                    <div className="font-medium text-gray-700 mb-2">{slotDay.date}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {slotDay.slots.map((slot, idx) => (
-                        <span
-                          key={idx}
-                          className={`px-3 py-1 rounded-lg text-xs font-medium border ${slot.booked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`}
-                        >
-                          {slot.time} {slot.booked ? '(Booked)' : '(Available)'}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             ) : (
-              <p className="text-gray-500">No slot data available for this expert.</p>
+              <p className="text-gray-600 text-center py-8">No bookings found for this expert.</p>
             )}
           </div>
+         {/* Slot Details */}
+<div className="mt-8">
+  <h3 className="text-lg font-semibold mb-4">Slot Details</h3>
+  {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
+    <div className="flex items-center justify-center py-4">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <span className="ml-2 text-gray-600">Loading slots...</span>
+    </div>
+  ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
+    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-gray-50 font-medium">
+        <div>Date</div>
+        <div>Start Time</div>
+        <div>End Time</div>
+        <div>Status</div>
+        <div>Clinic</div>
+        <div>Slot Type</div>
+        <div>Actions</div>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {expertSlots[selectedExpert.uuid].map((slot) => (
+          <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 items-center">
+            <div>{formatDate(slot.start_time)}</div>
+            <div>{formatTime(slot.start_time)}</div>
+            <div>{formatTime(slot.end_time)}</div>
+            <div>
+              <SlotStatusBadge is_booked={slot.is_booked} />
+              {slot.status === 'PENDING' && (
+                <span className="ml-1 text-yellow-600 text-xs">(Pending)</span>
+              )}
+              {slot.status === 'REJECTED' && (
+                <span className="ml-1 text-red-600 text-xs">(Rejected)</span>
+              )}
+            </div>
+            <div>{slot.clinic_name}</div>
+            <div className="text-sm">{slot.slot_type}</div>
+            <div className="flex gap-2">
+              {slot.status === 'DRAFT' && (
+                <>
+                  <button
+                    onClick={() => handleApproveSlot(slot)}
+                    className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                    title="Approve Slot"
+                  >
+                    <CheckCircle size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleRejectSlot(slot)}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Reject Slot"
+                  >
+                    <XCircle size={16} />
+                  </button>
+                </>
+              )}
+              {slot.status === 'APPROVED' && (
+                <span className="text-sm text-green-600">Approved</span>
+              )}
+              {slot.status === 'REJECTED' && (
+                <span className="text-sm text-red-600">Rejected</span>
+              )}
+              {slot.status === 'DRAFT' && (
+                <span className="text-sm text-yellow-600">Draft</span>
+              )}
+              {/* {slot.status  && (
+                <span className="text-sm text-red-600">{slot.status}</span>
+              )} */}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <p className="text-gray-600 text-center py-8">No slot data available for this expert.</p>
+  )}
+</div>
         </div>
       </ModernModal>
 
@@ -1279,7 +1504,88 @@ const handleDeleteExpert = async (expert: Expert) => {
           </div>
         </ModernModal>
       )}
+{/* Slot Action Modal */}
+<ModernModal
+  isOpen={isSlotActionModalOpen}
+  onClose={() => {
+    setIsSlotActionModalOpen(false);
+    setSelectedSlot(null);
+    setSlotActionType(null);
+    setRejectionReason('');
+  }}
+  title={`${slotActionType === 'approve' ? 'Approve' : 'Reject'} Slot`}
+  size="md"
+>
+  {selectedSlot && (
+    <div className="space-y-6">
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-medium text-gray-900">Slot Details</h4>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span className="text-gray-600">Date:</span> {formatDate(selectedSlot.start_time)}
+          </div>
+          <div>
+            <span className="text-gray-600">Time:</span> {formatTime(selectedSlot.start_time)} - {formatTime(selectedSlot.end_time)}
+          </div>
+          <div>
+            <span className="text-gray-600">Clinic:</span> {selectedSlot.clinic_name}
+          </div>
+          <div>
+            <span className="text-gray-600">Type:</span> {selectedSlot.slot_type}
+          </div>
+        </div>
+      </div>
 
+      {slotActionType === 'reject' && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Reason for Rejection <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            placeholder="Please provide a reason for rejecting this slot..."
+            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+            required
+          />
+        </div>
+      )}
+
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => {
+            setIsSlotActionModalOpen(false);
+            setSelectedSlot(null);
+            setSlotActionType(null);
+            setRejectionReason('');
+          }}
+          className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+          disabled={loadingSlotAction}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmSlotAction}
+          className={`px-4 py-2 rounded-lg text-white transition-colors ${
+            slotActionType === 'approve'
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-red-600 hover:bg-red-700'
+          } disabled:opacity-50`}
+          disabled={loadingSlotAction || (slotActionType === 'reject' && !rejectionReason.trim())}
+        >
+          {loadingSlotAction ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {slotActionType === 'approve' ? 'Approving...' : 'Rejecting...'}
+            </div>
+          ) : (
+            slotActionType === 'approve' ? 'Approve Slot' : 'Reject Slot'
+          )}
+        </button>
+      </div>
+    </div>
+  )}
+</ModernModal>
       {/* Notification */}
       <AnimatePresence>
         {notification && (

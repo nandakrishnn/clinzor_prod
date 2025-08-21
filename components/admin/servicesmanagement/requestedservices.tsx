@@ -188,13 +188,24 @@ interface PaginationData {
     previous: null
   });
   const [isLoading, setIsLoading] = useState(false);
+const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const fectchSercicve = async (page=1) => {
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  const fetchService = async (page = 1, search = '', status = 'ALL', priority = 'ALL') => {
     try {
-       setIsLoading(true);
-      const response = await GetAllClinicService(page)
-      setRequests(response.data)
-        setPaginationData({
+      setIsLoading(true);
+      const response = await GetAllClinicService(page, search, status, priority);
+      setRequests(response.data);
+      setPaginationData({
         current_page: response.current_page,
         total_pages: response.total_pages,
         total_items: response.total_items,
@@ -204,15 +215,20 @@ interface PaginationData {
     } catch (error) {
       console.error("Error fetching services:", error);
       throw error;
-      
-    }finally {
+    } finally {
       setIsLoading(false);
     }
   }
+
+  // Fetch services when filters change
   useEffect(() => {
-    fectchSercicve(currentPage);
-  }, [currentPage])
-  console.log("service",requests)
+    fetchService(currentPage, debouncedSearchTerm, statusFilter, priorityFilter);
+  }, [currentPage, debouncedSearchTerm, statusFilter, priorityFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, priorityFilter]);
   
   const getServiceIcon = (name: string) => {
     const serviceLower = name.toLowerCase();
@@ -292,8 +308,11 @@ const handleReject = async (id: string, reason: string) => {
     setShowRejectionModal(null);
     setRejectionReason('');
     
-    // Call API to persist the change
-    await approveOrRejectClinicService(id, { status: 'REJECTED' });
+    // Call API to persist the change with reason
+    await approveOrRejectClinicService(id, { 
+      status: 'REJECTED', 
+      reason_for_rejection: reason 
+    });
     
     // Optional: Show success notification
     setNotification({
@@ -352,14 +371,15 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
   }
 };
 
-  const filteredRequests = requests.filter(request => {
-    const matchesSearch = 
-      request.clinic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.service.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // const filteredRequests = requests.filter(request => {
+  //   const matchesSearch = 
+  //     request.clinic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     request.service.toLowerCase().includes(searchTerm.toLowerCase());
+  //   const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter;
+  //   return matchesSearch && matchesStatus;
+  // });
 
+  const currentRequests = requests;
   // Pagination logic
     const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
@@ -383,7 +403,16 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
   };
 
   const statusCounts = getStatusCounts();
-
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -468,7 +497,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
 
         {/* Requests Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {filteredRequests.map((request) => (
+          {currentRequests.map((request) => (
             <div key={request.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="p-6">
                 {/* Header */}
@@ -625,7 +654,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
         </div>
 
         {/* Empty State */}
-        {filteredRequests.length === 0 && (
+        {currentRequests.length === 0 && (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-10 h-10 text-gray-400" />
