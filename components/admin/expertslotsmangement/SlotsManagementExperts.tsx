@@ -19,7 +19,9 @@ import {
   Trash2,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Home,
+  Loader2
 } from 'lucide-react';
 import { approveOrRejectExpert, createExpert, deleteExpert, GetAllClinicServiceforDoc, GetAllExpert } from '@/service/admin/expertManagementService';
 import { getAllBookings, getAllSlots } from '@/service/admin/bookingManagementService';
@@ -42,6 +44,8 @@ type Expert = {
   joinedDate?: string;
   clinic_service?: string;
   education?: string;
+  address?: string;
+  dob?: string;
 };
 
 type Booking = {
@@ -108,8 +112,8 @@ const StatusBadge = ({ enabled }: { enabled: 'APPROVED' | 'PENDING' | 'REJECTED'
   const config = statusConfig[enabled];
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config?.bg} ${config.textColor} ${config.border}`}>
-      {config.text}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config?.bg} ${config?.textColor} ${config?.border}`}>
+      {config?.text}
     </span>
   );
 };
@@ -295,22 +299,22 @@ export default function ExpertManagement() {
     password: '',
     phone_number: '',
     gender: 'MALE' as 'MALE' | 'FEMALE',
-    specialization: '',
-    experience: '',
-    clinic_service: "",
-    education: '',
-    specializaton: "",
+    dob: '',
+    addresss: "",
+    // specialization: '',
+    // experience: '',
+    // clinic_service: "",
+    // education: '',
+    // specializaton: "",
   });
-const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState({
     name: '',
     email: '',
     password: '',
     phone_number: '',
-    specialization: '',
-    clinic_service: "",
-    education: '',
-    specializaton: "",
+    dob: '',
+    addresss: "",
   });
 
   // Confirmation modal state
@@ -324,7 +328,7 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     setLoading(true);
     try {
       const expertsResponse = await GetAllExpert(page);
-      
+
       setExperts(expertsResponse.data);
       setPaginationData({
         current_page: expertsResponse.current_page,
@@ -348,12 +352,17 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const fetchAdditionalData = async () => {
     try {
+      const params: any = {
+        page: currentPage || 1,
+        expert: selectedExpert?.uuid || '',
+      };
+
       const [slotsResponse, bookingsResponse, clinicServiceResponse] = await Promise.all([
-        getAllSlots(1),
-        getAllBookings(1),
+        getAllSlots(params),
+        getAllBookings(params),
         GetAllClinicServiceforDoc(1)
       ]);
-
+      console.log("slotsResponse", slotsResponse);
       setClinicServices(clinicServiceResponse.data);
       // Transform and set other data as needed
     } catch (error) {
@@ -428,39 +437,39 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const pages = [];
     const totalPages = paginationData.total_pages;
     const current = paginationData.current_page;
-    
+
     // Always show first page
     if (totalPages > 0) {
       pages.push(1);
     }
-    
+
     // Add ellipsis if needed
     if (current > 3) {
       pages.push('...');
     }
-    
+
     // Add pages around current page
     for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
       if (!pages.includes(i)) {
         pages.push(i);
       }
     }
-    
+
     // Add ellipsis if needed
     if (current < totalPages - 2) {
       pages.push('...');
     }
-    
+
     // Always show last page
     if (totalPages > 1) {
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
   const stats = {
-    total: paginationData.total_items,
+    total: experts.length,
     enabled: experts.filter(e => e.status === 'APPROVED').length,
     disabled: experts.filter(e => e.status !== 'APPROVED').length,
     male: experts.filter(e => e.gender === 'MALE').length,
@@ -480,7 +489,7 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' };
+    const errors = { name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", };
 
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
@@ -502,10 +511,6 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
       valid = false;
     }
 
-    if (!newExpert.specialization.trim()) {
-      errors.specialization = 'Specialization is required';
-      valid = false;
-    }
 
     setFormErrors(errors);
     return valid;
@@ -521,15 +526,19 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
     }
 
     try {
+      setLoading(true);
       const expertData = {
-        name: newExpert.name,
+        full_name: newExpert.name,
         email: newExpert.email,
         phone_number: newExpert.phone_number,
         gender: newExpert.gender,
-        specializaton: newExpert.specialization,
-        experience: newExpert.experience || '0 years',
-        clinic_service: newExpert.clinic_service,
-        education: newExpert.education,
+        dob: newExpert.dob,
+        address: newExpert.addresss,
+        password: newExpert.password,
+        // specializaton: newExpert.specialization,
+        // experience: newExpert.experience || '0 years',
+        // clinic_service: newExpert.clinic_service,
+        // education: newExpert.education,
         enabled: true,
         status: 'PENDING' as 'PENDING',
       };
@@ -547,13 +556,10 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
         password: '',
         phone_number: '',
         gender: 'MALE',
-        specialization: '',
-        experience: '',
-        clinic_service: "",
-        education: '',
-        specializaton: "",
+        dob: '',
+        addresss: '',
       });
-      setFormErrors({ name: '', email: '', password: '', phone_number: '', specialization: '', clinic_service: '', education: '', specializaton: '' });
+      setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", });
       setIsAddModalOpen(false);
 
       setNotification({
@@ -566,6 +572,8 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
         message: 'Failed to add expert. Please try again.'
       });
       console.error('Error adding expert:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -583,38 +591,38 @@ const [isDeleting, setIsDeleting] = useState<string | null>(null);
         type: 'success',
         message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
       });
-    } catch (error:any) {
+    } catch (error: any) {
       setNotification({
         type: 'error',
-        message: `${error.response.data.message} please try again later `||`Failed to update expert status`
+        message: `${error.response.data.message} please try again later ` || `Failed to update expert status`
       });
     }
   };
 
-const handleDeleteExpert = async (expert: Expert) => {
-  if (!window.confirm(`Are you sure you want to delete expert "${expert.name}"?`)) {
-    return;
-  }
+  const handleDeleteExpert = async (expert: Expert) => {
+    if (!window.confirm(`Are you sure you want to delete expert "${expert.name}"?`)) {
+      return;
+    }
 
-  setIsDeleting(expert.uuid);
-  try {
-    await deleteExpert(expert.uuid);
-    // Only remove from state if API call succeeds
-    setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
-    setNotification({
-      type: 'success',
-      message: `Expert "${expert.name}" deleted successfully`
-    });
-  } catch (error) {
-    console.error("Error deleting expert:", error);
-    setNotification({
-      type: 'error',
-      message: `Failed to delete expert "${expert.name}". Please try again.`
-    });
-  } finally {
-    setIsDeleting(null);
-  }
-};
+    setIsDeleting(expert.uuid);
+    try {
+      await deleteExpert(expert.uuid);
+      // Only remove from state if API call succeeds
+      setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
+      setNotification({
+        type: 'success',
+        message: `Expert "${expert.name}" deleted successfully`
+      });
+    } catch (error) {
+      console.error("Error deleting expert:", error);
+      setNotification({
+        type: 'error',
+        message: `Failed to delete expert "${expert.name}". Please try again.`
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -817,7 +825,9 @@ const handleDeleteExpert = async (expert: Expert) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">{expert.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">{expert.specializaton}</p>
                     <div className="flex items-center gap-2 mb-2">
-                      <StatusBadge enabled={expert.status} />
+                      {expert.status && (
+                        <StatusBadge enabled={expert.status} />
+                      )}
                       <GenderBadge gender={expert.gender} />
                     </div>
                   </div>
@@ -841,17 +851,22 @@ const handleDeleteExpert = async (expert: Expert) => {
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-gray-600">
+                    <Home size={14} className="mr-2" />
+                    {expert.address || 'N/A'}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
                     <Mail size={14} className="mr-2" />
-                    {expert.email}
+                    {expert.email || 'N/A'}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Phone size={14} className="mr-2" />
-                    {expert.phone_number}
+                    {expert.phone_number || 'N/A'}
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <User size={14} className="mr-2" />
-                    {expert.experience} experience
-                  </div>
+                  {expert.experience && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <User size={14} className="mr-2" />
+                      {expert.experience} experience
+                    </div>)}
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -939,11 +954,10 @@ const handleDeleteExpert = async (expert: Expert) => {
                       key={page}
                       onClick={() => handlePageChange(page as number)}
                       disabled={loading}
-                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                        paginationData.current_page === page
+                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
                           ? 'bg-blue-600 text-white'
                           : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
@@ -1020,7 +1034,7 @@ const handleDeleteExpert = async (expert: Expert) => {
               <option value="FEMALE">Female</option>
             </select>
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Clinic Service <span className="text-red-500">*</span>
             </label>
@@ -1040,16 +1054,25 @@ const handleDeleteExpert = async (expert: Expert) => {
             {formErrors.clinic_service && (
               <p className="mt-1 text-sm text-red-500">{formErrors.clinic_service}</p>
             )}
-          </div>
+          </div> */}
           <InputField
-            label="Education"
-            value={newExpert.education}
-            onChange={(e) => setNewExpert({ ...newExpert, education: e.target.value })}
-            placeholder="Enter education"
+            label="DOB"
+            value={newExpert.dob}
+            onChange={(e) => setNewExpert({ ...newExpert, dob: e.target.value })}
+            placeholder="Enter dob"
             required
-            error={formErrors.education}
+            type='date'
+            error={formErrors.dob}
           />
           <InputField
+            label="Address"
+            value={newExpert.addresss}
+            onChange={(e) => setNewExpert({ ...newExpert, addresss: e.target.value })}
+            placeholder="Enter addresss"
+            required
+            error={formErrors.addresss}
+          />
+          {/* <InputField
             label="Specialization"
             value={newExpert.specialization}
             onChange={(e) => setNewExpert({ ...newExpert, specialization: e.target.value })}
@@ -1062,7 +1085,7 @@ const handleDeleteExpert = async (expert: Expert) => {
             value={newExpert.experience}
             onChange={(e) => setNewExpert({ ...newExpert, experience: e.target.value })}
             placeholder="Enter years of experience"
-          />
+          /> */}
         </div>
         <div className="mt-8 flex justify-end gap-4">
           <button
@@ -1072,11 +1095,20 @@ const handleDeleteExpert = async (expert: Expert) => {
             Cancel
           </button>
           <button
+            disabled={loading}
             onClick={handleAddExpert}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
           >
-            Add Expert
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin mr-2" size={16} />
+                Adding...
+              </>
+            ) : (
+              "Add Expert"
+            )}
           </button>
+
         </div>
       </ModernModal>
 

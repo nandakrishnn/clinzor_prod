@@ -415,6 +415,11 @@ export default function AllUsersPage() {
         page: page,
         user_role: 'CUSTOMER'
       };
+      const paramsbooking: any = {
+        page_size: itemsPerPage,
+        page: page,
+        
+      };
 
       // Add search parameter if provided
       if (search) {
@@ -439,7 +444,7 @@ export default function AllUsersPage() {
       }
 
       const data = await GetAllUsers(params);
-      const bookingData = await getAllBookings(page);
+      const bookingData = await getAllBookings(paramsbooking);
       
       setUsers(data.data);
       setBookings(bookingData.data);

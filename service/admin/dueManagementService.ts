@@ -22,14 +22,63 @@ export const GetADue = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
 
-export const GetAllDues= async (page:number) => {
+export const GetAllDues = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
   try {
-    const response = await axiosPrivate.get(
-      `clinic/list-clinic-dues/?page=${page}`
-    );
+    const params: any = {
+      page: page
+    };
+
+    // Add search parameter if provided
+    if (search) {
+      params.search = search;
+    }
+
+    // Add filter parameter if provided and not 'all'
+    if (filter !== 'all') {
+      params.status = filter;
+    }
+
+    // Add sort parameter if provided and not 'default'
+    if (sort !== 'default') {
+      params.sort = sort;
+    }
+
+    const response = await axiosPrivate.get('clinic/list-clinic-dues/', {
+      params: params
+    });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch dues data", error);
+    throw error;
+  }
+};
+export const GetAllPayment = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
+  try {
+    const params: any = {
+      page: page
+    };
+
+    // Add search parameter if provided
+    if (search) {
+      params.search = search;
+    }
+
+    // Add filter parameter if provided and not 'all'
+    if (filter !== 'all') {
+      params.status = filter;
+    }
+
+    // Add sort parameter if provided and not 'default'
+    if (sort !== 'default') {
+      params.sort = sort;
+    }
+
+    const response = await axiosPrivate.get('/clinic/payment-transaction-list/', {
+      params: params
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch dues data", error);
     throw error;
   }
 };
