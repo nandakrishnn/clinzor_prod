@@ -58,15 +58,31 @@ export const deleteOffers = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/offer-rud/${Id}/`);
 };
 
-export const GetAllOffers = async (page:number) => {
+// Update the GetAllOffers function to accept filters
+export const GetAllOffers = async (page: number, filters: any = {}) => {
   try {
+    // Create params object with page and any filters
+    const params: any = { page };
+    
+    // Add filters to params if they exist
+    if (filters.search && filters.search.trim() !== '') {
+      params.search = filters.search.trim();
+    }
+    if (filters.status && filters.status !== 'ALL') {
+      params.status = filters.status;
+    }
+    if (filters.type && filters.type !== 'ALL') {
+      params.offer_type = filters.type;
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(
-      `clinic/offer-lc/?page=${page}`
+      `clinic/offer-lc/?${queryString}`
     );
-      const data =  response.data.data;
-     return data;
+    const data = response.data.data;
+    return data;
   } catch (error) {
-    console.error("Failed to fetch Organization", error);
+    console.error("Failed to fetch offers", error);
     throw error;
   }
 };

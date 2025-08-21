@@ -94,28 +94,39 @@ const CampManagement = () => {
     previous: null
   });
   useEffect(() => {
-    
-    const fectchCamps = async (page = 1) => {
-      setLoading(true)
-      try {
-        const response = await getAllCamps(page);
-        setCamps(response.data)
-        console.log(response,"camp data")
-        setPaginationData({
+    const debounceTimer = setTimeout(() => {
+      fetchCamps(currentPage, {
+        status: filterStatus,
+        search: searchTerm,
+        completion: filterCompletion
+      });
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, filterStatus, filterCompletion, currentPage]);
+
+  const fetchCamps = async (page = 1, filters: any = {}) => {
+    setLoading(true);
+    try {
+      const response = await getAllCamps(page, filters);
+      setCamps(response.data);
+      setPaginationData({
         current_page: response.current_page,
         total_pages: response.total_pages,
         total_items: response.total_items,
         next: response.next,
         previous: response.previous
       });
-      } catch (error) {
-
-      } finally {
-        setLoading(false);
-      }
+    } catch (error) {
+      console.error("Failed to fetch camps:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load camps. Please try again later.'
+      });
+    } finally {
+      setLoading(false);
     }
-    fectchCamps(currentPage);
-  }, [currentPage])
+  };
   console.log(camps, "data")
 
   // Approve/Reject handlers
@@ -217,7 +228,7 @@ const CampManagement = () => {
   });
 
   const stats = {
-    total: camps.length,
+    total: paginationData.total_items, // Use total from pagination
     pending: camps.filter((c) => c.status === "PENDING").length,
     approved: camps.filter((c) => c.status === "APPROVED").length,
     totalParticipants: camps.reduce(
@@ -226,6 +237,16 @@ const CampManagement = () => {
     )
   };
 
+   if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -303,13 +324,14 @@ const CampManagement = () => {
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All Status</option>
-              <option value="PENDING">Pending</option>
+              <option value="DRAFT">Draft</option>
               <option value="APPROVED">Approved</option>
+              <option value="COMPLETED">Completed</option>
               <option value="REJECTED">Rejected</option>
             </select>
 
             {/* Filter by Completion */}
-            <select
+            {/* <select
               value={filterCompletion}
               onChange={(e) => setFilterCompletion(e.target.value)}
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
@@ -317,7 +339,7 @@ const CampManagement = () => {
               <option value="all">All</option>
               <option value="COMPLETED">Completed</option>
               <option value="PENDING">Pending</option>
-            </select>
+            </select> */}
           </div>
         </div>
 
@@ -416,7 +438,7 @@ const CampManagement = () => {
                   </div>
 
                   {/* Mark as Complete Button */}
-                  {!camp.completed && (
+                  {camp.status !==  "COMPLETED" && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -427,7 +449,7 @@ const CampManagement = () => {
                       Mark as Complete
                     </button>
                   )}
-                  {camp.completed && (
+                  {camp.status ==  "COMPLETED"  && (
                     <div className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center">
                       Completed
                     </div>
@@ -682,5 +704,4 @@ const CampManagement = () => {
   );
 };
 
-// Type fixes for linter
 export default CampManagement;

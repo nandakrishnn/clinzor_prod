@@ -27,7 +27,13 @@ import {
   Globe,
   Building,
   Lock,
-  Check
+  Check,
+  User,
+  ArrowRight,
+  ArrowLeft,
+  Upload,
+  ImageIcon,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -35,12 +41,14 @@ import { useRouter } from "next/navigation";
 import {
   approveOrRejectClinic,
   createClinic,
+  createUserForClinic,
   deleteClinic,
   getAllClinic,
   toggleActiveClinic
 } from "@/service/admin/clinicManagentService";
 import { Call } from "@mui/icons-material";
 import { sampleBookings } from "@/components/clinicportal/dues/duesmanagement";
+import { uploadFiles } from "@/service/uploadService/uploadService";
 
 interface Clinic {
   uuid: string;
@@ -89,7 +97,7 @@ type ModernModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  size?: "sm" | "lg";
+  size?: "sm" | "lg" | "xl";
   children: React.ReactNode;
 };
 
@@ -104,9 +112,9 @@ const ModernModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div
-        className={`bg-white rounded-2xl shadow-2xl ${
-          size === "lg" ? "max-w-4xl w-full" : "max-w-md w-full"
-        } max-h-[90vh] overflow-y-auto`}
+        className={`bg-white rounded-2xl shadow-2xl ${size === "lg" ? "max-w-4xl w-full" :
+          size === "xl" ? "max-w-5xl w-full" : "max-w-md w-full"
+          } max-h-[90vh] overflow-y-auto`}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
@@ -174,11 +182,10 @@ const TimePicker = ({
                 onChange(time.value);
                 setIsOpen(false);
               }}
-              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors ${
-                value === time.value
-                  ? "bg-blue-100 text-blue-800 font-medium"
-                  : "text-gray-700"
-              }`}
+              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors ${value === time.value
+                ? "bg-blue-100 text-blue-800 font-medium"
+                : "text-gray-700"
+                }`}
             >
               {time.label}
             </div>
@@ -198,6 +205,7 @@ type InputFieldProps = {
   required?: boolean;
   error?: string;
   icon?: React.ElementType;
+  optional?: boolean;
 };
 
 function InputField({
@@ -208,12 +216,14 @@ function InputField({
   placeholder,
   required = false,
   error,
-  icon: Icon
+  icon: Icon,
+  optional = false
 }: InputFieldProps) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
+        {optional && <span className="text-gray-400 text-xs ml-1">(optional)</span>}
       </label>
       <div className="relative">
         {Icon && (
@@ -223,11 +233,9 @@ function InputField({
           type={type}
           value={value}
           onChange={onChange}
-          className={`w-full ${
-            Icon ? "pl-10" : "pl-4"
-          } pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-            error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
-          }`}
+          className={`w-full ${Icon ? "pl-10" : "pl-4"
+            } pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            }`}
           placeholder={placeholder}
           required={required}
         />
@@ -285,19 +293,19 @@ const StatusBadge = ({ status }: { status: Clinic["status"] }) => {
   const statusConfig = {
     APPROVED: {
       color: "bg-green-100 text-green-700",
-      icon: CheckCircle // Make sure this is imported correctly
+      icon: CheckCircle
     },
     Draft: {
       color: "bg-gray-100 text-gray-700",
-      icon: Edit // Make sure this is imported correctly
+      icon: Edit
     },
     Pending: {
       color: "bg-yellow-100 text-yellow-700",
-      icon: Clock // Make sure this is imported correctly
+      icon: Clock
     },
     REJECTED: {
       color: "bg-red-100 text-red-700",
-      icon: XCircle // Make sure this is imported correctly
+      icon: XCircle
     }
   };
 
@@ -337,200 +345,28 @@ const PaymentStatusBadge = ({
   );
 };
 
-// Mock data array similar to PendingClinics
-// const allClinicsMockData: Clinic[] = [
-//   {
-//     uuid: 1,
-//     name: 'Greater Kailash Hospital',
-//     address: 'Old Palasia, AB Road, Indore, Madhya Pradesh 452001',
-//     city: 'Indore',
-//     pincode: '452001',
-//     status: 'Approved',
-//     paymentStatus: 'No Dues',
-//     dueAmount: '₹0',
-//     hours: '10:00 AM - 5:00 PM',
-//     workingDays: ['Mon', 'Wed', 'Fri'],
-//     phone: '+91 98765 43210',
-//     email: 'contact@greaterkailash.com',
-//     isActive: false,
-//     mapLink: 'https://www.google.com/maps/place/Greater+Kailash+Hospital',
-//     openingTime: '10:00',
-//     closingTime: '17:00',
-//     submissionDate: '2025-06-28',
-//     documents: ['doc1.pdf', 'doc2.pdf']
-//   },
-//   {
-//     id: 2,
-//     name: 'Getwell Medical Center',
-//     address: 'Post Office Rd, Dr. Ambedkar Nagar, Indore',
-//     city: 'Indore',
-//     pincode: '453331',
-//     status: 'Draft',
-//     paymentStatus: 'No Dues',
-//     dueAmount: '₹0',
-//     hours: '10:00 AM - 6:30 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Sun'],
-//     phone: '+91 98765 43211',
-//     email: 'contact@getwell.com',
-//     isActive: false,
-//     openingTime: '10:00',
-//     closingTime: '18:30',
-//     submissionDate: '2025-06-27',
-//     documents: ['doc3.pdf']
-//   },
-//   {
-//     id: 3,
-//     name: 'Sunshine Healthcare',
-//     address: 'MG Road, Vijay Nagar, Indore',
-//     city: 'Indore',
-//     pincode: '452010',
-//     status: 'Approved',
-//     paymentStatus: 'Paid',
-//     dueAmount: '₹0',
-//     hours: '9:00 AM - 8:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-//     phone: '+91 98765 43212',
-//     email: 'info@sunshine.com',
-//     isActive: true,
-//     openingTime: '09:00',
-//     closingTime: '20:00',
-//     submissionDate: '2025-06-26',
-//     documents: []
-//   },
-//   {
-//     id: 4,
-//     name: 'City Care Clinic',
-//     address: 'Palasia Square, Indore',
-//     city: 'Indore',
-//     pincode: '452001',
-//     status: 'Pending',
-//     paymentStatus: 'Pending',
-//     dueAmount: '₹2,500',
-//     hours: '10:00 AM - 7:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-//     phone: '+91 98765 43213',
-//     email: 'admin@citycare.com',
-//     isActive: false,
-//     openingTime: '10:00',
-//     closingTime: '19:00',
-//     submissionDate: '2025-06-25',
-//     documents: ['doc4.pdf']
-//   },
-//   {
-//     id: 5,
-//     name: 'Apollo Clinic',
-//     address: 'MG Road, Mumbai',
-//     city: 'Mumbai',
-//     pincode: '400001',
-//     status: 'Approved',
-//     paymentStatus: 'Paid',
-//     dueAmount: '₹0',
-//     hours: '8:00 AM - 4:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-//     phone: '+91 90000 11111',
-//     email: 'info@apollomumbai.com',
-//     isActive: true,
-//     openingTime: '08:00',
-//     closingTime: '16:00',
-//     submissionDate: '2025-06-24',
-//     documents: []
-//   },
-//   {
-//     id: 6,
-//     name: 'Fortis Health',
-//     address: 'Sector 62, Noida',
-//     city: 'Noida',
-//     pincode: '201301',
-//     status: 'Rejected',
-//     paymentStatus: 'Overdue',
-//     dueAmount: '₹5,000',
-//     hours: '9:00 AM - 5:00 PM',
-//     workingDays: ['Mon', 'Wed', 'Fri'],
-//     phone: '+91 90000 22222',
-//     email: 'contact@fortisnoida.com',
-//     isActive: false,
-//     openingTime: '09:00',
-//     closingTime: '17:00',
-//     submissionDate: '2025-06-23',
-//     documents: ['doc5.pdf']
-//   },
-//   {
-//     id: 7,
-//     name: 'Care Plus Clinic',
-//     address: 'Park Street, Kolkata',
-//     city: 'Kolkata',
-//     pincode: '700016',
-//     status: 'Draft',
-//     paymentStatus: 'Pending',
-//     dueAmount: '₹1,200',
-//     hours: '11:00 AM - 7:00 PM',
-//     workingDays: ['Tue', 'Thu', 'Sat'],
-//     phone: '+91 90000 33333',
-//     email: 'careplus@kolkata.com',
-//     isActive: false,
-//     openingTime: '11:00',
-//     closingTime: '19:00',
-//     submissionDate: '2025-06-22',
-//     documents: []
-//   },
-//   {
-//     id: 8,
-//     name: 'Medicover Hospitals',
-//     address: 'Banjara Hills, Hyderabad',
-//     city: 'Hyderabad',
-//     pincode: '500034',
-//     status: 'Pending',
-//     paymentStatus: 'No Dues',
-//     dueAmount: '₹0',
-//     hours: '7:00 AM - 3:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-//     phone: '+91 90000 44444',
-//     email: 'info@medicoverhyd.com',
-//     isActive: false,
-//     openingTime: '07:00',
-//     closingTime: '15:00',
-//     submissionDate: '2025-06-21',
-//     documents: ['doc6.pdf']
-//   },
-//   {
-//     id: 9,
-//     name: 'Rainbow Children Hospital',
-//     address: 'Jayanagar, Bangalore',
-//     city: 'Bangalore',
-//     pincode: '560041',
-//     status: 'Approved',
-//     paymentStatus: 'Paid',
-//     dueAmount: '₹0',
-//     hours: '6:00 AM - 2:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-//     phone: '+91 90000 55555',
-//     email: 'contact@rainbowblr.com',
-//     isActive: true,
-//     openingTime: '06:00',
-//     closingTime: '14:00',
-//     submissionDate: '2025-06-20',
-//     documents: []
-//   },
-//   {
-//     id: 10,
-//     name: 'Aster Clinic',
-//     address: 'Ernakulam, Kochi',
-//     city: 'Kochi',
-//     pincode: '682016',
-//     status: 'Draft',
-//     paymentStatus: 'No Dues',
-//     dueAmount: '₹0',
-//     hours: '10:00 AM - 6:00 PM',
-//     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-//     phone: '+91 90000 66666',
-//     email: 'aster@kochi.com',
-//     isActive: false,
-//     openingTime: '10:00',
-//     closingTime: '18:00',
-//     submissionDate: '2025-06-19',
-//     documents: []
-//   }
-// ];
+// Stepper component for multi-step form
+const Stepper = ({ steps, currentStep }: { steps: string[], currentStep: number }) => {
+  return (
+    <div className="flex justify-between mb-8 relative">
+      <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 -z-10"></div>
+      {steps.map((step, index) => (
+        <div key={index} className="flex flex-col items-center relative">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep > index
+            ? "bg-blue-600 text-white"
+            : currentStep === index
+              ? "bg-blue-100 border-2 border-blue-600 text-blue-600"
+              : "bg-gray-100 text-gray-400"
+            } font-semibold text-sm`}>
+            {currentStep > index ? <Check size={16} /> : index + 1}
+          </div>
+          <span className={`text-sm mt-2 font-medium ${currentStep >= index ? "text-blue-600" : "text-gray-500"
+            }`}>{step}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function ClinicManagement() {
   const router = useRouter();
@@ -552,31 +388,48 @@ export default function ClinicManagement() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-const [paginationData, setPaginationData] = useState({
-  current_page: 1,
-  total_pages: 1,
-  total_items: 0,
-  next: null as string | null,
-  previous: null as string | null
-});
+  const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
 
-  // Add Clinic Form State
+  // Multi-step form state
+  const [currentStep, setCurrentStep] = useState(0);
+  const steps = ["Clinic Details", "Create Admin User"];
+
+  // Add Clinic Form State - Step 1
   const [newClinic, setNewClinic] = useState({
     name: "",
     city: "",
     phone: "",
     email: "",
-    password: "",
     address: "",
+    pincode: "",
+    landmark: "",
     mapLink: "",
     gpsCoordinates: "",
     openingTime: "",
     closingTime: "",
-    workingDays: [] as string[]
+    workingDays: [] as string[],
+    about_clinic: "",
+    gst_no: "",
+    images: [] as string[]
+  });
+
+  // Add User Form State - Step 2
+  const [newUser, setNewUser] = useState({
+    clinic: "",
+    full_name: "",
+    email: "",
+    phone_number: "",
+    password: ""
   });
 
   // Add state for confirmation modals
@@ -597,76 +450,97 @@ const [paginationData, setPaginationData] = useState({
 
   const clinicsListRef = useRef<HTMLDivElement>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showDeactivated, setShowDeactivated] = useState(false);
-
+  // Inside your ClinicManagement component, add these states
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedRegistrationCertificate, setSelectedRegistrationCertificate] = useState<File | null>(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [uploadedCertificateUrl, setUploadedCertificateUrl] = useState<string>("");
   const [selectedHeader, setSelectedHeader] = useState<
     "ALL" | "Approved" | "Pending" | "Active" | "Deactivated"
   >("Approved");
 
-
-
-const fetchClinics = async (page=1) => {
-  setLoading(true);
-  try {
-    const response = await getAllClinic(page);
-    setClinics(response.data);
-    setPaginationData({
-      current_page: response.current_page,
-      total_pages: response.total_pages,
-      total_items: response.total_items,
-      next: response.next,
-      previous: response.previous
-    });
-  } catch (error) {
-    console.error("Failed to fetch clinics:", error);
-    setNotification({
-      type: "error",
-      message: "Failed to load clinics"
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  fetchClinics(currentPage);
-}, [currentPage]);
-console.log(clinics,"clinics data")
-  // Filter clinics
   useEffect(() => {
-    let filtered = [...clinics];
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms debounce
 
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (clinic) =>
-          clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          clinic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          clinic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          clinic.contact_number.includes(searchQuery)
-      );
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
+  const fetchClinics = async (page = 1, search = '', status = 'ALL', paymentStatus = 'ALL') => {
+    setLoading(true);
+    try {
+      // Prepare query parameters
+      const params: any = {
+        page_size: itemsPerPage,
+        page: page
+      };
+
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+
+      // Add status filter if provided
+      if (status !== 'ALL') {
+        params.status = status;
+      }
+
+      // Add payment status filter if provided
+      if (paymentStatus !== 'ALL') {
+        params.payment_status = paymentStatus;
+      }
+
+      // Add header filter if provided
+      if (selectedHeader !== 'ALL') {
+        if (selectedHeader === 'Approved') {
+          params.status = 'APPROVED';
+        } else if (selectedHeader === 'Pending') {
+          params.status = 'PENDING';
+        } else if (selectedHeader === 'Active') {
+          params.is_active = true;
+        } else if (selectedHeader === 'Deactivated') {
+          params.is_active = false;
+        }
+      }
+
+      const response = await getAllClinic(params);
+      setClinics(response.data);
+      console.log(response.data, "clinics data");
+      setFilteredClinics(response.data);
+      setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
+    } catch (error) {
+      console.error("Failed to fetch clinics:", error);
+      setNotification({
+        type: "error",
+        message: "Failed to load clinics"
+      });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (selectedStatus !== "ALL") {
-      filtered = filtered.filter((clinic) => clinic.status === selectedStatus);
-    }
-
-    if (selectedPaymentStatus !== "ALL") {
-      filtered = filtered.filter(
-        (clinic) => clinic.paymentStatus === selectedPaymentStatus
-      );
-    }
-
-    setFilteredClinics(filtered);
-    // setCurrentPage(1);
-  }, [clinics, searchQuery, selectedStatus, selectedPaymentStatus]);
+  useEffect(() => {
+    fetchClinics(currentPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus);
+  }, [currentPage, itemsPerPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus, selectedHeader]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= paginationData.total_pages) {
       setCurrentPage(newPage);
     }
   };
-  
+
   // Filter for header selection
   let clinicsToShow = filteredClinics;
   if (selectedHeader === "Approved")
@@ -719,12 +593,30 @@ console.log(clinics,"clinics data")
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddClinic = async () => {
+  // Add file input handlers
+  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedImages(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleCertificateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedRegistrationCertificate(e.target.files[0]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const handleAddClinicStep1 = async () => {
     if (
       !newClinic.name ||
       !newClinic.city ||
       !newClinic.email ||
-      !newClinic.password
+      !newClinic.phone
     ) {
       setNotification({
         type: "error",
@@ -742,66 +634,133 @@ console.log(clinics,"clinics data")
     }
 
     setIsSubmitting(true);
-
+    setUploadingFiles(true);
     try {
+      // Upload files if any are selected
+      let imageUrls: string[] = [];
+      let certificateUrl = "";
+
+      if (selectedImages.length > 0) {
+        imageUrls = await uploadFiles(selectedImages);
+      }
+
+      if (selectedRegistrationCertificate) {
+        const certificateUrls = await uploadFiles([selectedRegistrationCertificate]);
+        certificateUrl = certificateUrls[0];
+      }
       const clinicData = {
         name: newClinic.name,
         email: newClinic.email,
         phone: newClinic.phone,
-        password: newClinic.password,
         city: newClinic.city,
         address: newClinic.address,
+        pincode: newClinic.pincode,
+        landmark: newClinic.landmark,
         map_link: newClinic.mapLink,
         gps_coordinates: newClinic.gpsCoordinates,
         opening_time: newClinic.openingTime,
         closing_time: newClinic.closingTime,
-        working_days: newClinic.workingDays
+        working_days: newClinic.workingDays,
+        about_clinic: newClinic.about_clinic,
+        gst_no: newClinic.gst_no,
+        images: imageUrls,
+        registration_certificate: certificateUrl
       };
 
       const createdClinic = await createClinic(clinicData);
 
-      setClinics((prev) => [
+      // Store the created clinic UUID for the next step
+      setNewUser(prev => ({
         ...prev,
-        {
-          ...createdClinic,
-          status: "Draft",
-          paymentStatus: "No Dues",
-          dueAmount: "₹0",
-          hours:
-            newClinic.openingTime && newClinic.closingTime
-              ? `${formatTime(newClinic.openingTime)} - ${formatTime(
-                  newClinic.closingTime
-                )}`
-              : "",
-          isActive: false,
-          submissionDate: new Date().toISOString().split("T")[0],
-          documents: []
-        }
-      ]);
+        clinic: createdClinic.data.uuid,
+        email: newClinic.email // Pre-fill email for user creation
+      }));
 
-      setNewClinic({
-        name: "",
-        city: "",
-        phone: "",
-        email: "",
-        password: "",
-        address: "",
-        mapLink: "",
-        gpsCoordinates: "",
-        openingTime: "",
-        closingTime: "",
-        workingDays: []
-      });
+      // Move to next step
+      setCurrentStep(1);
 
-      setIsAddModalOpen(false);
       setNotification({
         type: "success",
-        message: "Clinic added successfully"
+        message: "Clinic created successfully! Now create an admin user."
       });
     } catch (error: any) {
       setNotification({
         type: "error",
         message: `Failed to add clinic: ${error.message}`
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddUserStep2 = async () => {
+    if (
+      !newUser.full_name ||
+      !newUser.email ||
+      !newUser.phone_number ||
+      !newUser.password
+    ) {
+      setNotification({
+        type: "error",
+        message: "Please fill in all required user fields"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const userData = {
+        clinic: newUser.clinic,
+        full_name: newUser.full_name,
+        email: newUser.email,
+        phone_number: newUser.phone_number,
+        password: newUser.password
+      };
+      console.log(userData, "user data for submission");
+      await createUserForClinic(userData);
+
+      // Reset forms and close modal
+      setNewClinic({
+        name: "",
+        city: "",
+        phone: "",
+        email: "",
+        address: "",
+        pincode: "",
+        landmark: "",
+        mapLink: "",
+        gpsCoordinates: "",
+        openingTime: "",
+        closingTime: "",
+        workingDays: [],
+        about_clinic: "",
+        gst_no: "",
+        images: []
+      });
+
+      setNewUser({
+        clinic: "",
+        full_name: "",
+        email: "",
+        phone_number: "",
+        password: ""
+      });
+
+      setIsAddModalOpen(false);
+      setCurrentStep(0);
+
+      // Refresh clinics list
+      fetchClinics();
+
+      setNotification({
+        type: "success",
+        message: "Clinic and admin user created successfully!"
+      });
+    } catch (error: any) {
+      setNotification({
+        type: "error",
+        message: `Failed to create user: ${error.response?.data?.message || error.message}`
       });
     } finally {
       setIsSubmitting(false);
@@ -851,9 +810,8 @@ console.log(clinics,"clinics data")
         );
         setNotification({
           type: "error",
-          message: `Failed to approve clinic "${clinic.name}". ${
-            error.response?.data?.message || ""
-          }`
+          message: `Failed to approve clinic "${clinic.name}". ${error.response?.data?.message || ""
+            }`
         });
       });
   }
@@ -883,9 +841,8 @@ console.log(clinics,"clinics data")
         );
         setNotification({
           type: "error",
-          message: `Failed to reject clinic "${clinic.name}". ${
-            error.response?.data?.message || ""
-          }`
+          message: `Failed to reject clinic "${clinic.name}". ${error.response?.data?.message || ""
+            }`
         });
       });
   }
@@ -905,9 +862,8 @@ console.log(clinics,"clinics data")
       .then(() => {
         setNotification({
           type: "success",
-          message: `Clinic "${clinic.name}" is now ${
-            !clinic.is_active ? "active" : "inactive"
-          }.`
+          message: `Clinic "${clinic.name}" is now ${!clinic.is_active ? "active" : "inactive"
+            }.`
         });
       })
       .catch((error) => {
@@ -919,9 +875,8 @@ console.log(clinics,"clinics data")
         );
         setNotification({
           type: "error",
-          message: `Failed to ${
-            clinic.is_active ? "deactivate" : "activate"
-          } clinic "${clinic.name}". ${error.response?.data?.message || ""}`
+          message: `Failed to ${clinic.is_active ? "deactivate" : "activate"
+            } clinic "${clinic.name}". ${error.response?.data?.message || ""}`
         });
       })
       .finally(() => {
@@ -941,9 +896,8 @@ console.log(clinics,"clinics data")
       .catch((error) => {
         setNotification({
           type: "error",
-          message: `Failed to delete clinic "${clinic.name}". ${
-            error.response?.data?.message || ""
-          }`
+          message: `Failed to delete clinic "${clinic.name}". ${error.response?.data?.message || ""
+            }`
         });
       })
       .finally(() => {
@@ -956,6 +910,17 @@ console.log(clinics,"clinics data")
     return sampleBookings.filter((b: any) => b.clinic_name === clinicName)
       .length;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
@@ -997,32 +962,13 @@ console.log(clinics,"clinics data")
         {/* Deactivated Clinics Header/Toggle */}
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">All Clinics</h2>
-          <button
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              showDeactivated
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-            onClick={() => setShowDeactivated(!showDeactivated)}
-          >
-            Deactivated Clinics
-          </button>
-          {showDeactivated && (
-            <button
-              className="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 transition"
-              onClick={() => setShowDeactivated(false)}
-            >
-              Show All
-            </button>
-          )}
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
-              selectedHeader === "ALL" ? "ring-2 ring-blue-500" : ""
-            }`}
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "ALL" ? "ring-2 ring-blue-500" : ""
+              }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => {
@@ -1047,9 +993,8 @@ console.log(clinics,"clinics data")
           </motion.div>
 
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
-              selectedHeader === "Approved" ? "ring-2 ring-blue-500" : ""
-            }`}
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "Approved" ? "ring-2 ring-blue-500" : ""
+              }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -1073,14 +1018,15 @@ console.log(clinics,"clinics data")
           </motion.div>
 
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
-              selectedHeader === "Pending" ? "ring-2 ring-blue-500" : ""
-            }`}
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "Pending" ? "ring-2 ring-blue-500" : ""
+              }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             onClick={() => {
-              router.push("/admin/pending");
+              setSelectedHeader("Pending");
+              setSelectedStatus("ALL");
+              setShowDeactivated(false);
             }}
           >
             <div className="flex items-center justify-between">
@@ -1097,9 +1043,8 @@ console.log(clinics,"clinics data")
           </motion.div>
 
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
-              selectedHeader === "Active" ? "ring-2 ring-blue-500" : ""
-            }`}
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "Active" ? "ring-2 ring-blue-500" : ""
+              }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -1123,9 +1068,8 @@ console.log(clinics,"clinics data")
           </motion.div>
 
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${
-              selectedHeader === "Deactivated" ? "ring-2 ring-blue-500" : ""
-            }`}
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "Deactivated" ? "ring-2 ring-blue-500" : ""
+              }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -1241,7 +1185,6 @@ console.log(clinics,"clinics data")
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              // onClick={() => window.location.href = `/admin/allclinics/${clinic.uuid}`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* Clinic Info */}
@@ -1270,14 +1213,20 @@ console.log(clinics,"clinics data")
                       <Phone size={14} />
                       <span>{clinic.country_code}{clinic.contact_number}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock size={14} />
-                      <span>{clinic.hours}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={14} />
-                      <span>{clinic?.workingDays?.join(", ")}</span>
-                    </div>
+                    {clinic.hours && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Clock size={14} />
+                        <span>{clinic.hours}</span>
+                      </div>
+                    )
+                    }
+                    {clinic?.workingDays && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar size={14} />
+                        <span>{clinic?.workingDays?.join(", ")}</span>
+                      </div>
+                    )}
+
                   </div>
                   {clinic.submissionDate && (
                     <div className="text-xs text-gray-500">
@@ -1285,14 +1234,17 @@ console.log(clinics,"clinics data")
                       {new Date(clinic.submissionDate).toLocaleDateString()}
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
-                    <PaymentStatusBadge status={clinic.paymentStatus} />
-                    {clinic.dueAmount !== "₹0" && (
-                      <span className="text-rose-600">
-                        Due: {clinic.dueAmount}
-                      </span>
-                    )}
-                  </div>
+                  {clinic.dueAmount && (
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
+                      <PaymentStatusBadge status={clinic.paymentStatus} />
+                      {clinic.dueAmount !== "₹0" && (
+                        <span className="text-rose-600">
+                          Due: {clinic.dueAmount}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
@@ -1331,22 +1283,22 @@ console.log(clinics,"clinics data")
                   {clinic.is_active ? (
                     <button
                       onClick={() =>
-                        setConfirmModal({ type: "inactive", clinic })
-                      }
-                      className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
-                    >
-                      <XCircle size={16} />
-                      <span className="hidden sm:inline">Deactivate</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() =>
                         setConfirmModal({ type: "active", clinic })
                       }
                       className="flex items-center gap-2 px-4 py-2 text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
                     >
                       <CheckCircle size={16} />
                       <span className="hidden sm:inline">Activate</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        setConfirmModal({ type: "inactive", clinic })
+                      }
+                      className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
+                    >
+                      <XCircle size={16} />
+                      <span className="hidden sm:inline">Deactivate</span>
                     </button>
                   )}
                   <button
@@ -1363,284 +1315,522 @@ console.log(clinics,"clinics data")
         </div>
 
         {/* Pagination Controls */}
+        {paginationData.total_pages > 1 && (
+          <motion.div
+            className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${currentPage === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+              >
+                Previous
+              </button>
 
-{/* Pagination Controls */}
-{paginationData.total_pages > 1 && (
-  <motion.div
-    className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-  >
-    <div className="flex items-center gap-2">
-<button
-  type="button"
-  onClick={() => handlePageChange(currentPage - 1)}
-  disabled={currentPage === 1}
-  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-    currentPage === 1
-      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-  }`}
->
-  Previous
-</button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {paginationData.total_pages}
+              </span>
 
-<span className="text-sm text-gray-600">
-  Page {currentPage} of {paginationData.total_pages}
-</span>
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === paginationData.total_pages}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${currentPage === paginationData.total_pages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+            <div className="text-sm text-gray-500">
+              Showing {(paginationData.current_page - 1) * itemsPerPage + 1}-
+              {Math.min(
+                paginationData.current_page * itemsPerPage,
+                paginationData.total_items
+              )}{" "}
+              of {paginationData.total_items} clinics
+            </div>
+          </motion.div>
+        )}
 
-<button
-  type="button"
-  onClick={() => handlePageChange(currentPage + 1)}
-  disabled={currentPage === paginationData.total_pages}
-  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-    currentPage === paginationData.total_pages
-      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-  }`}
->
-  Next
-</button>
-
-    </div>
-    <div className="text-sm text-gray-500">
-      Showing {(paginationData.current_page - 1) * itemsPerPage + 1}-
-      {Math.min(
-        paginationData.current_page * itemsPerPage,
-        paginationData.total_items
-      )}{" "}
-      of {paginationData.total_items} clinics
-    </div>
-  </motion.div>
-)}
         {/* Add Clinic Modal */}
         {isAddModalOpen && (
           <ModernModal
             isOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setCurrentStep(0);
+              // Reset forms when modal is closed
+              setNewClinic({
+                name: "",
+                city: "",
+                phone: "",
+                email: "",
+                address: "",
+                pincode: "",
+                landmark: "",
+                mapLink: "",
+                gpsCoordinates: "",
+                openingTime: "",
+                closingTime: "",
+                workingDays: [],
+                about_clinic: "",
+                gst_no: "",
+                images: []
+              });
+              setNewUser({
+                clinic: "",
+                full_name: "",
+                email: "",
+                phone_number: "",
+                password: ""
+              });
+            }}
             title="Add New Clinic"
-            size="lg"
+            size="xl"
           >
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAddClinic();
-              }}
-              className="space-y-6"
-            >
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  Basic Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    label="Clinic Name"
-                    value={newClinic.name}
-                    onChange={(e) =>
-                      setNewClinic({ ...newClinic, name: e.target.value })
-                    }
-                    placeholder="Enter clinic name"
-                    required
-                    icon={Building}
-                  />
-                  <InputField
-                    label="City"
-                    value={newClinic.city}
-                    onChange={(e) =>
-                      setNewClinic({ ...newClinic, city: e.target.value })
-                    }
-                    placeholder="Enter city"
-                    required
-                    icon={MapPin}
-                  />
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Contact & Access
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    label="Email"
-                    type="email"
-                    value={newClinic.email}
-                    onChange={(e) =>
-                      setNewClinic({ ...newClinic, email: e.target.value })
-                    }
-                    placeholder="Enter clinic email"
-                    required
-                    icon={Mail}
-                  />
-                  <InputField
-                    label="Temporary Password"
-                    type="password"
-                    value={newClinic.password}
-                    onChange={(e) =>
-                      setNewClinic({ ...newClinic, password: e.target.value })
-                    }
-                    placeholder="Enter temporary password (min 6 chars)"
-                    required
-                    icon={Lock}
-                  />
-                  <InputField
-                    label="Contact Number"
-                    type="number"
-                    value={newClinic.phone}
-                    onChange={(e) =>
-                      setNewClinic({ ...newClinic, phone: e.target.value })
-                    }
-                    placeholder="Enter clinic Contact number"
-                    required
-                    icon={Call}
-                  />
-                </div>
-                <span className="text-xs text-gray-500 block mt-2">
-                  This email and password will be used as the clinic's login
-                  credentials.
-                </span>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Location Details
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Address
-                    </label>
-                    <textarea
-                      value={newClinic.address}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, address: e.target.value })
-                      }
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      rows={3}
-                      placeholder="Enter full address"
-                    />
-                  </div>
+            <Stepper steps={steps} currentStep={currentStep} />
+
+            {currentStep === 0 && (
+              <form className="space-y-6">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Building className="w-5 h-5" />
+                    Basic Information
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField
-                      label="Google Maps Link"
-                      type="url"
-                      value={newClinic.mapLink}
+                      label="Clinic Name"
+                      value={newClinic.name}
                       onChange={(e) =>
-                        setNewClinic({ ...newClinic, mapLink: e.target.value })
+                        setNewClinic({ ...newClinic, name: e.target.value })
                       }
-                      placeholder="https://maps.google.com/..."
+                      placeholder="Enter clinic name"
+                      required
+                      icon={Building}
                     />
                     <InputField
-                      label="Coordinates"
-                      value={newClinic.gpsCoordinates}
+                      label="About Clinic"
+                      value={newClinic.about_clinic}
                       onChange={(e) =>
-                        setNewClinic({
-                          ...newClinic,
-                          gpsCoordinates: e.target.value
-                        })
+                        setNewClinic({ ...newClinic, about_clinic: e.target.value })
                       }
-                      placeholder="POINT(longitude latitude)"
+                      placeholder="Enter about clinic"
+                      optional
+                      icon={Building}
+                    />
+                    <InputField
+                      label="GST No"
+                      value={newClinic.gst_no}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, gst_no: e.target.value })
+                      }
+                      placeholder="Enter GST number"
+                      optional
+                      icon={Building}
+                    />
+                    <InputField
+                      label="City"
+                      value={newClinic.city}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, city: e.target.value })
+                      }
+                      placeholder="Enter city"
+                      required
+                      icon={MapPin}
+                    />
+                    <InputField
+                      label="Landmark"
+                      value={newClinic.landmark}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, landmark: e.target.value })
+                      }
+                      placeholder="Enter landmark"
+                      optional
+                      icon={MapPin}
+                    />
+                    <InputField
+                      label="Pincode"
+                      value={newClinic.pincode}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, pincode: e.target.value })
+                      }
+                      placeholder="Enter pincode"
+                      optional
+                      icon={MapPin}
                     />
                   </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Working Hours
-                </h3>
-                <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    Contact Information
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InputField
+                      label="Email"
+                      type="email"
+                      value={newClinic.email}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, email: e.target.value })
+                      }
+                      placeholder="Enter clinic email"
+                      required
+                      icon={Mail}
+                    />
+                    <InputField
+                      label="Contact Number"
+                      type="tel"
+                      value={newClinic.phone}
+                      onChange={(e) =>
+                        setNewClinic({ ...newClinic, phone: e.target.value })
+                      }
+                      placeholder="Enter clinic contact number"
+                      required
+                      icon={Call}
+                    />
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Location Details
+                  </h3>
+                  <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Opening Time <span className="text-red-500">*</span>
+                        Address
                       </label>
-                      <TimePicker
-                        value={newClinic.openingTime}
-                        onChange={(value) =>
-                          setNewClinic({ ...newClinic, openingTime: value })
+                      <textarea
+                        value={newClinic.address}
+                        onChange={(e) =>
+                          setNewClinic({ ...newClinic, address: e.target.value })
                         }
-                        placeholder="Select opening time"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        rows={3}
+                        placeholder="Enter full address"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Closing Time <span className="text-red-500">*</span>
-                      </label>
-                      <TimePicker
-                        value={newClinic.closingTime}
-                        onChange={(value) =>
-                          setNewClinic({ ...newClinic, closingTime: value })
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <InputField
+                        label="Google Maps Link"
+                        type="url"
+                        value={newClinic.mapLink}
+                        onChange={(e) =>
+                          setNewClinic({ ...newClinic, mapLink: e.target.value })
                         }
-                        placeholder="Select closing time"
+                        placeholder="https://maps.google.com/..."
+                        optional
+                      />
+                      <InputField
+                        label="Coordinates"
+                        value={newClinic.gpsCoordinates}
+                        onChange={(e) =>
+                          setNewClinic({
+                            ...newClinic,
+                            gpsCoordinates: e.target.value
+                          })
+                        }
+                        placeholder="POINT(longitude latitude)"
+                        optional
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Working Days <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {workingDayOptions.map((day) => (
-                        <label
-                          key={day.value}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={newClinic.workingDays.includes(day.value)}
-                            onChange={() => handleWorkingDayToggle(day.value)}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {day.label}
-                          </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Image Upload Section */}
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5" />
+                      Clinic Images
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Upload Clinic Images {selectedImages.length > 0 && `(${selectedImages.length} selected)`}
                         </label>
-                      ))}
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
+                            <Upload size={16} />
+                            Select Images
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={handleImageSelection}
+                              className="hidden"
+                            />
+                          </label>
+                          {uploadingFiles && (
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <RefreshCw size={16} className="animate-spin" />
+                              Uploading...
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedImages.length > 0 && (
+                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {selectedImages.map((file, index) => (
+                              <div key={index} className="relative group">
+                                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={file.name}
+                                    className="object-cover w-full h-full"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X size={12} />
+                                </button>
+                                <p className="text-xs text-gray-500 truncate mt-1">{file.name}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        type="button"
-                        className="text-xs text-blue-600 underline"
-                        onClick={handleSelectAllDays}
-                      >
-                        All
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs text-blue-600 underline"
-                        onClick={handleSelectWeekdays}
-                      >
-                        Weekdays
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs text-blue-600 underline"
-                        onClick={handleClearAllDays}
-                      >
-                        Clear
-                      </button>
+                  </div>
+                  {/* Registration Certificate Upload Section */}
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Registration Certificate
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Upload Registration Certificate (PDF)
+                          {selectedRegistrationCertificate && ` - ${selectedRegistrationCertificate.name}`}
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors">
+                            <Upload size={16} />
+                            Select Certificate
+                            <input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              onChange={handleCertificateSelection}
+                              className="hidden"
+                            />
+                          </label>
+                          {selectedRegistrationCertificate && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRegistrationCertificate(null)}
+                              className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                            >
+                              <X size={16} />
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold"
-                >
-                  Add Clinic
-                </button>
-              </div>
-            </form>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Working Hours
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Opening Time <span className="text-red-500">*</span>
+                        </label>
+                        <TimePicker
+                          value={newClinic.openingTime}
+                          onChange={(value) =>
+                            setNewClinic({ ...newClinic, openingTime: value })
+                          }
+                          placeholder="Select opening time"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Closing Time <span className="text-red-500">*</span>
+                        </label>
+                        <TimePicker
+                          value={newClinic.closingTime}
+                          onChange={(value) =>
+                            setNewClinic({ ...newClinic, closingTime: value })
+                          }
+                          placeholder="Select closing time"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Working Days <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {workingDayOptions.map((day) => (
+                          <label
+                            key={day.value}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={newClinic.workingDays.includes(day.value)}
+                              onChange={() => handleWorkingDayToggle(day.value)}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">
+                              {day.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 underline"
+                          onClick={handleSelectAllDays}
+                        >
+                          All
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 underline"
+                          onClick={handleSelectWeekdays}
+                        >
+                          Weekdays
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 underline"
+                          onClick={handleClearAllDays}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddClinicStep1}
+                    disabled={isSubmitting}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        Next Step <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {currentStep === 1 && (
+              <form className="space-y-6">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Create Admin User
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Create an admin user for this clinic. This user will have administrative access to manage the clinic.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InputField
+                      label="Full Name"
+                      value={newUser.full_name}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, full_name: e.target.value })
+                      }
+                      placeholder="Enter user's full name"
+                      required
+                      icon={User}
+                    />
+                    <InputField
+                      label="Email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, email: e.target.value })
+                      }
+                      placeholder="Enter user email"
+                      required
+                      icon={Mail}
+                    />
+                    <InputField
+                      label="Phone Number"
+                      type="tel"
+                      value={newUser.phone_number}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, phone_number: e.target.value })
+                      }
+                      placeholder="Enter user phone number"
+                      required
+                      icon={Call}
+                    />
+                    <InputField
+                      label="Password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, password: e.target.value })
+                      }
+                      placeholder="Enter temporary password (min 6 chars)"
+                      required
+                      icon={Lock}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between gap-4 pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(0)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium flex items-center gap-2"
+                  >
+                    <ArrowLeft size={16} /> Previous Step
+                  </button>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddUserStep2}
+                      disabled={isSubmitting}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Creating User..." : "Create User & Complete"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
           </ModernModal>
         )}
 
@@ -1664,8 +1854,8 @@ console.log(clinics,"clinics data")
               confirmModal.type === "delete"
                 ? "Delete Clinic"
                 : confirmModal.type === "active"
-                ? "Activate Clinic"
-                : "Deactivate Clinic"
+                  ? "Activate Clinic"
+                  : "Deactivate Clinic"
             }
             size="sm"
           >

@@ -7,13 +7,15 @@ import  { axiosPrivate } from "../../axios/axios";
 export const createClinic = async (clinicData: {
   name: string;
   email: string;
-  password: string;
   phone: string;
   city: string;
   address?: string;
   map_link?: string;
   gps_coordinates?: string;
-  opening_time?: string;
+gst_no?: string;
+about_clinic?: string;
+  registration_certificate?: string;
+    opening_time?: string;
   closing_time?: string;
   working_days: string[];
 }) => {
@@ -21,15 +23,40 @@ export const createClinic = async (clinicData: {
     const response = await axiosPrivate.post('/clinic/', {
       name: clinicData.name,
       email: clinicData.email,
-      password: clinicData.password,
       contact_number:clinicData.phone,
       city: clinicData.city,
       address: clinicData.address,
       map_link: clinicData.map_link,
       gps_coordinates: clinicData.gps_coordinates,
-      opening_time: clinicData.opening_time,
+      registration_certificate: clinicData.registration_certificate,
+      gst_no: clinicData.gst_no,
+      about_clinic: clinicData.about_clinic,
+        opening_time: clinicData.opening_time,
       closing_time: clinicData.closing_time,
       working_days: clinicData.working_days
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating clinic:", error);
+    throw error;
+  }
+};
+export const createUserForClinic = async (clinicData: {
+  clinic: string;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  password: string;
+
+}) => {
+  try {
+    const response = await axiosPrivate.post('clinic/clinic-user-create/', {
+      clinic: clinicData.clinic,
+      full_name: clinicData.full_name,
+      email: clinicData.email,
+      password: clinicData.password,
+      phone_number:clinicData.phone_number,
+  
     });
     return response.data;
   } catch (error) {
@@ -68,9 +95,10 @@ export const getAClinic = async (Id:string) => {
   return await axiosPrivate.get(`/clinic/clinic-rud/${Id}`);
 };
 
-export const getAllClinic = async (page:number) => {
+export const getAllClinic = async (params: any = {}) => {
   try {
-    const response = await axiosPrivate.get(`/clinic/?page=${page}`);
+      const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`clinic/?${queryString}`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
@@ -79,3 +107,45 @@ export const getAllClinic = async (page:number) => {
 };
 
 
+
+// In your clinicManagentService.ts file
+
+export const GetAllDoctor = async (page: number, clinicId?: string, status?: string) => {
+  try {
+    const params: any = { page };
+    
+    if (clinicId) {
+      params.clinic = clinicId;
+    }
+    if (status) {
+      params.status = status;
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`/clinic/doctor-lc/?${queryString}`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch doctors", error);
+    throw error;
+  }
+};
+
+export const GetAllSpecialties  = async (page: number, clinicId?: string, status?: string) => {
+  try {
+    const params: any = { page };
+    
+    if (clinicId) {
+      params.clinic = clinicId;
+    }
+    if (status) {
+      params.status = status;
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`/clinic/service-lc/?${queryString}`);
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Failed to fetch services", error);
+    throw error;
+  }
+};

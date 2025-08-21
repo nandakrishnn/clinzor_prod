@@ -68,14 +68,29 @@ export const getACamp = async (Id:string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
-export const getAllCamps = async (page:number) => {
+// Update the getAllCamps function to accept filters
+export const getAllCamps = async (page: number, filters: any = {}) => {
   try {
-    const response = await axiosPrivate.get(`clinic/camp-lc/?page=${page}`);
+    // Create params object with page and any filters
+    const params: any = { page };
+    
+    // Add filters to params if they exist
+    if (filters.status && filters.status !== 'all') {
+      params.status = filters.status;
+    }
+    if (filters.search && filters.search.trim() !== '') {
+      params.search = filters.search.trim();
+    }
+    if (filters.completion && filters.completion !== 'all') {
+      params.completed = filters.completion === 'COMPLETED';
+    }
+    
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`clinic/camp-lc/?${queryString}`);
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch camps", error);
     throw error;
   }
 };
-
 

@@ -101,7 +101,7 @@ const OfferManagementTable = () => {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [showRejectionModal, setShowRejectionModal] = useState<string | null>(null);
-  const [offerViewType, setOfferViewType] = useState<'ADMIN' | 'CLINIC'>('ADMIN');
+  const [offerViewType, setOfferViewType] = useState<'ADMIN' | 'CLINIC' | 'ALL'>('ALL');
   const [formData, setFormData] = useState<OfferFormData>({
     title: '',
     offer_type: 'ADMIN',
@@ -127,9 +127,23 @@ const OfferManagementTable = () => {
     previous: null
   });
   
-  const fetchOffers = async (page = 1) => {
+    useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchOffers(currentPage, {
+        search: searchTerm,
+        status: statusFilter,
+        type:   offerViewType,
+      });
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, statusFilter, typeFilter, currentPage, offerViewType]);
+
+
+  const fetchOffers = async (page = 1, filters: any = {}) => {
     try {
-      const response = await GetAllOffers(page);
+      setLoading(true);
+      const response = await GetAllOffers(page, filters);
       setOffers(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -140,7 +154,11 @@ const OfferManagementTable = () => {
       });
     } catch (error) {
       console.error(error);
-    }
+      setNotification({
+        type: 'error',
+        message: 'Failed to load offers. Please try again later.'
+      });
+    }setLoading(false);
   };
 
   useEffect(() => {
@@ -148,19 +166,21 @@ const OfferManagementTable = () => {
   }, [currentPage]);
 
   // Filter and search logic
-  const filteredOffers = useMemo(() => {
-    return offers.filter(offer => {
-      const matchesViewType = offerViewType === 'ADMIN'
-        ? offer.offer_type === 'ADMIN' || offer.offer_type === 'SYSTEM'
-        : offer.offer_type === 'CLINIC';
-      const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        offer.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || offer.status === statusFilter;
-      const matchesType = typeFilter === 'ALL' || offer.offer_type === typeFilter;
-      return matchesViewType && matchesSearch && matchesStatus && matchesType;
-    });
-  }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
+  // const filteredOffers = useMemo(() => {
+  //   return offers.filter(offer => {
+  //     const matchesViewType = offerViewType === 'ADMIN'
+  //       ? offer.offer_type === 'ADMIN' || offer.offer_type === 'SYSTEM'
+  //       : offer.offer_type === 'CLINIC';
+  //     const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       offer.description.toLowerCase().includes(searchTerm.toLowerCase());
+  //     const matchesStatus = statusFilter === 'ALL' || offer.status === statusFilter;
+  //     const matchesType = typeFilter === 'ALL' || offer.offer_type === typeFilter;
+  //     return matchesViewType && matchesSearch && matchesStatus && matchesType;
+  //   });
+  // }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
   
+    const displayedOffers = offers;
+
   const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
 
@@ -401,7 +421,16 @@ const OfferManagementTable = () => {
       setCurrentPage(newPage);
     }
   };
-  
+    if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
@@ -424,6 +453,12 @@ const OfferManagementTable = () => {
           </div>
           {/* Toggle for Admin/Clinic offers */}
           <div className="mt-6 flex gap-2">
+            <button
+              className={`px-6 py-2 rounded-2xl font-semibold transition-all duration-200 ${offerViewType === 'ALL' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              onClick={() => setOfferViewType('ALL')}
+            >
+              ALL Offers
+            </button>
             <button
               className={`px-6 py-2 rounded-2xl font-semibold transition-all duration-200 ${offerViewType === 'ADMIN' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
               onClick={() => setOfferViewType('ADMIN')}
@@ -460,11 +495,11 @@ const OfferManagementTable = () => {
               >
                 <option value="ALL">All Status</option>
                 <option value="DRAFT">Draft</option>
-                <option value="PENDING">Pending</option>
+                {/* <option value="PENDING">Pending</option> */}
                 <option value="APPROVED">Approved</option>
                 <option value="REJECTED">Rejected</option>
               </select>
-              <select
+              {/* <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
@@ -472,9 +507,7 @@ const OfferManagementTable = () => {
                 <option value="ALL">All Types</option>
                 <option value="ADMIN">Admin</option>
                 <option value="CLINIC">Clinic</option>
-                <option value="PROMOTIONAL">Promotional</option>
-                <option value="SYSTEM">System</option>
-              </select>
+              </select> */}
             </div>
           </div>
         </div>
@@ -495,7 +528,7 @@ const OfferManagementTable = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {offers.length > 0 ? offers.map((offer: Offer) => (
+                {displayedOffers.length > 0 ? displayedOffers.map((offer: Offer) => (
                   <tr key={offer.uuid} className="hover:bg-gray-50/50 transition-all duration-200 group">
                     <td className="py-5 px-6">
                       <div>

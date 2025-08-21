@@ -60,6 +60,7 @@ const OrganizationManagement = () => {
     auto_approve_normal_slot: false,
     auto_approve_expert_slot: false
   });
+    const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
@@ -67,11 +68,14 @@ const OrganizationManagement = () => {
 
   const fetchOrgData = async () => {
     try {
+      setLoading(true);
       const data = await GetAllOrganization();
       setOrganizations(data);
       console.log(data, "org data");
     } catch (error) {
       console.log(error);
+    }finally{
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -206,6 +210,16 @@ const OrganizationManagement = () => {
     }
   };
 
+    if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -225,20 +239,20 @@ const OrganizationManagement = () => {
                 </p>
               </div>
             </div>
-            <button
+            {/* <button
               onClick={openCreateModal}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Organization
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -314,7 +328,7 @@ const OrganizationManagement = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Organizations Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
@@ -351,13 +365,13 @@ const OrganizationManagement = () => {
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button
+                    {/* <button
                       onClick={() => handleDelete(org.uuid)}
                       className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 

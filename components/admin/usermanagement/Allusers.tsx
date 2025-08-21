@@ -275,12 +275,12 @@ const UserCard = ({ user, onEdit, onDelete, onBlock, onView }: UserCardProps) =>
       >
         View
       </button>
-      <button
+      {/* <button
         onClick={() => onEdit(user)}
         className="flex-1 py-2 px-3 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
       >
         Edit
-      </button>
+      </button> */}
       <button
         onClick={() => onBlock(user)}
         className={`flex-1 py-2 px-3 rounded-lg transition-colors text-sm font-medium ${user.is_blocked
@@ -335,12 +335,12 @@ const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
         >
           <Eye size={16} />
         </button>
-        <button
+        {/* <button
           onClick={() => onEdit(user)}
           className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-all"
         >
           <Edit size={16} />
-        </button>
+        </button> */}
         <button
           onClick={() => onBlock(user)}
           className={`p-1 rounded transition-all ${user.is_blocked
@@ -386,6 +386,7 @@ export default function AllUsersPage() {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
+   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
     total_pages: 1,
@@ -394,17 +395,55 @@ export default function AllUsersPage() {
     previous: null
   });
   const isMobile = useMedia('(max-width: 640px)');
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms debounce
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
   // Load users with pagination
-  const loadUsers = async (page = 1) => {
+  // Load users with pagination, search and filters
+  const loadUsers = async (page = 1, search = '', status = 'ALL') => {
     setLoading(true);
     try {
-      const data = await GetAllUsers(itemsPerPage, page);
+      // Prepare query parameters for the API
+      const params: any = {
+        page_size: itemsPerPage,
+        page: page,
+        user_role: 'CUSTOMER'
+      };
+
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+
+      // Add status filter if provided
+      if (status !== 'ALL') {
+        if (status === 'ACTIVE') {
+          params.is_active = true;
+          params.is_blocked = false;
+        } else if (status === 'INACTIVE') {
+          params.is_active = false;
+        } else if (status === 'BLOCKED') {
+          params.is_blocked = true;
+        }
+      }
+
+      // Add sorting parameters
+      if (sortBy) {
+        params.ordering = sortOrder === 'desc' ? `-${sortBy}` : sortBy;
+      }
+
+      const data = await GetAllUsers(params);
       const bookingData = await getAllBookings(page);
       
       setUsers(data.data);
       setBookings(bookingData.data);
-      setFilteredUsers(data.data);
+      setFilteredUsers(data.data); // This can be removed if backend handles all filtering
       setPaginationData({
         current_page: data.current_page,
         total_pages: data.total_pages,
@@ -423,10 +462,10 @@ export default function AllUsersPage() {
     }
   };
 
+  // Load users when page, filters, or search changes
   useEffect(() => {
-    loadUsers(currentPage);
-  }, [currentPage, itemsPerPage]);
-
+    loadUsers(currentPage, debouncedSearchQuery, statusFilter);
+  }, [currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
   // Filter users based on search and status
   useEffect(() => {
     let filtered = [...users];

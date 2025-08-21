@@ -21,30 +21,45 @@ const FAQAdminPanel = () => {
   const [createForm, setCreateForm] = useState({ question: '', answer: '' });
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null); // For delete animation
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-    const fetchFaqs = async () => {
-      try {
-        const data = await GetAllFAQ();
-        setFaqs(data)
-        
-      } catch (error) {
-        console.error("Failed to fetch FAQs:", error);
-        setNotification({
-          type: 'error',
-          message: 'Failed to load FAQs. Please try again later.'
-        });
-        
-      }
+
+  const fetchFaqs = async (searchQuery?: string) => {
+    try {
+      setLoading(true);
+      const data = await GetAllFAQ(searchQuery);
+      setFaqs(data);
+    } catch (error) {
+      console.error("Failed to fetch FAQs:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load FAQs. Please try again later.'
+      });
+    }finally{
+      setLoading(false)
     }
+  
+  }
+
   useEffect(() => {
-  
-   fetchFaqs();
-  }, [])
-  
+    fetchFaqs(); // Initial load without search
+  }, []);
+    useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (searchTerm.trim() !== '') {
+        fetchFaqs(searchTerm);
+      } else {
+        fetchFaqs(); // Fetch all FAQs when search is cleared
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
 
   const filteredFaqs = faqs.filter(faq =>
     faq?.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -189,6 +204,16 @@ const handleCreate = async () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 animate-fadein">
       {/* Animated Background Elements */}
