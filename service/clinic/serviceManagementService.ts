@@ -79,12 +79,18 @@ export const GetAllServiceForClinic = async () => {
 };
 export const GetAllClinicService = async (
   clinicId?: string,
-  status?: string // Pass this if you want status filtering
+  status?: string,
+  search?: string,
+  page?: number,
+  pageSize?: number
 ) => {
   try {
     const params: string[] = [];
     if (clinicId) params.push(`clinic=${encodeURIComponent(clinicId)}`);
     if (status && status !== 'all') params.push(`status=${encodeURIComponent(status)}`);
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    if (page) params.push(`page=${encodeURIComponent(page)}`);
+    if (pageSize) params.push(`page_size=${encodeURIComponent(pageSize)}`);
 
     const queryString = params.length ? `?${params.join('&')}` : '';
     const response = await axiosPrivate.get(`/clinic/clinic-service-lc/${queryString}`);
@@ -94,6 +100,7 @@ export const GetAllClinicService = async (
     throw error;
   }
 };
+
 
 export const Clinic_by_clinic_user = async () => {
   try {

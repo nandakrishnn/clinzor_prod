@@ -27,7 +27,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { createBlukSlot, createSlot, deleteSlot, editSlot, GetAllSlot } from '@/service/expert/slotManangementService';
 import { set } from 'date-fns';
-
+import { motion, AnimatePresence } from 'framer-motion';
 // Type definitions
 interface ExpertSlot {
   uuid?: string;
@@ -45,6 +45,32 @@ interface Notification {
 }
 
 type ModalType = 'add' | 'edit' | 'view' | 'delete' | 'bulk' | null;
+
+const Notification = ({ type, message, onClose }: {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: -50, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -50, scale: 0.9 }}
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+        'bg-yellow-50 border-yellow-200 text-yellow-800'
+      }`}
+  >
+    <div className="flex items-center justify-between">
+      <p className="font-medium">{message}</p>
+      <button
+        onClick={onClose}
+        className="ml-4 text-gray-400 hover:text-gray-600"
+      >
+        ×
+      </button>
+    </div>
+  </motion.div>
+);
 
 export default function ExpertSlotManagement() {
   const [slots, setSlots] = useState<ExpertSlot[]>([]);
@@ -78,26 +104,55 @@ export default function ExpertSlotManagement() {
     timeSlots?: string;
     weekdays?: string;
   }>({});
+  // Add debounced search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-const fetchSlots = async (page = 1) => {
-  setIsLoading(true);
-  try {
-    const data = await GetAllSlot(page);
-    setSlots(data.data);
-    setTotalPagesState(data.total_pages);
-     setTotalItemsCount(data.total_items);
-    console.log(data, "Fetched slots data");
-  } catch (error) {
-    console.error("Error fetching slots data:", error);
-    showNotification('error', 'Failed to fetch slots. Please try again.');
-  } finally {
-    setIsLoading(false);
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+ const fetchSlots = async (page = 1, search = '', status = 'ALL') => {
+   try {
+      setIsLoading(true);
+      // Prepare query parameters
+      const params: any = {
+        page: page
+      };
+
+      // Add search parameter if provided
+      if (search) {
+        params.search = search;
+      }
+
+      // Add status filter if provided and not 'ALL'
+      if (status !== 'ALL') {
+        params.status = status;
+      }
+
+      const data = await GetAllSlot(params);
+      setSlots(data.data);
+      setTotalPagesState(data.total_pages);
+      setTotalItemsCount(data.total_items);
+      console.log(data, "Fetched slots data");
+    } catch (error) {
+      console.error("Error fetching slots data:", error);
+      showNotification('error', 'Failed to fetch slots. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
-}
 
-useEffect(() => {
-  fetchSlots(currentPage);
-}, [currentPage]);
+  // Fetch data when filters change
+  useEffect(() => {
+    fetchSlots(currentPage, debouncedSearchTerm, statusFilter);
+  }, [currentPage, debouncedSearchTerm, statusFilter]);
 
   const itemsPerPage = 10;
 
@@ -180,6 +235,7 @@ useEffect(() => {
         })
       };
     }, [value]);
+
 
     return (
       <div className={`space-y-6 ${className}`}>
@@ -635,9 +691,9 @@ useEffect(() => {
   // Memoized statistics
   const stats = useMemo(() => ({
     total: totalItemsCount,
-    active: slots.filter(s => s.status === 'ACTIVE').length,
+    approved: slots.filter(s => s.status === 'APPROVED').length,
     draft: slots.filter(s => s.status === 'DRAFT').length,
-    cancelled: slots.filter(s => s.status === 'CANCELLED').length
+    rejected: slots.filter(s => s.status === 'REJECTED').length
   }), [slots]);
 
   // Memoized pagination
@@ -648,7 +704,7 @@ const totalPagesMemo = totalPagesState;
 
   const getStatusConfig = useCallback((status: string) => {
     switch (status) {
-      case 'ACTIVE':
+      case 'APPROVED':
         return {
           color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
           dot: 'bg-emerald-500'
@@ -658,7 +714,7 @@ const totalPagesMemo = totalPagesState;
           color: 'bg-amber-50 text-amber-700 border-amber-200',
           dot: 'bg-amber-500'
         };
-      case 'CANCELLED':
+      case 'REJECTED':
         return {
           color: 'bg-red-50 text-red-700 border-red-200',
           dot: 'bg-red-500'
@@ -1468,6 +1524,17 @@ const DeleteConfirmationModal = () => (
     )}
   </Modal>
 );
+
+   if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-4 sm:py-8">
@@ -1513,7 +1580,7 @@ const DeleteConfirmationModal = () => (
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.approved}</p>
               </div>
               <div className="p-3 bg-emerald-50 rounded-lg">
                 <CheckCircle className="text-emerald-600" size={24} />
@@ -1537,7 +1604,7 @@ const DeleteConfirmationModal = () => (
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Cancelled</p>
-                <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+                <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <div className="p-3 bg-red-50 rounded-lg">
                 <XCircle className="text-red-600" size={24} />
@@ -1569,10 +1636,10 @@ const DeleteConfirmationModal = () => (
                 className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="ALL">All Status</option>
-                <option value="ACTIVE">Active</option>
+                <option value="APPROVED">Approved</option>
                 <option value="DRAFT">Draft</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="COMPLETED">Completed</option>
+                <option value="REJECTED">rejected</option>
+                {/* <option value="COMPLETED">Completed</option> */}
               </select>
             </div>
           </div>
@@ -1748,6 +1815,16 @@ const DeleteConfirmationModal = () => (
           )}
         </div>
       </div>
+   {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Modals */}
       <AddEditModal />

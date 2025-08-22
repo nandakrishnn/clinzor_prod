@@ -1,7 +1,17 @@
 import { axiosPrivate } from '@/axios/axios';
 import { useState, useEffect } from 'react';
 
-
+interface BackendClinic {
+  name: string;
+  email: string;
+  contact_number: string;
+  address: string;
+  city: string;
+  pincode: string;
+  about_clinic: string;
+  coordinates?: string;
+  uuid?: string;
+}
 const useClinicByUser = () => {
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);

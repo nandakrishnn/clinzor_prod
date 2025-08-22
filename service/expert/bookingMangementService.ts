@@ -70,14 +70,14 @@ export const GetASlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/expert-slot-rud/${Id}`);
 };
 
-export const GetAllExpertBooking= async () => {
+export const GetAllExpertBooking = async (params: any = {}) => {
   try {
-    const response = await axiosPrivate.get(
-      `customer/expert-booking-lc/`
-    );
+    const response = await axiosPrivate.get('customer/expert-booking-lc/', {
+      params: params
+    });
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch bookings", error);
     throw error;
   }
 };

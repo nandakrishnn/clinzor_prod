@@ -62,16 +62,30 @@ export const deleteDoctor = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
 
-export const GetAllDoctor = async (page: number, page_size?: number): Promise<any> => {
+// Update the GetAllDoctor function to accept additional parameters
+export const GetAllDoctor = async (
+  page: number = 1,
+  page_size?: number,
+  search?: string,
+  status?: string,
+  service?: string,
+  gender?: string,
+  specialization?: string
+): Promise<any> => {
   try {
     const params: Record<string, any> = { page };
     if (page_size) params.page_size = page_size;
+    if (search) params.search = search;
+    if (status) params.status = status;
+    if (service) params.clinic_service = service;
+    if (gender) params.gender = gender;
+    if (specialization) params.specialization = specialization;
+    
     const response = await axiosPrivate.get(`clinic/doctor-lc/`, { params });
     // Return full shape so callers can read pagination metadata
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch doctors", error);
     throw error;
   }
 };
-
