@@ -38,25 +38,115 @@ const BookingManagement = () => {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const dateObj = useMemo(() => new Date(dateFilter), [dateFilter]);
   const isDateToday = useMemo(() => isToday(dateObj), [dateObj]);
-  const [totalBookings, setTotalBookings] = useState(0);
-
-  const fetchBookings = async (page=1) => {
-    try {
-      const data = await getAllClinicBookings(page);
-      setTotalBookings(data.total_items);
-      setTotalPages(data.total_pages);
-      setBookings(data.data);
-      console.log(data,"booking data")
-    } catch (error) {
-      console.error("Error fetching data ", error);
+  const [loading, setLoading] = useState(false);
+  const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
+  // Add state for search timeout
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const itemsPerPage = 10; // Add this line
+const fetchBookings = async (
+  page: number = currentPage,
+  search: string = searchTerm,
+  status: string = statusFilter,
+  type: string = typeFilter,
+  date: string = dateFilter
+) => {
+  try {
+    setLoading(true);
+    
+    // Determine if we should show today's bookings
+    let showTodayParam = false;
+    let dateParam = dateFilter;
+    
+    // If date filter is today, set show_today=true and clear the date parameter
+    if (dateFilter === format(new Date(), 'yyyy-MM-dd')) {
+      showTodayParam = true;
+      dateParam = ''; // Clear date parameter since we're using show_today
     }
+    
+    const data = await getAllClinicBookings(
+      page, 
+      10, 
+      search, 
+      status, 
+      type, 
+      dateParam, 
+      showTodayParam
+    );
+
+    setBookings(data.data);
+    setPaginationData({
+      current_page: data.current_page,
+      total_pages: data.total_pages,
+      total_items: data.total_items,
+      next: data.next,
+      previous: data.previous
+    });
+  } catch (error) {
+    console.error("Error fetching data ", error);
+  } finally {
+    setLoading(false);
+  }
+};
+  // Initial fetch and when filters change
+useEffect(() => {
+  fetchBookings(1, searchTerm, statusFilter, typeFilter, dateFilter);
+  setCurrentPage(1);
+}, [searchTerm, statusFilter, typeFilter, dateFilter]);
+
+// In your useEffect for page changes:
+useEffect(() => {
+  fetchBookings(currentPage, searchTerm, statusFilter, typeFilter, dateFilter);
+}, [currentPage]);
+
+  // Update search handler with debounce
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for debounced search
+    const timeoutId = setTimeout(() => {
+      fetchBookings(1, term, statusFilter, typeFilter, dateFilter);
+    }, 500);
+
+    setSearchTimeout(timeoutId);
   };
 
+  // Update filter handlers to trigger API calls
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+  };
+
+  const handleTypeFilterChange = (type: string) => {
+    setTypeFilter(type);
+  };
+
+const handleDateFilterChange = (date: string) => {
+  setDateFilter(date);
+  
+  // If selecting today, we might want to trigger a refresh immediately
+  if (date === format(new Date(), 'yyyy-MM-dd')) {
+    fetchBookings(1, searchTerm, statusFilter, typeFilter, date);
+  }
+};
+
+  // Clean up timeout on unmount
   useEffect(() => {
-    fetchBookings(currentPage);
-  }, [currentPage]);
-// console.log(bookings,"booking data")
-  const itemsPerPage = 6;
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Status configuration
   const getStatusConfig = (status: string) => {
@@ -84,39 +174,37 @@ const BookingManagement = () => {
   };
 
   // Filter bookings by date (default: today)
-  const filteredBookings = useMemo(() => {
-    return bookings.filter(booking => {
-      const matchesSearch = booking.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.uuid?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter ? booking.booking_status === statusFilter : true;
-      const matchesType = typeFilter ? booking.booking_type === typeFilter : true;
-      // Date filter: show only bookings for selected date
-      const matchesDate = dateFilter ? format(parseISO(booking.start_time), 'yyyy-MM-dd') === dateFilter : true;
-      return matchesSearch && matchesStatus && matchesType && matchesDate;
-    });
-  }, [bookings, searchTerm, statusFilter, typeFilter, dateFilter]);
+  // const filteredBookings = useMemo(() => {
+  //   return bookings.filter(booking => {
+  //     const matchesSearch = booking.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       booking.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       booking.uuid?.toLowerCase().includes(searchTerm.toLowerCase());
+  //     const matchesStatus = statusFilter ? booking.booking_status === statusFilter : true;
+  //     const matchesType = typeFilter ? booking.booking_type === typeFilter : true;
+  //     // Date filter: show only bookings for selected date
+  //     const matchesDate = dateFilter ? format(parseISO(booking.start_time), 'yyyy-MM-dd') === dateFilter : true;
+  //     return matchesSearch && matchesStatus && matchesType && matchesDate;
+  //   });
+  // }, [bookings, searchTerm, statusFilter, typeFilter, dateFilter]);
 
-  const [showAll, setShowAll] = useState(false);
-  const bookingsToShow = showAll ? bookings : filteredBookings;
+  // const [showAll, setShowAll] = useState(false);
+  // const bookingsToShow = showAll ? bookings : filteredBookings;
   // const totalPages = Math.ceil(bookingsToShow.length / itemsPerPage);
-  const paginatedBookings = bookingsToShow.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedBookings = bookings;
 
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, typeFilter]);
 
   // Header stats
+  // Header stats
   const stats = useMemo(() => {
-    const total = totalBookings;
+    const total = paginationData.total_items; // Use this instead of totalBookings
     const completed = bookings.filter(b => b.booking_status === 'COMPLETED').length;
     const scheduled = bookings.filter(b => b.booking_status === 'SCHEDULED').length;
     const canceled = bookings.filter(b => b.booking_status === 'CANCELED').length;
     const totalAmount = bookings.reduce((sum, b) => sum + (b.booking_status === 'COMPLETED' ? parseFloat(b.booking_charge) : 0), 0);
-    
+
     // Most booked service
     const serviceCount: Record<string, number> = {};
     bookings.forEach(b => {
@@ -125,18 +213,17 @@ const BookingManagement = () => {
     const mostBookedServiceEntry = Object.entries(serviceCount).sort((a, b) => b[1] - a[1])[0];
     const mostBookedService = mostBookedServiceEntry ? mostBookedServiceEntry[0] : '-';
     const mostBookedServiceCount = mostBookedServiceEntry ? mostBookedServiceEntry[1] : 0;
-    
-    return { 
-      total, 
-      completed, 
-      scheduled, 
-      canceled, 
-      totalAmount, 
-      mostBookedService, 
-      mostBookedServiceCount 
-    };
-  }, [bookings]);
 
+    return {
+      total,
+      completed,
+      scheduled,
+      canceled,
+      totalAmount,
+      mostBookedService,
+      mostBookedServiceCount
+    };
+  }, [bookings, paginationData.total_items]); // Add paginationData.total_items to dependencies
   // Avatar with initials
   const getInitials = (name: string) => {
     return name
@@ -153,19 +240,32 @@ const BookingManagement = () => {
       modalRef.current.focus();
     }
   }, [selectedBooking]);
-// Add this function to your component
-const handleCancelBooking = async (bookingId: string) => {
-  try {
-    await cancelClinicBookings(bookingId, { booking_status: 'CANCELED' });
-    // Refresh bookings after successful cancellation
-    await fetchBookings();
-    // Close the action menu
-    setShowActionMenu(null);
-  } catch (error) {
-    console.error("Error canceling booking:", error);
-    // You might want to add error handling here (e.g., show a toast notification)
+  // Add this function to your component
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      await cancelClinicBookings(bookingId, { booking_status: 'CANCELED' });
+      // Refresh bookings after successful cancellation
+      await fetchBookings();
+      // Close the action menu
+      setShowActionMenu(null);
+    } catch (error) {
+      console.error("Error canceling booking:", error);
+      // You might want to add error handling here (e.g., show a toast notification)
+    }
+  };
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
   }
-};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Sticky Header */}
@@ -223,7 +323,7 @@ const handleCancelBooking = async (bookingId: string) => {
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
-                  onClick={() => setDateFilter(format(subDays(dateObj, 1), 'yyyy-MM-dd'))}
+                  onClick={() => handleDateFilterChange(format(subDays(dateObj, 1), 'yyyy-MM-dd'))}
                   className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
                   aria-label="Previous Day"
                 >
@@ -238,7 +338,7 @@ const handleCancelBooking = async (bookingId: string) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDateFilter(format(addDays(dateObj, 1), 'yyyy-MM-dd'))}
+                  onClick={() => handleDateFilterChange(format(addDays(dateObj, 1), 'yyyy-MM-dd'))}
                   className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
                   aria-label="Next Day"
                 >
@@ -249,7 +349,7 @@ const handleCancelBooking = async (bookingId: string) => {
               <input
                 type="date"
                 value={dateFilter}
-                onChange={e => { setDateFilter(e.target.value); setDatePickerOpen(false); }}
+                onChange={e => { handleDateFilterChange(e.target.value); setDatePickerOpen(false); }}
                 className="hidden"
                 ref={el => {
                   if (datePickerOpen && el) el.showPicker && el.showPicker();
@@ -266,7 +366,7 @@ const handleCancelBooking = async (bookingId: string) => {
                   type="text"
                   placeholder="Search by patient name, email, or booking ID..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                 />
               </div>
@@ -276,7 +376,7 @@ const handleCancelBooking = async (bookingId: string) => {
               <label className="text-xs font-semibold text-slate-600 mb-2 block">Status</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="">All Status</option>
@@ -291,7 +391,7 @@ const handleCancelBooking = async (bookingId: string) => {
               <label className="text-xs font-semibold text-slate-600 mb-2 block">Type</label>
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) => handleTypeFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="">All Types</option>
@@ -306,6 +406,7 @@ const handleCancelBooking = async (bookingId: string) => {
                   setSearchTerm('');
                   setStatusFilter('');
                   setTypeFilter('');
+                  setDateFilter(format(new Date(), 'yyyy-MM-dd'));
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700 rounded-xl font-medium border border-slate-300 hover:from-slate-300 hover:to-slate-200 transition-all duration-200"
               >
@@ -332,7 +433,7 @@ const handleCancelBooking = async (bookingId: string) => {
               {paginatedBookings.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-slate-400 text-lg">
-                    <span className="inline-block mb-2 text-4xl">😕</span><br/>
+                    <span className="inline-block mb-2 text-4xl">😕</span><br />
                     No bookings found matching your filters.
                   </td>
                 </tr>
@@ -388,15 +489,15 @@ const handleCancelBooking = async (bookingId: string) => {
                         <div className="flex items-center space-x-2">
                           {booking.booking_type === 'VIDEO_CALL' ? (
                             <a href={booking.clinic_meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Video className="w-4 h-4 text-blue-600" />
+                              <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <Video className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                  <div className="text-xs font-medium text-slate-900 leading-tight">Online</div>
+                                  <div className="text-xs text-slate-500 leading-tight">Video Call</div>
+                                </div>
                               </div>
-                              <div className="flex flex-col justify-center">
-                                <div className="text-xs font-medium text-slate-900 leading-tight">Online</div>
-                                <div className="text-xs text-slate-500 leading-tight">Video Call</div>
-                              </div>
-                            </div>
                             </a>
                           ) : (
                             <div className="flex items-center space-x-2">
@@ -448,16 +549,16 @@ const handleCancelBooking = async (bookingId: string) => {
                             aria-label="Action Menu"
                           >
                             <button
-                             onClick={() => setSelectedBooking(booking)}
-                             className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                              onClick={() => setSelectedBooking(booking)}
+                              className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               View Details
                             </button>
                             {/* <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               Send Message
                             </button> */}
-                            <button 
-                            onClick={() => handleCancelBooking(booking.uuid)}
-                            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                            <button
+                              onClick={() => handleCancelBooking(booking.uuid)}
+                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               Cancel Booking
                             </button>
                           </div>
@@ -472,13 +573,13 @@ const handleCancelBooking = async (bookingId: string) => {
         </div>
         {/* Mobile Card List */}
         <div className="sm:hidden space-y-4">
-          {paginatedBookings.length === 0 ? (
+          {bookings.length === 0 ? (
             <div className="py-16 text-center text-slate-400 text-lg bg-white/80 rounded-2xl shadow-lg">
-              <span className="inline-block mb-2 text-4xl">😕</span><br/>
+              <span className="inline-block mb-2 text-4xl">😕</span><br />
               No bookings found matching your filters.
             </div>
           ) : (
-            paginatedBookings.map((booking) => {
+            bookings.map((booking) => {
               const statusConfig = getStatusConfig(booking.booking_status);
               const scheduledDateTime = formatDateTime(booking.start_time);
               return (
@@ -522,11 +623,11 @@ const handleCancelBooking = async (bookingId: string) => {
                     <div className="mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
                       <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl">View Details</button>
                       <button
-                      
-                      className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700">Send Message</button>
+
+                        className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700">Send Message</button>
                       <button
-                      onClick={() => handleCancelBooking(booking.uuid)}
-                      className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
+                        onClick={() => handleCancelBooking(booking.uuid)}
+                        className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
                     </div>
                   )}
                 </div>
@@ -534,60 +635,49 @@ const handleCancelBooking = async (bookingId: string) => {
             })
           )}
         </div>
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
-            <div className="text-xs sm:text-sm text-slate-500">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalBookings)} of {totalBookings} bookings
-            </div>
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 sm:p-2.5 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                aria-label="Previous Page"
-              >
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <div className="flex items-center space-x-0.5 sm:space-x-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                      aria-current={currentPage === pageNum ? 'page' : undefined}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 sm:p-2.5 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                aria-label="Next Page"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          </div>
-        )}
+       {/* Pagination */}
+{paginationData.total_pages > 1 && (
+  <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
+    <div className="text-xs sm:text-sm text-slate-500">
+      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, paginationData.total_items)} of {paginationData.total_items} bookings
+    </div>
+    <div className="flex flex-wrap justify-center items-center gap-2">
+      <button
+        onClick={() => {
+          const nextPage = Math.max(1, currentPage - 1);
+          if (nextPage !== currentPage) {
+            setCurrentPage(nextPage);
+          }
+        }}
+        disabled={currentPage === 1}
+        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+      >
+        Prev
+      </button>
+      {Array.from({ length: paginationData.total_pages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
+        >
+          {i + 1}
+        </button>
+      ))}
+      <button
+        onClick={() => {
+          const nextPage = Math.min(paginationData.total_pages, currentPage + 1);
+          if (nextPage !== currentPage) {
+            setCurrentPage(nextPage);
+          }
+        }}
+        disabled={currentPage === paginationData.total_pages}
+        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+)}
       </div>
       {/* Detail Modal with transition and focus trap */}
       {selectedBooking && (
@@ -623,7 +713,7 @@ const handleCancelBooking = async (bookingId: string) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2">Booking Information</h3>
@@ -639,7 +729,7 @@ const handleCancelBooking = async (bookingId: string) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <h3 className="font-semibold text-slate-900 mb-2">Schedule</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
@@ -651,7 +741,7 @@ const handleCancelBooking = async (bookingId: string) => {
                     </div>
                   </div>
                 </div>
-                
+
                 {selectedBooking.offers_applied && selectedBooking.offers_applied.length > 0 && (
                   <div className="md:col-span-2">
                     <h3 className="font-semibold text-slate-900 mb-2">Offers Applied</h3>
