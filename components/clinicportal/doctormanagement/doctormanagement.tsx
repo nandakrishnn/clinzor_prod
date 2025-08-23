@@ -180,10 +180,10 @@ const DoctorManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-    const [notification, setNotification] = useState<{
-      type: "success" | "error" | "warning";
-      message: string;
-    } | null>(null);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+  } | null>(null);
   // Add state for search timeout
   const [loading, setLoading] = useState(true);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -473,7 +473,7 @@ const DoctorManagement: React.FC = () => {
         dob: newDoctor.dob,
         gender: newDoctor.gender,
         specializaton: newDoctor.specializaton,
-       experience: newDoctor.experience,
+        experience: newDoctor.experience,
         phone_number: newDoctor.phone_number,
         email: newDoctor.email,
         education: newDoctor.education,
@@ -489,19 +489,19 @@ const DoctorManagement: React.FC = () => {
       setDoctors([createdDoctor, ...doctors]);
       resetForm();
       setShowCreateModal(false);
-      
-    setNotification({
-      type: "success",
-      message: "Doctor created successfully!"
-    });
+
+      setNotification({
+        type: "success",
+        message: "Doctor created successfully!"
+      });
       // showToast('Doctor created successfully!', 'success');
       fetchDoctor(currentPage);
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error creating doctor:", error);
-       setNotification({
-      type: "error",
-      message: `Failed to create doctor ${error.message}`
-    });
+      setNotification({
+        type: "error",
+        message: `Failed to create doctor ${error.message}`
+      });
       // showToast('Failed to create doctor', 'error');
     } finally {
       setUploading(false); // Add this if you have uploading state
@@ -556,16 +556,16 @@ const DoctorManagement: React.FC = () => {
       closeModal();
       fetchDoctor(currentPage)
       setNotification({
-      type: "success",
-      message: "Doctor updated successfully!"
-    });
+        type: "success",
+        message: "Doctor updated successfully!"
+      });
       // showToast('Doctor updated successfully!', 'success');
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error updating doctor:", error);
       setNotification({
-      type: "error",
-      message: `Failed to updating doctor: ${error.message}`
-    });
+        type: "error",
+        message: `Failed to updating doctor: ${error.message}`
+      });
       // showToast('Failed to update doctor', 'error');
     } finally {
       setUploading(false); // Add this if you have uploading state
@@ -582,18 +582,18 @@ const DoctorManagement: React.FC = () => {
       // Update local state
       setDoctors(doctors.filter(d => d.uuid !== selectedDoctor.uuid));
       closeModal();
-         setNotification({
-      type: "success",
-      message: "Doctor deleted successfully!"
-    });
+      setNotification({
+        type: "success",
+        message: "Doctor deleted successfully!"
+      });
       // showToast('Doctor deleted successfully!', 'success');
       fetchDoctor(currentPage)
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error deleting doctor:", error);
-        setNotification({
-      type: "error",
-      message: `Failed to  deleting doctor: ${error.message}`
-    });
+      setNotification({
+        type: "error",
+        message: `Failed to  deleting doctor: ${error.message}`
+      });
       // showToast('Failed to delete doctor', 'error');
     }
   };
@@ -603,24 +603,24 @@ const DoctorManagement: React.FC = () => {
     setModalMode('view');
   };
 
-const handleEditDoctor = (doctor: Doctor) => {
-  setSelectedDoctor(doctor);
-  setNewDoctor({
-    clinic_service: doctor.clinic_service,
-    name: doctor.name,
-    dob: doctor.dob || '',
-    gender: doctor.gender,
-    specializaton: doctor.specializaton,
-    experience: doctor.experience?.toString() || '',
-    phone_number: doctor.phone_number,
-    email: doctor.email || '',
-    education: doctor.education || '',
-    additional_info: doctor.extra_info || '',
-    profile_pic_file: null,
-    govt_verification_doc_files: [],
-  });
-  setModalMode('edit');
-};
+  const handleEditDoctor = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+    setNewDoctor({
+      clinic_service: doctor.clinic_service,
+      name: doctor.name,
+      dob: doctor.dob || '',
+      gender: doctor.gender,
+      specializaton: doctor.specializaton,
+      experience: doctor.experience?.toString() || '',
+      phone_number: doctor.phone_number,
+      email: doctor.email || '',
+      education: doctor.education || '',
+      additional_info: doctor.extra_info || '',
+      profile_pic_file: null,
+      govt_verification_doc_files: [],
+    });
+    setModalMode('edit');
+  };
 
   const handleDeleteConfirm = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -1545,9 +1545,20 @@ const handleEditDoctor = (doctor: Doctor) => {
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold border border-slate-300 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
+                        disabled={uploading}
+                        className={`px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold border border-slate-300 transition-all duration-200 ${uploading
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:from-blue-700 hover:to-indigo-700'
+                          }`}
                       >
-                        {modalMode === 'edit' ? 'Update Doctor' : 'Add Doctor'}
+                        {uploading ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            {modalMode === 'edit' ? 'Updating...' : 'Creating...'}
+                          </div>
+                        ) : (
+                          modalMode === 'edit' ? 'Update Doctor' : 'Add Doctor'
+                        )}
                       </button>
                     </div>
                   </form>
@@ -1625,16 +1636,16 @@ const handleEditDoctor = (doctor: Doctor) => {
           </div>
         </div>
       )}
-          {/* Notification */}
-              <AnimatePresence>
-                {notification && (
-                  <Notification
-                    type={notification.type}
-                    message={notification.message}
-                    onClose={() => setNotification(null)}
-                  />
-                )}
-              </AnimatePresence>
+      {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
