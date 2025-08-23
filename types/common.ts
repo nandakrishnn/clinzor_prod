@@ -106,3 +106,37 @@ export const clinicData: Clinic[] = [
     femaleDoctors: true
   },
 ];
+
+export interface Slot {
+  uuid: string;
+  clinic: string;
+  clinic_service: string;
+  slot_type: string;
+  start_time: string;
+  end_time: string;
+  created_by: string;
+  max_bookings: number;
+  available_slots: number;
+  status: string;
+  reason_for_rejection: string | null;
+  is_video_call: boolean;
+  is_home_visit: boolean;
+  is_physical_visit: boolean;
+  female_doctor_count: number;
+  clinic_name: string;
+}
+
+export interface FilterState {
+  fromDate: Date | null;
+  toDate: Date | null;
+  status: string;
+  clinicService: string;
+  timeRange: string;
+  capacity: string;
+  availability: string;
+}
+
+export interface ClinicService {
+  id: string;
+  name: string;
+}
