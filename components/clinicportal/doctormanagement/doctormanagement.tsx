@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   Filter,
-  Edit3, 
-  Eye, 
-  Trash2, 
+  Edit3,
+  Eye,
+  Trash2,
   MoreHorizontal,
   Users,
   UserCheck,
@@ -18,13 +18,15 @@ import {
   X,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  XCircle
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createDoctor, deleteDoctor, editDoctor, GetAllDoctor } from '@/service/clinic/doctorManagementService';
 import { Clinic_by_clinic_user, GetAllClinicService, GetAllServiceForClinic } from '@/service/clinic/serviceManagementService';
-
+import { uploadFiles } from '@/service/uploadService/uploadService';
+import { motion, AnimatePresence } from "framer-motion";
 // Types
 interface Service {
   uuid: string;
@@ -51,8 +53,8 @@ interface Doctor {
   profile_pic: string | null;
   reason_for_rejection: string | null;
   education?: string;
-  govt_verification_docs?: { name: string; url?: string }[];
-  additional_info?: string;
+  government_document?: string[];
+  extra_info?: string;
 }
 
 interface NewDoctor {
@@ -72,8 +74,56 @@ interface NewDoctor {
 }
 
 // remove mock/sample data – real backend data is used
+interface NotificationProps {
+  type: "success" | "error" | "warning";
+  message: string;
+  onClose: () => void;
+}
 
 const MAX_GOVT_DOC_FILES = 5;
+const Notification = ({ type, message, onClose }: NotificationProps) => {
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case "error":
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case "warning":
+        return <AlertCircle className="h-5 w-5 text-yellow-400" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-50";
+      case "error":
+        return "bg-red-50";
+      case "warning":
+        return "bg-yellow-50";
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getBgColor()} border border-gray-200`}
+    >
+      <div className="flex items-center">
+        {getIcon()}
+        <p className="ml-3 text-sm font-medium text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-400 hover:text-gray-500"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 
 const DoctorManagement: React.FC = () => {
   // State management
@@ -88,12 +138,12 @@ const DoctorManagement: React.FC = () => {
   const [serviceFilter, setServiceFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState('');
-// totalPages moved up
+  // totalPages moved up
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'delete' | null>(null);
-  
+  const [uploading, setUploading] = useState(false);
   const [newDoctor, setNewDoctor] = useState<NewDoctor>({
     clinic_service: '',
     name: '',
@@ -108,7 +158,7 @@ const DoctorManagement: React.FC = () => {
     profile_pic_file: null,
     govt_verification_doc_files: [],
   });
- const [paginationData, setPaginationData] = useState({
+  const [paginationData, setPaginationData] = useState({
     current_page: 1,
     total_pages: 1,
     total_items: 0,
@@ -122,7 +172,7 @@ const DoctorManagement: React.FC = () => {
   const [govtDocError, setGovtDocError] = useState<string>('');
   const [govtDocHelper, setGovtDocHelper] = useState<string>('You can upload up to 5 files.');
   const [services, setServices] = useState<Service[]>([])
-  const [totalitems , setTotalItems] = useState(0);
+  const [totalitems, setTotalItems] = useState(0);
   // Preview state
   const [previewDoc, setPreviewDoc] = useState<{ url: string; type: string; name: string } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -130,10 +180,14 @@ const DoctorManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+    const [notification, setNotification] = useState<{
+      type: "success" | "error" | "warning";
+      message: string;
+    } | null>(null);
   // Add state for search timeout
   const [loading, setLoading] = useState(true);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
- const fetchDoctor = async (
+  const fetchDoctor = async (
     pageNum: number = currentPage,
     searchText: string = searchTerm,
     status: string = statusFilter,
@@ -145,12 +199,12 @@ const DoctorManagement: React.FC = () => {
       setLoading(true);
       const clinicUserData = await Clinic_by_clinic_user();
       const clinicId = clinicUserData?.uuid as string;
-      
+
       const [DoctorData, allServicesData] = await Promise.all([
         GetAllDoctor(pageNum, doctorsPerPage, searchText, status, service, gender, specialization),
         GetAllClinicService(clinicId, 'approved'),
       ]);
-      
+
       // Set states with the responses
       setPaginationData({
         current_page: DoctorData.current_page || 1,
@@ -159,14 +213,14 @@ const DoctorManagement: React.FC = () => {
         next: DoctorData.next || null,
         previous: DoctorData.previous || null
       });
-      
+
       setTotalPages(DoctorData.total_pages || Math.ceil((DoctorData.count || 0) / doctorsPerPage) || 1);
       setDoctors(DoctorData.data);
       setTotalItems(DoctorData.total_items || 0);
       setServices(allServicesData.data);
     } catch (error) {
       console.error("Error to fetch Data", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   }
@@ -174,11 +228,11 @@ const DoctorManagement: React.FC = () => {
   // Update useEffect to use parameters
   useEffect(() => {
     fetchDoctor(
-      currentPage, 
-      searchTerm, 
-      statusFilter, 
-      serviceFilter, 
-      genderFilter, 
+      currentPage,
+      searchTerm,
+      statusFilter,
+      serviceFilter,
+      genderFilter,
       specializationFilter
     );
   }, [currentPage, statusFilter, serviceFilter, genderFilter, specializationFilter]);
@@ -186,25 +240,25 @@ const DoctorManagement: React.FC = () => {
   // Update search handler to trigger API call with debounce
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    
+
     // Clear previous timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
-    
+
     // Set new timeout for debounced search
     const timeoutId = setTimeout(() => {
       fetchDoctor(
-        1, 
-        term, 
-        statusFilter, 
-        serviceFilter, 
-        genderFilter, 
+        1,
+        term,
+        statusFilter,
+        serviceFilter,
+        genderFilter,
         specializationFilter
       );
       setCurrentPage(1); // Reset to first page when searching
     }, 500);
-    
+
     setSearchTimeout(timeoutId);
   };
 
@@ -217,7 +271,7 @@ const DoctorManagement: React.FC = () => {
     };
   }, [searchTimeout]);
 
-console.log(doctors,"data")
+  console.log(doctors, "data")
 
   // Update filter handlers to trigger API calls
   const handleStatusFilterChange = (status: string) => {
@@ -240,7 +294,7 @@ console.log(doctors,"data")
     setCurrentPage(1);
   };
 
-  
+
 
   // Helper functions
   const getStatusConfig = (status: string) => {
@@ -288,7 +342,7 @@ console.log(doctors,"data")
   //   const matchesGender = genderFilter ? doctor.gender === genderFilter : true;
   //   const matchesSpecialization = specializationFilter ? 
   //     doctor.specializaton?.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
-    
+
   //   return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
   // });
 
@@ -352,107 +406,221 @@ console.log(doctors,"data")
     setFormErrors({});
   };
 
+  // Add these helper functions to your component
+  const uploadDoctorFiles = async (
+    profilePicFile: File | null | undefined,
+    govtDocFiles: File[] = []
+  ) => {
+    try {
+      const filesToUpload: File[] = [];
+
+      // Handle profile pic file (could be null or undefined)
+      if (profilePicFile) {
+        filesToUpload.push(profilePicFile);
+      }
+
+      // Handle govt doc files
+      if (govtDocFiles && govtDocFiles.length > 0) {
+        filesToUpload.push(...govtDocFiles);
+      }
+
+      if (filesToUpload.length === 0) {
+        return { profilePicUrl: null, govtDocUrls: [] };
+      }
+
+      // Upload all files
+      const uploadedUrls = await uploadFiles(filesToUpload);
+
+      // Separate the URLs - profile pic is first if it exists
+      let profilePicUrl = null;
+      let govtDocUrls = [];
+
+      if (profilePicFile) {
+        profilePicUrl = uploadedUrls[0];
+        govtDocUrls = uploadedUrls.slice(1);
+      } else {
+        govtDocUrls = uploadedUrls;
+      }
+
+      return { profilePicUrl, govtDocUrls };
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      throw new Error("Failed to upload files");
+    }
+  };
+
+  const prepareGovtVerificationDocs = (govtDocUrls: string[]) => {
+    // Simply return the array of URLs as the API expects
+    return govtDocUrls;
+  };
   // CRUD operations
-const handleCreateDoctor = async () => {
-  try {
-    const payload = {
-      clinic_service: newDoctor.clinic_service,
-      name: newDoctor.name,
-      dob: newDoctor.dob,
-      gender: newDoctor.gender,
-      specializaton: newDoctor.specializaton,
-      experience: newDoctor.experience,
-      phone_number: newDoctor.phone_number,
-      email: newDoctor.email,
-      education: newDoctor.education,
-      additional_info: newDoctor.additional_info,
-      profile_pic_file: newDoctor.profile_pic_file,
-      govt_verification_doc_files: newDoctor.govt_verification_doc_files,
-    };
+  const handleCreateDoctor = async () => {
+    try {
+      // Upload files first
+      setUploading(true);
+      const { profilePicUrl, govtDocUrls } = await uploadDoctorFiles(
+        newDoctor.profile_pic_file,
+        newDoctor.govt_verification_doc_files || []
+      );
 
-    const createdDoctor = await createDoctor(payload);
+      // Prepare the govt verification docs
+      const government_document = prepareGovtVerificationDocs(govtDocUrls);
 
-    // Update local state (createdDoctor already in API shape)
-    setDoctors([createdDoctor, ...doctors]);
-    resetForm();
-    setShowCreateModal(false);
-    showToast('Doctor created successfully!', 'success');
-    fetchDoctor(currentPage)
-  } catch (error) {
-    console.error("Error creating doctor:", error);
-    showToast('Failed to create doctor', 'error');
-  }
-};
+      // Prepare the payload for API
+      const payload = {
+        clinic_service: newDoctor.clinic_service,
+        name: newDoctor.name,
+        dob: newDoctor.dob,
+        gender: newDoctor.gender,
+        specializaton: newDoctor.specializaton,
+       experience: newDoctor.experience,
+        phone_number: newDoctor.phone_number,
+        email: newDoctor.email,
+        education: newDoctor.education,
+        extra_info: newDoctor.additional_info,
+        profile_pic: profilePicUrl,
+        government_document: government_document,
+      };
 
-const handleUpdateDoctor = async () => {
-  if (!selectedDoctor) return;
+      // Call the create doctor API
+      const createdDoctor = await createDoctor(payload);
 
-  try {
-    const payload = {
-      name: newDoctor.name,
-      dob: newDoctor.dob,
-      gender: newDoctor.gender,
-      specializaton: newDoctor.specializaton,
-      experience: newDoctor.experience,
-      phone_number: newDoctor.phone_number,
-      email: newDoctor.email,
-      education: newDoctor.education,
-      additional_info: newDoctor.additional_info,
-    };
+      // Update local state
+      setDoctors([createdDoctor, ...doctors]);
+      resetForm();
+      setShowCreateModal(false);
+      
+    setNotification({
+      type: "success",
+      message: "Doctor created successfully!"
+    });
+      // showToast('Doctor created successfully!', 'success');
+      fetchDoctor(currentPage);
+    } catch (error:any) {
+      console.error("Error creating doctor:", error);
+       setNotification({
+      type: "error",
+      message: `Failed to create doctor ${error.message}`
+    });
+      // showToast('Failed to create doctor', 'error');
+    } finally {
+      setUploading(false); // Add this if you have uploading state
+    }
+  };
 
-    await editDoctor(selectedDoctor.uuid, payload as any);
-    await fetchDoctor();
-   
-    closeModal();
-    fetchDoctor(currentPage)
-    showToast('Doctor updated successfully!', 'success');
-  } catch (error) {
-    console.error("Error updating doctor:", error);
-    showToast('Failed to update doctor', 'error');
-  }
-};
+  const handleUpdateDoctor = async () => {
+    if (!selectedDoctor) return;
 
-const handleDeleteDoctor = async () => {
-  if (!selectedDoctor) return;
+    try {
+      setUploading(true); // Add this if you have uploading state
 
-  try {
-    // Call API
-    await deleteDoctor(selectedDoctor.uuid);
+      let profilePicUrl = selectedDoctor.profile_pic;
+      let government_document = selectedDoctor.government_document || [];
 
-    // Update local state
-    setDoctors(doctors.filter(d => d.uuid !== selectedDoctor.uuid));
-    closeModal();
-    showToast('Doctor deleted successfully!', 'success');
-    fetchDoctor(currentPage)
-  } catch (error) {
-    console.error("Error deleting doctor:", error);
-    showToast('Failed to delete doctor', 'error');
-  }
-};
+      // Upload new files if they exist
+      if (newDoctor.profile_pic_file || (newDoctor.govt_verification_doc_files && newDoctor.govt_verification_doc_files.length > 0)) {
+        const { profilePicUrl: newProfilePicUrl, govtDocUrls } = await uploadDoctorFiles(
+          newDoctor.profile_pic_file,
+          newDoctor.govt_verification_doc_files || []
+        );
+
+        // Use new profile pic URL if uploaded
+        if (newProfilePicUrl) {
+          profilePicUrl = newProfilePicUrl;
+        }
+
+        // Add new govt docs if uploaded
+        if (govtDocUrls.length > 0) {
+          government_document = [...government_document, ...govtDocUrls];
+        }
+      }
+
+      // Prepare the payload for API
+      const payload = {
+        name: newDoctor.name,
+        dob: newDoctor.dob,
+        gender: newDoctor.gender,
+        specializaton: newDoctor.specializaton,
+        experience: parseInt(newDoctor.experience),
+        phone_number: newDoctor.phone_number,
+        email: newDoctor.email,
+        education: newDoctor.education,
+        extra_info: newDoctor.additional_info,
+        profile_pic: profilePicUrl,
+        government_document: government_document,
+      };
+
+      await editDoctor(selectedDoctor.uuid, payload as any);
+      await fetchDoctor();
+
+      closeModal();
+      fetchDoctor(currentPage)
+      setNotification({
+      type: "success",
+      message: "Doctor updated successfully!"
+    });
+      // showToast('Doctor updated successfully!', 'success');
+    } catch (error:any) {
+      console.error("Error updating doctor:", error);
+      setNotification({
+      type: "error",
+      message: `Failed to updating doctor: ${error.message}`
+    });
+      // showToast('Failed to update doctor', 'error');
+    } finally {
+      setUploading(false); // Add this if you have uploading state
+    }
+  };
+
+  const handleDeleteDoctor = async () => {
+    if (!selectedDoctor) return;
+
+    try {
+      // Call API
+      await deleteDoctor(selectedDoctor.uuid);
+
+      // Update local state
+      setDoctors(doctors.filter(d => d.uuid !== selectedDoctor.uuid));
+      closeModal();
+         setNotification({
+      type: "success",
+      message: "Doctor deleted successfully!"
+    });
+      // showToast('Doctor deleted successfully!', 'success');
+      fetchDoctor(currentPage)
+    } catch (error:any) {
+      console.error("Error deleting doctor:", error);
+        setNotification({
+      type: "error",
+      message: `Failed to  deleting doctor: ${error.message}`
+    });
+      // showToast('Failed to delete doctor', 'error');
+    }
+  };
   // Modal handlers
   const handleViewDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
     setModalMode('view');
   };
 
-  const handleEditDoctor = (doctor: Doctor) => {
-    setSelectedDoctor(doctor);
-    setNewDoctor({
-      clinic_service: doctor.clinic_service,
-      name: doctor.name,
-      dob: doctor.dob || '',
-      gender: doctor.gender,
-      specializaton: doctor.specializaton,
-      experience: doctor.experience?.toString() || '',
-      phone_number: doctor.phone_number,
-      email: doctor.email || '',
-      education: doctor.education || '',
-      additional_info: doctor.additional_info || '',
-      profile_pic_file: null,
-      govt_verification_doc_files: [],
-    });
-    setModalMode('edit');
-  };
+const handleEditDoctor = (doctor: Doctor) => {
+  setSelectedDoctor(doctor);
+  setNewDoctor({
+    clinic_service: doctor.clinic_service,
+    name: doctor.name,
+    dob: doctor.dob || '',
+    gender: doctor.gender,
+    specializaton: doctor.specializaton,
+    experience: doctor.experience?.toString() || '',
+    phone_number: doctor.phone_number,
+    email: doctor.email || '',
+    education: doctor.education || '',
+    additional_info: doctor.extra_info || '',
+    profile_pic_file: null,
+    govt_verification_doc_files: [],
+  });
+  setModalMode('edit');
+};
 
   const handleDeleteConfirm = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -486,7 +654,7 @@ const handleDeleteDoctor = async () => {
     setGovtDocHelper('');
   };
 
- // Update resetFilters to reset API calls
+  // Update resetFilters to reset API calls
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
@@ -494,7 +662,7 @@ const handleDeleteDoctor = async () => {
     setGenderFilter('');
     setSpecializationFilter('');
     setCurrentPage(1);
-    
+
     // Fetch with empty filters
     fetchDoctor(1, '', '', '', '', '');
   };
@@ -538,7 +706,7 @@ const handleDeleteDoctor = async () => {
       return { ...prev, govt_verification_doc_files: [...currentFiles, file] };
     });
   }
-if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -562,7 +730,7 @@ if (loading) {
                   </h1>
                   <p className="text-sm text-slate-500 mt-1">Manage your clinic doctors</p>
                 </div>
-                
+
                 {/* Stats Cards */}
                 <div className="hidden lg:flex items-center space-x-6">
                   <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
@@ -603,7 +771,7 @@ if (loading) {
                   </div>
                 </div>
               </div>
-              
+
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
@@ -629,7 +797,7 @@ if (loading) {
                     type="text"
                     placeholder="Search by name, specialization, or phone..."
                     value={searchTerm}
-                     onChange={(e) => handleSearchChange(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                   />
                 </div>
@@ -640,7 +808,7 @@ if (loading) {
                 <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Status</label>
                 <select
                   value={statusFilter}
-                   onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                 >
                   <option value="">All Status</option>
@@ -652,16 +820,16 @@ if (loading) {
 
               {/* Service Filter */}
               <div>
-                 <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
                 <select
                   value={serviceFilter}
                   onChange={(e) => handleServiceFilterChange(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
                 >
-                   <option value="">All Services</option>
-                   {services.map(service => (
-                     <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
-                   ))}
+                  <option value="">All Services</option>
+                  {services.map(service => (
+                    <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -727,7 +895,7 @@ if (loading) {
               {paginatedDoctors.map((doctor) => {
                 const statusConfig = getStatusConfig(doctor.status);
                 const StatusIcon = statusConfig.icon;
-                
+
                 return (
                   <div key={doctor.uuid} className="group relative">
                     <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 overflow-hidden">
@@ -747,7 +915,7 @@ if (loading) {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
                               <StatusIcon className="w-3 h-3 mr-1" />
@@ -805,19 +973,19 @@ if (loading) {
                         <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                           <div />
                           <div className="flex items-center space-x-1">
-                            <button 
+                            <button
                               onClick={() => handleViewDoctor(doctor)}
                               className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleEditDoctor(doctor)}
                               className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDeleteConfirm(doctor)}
                               className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
                             >
@@ -836,17 +1004,17 @@ if (loading) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
-               <button
-                  onClick={() => {
+              <button
+                onClick={() => {
                   const nextPage = Math.max(1, currentPage - 1);
                   if (nextPage !== currentPage) {
                     setCurrentPage(nextPage);
                     fetchDoctor(
-                      nextPage, 
-                      searchTerm, 
-                      statusFilter, 
-                      serviceFilter, 
-                      genderFilter, 
+                      nextPage,
+                      searchTerm,
+                      statusFilter,
+                      serviceFilter,
+                      genderFilter,
                       specializationFilter
                     );
                   }
@@ -856,17 +1024,17 @@ if (loading) {
               >
                 Prev
               </button>
-               {Array.from({ length: totalPages }, (_, i) => (
-                 <button
-                   key={i}
-                    onClick={() => {
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
                     setCurrentPage(i + 1);
                     fetchDoctor(
-                      i + 1, 
-                      searchTerm, 
-                      statusFilter, 
-                      serviceFilter, 
-                      genderFilter, 
+                      i + 1,
+                      searchTerm,
+                      statusFilter,
+                      serviceFilter,
+                      genderFilter,
                       specializationFilter
                     );
                   }}
@@ -875,17 +1043,17 @@ if (loading) {
                   {i + 1}
                 </button>
               ))}
-               <button
-                  onClick={() => {
+              <button
+                onClick={() => {
                   const nextPage = Math.min(totalPages, currentPage + 1);
                   if (nextPage !== currentPage) {
                     setCurrentPage(nextPage);
                     fetchDoctor(
-                      nextPage, 
-                      searchTerm, 
-                      statusFilter, 
-                      serviceFilter, 
-                      genderFilter, 
+                      nextPage,
+                      searchTerm,
+                      statusFilter,
+                      serviceFilter,
+                      genderFilter,
                       specializationFilter
                     );
                   }
@@ -931,7 +1099,9 @@ if (loading) {
                           {selectedDoctor.profile_pic ? (
                             <img src={selectedDoctor.profile_pic} alt={selectedDoctor.name} className="h-20 w-20 object-cover rounded-xl border border-slate-200" />
                           ) : (
-                            <div className="h-20 w-20 flex items-center justify-center rounded-xl bg-slate-200 text-slate-400 text-3xl font-bold">{selectedDoctor.name.charAt(0)}</div>
+                            <div className="h-20 w-20 flex items-center justify-center rounded-xl bg-slate-200 text-slate-400 text-3xl font-bold">
+                              {selectedDoctor.name.charAt(0)}
+                            </div>
                           )}
                         </div>
                         <div className="flex-1">
@@ -1016,43 +1186,47 @@ if (loading) {
                       <div>
                         <h3 className="text-blue-700 font-semibold text-lg mb-2">Verification Documents</h3>
                         <p className="text-xs text-blue-700 mb-2">Uploaded government-issued documents for identity and credential verification.</p>
-                        {selectedDoctor.govt_verification_docs && selectedDoctor.govt_verification_docs.length > 0 ? (
+                     // In the view modal section, update the verification documents display
+                        {selectedDoctor.government_document && selectedDoctor.government_document.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {selectedDoctor.govt_verification_docs.map((doc, idx) => (
-                              <div key={idx} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2">
-                                {doc.url ? (
-                                  <>
-                                    <img src={doc.url} alt={doc.name} className="h-10 w-10 object-cover rounded border border-slate-200" />
-                                    <button
-                                      type="button"
-                                      className="text-xs text-blue-600 hover:underline ml-2"
-                                      title="View document"
-                                      onClick={() => setPreviewDoc({ url: doc.url!, type: doc.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image', name: doc.name })}
-                                    >View</button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg className="w-6 h-6 text-red-500 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-                                    <span className="text-blue-700 font-semibold text-sm">{doc.name}</span>
-                                    <button
-                                      type="button"
-                                      className="text-xs text-blue-600 hover:underline ml-2"
-                                      title="View document"
-                                      onClick={() => setPreviewDoc({ url: '', type: 'pdf', name: doc.name })}
-                                    >View</button>
-                                  </>
-                                )}
-                              </div>
-                            ))}
+                            {selectedDoctor.government_document.map((url, idx) => {
+                              const fileName = url.split('/').pop() || `document-${idx + 1}`;
+                              const isPdf = fileName.toLowerCase().endsWith('.pdf');
+
+                              return (
+                                <div key={idx} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2">
+                                  {isPdf ? (
+                                    <svg className="w-6 h-6 text-red-500 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                  ) : (
+                                    <img src={url} alt={fileName} className="h-10 w-10 object-cover rounded border border-slate-200" />
+                                  )}
+                                  <span className="text-blue-700 font-semibold text-sm truncate max-w-[100px]">{fileName}</span>
+                                  <button
+                                    type="button"
+                                    className="text-xs text-blue-600 hover:underline ml-2"
+                                    title="View document"
+                                    onClick={() => setPreviewDoc({
+                                      url: url,
+                                      type: isPdf ? 'pdf' : 'image',
+                                      name: fileName
+                                    })}
+                                  >
+                                    View
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
-                          <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400">Not provided</div>
+                          <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400">No documents uploaded</div>
                         )}
                       </div>
                       {/* Section: Additional Info */}
                       <div>
                         <h3 className="text-blue-700 font-semibold text-lg mb-2">Additional Info</h3>
-                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 whitespace-pre-line">{selectedDoctor.additional_info || 'N/A'}</div>
+                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 whitespace-pre-line">{selectedDoctor.extra_info || 'N/A'}</div>
                       </div>
                     </div>
                   )}
@@ -1444,13 +1618,23 @@ if (loading) {
               )}
               {previewDoc.type === 'pdf' && !previewDoc.url && (
                 <div className="w-full h-[60vh] flex items-center justify-center">
-                  <span className="text-slate-500">PDF preview not available. <br/> <a href={`/path/to/pdf/${previewDoc.name}`} download className="text-blue-600 underline">Download</a></span>
+                  <span className="text-slate-500">PDF preview not available. <br /> <a href={`/path/to/pdf/${previewDoc.name}`} download className="text-blue-600 underline">Download</a></span>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
+          {/* Notification */}
+              <AnimatePresence>
+                {notification && (
+                  <Notification
+                    type={notification.type}
+                    message={notification.message}
+                    onClose={() => setNotification(null)}
+                  />
+                )}
+              </AnimatePresence>
     </>
   );
 }
