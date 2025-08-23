@@ -741,12 +741,12 @@ const steps = [
 
               <div className="bg-gray-50 p-6 rounded-2xl">
                 {/* Days Cards */}
-                <div className="flex gap-4 overflow-x-auto pb-4 mb-6">
+                <div className="flex gap-4 overflow-x-auto pb-4 mb-6 hide-scrollbar justify-content-center items-center">
                   {days.map((day, index) => (
                     <div
                       key={index}
                       onClick={() => handleDaySelect(index)}
-                      className={`min-w-[120px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${
+                      className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${
                         selectedDayIndex === index
                           ? "border-gray-800 bg-gray-100 shadow-md"
                           : "border-gray-200 hover:border-gray-400"
