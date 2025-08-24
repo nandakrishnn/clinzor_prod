@@ -121,9 +121,29 @@ interface TimePreviewModalProps {
   slot: TimeSlot
   dayName: string
   date: string
+  onSave: (updatedSlot: TimeSlot) => void
+  isEditing?: boolean
+  onEdit?: () => void
+  onCancelEdit?: () => void
 }
 
-const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ isOpen, onClose, slot, dayName, date }) => {
+const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  slot, 
+  dayName, 
+  date, 
+  onSave,
+  isEditing = false,
+  onEdit,
+  onCancelEdit
+}) => {
+  const [editedSlot, setEditedSlot] = useState<TimeSlot>(slot)
+  
+  useEffect(() => {
+    setEditedSlot(slot)
+  }, [slot])
+
   if (!isOpen) return null
 
   const formatDateTime = (dateTimeStr: string) => {
@@ -143,8 +163,13 @@ const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ isOpen, onClose, sl
     }
   }
 
-  const startTime = formatDateTime(slot.start_time)
-  const endTime = formatDateTime(slot.end_time)
+  const handleSave = () => {
+    onSave(editedSlot)
+    onClose()
+  }
+
+  const startTime = formatDateTime(editedSlot.start_time)
+  const endTime = formatDateTime(editedSlot.end_time)
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
@@ -153,7 +178,9 @@ const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ isOpen, onClose, sl
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Clock className="w-6 h-6" />
-              <h3 className="text-xl font-bold">Time Slot Preview</h3>
+              <h3 className="text-xl font-bold">
+                {isEditing ? "Edit Time Slot" : "Time Slot Preview"}
+              </h3>
             </div>
             <button
               onClick={onClose}
@@ -171,6 +198,7 @@ const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ isOpen, onClose, sl
           </div>
 
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+            {/* Time Field - Not Editable */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">Time</span>
               <span className="text-lg font-bold text-gray-900">
@@ -178,28 +206,121 @@ const TimePreviewModal: React.FC<TimePreviewModalProps> = ({ isOpen, onClose, sl
               </span>
             </div>
 
+            {/* Max Bookings Field */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">Max Bookings</span>
-              <span className="text-sm font-semibold text-gray-900">{slot.max_bookings}</span>
+              {isEditing ? (
+                <input
+                  type="number"
+                  min="1"
+                  value={editedSlot.max_bookings}
+                  onChange={(e) => setEditedSlot({
+                    ...editedSlot,
+                    max_bookings: Number.parseInt(e.target.value) || 1
+                  })}
+                  className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                />
+              ) : (
+                <span className="text-sm font-semibold text-gray-900">{editedSlot.max_bookings}</span>
+              )}
             </div>
 
+            {/* Female Doctors Field */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">Female Doctors</span>
-              <span className="text-sm font-semibold text-gray-900">{slot.female_doctors}</span>
+              {isEditing ? (
+                <input
+                  type="number"
+                  min="0"
+                  value={editedSlot.female_doctors}
+                  onChange={(e) => setEditedSlot({
+                    ...editedSlot,
+                    female_doctors: Number.parseInt(e.target.value) || 0
+                  })}
+                  className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                />
+              ) : (
+                <span className="text-sm font-semibold text-gray-900">{editedSlot.female_doctors}</span>
+              )}
             </div>
 
+            {/* Service Types Field */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">Service Types</span>
-              <div className="flex gap-1">
-                {slot.is_video_call && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Video</span>
-                )}
-                {slot.is_physical_visit && (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Physical</span>
-                )}
-              </div>
+              {isEditing ? (
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editedSlot.is_video_call}
+                      onChange={(e) => setEditedSlot({
+                        ...editedSlot,
+                        is_video_call: e.target.checked
+                      })}
+                      className="rounded text-gray-600 focus:ring-gray-500"
+                    />
+                    <span className="ml-2 text-xs text-gray-700">Video</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editedSlot.is_physical_visit}
+                      onChange={(e) => setEditedSlot({
+                        ...editedSlot,
+                        is_physical_visit: e.target.checked
+                      })}
+                      className="rounded text-gray-600 focus:ring-gray-500"
+                    />
+                    <span className="ml-2 text-xs text-gray-700">Physical</span>
+                  </label>
+                </div>
+              ) : (
+                <div className="flex gap-1">
+                  {editedSlot.is_video_call && (
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Video</span>
+                  )}
+                  {editedSlot.is_physical_visit && (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Physical</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-between p-6 border-t border-gray-200">
+          {isEditing ? (
+            <>
+              <button
+                onClick={onCancelEdit}
+                className="px-4 py-2 text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-all duration-200"
+              >
+                Save Changes
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-300"
+              >
+                Close
+              </button>
+              <button
+                onClick={onEdit}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <Edit3 size={16} />
+                Edit Slot
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -220,6 +341,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   const [reviewDayIndex, setReviewDayIndex] = useState(0)
   const [selectedSlots, setSelectedSlots] = useState<number[]>([])
   const [selectedDayIndex, setSelectedDayIndex] = useState(0)
+  const [isEditingSlot, setIsEditingSlot] = useState(false)
+  const [editingReviewSlot, setEditingReviewSlot] = useState<{dayIndex: number; slotIndex: number} | null>(null)
+  const [timeGap, setTimeGap] = useState(1) // Default to 1 hour
+  const [selectedDays, setSelectedDays] = useState<DaySlots[]>([])
 
   // Step 1 data
   const [femaleDoctors, setFemaleDoctors] = useState(2)
@@ -244,20 +369,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     const period = h >= 12 ? "PM" : "AM"
     const hour12 = h % 12 || 12
     return `${hour12}:${minutes} ${period}`
-  }
-
-  // Convert time to 24-hour format
-  const to24HourFormat = (time12: string) => {
-    const [time, period] = time12.split(" ")
-    let [hours, minutes] = time.split(":")
-
-    if (period === "PM" && hours !== "12") {
-      hours = (Number.parseInt(hours) + 12).toString()
-    } else if (period === "AM" && hours === "12") {
-      hours = "00"
-    }
-
-    return `${hours.padStart(2, "0")}:${minutes}`
   }
 
   // Initialize days for the next 7 days
@@ -285,7 +396,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       setDays(nextDays)
       setSelectedDayIndex(0)
     }
-  }, [activeStep, slotType, startTime, endTime])
+  }, [activeStep, slotType, startTime, endTime, timeGap])
 
   // Initialize copy days
   useEffect(() => {
@@ -299,15 +410,37 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     }
   }, [activeStep, days])
 
+  // Update selected days when copy days change
+  useEffect(() => {
+    const selected = days.filter((_, index) => copyDays[index]?.selected)
+    setSelectedDays(selected)
+  }, [copyDays, days])
+
   // Generate time slots based on start and end time
   const generateTimeSlots = (date: string, start: string, end: string): TimeSlot[] => {
     const slots: TimeSlot[] = []
     const startHour = Number.parseInt(start.split(":")[0])
     const endHour = Number.parseInt(end.split(":")[0])
-
-    for (let hour = startHour; hour < endHour; hour++) {
-      const startTime = `${hour.toString().padStart(2, "0")}:00`
-      const endTime = `${(hour + 1).toString().padStart(2, "0")}:00`
+    
+    // Calculate total minutes between start and end
+    const startMinutes = startHour * 60 + Number.parseInt(start.split(":")[1])
+    const endMinutes = endHour * 60 + Number.parseInt(end.split(":")[1])
+    const totalMinutes = endMinutes - startMinutes
+    
+    // Calculate number of slots based on time gap
+    const numberOfSlots = Math.floor(totalMinutes / (timeGap * 60))
+    
+    for (let i = 0; i < numberOfSlots; i++) {
+      const slotStartMinutes = startMinutes + i * timeGap * 60
+      const slotEndMinutes = slotStartMinutes + timeGap * 60
+      
+      const startHour = Math.floor(slotStartMinutes / 60)
+      const startMinute = slotStartMinutes % 60
+      const endHour = Math.floor(slotEndMinutes / 60)
+      const endMinute = slotEndMinutes % 60
+      
+      const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`
+      const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`
 
       slots.push({
         start_time: `${date}T${startTime}`,
@@ -387,7 +520,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
     const newStartTime = new Date(lastEndTime)
     const newEndTime = new Date(lastEndTime)
-    newEndTime.setHours(newEndTime.getHours() + 1)
+    newEndTime.setHours(newEndTime.getHours() + timeGap)
 
     const newSlot: TimeSlot = {
       start_time: newStartTime.toISOString().split(".")[0],
@@ -426,7 +559,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     })
 
     setDays(updatedDays)
-    setActiveStep(1) // Back to day selection
   }
 
   // Apply template for N days
@@ -437,8 +569,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     const updatedDays = [...days]
     const today = new Date()
 
-    for (let i = 0; i < copyForDays && i < 30; i++) {
-      // Limit to 30 days max
+    for (let i = 0; i < copyForDays ; i++) { // Limit to 30 days max
       const date = new Date()
       date.setDate(today.getDate() + i)
       const dateStr = date.toISOString().split("T")[0]
@@ -464,15 +595,25 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     }
 
     setDays(updatedDays)
-    setActiveStep(1) // Back to day selection
   }
 
-  // Submit all data to backend
+  // Delete a slot in review step
+  const deleteSlotInReview = (dayIndex: number, slotIndex: number) => {
+    const updatedDays = [...days]
+    updatedDays[dayIndex].slots.splice(slotIndex, 1)
+    setDays(updatedDays)
+  }
+
+  // Submit only selected days data to backend
   const submitBulkSlots = async () => {
     try {
-      // Collect all slots from all days
+      // Collect all slots from selected days only
       const allSlots: any[] = []
-      days.forEach((day) => {
+      const daysToSubmit = copyDays.some(day => day.selected) ? 
+        days.filter((_, index) => copyDays[index].selected) : 
+        days
+
+      daysToSubmit.forEach((day) => {
         day.slots.forEach((slot) => {
           allSlots.push({
             start_time: slot.start_time,
@@ -514,43 +655,57 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     }
   }
 
-  if (!showBulkForm) return null
-
-const steps = [
-  {
-    id: 0,
-    title: "Setup",
-    subtitle: "Choose slot type & basic settings",
-    icon: <Settings className="w-6 h-6" />,
-  },
-  {
-    id: 1,
-    title: "Configure",
-    subtitle: "Set up days & time slots",
-    icon: <Calendar className="w-6 h-6" />,
-  },
-  {
-    id: 2,
-    title: "Copy",
-    subtitle: "Apply to multiple days",
-    icon: <Copy className="w-6 h-6" />,
-  },
-  {
-    id: 3,
-    title: "Review",
-    subtitle: "Confirm & create slots",
-    icon: <CheckCircle className="w-6 h-6" />,
-  },
-];
-
   const handleSlotTypeSelect = (type: "PHYSICAL_OR_VIDEO" | "HOME_VISIT") => {
     setSlotType(type)
     setShowBasicConfig(true)
   }
 
-  const handleTimePreview = (slot: TimeSlot, dayName: string, date: string) => {
+  const handleTimePreview = (slot: TimeSlot, dayName: string, date: string, dayIndex: number, slotIndex: number) => {
     setPreviewSlot({ slot, dayName, date })
+    setEditingReviewSlot({ dayIndex, slotIndex })
   }
+
+  const handleSaveEditedSlot = (updatedSlot: TimeSlot) => {
+    if (editingReviewSlot) {
+      const updatedDays = [...days]
+      updatedDays[editingReviewSlot.dayIndex].slots[editingReviewSlot.slotIndex] = updatedSlot
+      setDays(updatedDays)
+    }
+  }
+
+  if (!showBulkForm) return null
+
+  const steps = [
+    {
+      id: 0,
+      title: "Setup",
+      subtitle: "Choose slot type ",
+      icon: <Settings className="w-6 h-6" />,
+    },
+    {
+      id: 1,
+      title: "Configure",
+      subtitle: "Set up time slots",
+      icon: <Calendar className="w-6 h-6" />,
+    },
+    {
+      id: 2,
+      title: "Copy",
+      subtitle: "Apply to multiple days",
+      icon: <Copy className="w-6 h-6" />,
+    },
+    {
+      id: 3,
+      title: "Review",
+      subtitle: "Create slots",
+      icon: <CheckCircle className="w-6 h-6" />,
+    },
+  ]
+
+  // Get the days to display in review based on selection
+  const reviewDays = copyDays.some(day => day.selected) ? 
+    days.filter((_, index) => copyDays[index].selected) : 
+    days
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
@@ -570,7 +725,7 @@ const steps = [
           </div>
         </div>
 
-        <div className="px-8 py-6 bg-gray-50 border-b border-gray-200">
+        <div className="px-8 py-4 pt-6 bg-gray-50 border-b border-gray-200">
           <div className="flex justify-between items-center relative">
             {/* Progress line */}
             <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-200">
@@ -593,7 +748,7 @@ const steps = [
                 >
                   {index < activeStep ? <Check size={20} /> : step.icon}
                 </div>
-                <div className="mt-3 text-center">
+                <div className="mt-2 text-center">
                   <div
                     className={`font-semibold text-sm ${
                       activeStep === index ? "text-gray-800" : index < activeStep ? "text-gray-600" : "text-gray-500"
@@ -601,7 +756,7 @@ const steps = [
                   >
                     {step.title}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 max-w-[100px]">{step.subtitle}</div>
+                  <div className="text-xs text-gray-500 mt-1 max-w-[200px]">{step.subtitle}</div>
                 </div>
               </div>
             ))}
@@ -723,6 +878,25 @@ const steps = [
                           <label className="block text-sm font-medium text-gray-600">End Time</label>
                           <TimePicker value={endTime} onChange={setEndTime} className="w-full" />
                         </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-4">Slot Duration</h5>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-600">Time Gap (Hours)</label>
+                        <select
+                          value={timeGap}
+                          onChange={(e) => setTimeGap(Number.parseInt(e.target.value))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        >
+                          {[1, 2, 3, 4, 5].map((hour) => (
+                            <option key={hour} value={hour}>
+                              {hour} hour{hour > 1 ? 's' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500">Duration of each time slot</p>
                       </div>
                     </div>
                   </div>
@@ -983,14 +1157,6 @@ const steps = [
                       </div>
                     ))}
                   </div>
-
-                  {/* <button
-                    onClick={applyToSelectedDays}
-                    className="w-full mt-6 py-4 bg-gray-800 hover:bg-gray-900 text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 font-semibold"
-                  >
-                    <Copy size={20} />
-                    Apply to Selected Days
-                  </button> */}
                 </div>
 
                 <div className="border-t pt-6">
@@ -1032,12 +1198,12 @@ const steps = [
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Total Days:</span>
-                      <span className="font-semibold text-gray-800 ml-2">{days.length}</span>
+                      <span className="font-semibold text-gray-800 ml-2">{reviewDays.length}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">Total Slots:</span>
                       <span className="font-semibold text-gray-800 ml-2">
-                        {days.reduce((total, day) => total + day.slots.length, 0)}
+                        {reviewDays.reduce((total, day) => total + day.slots.length, 0)}
                       </span>
                     </div>
                     <div>
@@ -1065,17 +1231,17 @@ const steps = [
 
                     <div className="text-center">
                       <h4 className="font-semibold text-gray-800 flex items-center gap-2 justify-center">
-                        <span>{days[reviewDayIndex]?.dayName}</span>
-                        <span className="text-sm text-gray-500">({days[reviewDayIndex]?.date})</span>
+                        <span>{reviewDays[reviewDayIndex]?.dayName}</span>
+                        <span className="text-sm text-gray-500">({reviewDays[reviewDayIndex]?.date})</span>
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        Day {reviewDayIndex + 1} of {days.length} • {days[reviewDayIndex]?.slots.length} slots
+                        Day {reviewDayIndex + 1} of {reviewDays.length} • {reviewDays[reviewDayIndex]?.slots.length} slots
                       </p>
                     </div>
 
                     <button
                       onClick={() => navigateReviewDay("next")}
-                      disabled={reviewDayIndex === days.length - 1}
+                      disabled={reviewDayIndex === reviewDays.length - 1}
                       className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       <ChevronRight size={20} className="text-gray-600" />
@@ -1083,14 +1249,22 @@ const steps = [
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {days[reviewDayIndex]?.slots.map((slot, slotIndex) => (
+                    {reviewDays[reviewDayIndex]?.slots.map((slot, slotIndex) => (
                       <div
                         key={slotIndex}
-                        className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 group cursor-pointer"
-                        onClick={() => handleTimePreview(slot, days[reviewDayIndex].dayName, days[reviewDayIndex].date)}
+                        className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 group relative"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                          <div 
+                            className="flex-1 cursor-pointer"
+                            onClick={() => handleTimePreview(
+                              slot, 
+                              reviewDays[reviewDayIndex].dayName, 
+                              reviewDays[reviewDayIndex].date,
+                              reviewDayIndex,
+                              slotIndex
+                            )}
+                          >
                             <div className="flex items-center gap-2">
                               <Clock size={16} className="text-gray-500" />
                               <span className="font-semibold text-gray-800">
@@ -1116,8 +1290,24 @@ const steps = [
                               </div>
                             )}
                           </div>
-                          <Eye size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                          <Eye 
+                            size={16} 
+                            className="text-gray-400 group-hover:text-gray-600 transition-colors cursor-pointer"
+                            onClick={() => handleTimePreview(
+                              slot, 
+                              reviewDays[reviewDayIndex].dayName, 
+                              reviewDays[reviewDayIndex].date,
+                              reviewDayIndex,
+                              slotIndex
+                            )}
+                          />
                         </div>
+                        <button
+                          onClick={() => deleteSlotInReview(reviewDayIndex, slotIndex)}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-all duration-200"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -1164,13 +1354,20 @@ const steps = [
         </div>
       </div>
 
-      {previewSlot && (
+      {previewSlot && editingReviewSlot && (
         <TimePreviewModal
           isOpen={!!previewSlot}
-          onClose={() => setPreviewSlot(null)}
+          onClose={() => {
+            setPreviewSlot(null)
+            setIsEditingSlot(false)
+          }}
           slot={previewSlot.slot}
           dayName={previewSlot.dayName}
           date={previewSlot.date}
+          onSave={handleSaveEditedSlot}
+          isEditing={isEditingSlot}
+          onEdit={() => setIsEditingSlot(true)}
+          onCancelEdit={() => setIsEditingSlot(false)}
         />
       )}
     </div>
