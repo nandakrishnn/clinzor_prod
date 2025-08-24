@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllClinicSlot, deleteClinicSlot } from '@/service/clinic/slotManagementService';
 import { FilterState, Slot } from '@/types/common';
-
+import { motion, AnimatePresence } from "framer-motion";
 import Header from './Header';
 import FilterSection from './FilterSection';
 import SlotsGrid from './SlotsGrid';
@@ -9,7 +9,58 @@ import BulkCreationModal from './BulkCreationModal';
 import EditModal from './EditModal';
 import ViewModal from './ViewModal';
 import Pagination from './Pagination';
+import { AlertCircle, CheckCircle, X, XCircle } from 'lucide-react';
 
+interface NotificationProps {
+  type: "success" | "error" | "warning";
+  message: string;
+  onClose: () => void;
+}
+
+
+const Notification = ({ type, message, onClose }: NotificationProps) => {
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case "error":
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case "warning":
+        return <AlertCircle className="h-5 w-5 text-yellow-400" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-50";
+      case "error":
+        return "bg-red-50";
+      case "warning":
+        return "bg-yellow-50";
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${getBgColor()} border border-gray-200`}
+    >
+      <div className="flex items-center">
+        {getIcon()}
+        <p className="ml-3 text-sm font-medium text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-400 hover:text-gray-500"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 const SlotManagementSystem = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [filteredSlots, setFilteredSlots] = useState<Slot[]>([]);
@@ -22,7 +73,10 @@ const SlotManagementSystem = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingSlot, setViewingSlot] = useState<Slot | null>(null);
-
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+  } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     fromDate: null,
     toDate: null,
@@ -39,7 +93,13 @@ const SlotManagementSystem = () => {
     { id: "359e3627-65eb-40b2-b535-37cbb6535ac0", name: "Dermatology" },
     { id: "459e3627-65eb-40b2-b535-37cbb6535ac1", name: "Pediatrics" }
   ];
-
+  const showNotification = (type: "success" | "error" | "warning", message: string) => {
+    setNotification({ type, message });
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
+  };
   const fetchSlots = async (page = 1) => {
     try {
       setLoading(true);
@@ -65,7 +125,7 @@ const SlotManagementSystem = () => {
       filtered = filtered.filter(slot => {
         const serviceName = getServiceName(slot.clinic_service);
         return serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               slot.created_by.toLowerCase().includes(searchTerm.toLowerCase());
+          slot.created_by.toLowerCase().includes(searchTerm.toLowerCase());
       });
     }
 
@@ -175,6 +235,8 @@ const SlotManagementSystem = () => {
       try {
         await deleteClinicSlot(uuid);
         setSlots(prev => prev.filter(slot => slot.uuid !== uuid));
+        showNotification("success", "Slot deleted successfully");
+        fetchSlots(currentPage);
       } catch (error) {
         console.error('Failed to delete slot:', error);
       }
@@ -189,7 +251,7 @@ const SlotManagementSystem = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header setShowBulkForm={setShowBulkForm} />
-      
+
       <div className="max-w-7xl mx-auto px-2 sm:px-6 py-4 sm:py-6">
         <FilterSection
           filters={filters}
@@ -200,7 +262,7 @@ const SlotManagementSystem = () => {
           filteredSlots={filteredSlots}
           clinicServices={clinicServices}
         />
-        
+
         <SlotsGrid
           slots={filteredSlots}
           loading={loading}
@@ -209,7 +271,7 @@ const SlotManagementSystem = () => {
           handleDelete={handleDelete}
           handleView={handleView}
         />
-        
+
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -223,6 +285,7 @@ const SlotManagementSystem = () => {
         currentPage={currentPage}
         fetchSlots={fetchSlots}
         clinicServices={clinicServices}
+        showNotification={showNotification}
       />
 
       <EditModal
@@ -232,6 +295,8 @@ const SlotManagementSystem = () => {
         setEditingSlot={setEditingSlot}
         handleSaveEdit={handleSaveEdit}
         clinicServices={clinicServices}
+        showNotification={showNotification}
+        fetchSlots={() => fetchSlots(currentPage)}
       />
 
       <ViewModal
@@ -240,6 +305,16 @@ const SlotManagementSystem = () => {
         viewingSlot={viewingSlot}
         getServiceName={getServiceName}
       />
+      {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
