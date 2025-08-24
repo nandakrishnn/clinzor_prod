@@ -466,7 +466,7 @@ export default function AllUsersPage() {
       setLoading(false);
     }
   };
-
+console.log(users,"user data here")
   // Load users when page, filters, or search changes
   useEffect(() => {
     loadUsers(currentPage, debouncedSearchQuery, statusFilter);

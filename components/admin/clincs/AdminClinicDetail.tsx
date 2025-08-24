@@ -32,6 +32,7 @@ interface Clinic {
   status: string;
   city: string;
   about_clinic?: string;
+  images: string[];
 }
 
 interface ApiDoctor {
@@ -88,7 +89,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         // Fetch clinic data
         const clinicData = await getAClinic(clinicId);
         setClinic(clinicData.data.data);
-
+        console.log(clinicData.data.data, "clinicData");
         // Fetch doctors for this clinic with query parameters
         const doctorsResponse = await GetAllDoctor(1, clinicId, "approved");
         const clinicDoctors = doctorsResponse.map((doctor: ApiDoctor) => ({
@@ -124,7 +125,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   }, [clinicId]);
 
   if (loading) {
-     return (
+    return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -317,7 +318,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         {/* Specialties */}
         {services.length > 0 && (
           <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Our Services</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {services.map((service) => (
                 <div
@@ -327,7 +328,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                   <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
                     <CheckCircle className="w-6 h-6 text-white" />
                   </div>
-                   <h3 className="font-bold text-gray-900 text-lg mb-2">{service.name}</h3>
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">{service.name}</h3>
                   <p className="text-gray-600 text-sm line-clamp-2">{service.description}</p>
                   {service.category && (
                     <div className="mt-3">
@@ -341,7 +342,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             </div>
           </section>
         )}
-         {/* Services Section */}
+        {/* Services Section */}
         {/* <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -428,7 +429,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             </div>
           )}
         </section>
-       
+
 
         {/* Gallery Section */}
         <section className="mb-16">
@@ -450,18 +451,18 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {staticData.gallery.map((image, index) => (
+              {clinic.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedGalleryIndex(index)}
                   className={`relative aspect-square rounded-xl overflow-hidden border-3 transition-all duration-200 ${selectedGalleryIndex === index
-                      ? 'border-blue-500 scale-95 shadow-lg'
-                      : 'border-gray-200 hover:border-gray-300 hover:scale-105'
+                    ? 'border-blue-500 scale-95 shadow-lg'
+                    : 'border-gray-200 hover:border-gray-300 hover:scale-105'
                     }`}
                 >
                   <img
-                    src={image.imageUrl}
-                    alt={image.caption}
+                    src={image}
+                    alt={`Gallery Image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
