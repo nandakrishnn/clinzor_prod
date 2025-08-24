@@ -1,14 +1,14 @@
 import React, { useState, useEffect, FormEvent } from 'react';
-import { 
-  CreditCard, 
-  DollarSign, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock, 
-  Plus, 
-  Eye, 
-  Calendar, 
-  TrendingUp, 
+import {
+  CreditCard,
+  DollarSign,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Plus,
+  Eye,
+  Calendar,
+  TrendingUp,
   TrendingDown,
   Receipt,
   Search,
@@ -23,6 +23,7 @@ import {
   Building
 } from 'lucide-react';
 import { GetAllClinicTransactions } from '@/service/clinic/dueManagementService';
+import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 
 // Types
 interface DuesSummary {
@@ -118,42 +119,6 @@ const sampleClinics: Clinic[] = [
     status: "ACTIVE"
   }
 ];
-
-// const sampleTransactions: Transaction[] = [
-//   {
-//     id: "txn_001",
-//     clinic_id: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-//     clinic_name: "MediCare Clinic",
-//     amount: 2000,
-//     status: "COMPLETED",
-//     created_at: "2025-01-15T10:30:00Z",
-//     updated_at: "2025-01-15T10:35:00Z",
-//     description: "Monthly subscription payment",
-//     type: "PAYMENT"
-//   },
-//   {
-//     id: "txn_002",
-//     clinic_id: "7b2e9e4a-db49-575d-a4c6-fb9fced7d14g",
-//     clinic_name: "City Health Center",
-//     amount: 1500,
-//     status: "PENDING",
-//     created_at: "2025-01-14T15:20:00Z",
-//     updated_at: "2025-01-14T15:20:00Z",
-//     description: "Service charges",
-//     type: "DUE"
-//   },
-//   {
-//     id: "txn_003",
-//     clinic_id: "8c3f0f5b-ec5a-686e-b5d7-gca0ged8e25h",
-//     clinic_name: "Family Wellness Clinic",
-//     amount: 800,
-//     status: "FAILED",
-//     created_at: "2025-01-13T09:15:00Z",
-//     updated_at: "2025-01-13T09:18:00Z",
-//     description: "Platform fees",
-//     type: "PAYMENT"
-//   }
-// ];
 
 export const sampleBookings: Booking[] = [
   {
@@ -267,7 +232,7 @@ const DuesManagement: React.FC = () => {
     total_paid: 600,
     remaining_dues: 4900
   });
-  
+
   const [clinics, setClinics] = useState<Clinic[]>(sampleClinics);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -276,28 +241,21 @@ const DuesManagement: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
-
-  const fetchTransactions = async () => {
-    try {
-      const data = await GetAllClinicTransactions()
-      setTransactions(data)
-    } catch (error) {
-      console.error("error to fetch data",error);
-    }
-    
-  }
-
-  useEffect(() => {
- fetchTransactions()
-  }, [])
-  console.log(transactions,"transactions data")
+  const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [clinicFilter, setClinicFilter] = useState('');
-  const [dateRange, setDateRange] = useState('all');
-  
+  const [dateRangeFilter, setDateRangeFilter] = useState('all');
+
   // Payment form state
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDescription, setPaymentDescription] = useState('');
@@ -306,6 +264,105 @@ const DuesManagement: React.FC = () => {
   // Payment History modal enhancements
   const [paymentHistorySearch, setPaymentHistorySearch] = useState('');
   const [paymentHistoryStatus, setPaymentHistoryStatus] = useState('');
+  
+  // Define a proper type for the clinic hook response
+  interface ClinicHookResponse {
+    clinic: {
+      uuid: string;
+      // Add other clinic properties as needed
+    } | null;
+    loading: boolean;
+  }
+  
+  const { clinic, loading: clinicLoading } = useClinicByUser() as ClinicHookResponse;
+
+  const fetchTransactions = async (
+    page: number = 1,
+    search: string = searchTerm,
+    status: string = statusFilter,
+    dateRange: string = dateRangeFilter
+  ) => {
+    // Check if clinic data is available
+    if (!clinic || !clinic.uuid) {
+      console.error("Clinic ID not available");
+      return;
+    }
+    
+    try {
+      const data = await GetAllClinicTransactions(
+        clinic.uuid,
+        page, 
+        10, 
+        search, 
+        status, 
+        dateRange
+      );
+      
+      setTransactions(data.data);
+      setPaginationData({
+        current_page: data.current_page,
+        total_pages: data.total_pages,
+        total_items: data.total_items,
+        next: data.next,
+        previous: data.previous
+      });
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
+  };
+
+  // Update the useEffect to only fetch when clinic is available
+  useEffect(() => {
+    if (clinic && clinic.uuid) {
+      fetchTransactions(1, searchTerm, statusFilter, dateRangeFilter);
+    }
+  }, [clinic, searchTerm, statusFilter, dateRangeFilter]);
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeoutId = setTimeout(() => {
+      if (clinic && clinic.uuid) {
+        fetchTransactions(1, term, statusFilter, dateRangeFilter);
+      }
+    }, 500);
+
+    setSearchTimeout(timeoutId);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    if (clinic && clinic.uuid) {
+      fetchTransactions(1, searchTerm, status, dateRangeFilter);
+    }
+  };
+
+  const handleDateRangeChange = (range: string) => {
+    setDateRangeFilter(range);
+    if (clinic && clinic.uuid) {
+      fetchTransactions(1, searchTerm, statusFilter, range);
+    }
+  };
+
+  const handleClinicFilterChange = (clinicId: string) => {
+    setClinicFilter(clinicId);
+    if (clinic && clinic.uuid) {
+      fetchTransactions(1, searchTerm, statusFilter, dateRangeFilter);
+    }
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Filtered payment transactions for modal
   const filteredPaymentTransactions = transactions.filter((transaction) => {
@@ -398,10 +455,10 @@ const DuesManagement: React.FC = () => {
   // API simulation functions
   const initiatePayment = async (clinicId: string, amount: number) => {
     setIsProcessingPayment(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     const newTransaction: Transaction = {
       uuid: `txn_${Date.now()}`,
       clinic_id: clinicId,
@@ -427,7 +484,7 @@ const DuesManagement: React.FC = () => {
         status: "created"
       }
     };
-    
+
     setTransactions([newTransaction, ...transactions]);
     setIsProcessingPayment(false);
     setShowPaymentModal(false);
@@ -440,7 +497,7 @@ const DuesManagement: React.FC = () => {
     // Simulate API call to refresh dues summary
     const totalDues = clinics.reduce((sum, clinic) => sum + clinic.current_dues, 0);
     const totalPaid = clinics.reduce((sum, clinic) => sum + clinic.total_paid, 0);
-    
+
     setDuesSummary({
       total_dues: totalDues,
       total_paid: totalPaid,
@@ -448,16 +505,7 @@ const DuesManagement: React.FC = () => {
     });
   };
 
-  // Filter transactions
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.clinic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.uuid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter ? transaction.status === statusFilter : true;
-    const matchesClinic = clinicFilter ? transaction.clinic_id === clinicFilter : true;
-    
-    return matchesSearch && matchesStatus && matchesClinic;
-  });
+  const displayedTransactions = transactions;
 
   // Filter bookings for new bookings with dues
   const newBookingsWithDues = bookings.filter(
@@ -592,7 +640,7 @@ const DuesManagement: React.FC = () => {
                   type="text"
                   placeholder="Search transactions..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                 />
               </div>
@@ -602,7 +650,7 @@ const DuesManagement: React.FC = () => {
               <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Status</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="">All Status</option>
@@ -617,7 +665,7 @@ const DuesManagement: React.FC = () => {
               <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Clinic</label>
               <select
                 value={clinicFilter}
-                onChange={(e) => setClinicFilter(e.target.value)}
+                onChange={(e) => handleClinicFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="">All Clinics</option>
@@ -630,8 +678,8 @@ const DuesManagement: React.FC = () => {
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Date Range</label>
               <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
+                value={dateRangeFilter}
+                onChange={(e) => handleDateRangeChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="all">All Time</option>
@@ -669,8 +717,8 @@ const DuesManagement: React.FC = () => {
               paginatedBookings.map((booking, index) => {
                 const activeDue = booking.amount_due > 0 && booking.status === 'NEW';
                 return (
-                  <div 
-                    key={booking.id} 
+                  <div
+                    key={booking.id}
                     className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 gap-6 sm:gap-0 border border-slate-200/70 hover:-translate-y-1"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -711,20 +759,30 @@ const DuesManagement: React.FC = () => {
             )}
           </div>
           {/* Pagination Controls */}
-          {totalBookingPages > 1 && (
-            <div className="flex justify-center items-center mt-10 space-x-3">
+          {paginationData.total_pages > 1 && (
+            <div className="flex justify-center items-center mt-8 space-x-4">
               <button
-                onClick={() => setCurrentBookingPage((p) => Math.max(1, p - 1))}
-                disabled={currentBookingPage === 1}
-                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 font-semibold disabled:opacity-50 transition-all duration-200 shadow-sm hover:shadow-md"
+                onClick={() => {
+                  const prevPage = Math.max(1, paginationData.current_page - 1);
+                  fetchTransactions(prevPage, searchTerm, statusFilter, dateRangeFilter);
+                }}
+                disabled={paginationData.current_page === 1}
+                className="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 disabled:opacity-50"
               >
                 Previous
               </button>
-              <span className="px-6 py-3 text-slate-700 font-semibold bg-white rounded-2xl shadow-sm">Page {currentBookingPage} of {totalBookingPages}</span>
+
+              <span className="text-slate-700">
+                Page {paginationData.current_page} of {paginationData.total_pages}
+              </span>
+
               <button
-                onClick={() => setCurrentBookingPage((p) => Math.min(totalBookingPages, p + 1))}
-                disabled={currentBookingPage === totalBookingPages}
-                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 font-semibold disabled:opacity-50 transition-all duration-200 shadow-sm hover:shadow-md"
+                onClick={() => {
+                  const nextPage = Math.min(paginationData.total_pages, paginationData.current_page + 1);
+                  fetchTransactions(nextPage, searchTerm, statusFilter, dateRangeFilter);
+                }}
+                disabled={paginationData.current_page === paginationData.total_pages}
+                className="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 disabled:opacity-50"
               >
                 Next
               </button>
@@ -762,8 +820,8 @@ const DuesManagement: React.FC = () => {
               paginatedPastDueBookings.map((booking, index) => {
                 const daysOverdue = Math.floor((Date.now() - new Date(booking.date).getTime()) / (1000 * 60 * 60 * 24));
                 return (
-                  <div 
-                    key={booking.id} 
+                  <div
+                    key={booking.id}
                     className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 bg-gradient-to-br from-red-50 via-white to-orange-50 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 gap-6 sm:gap-0 border border-red-200/70 hover:-translate-y-1"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -846,10 +904,10 @@ const DuesManagement: React.FC = () => {
             {clinics.slice(0, 3).map((clinic, index) => {
               const statusConfig = getStatusConfig(clinic.status);
               const StatusIcon = statusConfig.icon;
-              
+
               return (
-                <div 
-                  key={clinic.id} 
+                <div
+                  key={clinic.id}
                   className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl hover:from-slate-100 hover:to-slate-200 transition-all duration-300 gap-4 sm:gap-0 border border-slate-200/50 hover:shadow-lg"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -919,10 +977,10 @@ const DuesManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filteredTransactions.map((transaction, index) => {
+                {displayedTransactions.map((transaction, index) => {
                   const statusConfig = getStatusConfig(transaction.status);
                   const StatusIcon = statusConfig.icon;
-                  
+
                   return (
                     <tr key={transaction.uuid} className="hover:bg-slate-50 transition-all duration-200 group">
                       <td className="py-4 sm:py-6 px-4 sm:px-8">
@@ -970,7 +1028,7 @@ const DuesManagement: React.FC = () => {
             </table>
           </div>
 
-          {filteredTransactions.length === 0 && (
+          {displayedTransactions.length === 0 && (
             <div className="text-center py-12 sm:py-16">
               <div className="w-20 h-20 bg-gradient-to-r from-slate-100 to-slate-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <Receipt className="w-10 h-10 text-slate-400" />
@@ -997,7 +1055,7 @@ const DuesManagement: React.FC = () => {
             >
               <X className="w-6 h-6" />
             </button>
-            
+
             <div className="p-4 sm:p-8">
               <div className="text-center mb-6 sm:mb-8">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -1114,7 +1172,7 @@ const DuesManagement: React.FC = () => {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-4xl border border-white/20 shadow-2xl relative flex flex-col max-h-[90vh]">
             <button
               onClick={() => setShowPaymentHistoryModal(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full hover:bg-slice-100 text-slate-500 hover:text-slate-900 transition"
             >
               <X className="w-6 h-6" />
             </button>
@@ -1154,7 +1212,7 @@ const DuesManagement: React.FC = () => {
                       <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Transaction</th>
                       <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Service</th>
                       <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Amount</th>
-                      <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                      <th className="text left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
                       <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
                       <th className="text-left py-2 sm:py-4 px-2 sm:px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Description</th>
                     </tr>
