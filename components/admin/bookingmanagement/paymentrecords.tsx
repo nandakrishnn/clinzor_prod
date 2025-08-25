@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  CreditCard, 
-  Calendar, 
-  Filter, 
-  Search, 
-  Download, 
-  Eye, 
+import {
+  CreditCard,
+  Calendar,
+  Filter,
+  Search,
+  Download,
+  Eye,
   RefreshCw,
   DollarSign,
   TrendingUp,
@@ -85,49 +85,49 @@ const PaymentRecordsDashboard = () => {
     next: null,
     previous: null
   });
+  const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
+  const fetchPayments = async (page = 1, search = '') => {
+    try {
+      setIsLoading(true);
 
-const fetchPayments = async (page = 1, search = '') => {
-  try {
-    setIsLoading(true);
-    
-    // Prepare query parameters
-    const params = {
-      page: page,
-      search: search,
-      status: statusFilter !== 'ALL' ? statusFilter : undefined,
-      payment_type: paymentMethodFilter !== 'ALL' ? paymentMethodFilter : undefined,
-      from_date: fromDate || undefined,
-      to_date: toDate || undefined,
-      ordering: sortOrder === 'asc' ? sortBy : `-${sortBy}`
-    };
+      // Prepare query parameters
+      const params = {
+        page: page,
+        search: search,
+        status: statusFilter !== 'ALL' ? statusFilter : undefined,
+        payment_type: paymentMethodFilter !== 'ALL' ? paymentMethodFilter : undefined,
+        from_date: fromDate || undefined,
+        to_date: toDate || undefined,
+        ordering: sortOrder === 'asc' ? sortBy : `-${sortBy}`
+      };
 
-    // Make API call
-    const response = await getAllPayment(params);
+      // Make API call
+      const response = await getAllPayment(params);
 
-    // Process response data
-    const recordsWithDates = response.data.map((record: PaymentRecord) => ({
-      ...record,
-      paymentDate: record.paymentDate || new Date().toISOString()
-    }));
+      // Process response data
+      const recordsWithDates = response.data.map((record: PaymentRecord) => ({
+        ...record,
+        paymentDate: record.paymentDate || new Date().toISOString()
+      }));
 
-    // Update state
-    setPayment(recordsWithDates);
-    setTotalRecords(response.total_items);
-    setPaginationData({
-      current_page: response.current_page,
-      total_pages: response.total_pages,
-      total_items: response.total_items,
-      next: response.next,
-      previous: response.previous
-    });
+      // Update state
+      setPayment(recordsWithDates);
+      setTotalRecords(response.total_items);
+      setPaginationData({
+        current_page: response.current_page,
+        total_pages: response.total_pages,
+        total_items: response.total_items,
+        next: response.next,
+        previous: response.previous
+      });
 
-  } catch (error) {
-    console.error("Failed to fetch payments:", error);
-    // Optional: Add error state handling here
-  } finally {
-    setIsLoading(false);
-  }
-};
+    } catch (error) {
+      console.error("Failed to fetch payments:", error);
+      // Optional: Add error state handling here
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Debounce search
   useEffect(() => {
@@ -152,11 +152,11 @@ const fetchPayments = async (page = 1, search = '') => {
     const failed = payment.filter(r => r.status === 'FAILED').length;
     const refunded = payment.filter(r => r.status === 'REFUNDED').length;
     const created = payment.filter(r => r.status === 'CREATED').length;
-    
+
     const totalRevenue = payment
       .filter(r => r.status === 'COMPLETED')
       .reduce((sum, r) => sum + parseFloat(r.amount), 0);
-    
+
     const pendingAmount = payment
       .filter(r => r.status === 'PENDING' || r.status === 'CREATED')
       .reduce((sum, r) => sum + parseFloat(r.amount), 0);
@@ -167,8 +167,8 @@ const fetchPayments = async (page = 1, search = '') => {
   // Utility functions
   const formatCurrency = (amount: string) => {
     const numAmount = parseFloat(amount);
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
@@ -189,7 +189,7 @@ const fetchPayments = async (page = 1, search = '') => {
   const getStatusColor = (status: PaymentRecord['status']) => {
     switch (status) {
       case 'COMPLETED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'PENDING': 
+      case 'PENDING':
       case 'CREATED': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'FAILED': return 'bg-red-50 text-red-700 border-red-200';
       case 'REFUNDED': return 'bg-purple-50 text-purple-700 border-purple-200';
@@ -200,7 +200,7 @@ const fetchPayments = async (page = 1, search = '') => {
   const getStatusIcon = (status: PaymentRecord['status']) => {
     switch (status) {
       case 'COMPLETED': return <CheckCircle className="w-4 h-4" />;
-      case 'PENDING': 
+      case 'PENDING':
       case 'CREATED': return <Clock className="w-4 h-4" />;
       case 'FAILED': return <XCircle className="w-4 h-4" />;
       case 'REFUNDED': return <RefreshCw className="w-4 h-4" />;
@@ -210,7 +210,7 @@ const fetchPayments = async (page = 1, search = '') => {
 
   const handleExportData = () => {
     const csvContent = [
-      ['Transaction ID', 'Payment Date','Time', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
+      ['Transaction ID', 'Payment Date', 'Time', 'Patient Name', 'Service', 'Amount', 'Status', 'Payment Type', 'Clinic'],
       ...payment.map(record => [
         record.transaction_id,
         formatDate(record.paymentDate || ''),
@@ -243,7 +243,7 @@ const fetchPayments = async (page = 1, search = '') => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -262,7 +262,7 @@ const fetchPayments = async (page = 1, search = '') => {
                 <Download size={16} />
                 Export Data
               </button>
-              <button 
+              <button
                 onClick={() => fetchPayments(currentPage, searchTerm)}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
@@ -275,7 +275,17 @@ const fetchPayments = async (page = 1, search = '') => {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+          <div
+            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'ALL' ? 'ring-2 ring-blue-500 border-blue-300' : 'border-white/20'
+              }`}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'ALL' ? null : 'ALL';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('ALL');
+              setCurrentPage(1);
+              fetchPayments(1, searchTerm);
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Records</p>
@@ -299,7 +309,18 @@ const fetchPayments = async (page = 1, search = '') => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+          <div 
+    className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${
+      activeStatFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-white/20'
+    }`}
+    onClick={() => {
+      const newFilter = activeStatFilter === 'COMPLETED' ? null : 'COMPLETED';
+      setActiveStatFilter(newFilter);
+      setStatusFilter('COMPLETED');
+      setCurrentPage(1);
+      fetchPayments(1, searchTerm);
+    }}
+  >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Completed</p>
@@ -311,7 +332,19 @@ const fetchPayments = async (page = 1, search = '') => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+        
+  <div 
+    className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${
+      activeStatFilter === 'PENDING' ? 'ring-2 ring-amber-500 border-amber-300' : 'border-white/20'
+    }`}
+    onClick={() => {
+      const newFilter = activeStatFilter === 'PENDING' ? null : 'PENDING';
+      setActiveStatFilter(newFilter);
+      setStatusFilter('PENDING');
+      setCurrentPage(1);
+      fetchPayments(1, searchTerm);
+    }}
+  >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending/Created</p>
@@ -496,17 +529,16 @@ const fetchPayments = async (page = 1, search = '') => {
               <button
                 onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-lg border ${
-                  currentPage === 1
+                className={`px-3 py-1 rounded-lg border ${currentPage === 1
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <ChevronLeft size={16} />
               </button>
               {Array.from({ length: Math.min(5, paginationData.total_pages) }, (_, i) => {
                 // Show first pages, current page with neighbors, and last pages
-                 let pageNum: number;
+                let pageNum: number;
                 if (paginationData.total_pages <= 5) {
                   pageNum = i + 1;
                 } else if (currentPage <= 3) {
@@ -520,11 +552,10 @@ const fetchPayments = async (page = 1, search = '') => {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1 rounded-lg border ${
-                      currentPage === pageNum
+                    className={`px-3 py-1 rounded-lg border ${currentPage === pageNum
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -536,11 +567,10 @@ const fetchPayments = async (page = 1, search = '') => {
               {paginationData.total_pages > 5 && currentPage < paginationData.total_pages - 2 && (
                 <button
                   onClick={() => setCurrentPage(paginationData.total_pages)}
-                  className={`px-3 py-1 rounded-lg border ${
-                    currentPage === paginationData.total_pages
+                  className={`px-3 py-1 rounded-lg border ${currentPage === paginationData.total_pages
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {paginationData.total_pages}
                 </button>
@@ -548,11 +578,10 @@ const fetchPayments = async (page = 1, search = '') => {
               <button
                 onClick={() => setCurrentPage(Math.min(currentPage + 1, paginationData.total_pages))}
                 disabled={currentPage === paginationData.total_pages}
-                className={`px-3 py-1 rounded-lg border ${
-                  currentPage === paginationData.total_pages
+                className={`px-3 py-1 rounded-lg border ${currentPage === paginationData.total_pages
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <ChevronRight size={16} />
               </button>
