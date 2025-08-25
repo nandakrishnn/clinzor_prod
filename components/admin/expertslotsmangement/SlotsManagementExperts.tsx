@@ -621,6 +621,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     }
 
     try {
+      setLoading(true);
       const expertData = {
         full_name: newExpert.name,
         email: newExpert.email,
@@ -662,6 +663,8 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         message: 'Failed to add expert. Please try again.'
       });
       console.error('Error adding expert:', error);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -1232,9 +1235,10 @@ const confirmSlotAction = async () => {
           </button>
           <button
             onClick={handleAddExpert}
+            disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Add Expert
+            {loading ? 'Adding...' : 'Add Expert'}
           </button>
         </div>
       </ModernModal>
