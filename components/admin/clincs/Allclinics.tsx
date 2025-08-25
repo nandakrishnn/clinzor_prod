@@ -812,6 +812,7 @@ export default function ClinicManagement() {
           type: "success",
           message: `Clinic "${clinic.name}" approved!`
         });
+        fetchClinics(currentPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus);
       })
       .catch((error) => {
         // Revert the UI change if the API call fails
@@ -877,6 +878,7 @@ export default function ClinicManagement() {
           message: `Clinic "${clinic.name}" is now ${!clinic.is_active ? "active" : "inactive"
             }.`
         });
+        fetchClinics(currentPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus);
       })
       .catch((error) => {
         // Revert the UI change if the API call fails
@@ -1313,13 +1315,13 @@ export default function ClinicManagement() {
                       <span className="hidden sm:inline">Deactivate</span>
                     </button>
                   )}
-                  <button
+                  {/* <button
                     onClick={() => setConfirmModal({ type: "delete", clinic })}
                     className="flex items-center gap-2 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
                   >
                     <X size={16} />
                     <span className="hidden sm:inline">Delete</span>
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </motion.div>

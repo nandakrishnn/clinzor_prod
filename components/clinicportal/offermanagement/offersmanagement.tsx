@@ -119,10 +119,17 @@ const ClinicOffersManager = () => {
 
   // Modal state
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'delete' | null>(null);
-
+  const [paginationData, setPaginationData] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null as string | null,
+    previous: null as string | null
+  });
   // Dropdown state for actions menu
   const [actionMenuOfferId, setActionMenuOfferId] = useState<string | null>(null);
-
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [serviceFilter, setServiceFilter] = useState('');
   const isOfferLive = (offer: Offer): boolean => {
     const now = new Date();
     const validFrom = new Date(offer.valid_from);
@@ -130,36 +137,114 @@ const ClinicOffersManager = () => {
     return now >= validFrom && now <= validTo && offer.status === 'ACTIVE';
   };
 
-  const fetchOffers = async () => {
+  const fetchOffers = async (
+    page: number = currentPage,
+    search: string = searchTerm,
+    status: string = statusFilter,
+    service: string = serviceFilter,
+    fromDate: string = dateFrom,
+    toDate: string = dateTo,
+    liveOnly: boolean = showLiveOnly
+  ) => {
     try {
+      setLoading(true);
       const clinicUser = await Clinic_by_clinic_user();
       const clinicId = clinicUser?.uuid;
+
       const [serviceData, offersResponse] = await Promise.all([
         GetAllClinicService(clinicId, 'approved'),
-        GetAllClinicOffers()
+        GetAllClinicOffers(page, offersPerPage, search, status, service, fromDate, toDate, liveOnly)
       ]);
 
       setOffers(offersResponse.data || []);
       setServices(serviceData.data || []);
+      setPaginationData({
+        current_page: offersResponse.current_page || 1,
+        total_pages: offersResponse.total_pages || 1,
+        total_items: offersResponse.total_items || 0,
+        next: offersResponse.next || null,
+        previous: offersResponse.previous || null
+      });
     } catch (error) {
       console.error("Failed to fetch offers:", error);
+    } finally {
+      setLoading(false);
     }
   };
-  console.log(services, "data")
-  console.log(offers, "offers data")
+
+  // Initial fetch
   useEffect(() => {
     fetchOffers();
   }, []);
 
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  
+  // Format for Indian timezone without double conversion
+  return date.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+
+  // Update search handler with debounce
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for debounced search
+    const timeoutId = setTimeout(() => {
+      fetchOffers(1, term, statusFilter, serviceFilter, dateFrom, dateTo, showLiveOnly);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 500);
+
+    setSearchTimeout(timeoutId);
   };
+
+  // Update filter handlers to trigger API calls
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filtering
+    fetchOffers(1, searchTerm, status, serviceFilter, dateFrom, dateTo, showLiveOnly);
+  };
+
+  const handleServiceFilterChange = (service: string) => {
+    setServiceFilter(service);
+    setCurrentPage(1);
+    fetchOffers(1, searchTerm, statusFilter, service, dateFrom, dateTo, showLiveOnly);
+  };
+
+  const handleLiveOnlyChange = (liveOnly: boolean) => {
+    setShowLiveOnly(liveOnly);
+    setCurrentPage(1);
+    fetchOffers(1, searchTerm, statusFilter, serviceFilter, dateFrom, dateTo, liveOnly);
+  };
+
+  const handleDateFilterChange = (from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
+    setCurrentPage(1);
+    fetchOffers(1, searchTerm, statusFilter, serviceFilter, from, to, showLiveOnly);
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -183,24 +268,25 @@ const ClinicOffersManager = () => {
   };
 
   // Filtering logic
-  const filteredOffers = offers.filter(offer => {
-    const matchesSearch = offer.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = showLiveOnly ? isOfferLive(offer) : true;
-    const matchesStatus = statusFilter ? offer.status === statusFilter : true;
-    const matchesDateFrom = dateFrom ? new Date(offer.valid_from) >= new Date(dateFrom) : true;
-    const matchesDateTo = dateTo ? new Date(offer.valid_to) <= new Date(dateTo) : true;
-    return matchesSearch && matchesFilter && matchesStatus && matchesDateFrom && matchesDateTo;
-  });
+  // const filteredOffers = offers.filter(offer => {
+  //   const matchesSearch = offer.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
+  //   const matchesFilter = showLiveOnly ? isOfferLive(offer) : true;
+  //   const matchesStatus = statusFilter ? offer.status === statusFilter : true;
+  //   const matchesDateFrom = dateFrom ? new Date(offer.valid_from) >= new Date(dateFrom) : true;
+  //   const matchesDateTo = dateTo ? new Date(offer.valid_to) <= new Date(dateTo) : true;
+  //   return matchesSearch && matchesFilter && matchesStatus && matchesDateFrom && matchesDateTo;
+  // });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredOffers.length / offersPerPage);
-  const paginatedOffers = filteredOffers.slice((currentPage - 1) * offersPerPage, currentPage * offersPerPage);
+  const totalPages = paginationData.total_pages || 1;
+  // const paginatedOffers = filteredOffers.slice((currentPage - 1) * offersPerPage, currentPage * offersPerPage);
+  const paginatedOffers = offers;
 
-  const totalActiveOffers = offers.filter(offer => offer.status === 'ACTIVE').length;
-  const totalUsage = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
-  const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
-  const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
+const totalActiveOffers = offers.filter(offer => offer.status === 'ACTIVE').length;
+const totalUsage = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
+const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
+const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
 
   const handleCreateOffer = async () => {
     try {
@@ -404,6 +490,19 @@ const ClinicOffersManager = () => {
       // You might want to show an error message to the user here
     }
   };
+
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading ...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
@@ -486,7 +585,7 @@ const ClinicOffersManager = () => {
                   type="text"
                   placeholder="Search offers..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                 />
               </div>
@@ -496,8 +595,8 @@ const ClinicOffersManager = () => {
               <label htmlFor="service-filter" className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
               <select
                 id="service-filter"
-                value={newOffer.clinic_service}
-                onChange={e => setNewOffer({ ...newOffer, clinic_service: e.target.value })}
+                value={serviceFilter}
+                onChange={(e) => handleServiceFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
               >
                 <option value="">All Services</option>
@@ -512,20 +611,20 @@ const ClinicOffersManager = () => {
               <select
                 id="status-filter"
                 value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
               >
                 <option value="">All Status</option>
-                <option value="ACTIVE">Active</option>
+                <option value="APPROVED">Approved</option>
                 <option value="DRAFT">Draft</option>
-                <option value="EXPIRED">Expired</option>
+                <option value="REJECTED">Rejected</option>
               </select>
             </div>
             {/* Live Only Switch */}
             <div className="min-w-[120px] flex flex-col">
               <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Live Only</label>
               <button
-                onClick={() => setShowLiveOnly(!showLiveOnly)}
+                onClick={() => handleLiveOnlyChange(!showLiveOnly)}
                 className={`relative inline-flex items-center h-10 rounded-xl px-4 transition-all duration-200 border border-slate-200 ${showLiveOnly ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'bg-white/80 text-slate-600 hover:bg-slate-50'}`}
                 aria-pressed={showLiveOnly}
               >
@@ -542,7 +641,7 @@ const ClinicOffersManager = () => {
                 <DatePicker
                   id="date-from"
                   selected={dateFrom ? new Date(dateFrom) : null}
-                  onChange={date => setDateFrom(date ? date.toISOString().split('T')[0] : '')}
+                  onChange={date => handleDateFilterChange(date ? date.toISOString().split('T')[0] : '', dateTo)}
                   dateFormat="yyyy-MM-dd"
                   className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 w-full"
                   placeholderText="From"
@@ -555,7 +654,7 @@ const ClinicOffersManager = () => {
                 <DatePicker
                   id="date-to"
                   selected={dateTo ? new Date(dateTo) : null}
-                  onChange={date => setDateTo(date ? date.toISOString().split('T')[0] : '')}
+                  onChange={date => handleDateFilterChange(dateFrom, date ? date.toISOString().split('T')[0] : '')}
                   dateFormat="yyyy-MM-dd"
                   className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 w-full"
                   placeholderText="To"
@@ -568,9 +667,11 @@ const ClinicOffersManager = () => {
                 setSearchTerm('');
                 setShowLiveOnly(false);
                 setStatusFilter('');
+                setServiceFilter('');
                 setDateFrom('');
                 setDateTo('');
-                setNewOffer({ ...newOffer, clinic_service: '' });
+                setCurrentPage(1);
+                fetchOffers(1, '', '', '', '', '', false);
               }}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700 font-semibold border border-slate-300 hover:from-slate-300 hover:to-slate-200 transition-all duration-200 mt-2 sm:mt-0"
             >
@@ -580,7 +681,7 @@ const ClinicOffersManager = () => {
         </div>
 
         {/* Offers Grid */}
-        {filteredOffers.length === 0 ? (
+        {paginatedOffers.length === 0 ? (
           <div className="text-center py-20">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
@@ -734,8 +835,14 @@ const ClinicOffersManager = () => {
         {totalPages > 1 && (
           <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => {
+                const nextPage = Math.max(1, currentPage - 1);
+                if (nextPage !== currentPage) {
+                  setCurrentPage(nextPage);
+                  fetchOffers(nextPage, searchTerm, statusFilter, serviceFilter, dateFrom, dateTo, showLiveOnly);
+                }
+              }}
+              disabled={currentPage === 1 || !paginationData.previous}
               className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
             >
               Prev
@@ -743,15 +850,24 @@ const ClinicOffersManager = () => {
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentPage(i + 1)}
+                onClick={() => {
+                  setCurrentPage(i + 1);
+                  fetchOffers(i + 1, searchTerm, statusFilter, serviceFilter, dateFrom, dateTo, showLiveOnly);
+                }}
                 className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
               >
                 {i + 1}
               </button>
             ))}
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => {
+                const nextPage = Math.min(totalPages, currentPage + 1);
+                if (nextPage !== currentPage) {
+                  setCurrentPage(nextPage);
+                  fetchOffers(nextPage, searchTerm, statusFilter, serviceFilter, dateFrom, dateTo, showLiveOnly);
+                }
+              }}
+              disabled={currentPage === totalPages || !paginationData.next}
               className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
             >
               Next
@@ -1019,7 +1135,7 @@ const ClinicOffersManager = () => {
                 >
                   Cancel
                 </button>
-                 <button
+                <button
                   onClick={handleUpdateOffer}
                   disabled={loading}
                   className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"

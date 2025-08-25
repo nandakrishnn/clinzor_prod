@@ -373,7 +373,7 @@ export default function AllUsersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [sortBy, setSortBy] = useState<keyof User>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
+  const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
   // Modal states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -386,7 +386,7 @@ export default function AllUsersPage() {
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
-   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
     total_pages: 1,
@@ -418,7 +418,7 @@ export default function AllUsersPage() {
       const paramsbooking: any = {
         page_size: itemsPerPage,
         page: page,
-        
+
       };
 
       // Add search parameter if provided
@@ -445,7 +445,7 @@ export default function AllUsersPage() {
 
       const data = await GetAllUsers(params);
       const bookingData = await getAllBookings(paramsbooking);
-      
+
       setUsers(data.data);
       setBookings(bookingData.data);
       setFilteredUsers(data.data); // This can be removed if backend handles all filtering
@@ -466,7 +466,7 @@ export default function AllUsersPage() {
       setLoading(false);
     }
   };
-
+  console.log(users, "user data here")
   // Load users when page, filters, or search changes
   useEffect(() => {
     loadUsers(currentPage, debouncedSearchQuery, statusFilter);
@@ -734,6 +734,14 @@ export default function AllUsersPage() {
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+               whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'ALL' ? null : 'ALL';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('ALL');
+              setCurrentPage(1);
+              loadUsers(1, debouncedSearchQuery, 'ALL');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -744,6 +752,12 @@ export default function AllUsersPage() {
                 <Users size={24} className="text-blue-600" />
               </div>
             </div>
+              {/* {activeStatFilter === 'ALL' && (
+      <div className="mt-2 flex items-center">
+        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
+        <span className="text-xs text-blue-600 font-medium">Showing all users</span>
+      </div>
+    )} */}
           </motion.div>
 
           <motion.div
@@ -751,6 +765,14 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+             whileHover={{ y: -2 }}
+              onClick={() => {
+      const newFilter = activeStatFilter === 'ACTIVE' ? null : 'ACTIVE';
+      setActiveStatFilter(newFilter);
+      setStatusFilter('ACTIVE');
+      setCurrentPage(1);
+      loadUsers(1, debouncedSearchQuery, 'ACTIVE');
+    }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -770,6 +792,14 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
+             whileHover={{ y: -2 }}
+             onClick={() => {
+      const newFilter = activeStatFilter === 'BLOCKED' ? null : 'BLOCKED';
+      setActiveStatFilter(newFilter);
+      setStatusFilter('BLOCKED');
+      setCurrentPage(1);
+      loadUsers(1, debouncedSearchQuery, 'BLOCKED');
+    }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -789,6 +819,7 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+             whileHover={{ y: -2 }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -961,11 +992,10 @@ export default function AllUsersPage() {
                   loadUsers(newPage);
                 }}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
-                  currentPage === 1
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -979,11 +1009,10 @@ export default function AllUsersPage() {
                   loadUsers(newPage);
                 }}
                 disabled={currentPage === paginationData.total_pages}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${
-                  currentPage === paginationData.total_pages
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === paginationData.total_pages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
+                  }`}
               >
                 Next
               </button>

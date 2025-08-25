@@ -296,17 +296,17 @@ export default function ExpertManagement() {
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
-  
+
   // Add state for slots and bookings data
   const [expertSlots, setExpertSlots] = useState<{ [expertUuid: string]: Slot[] }>({});
   const [expertBookings, setExpertBookings] = useState<{ [expertUuid: string]: Booking[] }>({});
   const [loadingSlots, setLoadingSlots] = useState<{ [expertUuid: string]: boolean }>({});
   const [loadingBookings, setLoadingBookings] = useState<{ [expertUuid: string]: boolean }>({});
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-const [isSlotActionModalOpen, setIsSlotActionModalOpen] = useState(false);
-const [rejectionReason, setRejectionReason] = useState('');
-const [slotActionType, setSlotActionType] = useState<'approve' | 'reject' | null>(null);
-const [loadingSlotAction, setLoadingSlotAction] = useState(false);
+  const [isSlotActionModalOpen, setIsSlotActionModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [slotActionType, setSlotActionType] = useState<'approve' | 'reject' | null>(null);
+  const [loadingSlotAction, setLoadingSlotAction] = useState(false);
   type ClinicService = { uuid: string; clinic_name: string };
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [notification, setNotification] = useState<{
@@ -324,7 +324,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     dob: '',
     addresss: "",
   });
-  
+
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState({
     name: '',
@@ -344,7 +344,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
   // Booking filter state
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-
+  const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -356,21 +356,21 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     };
   }, [searchQuery]);
 
-// Fetch data with pagination
- const fetchExperts = async (page = 1, search = '', status = 'ALL', gender = 'ALL') => {
+  // Fetch data with pagination
+  const fetchExperts = async (page = 1, search = '', status = 'ALL', gender = 'ALL') => {
     setLoading(true);
     try {
       // Prepare filter parameters
       const statusParam = status !== 'ALL' ? status : undefined;
       const genderParam = gender !== 'ALL' ? gender : undefined;
-      
+
       const expertsResponse = await GetAllExpert(
-        page, 
-        search || undefined, 
-        statusParam, 
+        page,
+        search || undefined,
+        statusParam,
         genderParam
       );
-      
+
       setExperts(expertsResponse.data);
       setPaginationData({
         current_page: expertsResponse.current_page,
@@ -395,7 +395,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
   // Fetch data when filters change
   useEffect(() => {
     fetchExperts(currentPage, debouncedSearchQuery, selectedStatus, selectedGender);
-  
+
   }, [currentPage, debouncedSearchQuery, selectedStatus, selectedGender]);
   // Function to fetch slots for a specific expert
   const fetchExpertSlots = async (expertUuid: string) => {
@@ -403,7 +403,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     try {
       const params = { expert: expertUuid };
       const slotsResponse = await getAllSlotsforExpret(params);
-      
+
       // Transform the API response to match our Slot type
       const transformedSlots = slotsResponse.data.map((slot: any) => ({
         uuid: slot.uuid,
@@ -417,7 +417,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         is_booked: slot.is_booked || false,
         expert: slot.expert
       }));
-      
+
       setExpertSlots(prev => ({ ...prev, [expertUuid]: transformedSlots }));
     } catch (error) {
       console.error("Failed to fetch expert slots:", error);
@@ -436,7 +436,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     try {
       const params = { expert: expertUuid };
       const bookingsResponse = await getAllBookings(params);
-      
+
       // Transform the API response to match our Booking type
       const transformedBookings = bookingsResponse.data.map((booking: any) => ({
         uuid: booking.uuid,
@@ -452,7 +452,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         start_time: booking.start_time,
         end_time: booking.end_time
       }));
-      
+
       setExpertBookings(prev => ({ ...prev, [expertUuid]: transformedBookings }));
     } catch (error) {
       console.error("Failed to fetch expert bookings:", error);
@@ -527,34 +527,34 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     const pages = [];
     const totalPages = paginationData.total_pages;
     const current = paginationData.current_page;
-    
+
     // Always show first page
     if (totalPages > 0) {
       pages.push(1);
     }
-    
+
     // Add ellipsis if needed
     if (current > 3) {
       pages.push('...');
     }
-    
+
     // Add pages around current page
     for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
       if (!pages.includes(i)) {
         pages.push(i);
       }
     }
-    
+
     // Add ellipsis if needed
     if (current < totalPages - 2) {
       pages.push('...');
     }
-    
+
     // Always show last page
     if (totalPages > 1) {
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
@@ -573,19 +573,19 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
 
   const handleViewBookings = async (expert: Expert) => {
     setSelectedExpert(expert);
-    
+
     // Fetch slots and bookings for this expert
     await Promise.all([
       fetchExpertSlots(expert.uuid),
       fetchExpertBookings(expert.uuid)
     ]);
-    
+
     setIsBookingsModalOpen(true);
   };
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '',  dob: '', addresss: "",};
+    const errors = { name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", };
 
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
@@ -621,6 +621,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
     }
 
     try {
+      setLoading(true);
       const expertData = {
         full_name: newExpert.name,
         email: newExpert.email,
@@ -649,7 +650,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         dob: '',
         addresss: '',
       });
-      setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "",});
+      setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", });
       setIsAddModalOpen(false);
 
       setNotification({
@@ -662,6 +663,8 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         message: 'Failed to add expert. Please try again.'
       });
       console.error('Error adding expert:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -679,10 +682,10 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
         type: 'success',
         message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
       });
-    } catch (error:any) {
+    } catch (error: any) {
       setNotification({
         type: 'error',
-        message: `${error.response.data.message} please try again later `||`Failed to update expert status`
+        message: `${error.response.data.message} please try again later ` || `Failed to update expert status`
       });
     }
   };
@@ -725,7 +728,7 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
   // Filter bookings based on selected filter
   const getFilteredBookings = () => {
     if (!selectedExpert || !expertBookings[selectedExpert.uuid]) return [];
-    
+
     const today = new Date();
     return expertBookings[selectedExpert.uuid].filter((booking) => {
       if (bookingFilter === 'all') return true;
@@ -735,64 +738,64 @@ const [loadingSlotAction, setLoadingSlotAction] = useState(false);
       return true;
     });
   };
-const handleApproveSlot = async (slot: Slot) => {
-  setSelectedSlot(slot);
-  setSlotActionType('approve');
-  setIsSlotActionModalOpen(true);
-};
+  const handleApproveSlot = async (slot: Slot) => {
+    setSelectedSlot(slot);
+    setSlotActionType('approve');
+    setIsSlotActionModalOpen(true);
+  };
 
-const handleRejectSlot = async (slot: Slot) => {
-  setSelectedSlot(slot);
-  setSlotActionType('reject');
-  setRejectionReason('');
-  setIsSlotActionModalOpen(true);
-};
-
-const confirmSlotAction = async () => {
-  if (!selectedSlot || !slotActionType) return;
-
-  setLoadingSlotAction(true);
-  try {
-    if (slotActionType === 'approve') {
-      await approveExpertSlot(selectedSlot.uuid);
-      setNotification({
-        type: 'success',
-        message: 'Slot approved successfully'
-      });
-    } else {
-      if (!rejectionReason.trim()) {
-        setNotification({
-          type: 'error',
-          message: 'Please provide a reason for rejection'
-        });
-        return;
-      }
-      await rejectExpertSlot(selectedSlot.uuid, rejectionReason);
-      setNotification({
-        type: 'success',
-        message: 'Slot rejected successfully'
-      });
-    }
-
-    // Refresh the slots data
-    if (selectedExpert) {
-      await fetchExpertSlots(selectedExpert.uuid);
-    }
-    
-    setIsSlotActionModalOpen(false);
-    setSelectedSlot(null);
-    setSlotActionType(null);
+  const handleRejectSlot = async (slot: Slot) => {
+    setSelectedSlot(slot);
+    setSlotActionType('reject');
     setRejectionReason('');
+    setIsSlotActionModalOpen(true);
+  };
 
-  } catch (error: any) {
-    setNotification({
-      type: 'error',
-      message: error.response?.data?.message || `Failed to ${slotActionType} slot`
-    });
-  } finally {
-    setLoadingSlotAction(false);
-  }
-};
+  const confirmSlotAction = async () => {
+    if (!selectedSlot || !slotActionType) return;
+
+    setLoadingSlotAction(true);
+    try {
+      if (slotActionType === 'approve') {
+        await approveExpertSlot(selectedSlot.uuid);
+        setNotification({
+          type: 'success',
+          message: 'Slot approved successfully'
+        });
+      } else {
+        if (!rejectionReason.trim()) {
+          setNotification({
+            type: 'error',
+            message: 'Please provide a reason for rejection'
+          });
+          return;
+        }
+        await rejectExpertSlot(selectedSlot.uuid, rejectionReason);
+        setNotification({
+          type: 'success',
+          message: 'Slot rejected successfully'
+        });
+      }
+
+      // Refresh the slots data
+      if (selectedExpert) {
+        await fetchExpertSlots(selectedExpert.uuid);
+      }
+
+      setIsSlotActionModalOpen(false);
+      setSelectedSlot(null);
+      setSlotActionType(null);
+      setRejectionReason('');
+
+    } catch (error: any) {
+      setNotification({
+        type: 'error',
+        message: error.response?.data?.message || `Failed to ${slotActionType} slot`
+      });
+    } finally {
+      setLoadingSlotAction(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -835,6 +838,15 @@ const confirmSlotAction = async () => {
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'ALL' ? null : 'ALL';
+              setActiveStatFilter(newFilter);
+              setSelectedStatus('ALL');
+              setSelectedGender('ALL');
+              setCurrentPage(1);
+              fetchExperts(1, debouncedSearchQuery, 'ALL', 'ALL');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -852,6 +864,14 @@ const confirmSlotAction = async () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'ENABLED' ? null : 'ENABLED';
+              setActiveStatFilter(newFilter);
+              setSelectedStatus('ENABLED');
+              setCurrentPage(1);
+              fetchExperts(1, debouncedSearchQuery, 'ENABLED', selectedGender);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -869,6 +889,14 @@ const confirmSlotAction = async () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'DISABLED' ? null : 'DISABLED';
+              setActiveStatFilter(newFilter);
+              setSelectedStatus('DISABLED');
+              setCurrentPage(1);
+              fetchExperts(1, debouncedSearchQuery, 'DISABLED', selectedGender);
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -886,6 +914,14 @@ const confirmSlotAction = async () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'MALE' ? null : 'MALE';
+              setActiveStatFilter(newFilter);
+              setSelectedGender('MALE');
+              setCurrentPage(1);
+              fetchExperts(1, debouncedSearchQuery, selectedStatus, 'MALE');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -903,6 +939,14 @@ const confirmSlotAction = async () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'FEMALE' ? null : 'FEMALE';
+              setActiveStatFilter(newFilter);
+              setSelectedGender('FEMALE');
+              setCurrentPage(1);
+              fetchExperts(1, debouncedSearchQuery, selectedStatus, 'FEMALE');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -996,7 +1040,7 @@ const confirmSlotAction = async () => {
                     <p className="text-sm text-gray-600 mb-2">{expert.specializaton}</p>
                     <div className="flex items-center gap-2 mb-2">
                       {expert.status && (
-                        <StatusBadge enabled={expert.status} /> 
+                        <StatusBadge enabled={expert.status} />
                       )}
                       <GenderBadge gender={expert.gender} />
                     </div>
@@ -1033,10 +1077,10 @@ const confirmSlotAction = async () => {
                     {expert.phone_number || 'N/A'}
                   </div>
                   {expert.experience && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <User size={14} className="mr-2" />
-                    {expert.experience} experience
-                  </div> ) }
+                    <div className="flex items-center text-sm text-gray-600">
+                      <User size={14} className="mr-2" />
+                      {expert.experience} experience
+                    </div>)}
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -1124,11 +1168,10 @@ const confirmSlotAction = async () => {
                       key={page}
                       onClick={() => handlePageChange(page as number)}
                       disabled={loading}
-                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                        paginationData.current_page === page
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                        }`}
                     >
                       {page}
                     </button>
@@ -1232,9 +1275,10 @@ const confirmSlotAction = async () => {
           </button>
           <button
             onClick={handleAddExpert}
+            disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Add Expert
+            {loading ? 'Adding...' : 'Add Expert'}
           </button>
         </div>
       </ModernModal>
@@ -1323,7 +1367,7 @@ const confirmSlotAction = async () => {
               All
             </button>
           </div>
-          
+
           {/* Bookings List */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Bookings</h3>
@@ -1376,82 +1420,82 @@ const confirmSlotAction = async () => {
               <p className="text-gray-600 text-center py-8">No bookings found for this expert.</p>
             )}
           </div>
-         {/* Slot Details */}
-<div className="mt-8">
-  <h3 className="text-lg font-semibold mb-4">Slot Details</h3>
-  {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
-    <div className="flex items-center justify-center py-4">
-      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-      <span className="ml-2 text-gray-600">Loading slots...</span>
-    </div>
-  ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-gray-50 font-medium">
-        <div>Date</div>
-        <div>Start Time</div>
-        <div>End Time</div>
-        <div>Status</div>
-        <div>Clinic</div>
-        <div>Slot Type</div>
-        <div>Actions</div>
-      </div>
-      <div className="divide-y divide-gray-100">
-        {expertSlots[selectedExpert.uuid].map((slot) => (
-          <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 items-center">
-            <div>{formatDate(slot.start_time)}</div>
-            <div>{formatTime(slot.start_time)}</div>
-            <div>{formatTime(slot.end_time)}</div>
-            <div>
-              <SlotStatusBadge is_booked={slot.is_booked} />
-              {slot.status === 'PENDING' && (
-                <span className="ml-1 text-yellow-600 text-xs">(Pending)</span>
-              )}
-              {slot.status === 'REJECTED' && (
-                <span className="ml-1 text-red-600 text-xs">(Rejected)</span>
-              )}
-            </div>
-            <div>{slot.clinic_name}</div>
-            <div className="text-sm">{slot.slot_type}</div>
-            <div className="flex gap-2">
-              {slot.status === 'DRAFT' && (
-                <>
-                  <button
-                    onClick={() => handleApproveSlot(slot)}
-                    className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                    title="Approve Slot"
-                  >
-                    <CheckCircle size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleRejectSlot(slot)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Reject Slot"
-                  >
-                    <XCircle size={16} />
-                  </button>
-                </>
-              )}
-              {slot.status === 'APPROVED' && (
-                <span className="text-sm text-green-600">Approved</span>
-              )}
-              {slot.status === 'REJECTED' && (
-                <span className="text-sm text-red-600">Rejected</span>
-              )}
-              {slot.status === 'DRAFT' && (
-                <span className="text-sm text-yellow-600">Draft</span>
-              )}
-              {/* {slot.status  && (
+          {/* Slot Details */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">Slot Details</h3>
+            {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading slots...</span>
+              </div>
+            ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-gray-50 font-medium">
+                  <div>Date</div>
+                  <div>Start Time</div>
+                  <div>End Time</div>
+                  <div>Status</div>
+                  <div>Clinic</div>
+                  <div>Slot Type</div>
+                  <div>Actions</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {expertSlots[selectedExpert.uuid].map((slot) => (
+                    <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 items-center">
+                      <div>{formatDate(slot.start_time)}</div>
+                      <div>{formatTime(slot.start_time)}</div>
+                      <div>{formatTime(slot.end_time)}</div>
+                      <div>
+                        <SlotStatusBadge is_booked={slot.is_booked} />
+                        {slot.status === 'PENDING' && (
+                          <span className="ml-1 text-yellow-600 text-xs">(Pending)</span>
+                        )}
+                        {slot.status === 'REJECTED' && (
+                          <span className="ml-1 text-red-600 text-xs">(Rejected)</span>
+                        )}
+                      </div>
+                      <div>{slot.clinic_name}</div>
+                      <div className="text-sm">{slot.slot_type}</div>
+                      <div className="flex gap-2">
+                        {slot.status === 'DRAFT' && (
+                          <>
+                            <button
+                              onClick={() => handleApproveSlot(slot)}
+                              className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                              title="Approve Slot"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleRejectSlot(slot)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Reject Slot"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                          </>
+                        )}
+                        {slot.status === 'APPROVED' && (
+                          <span className="text-sm text-green-600">Approved</span>
+                        )}
+                        {slot.status === 'REJECTED' && (
+                          <span className="text-sm text-red-600">Rejected</span>
+                        )}
+                        {slot.status === 'DRAFT' && (
+                          <span className="text-sm text-yellow-600">Draft</span>
+                        )}
+                        {/* {slot.status  && (
                 <span className="text-sm text-red-600">{slot.status}</span>
               )} */}
-            </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-center py-8">No slot data available for this expert.</p>
+            )}
           </div>
-        ))}
-      </div>
-    </div>
-  ) : (
-    <p className="text-gray-600 text-center py-8">No slot data available for this expert.</p>
-  )}
-</div>
         </div>
       </ModernModal>
 
@@ -1504,88 +1548,87 @@ const confirmSlotAction = async () => {
           </div>
         </ModernModal>
       )}
-{/* Slot Action Modal */}
-<ModernModal
-  isOpen={isSlotActionModalOpen}
-  onClose={() => {
-    setIsSlotActionModalOpen(false);
-    setSelectedSlot(null);
-    setSlotActionType(null);
-    setRejectionReason('');
-  }}
-  title={`${slotActionType === 'approve' ? 'Approve' : 'Reject'} Slot`}
-  size="md"
->
-  {selectedSlot && (
-    <div className="space-y-6">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h4 className="font-medium text-gray-900">Slot Details</h4>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <span className="text-gray-600">Date:</span> {formatDate(selectedSlot.start_time)}
-          </div>
-          <div>
-            <span className="text-gray-600">Time:</span> {formatTime(selectedSlot.start_time)} - {formatTime(selectedSlot.end_time)}
-          </div>
-          <div>
-            <span className="text-gray-600">Clinic:</span> {selectedSlot.clinic_name}
-          </div>
-          <div>
-            <span className="text-gray-600">Type:</span> {selectedSlot.slot_type}
-          </div>
-        </div>
-      </div>
-
-      {slotActionType === 'reject' && (
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Reason for Rejection <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Please provide a reason for rejecting this slot..."
-            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
-            required
-          />
-        </div>
-      )}
-
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => {
-            setIsSlotActionModalOpen(false);
-            setSelectedSlot(null);
-            setSlotActionType(null);
-            setRejectionReason('');
-          }}
-          className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-          disabled={loadingSlotAction}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmSlotAction}
-          className={`px-4 py-2 rounded-lg text-white transition-colors ${
-            slotActionType === 'approve'
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-red-600 hover:bg-red-700'
-          } disabled:opacity-50`}
-          disabled={loadingSlotAction || (slotActionType === 'reject' && !rejectionReason.trim())}
-        >
-          {loadingSlotAction ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {slotActionType === 'approve' ? 'Approving...' : 'Rejecting...'}
+      {/* Slot Action Modal */}
+      <ModernModal
+        isOpen={isSlotActionModalOpen}
+        onClose={() => {
+          setIsSlotActionModalOpen(false);
+          setSelectedSlot(null);
+          setSlotActionType(null);
+          setRejectionReason('');
+        }}
+        title={`${slotActionType === 'approve' ? 'Approve' : 'Reject'} Slot`}
+        size="md"
+      >
+        {selectedSlot && (
+          <div className="space-y-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-900">Slot Details</h4>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Date:</span> {formatDate(selectedSlot.start_time)}
+                </div>
+                <div>
+                  <span className="text-gray-600">Time:</span> {formatTime(selectedSlot.start_time)} - {formatTime(selectedSlot.end_time)}
+                </div>
+                <div>
+                  <span className="text-gray-600">Clinic:</span> {selectedSlot.clinic_name}
+                </div>
+                <div>
+                  <span className="text-gray-600">Type:</span> {selectedSlot.slot_type}
+                </div>
+              </div>
             </div>
-          ) : (
-            slotActionType === 'approve' ? 'Approve Slot' : 'Reject Slot'
-          )}
-        </button>
-      </div>
-    </div>
-  )}
-</ModernModal>
+
+            {slotActionType === 'reject' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reason for Rejection <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Please provide a reason for rejecting this slot..."
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+                  required
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setIsSlotActionModalOpen(false);
+                  setSelectedSlot(null);
+                  setSlotActionType(null);
+                  setRejectionReason('');
+                }}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                disabled={loadingSlotAction}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSlotAction}
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${slotActionType === 'approve'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
+                  } disabled:opacity-50`}
+                disabled={loadingSlotAction || (slotActionType === 'reject' && !rejectionReason.trim())}
+              >
+                {loadingSlotAction ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {slotActionType === 'approve' ? 'Approving...' : 'Rejecting...'}
+                  </div>
+                ) : (
+                  slotActionType === 'approve' ? 'Approve Slot' : 'Reject Slot'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </ModernModal>
       {/* Notification */}
       <AnimatePresence>
         {notification && (

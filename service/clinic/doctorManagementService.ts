@@ -10,13 +10,13 @@ interface NewDoctor {
   dob: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   specializaton: string;
-  experience: string;
+ experience: number | string;
   phone_number: string;
   email: string;
   education?: string;
-  additional_info?: string;
   profile_pic_file?: File | null;
-  govt_verification_doc_files?: File[];
+  government_document?:string[];
+  extra_info?: string;
 }
 // Clinic-Doctor Management Api
 export const createDoctor = async (body: NewDoctor) => {

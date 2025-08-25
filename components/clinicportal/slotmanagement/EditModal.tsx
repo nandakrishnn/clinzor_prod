@@ -1,8 +1,9 @@
-import React from 'react';
-import { X, Save, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Save, Clock, Loader } from 'lucide-react';
 import { ClinicService, Slot } from '@/types/common';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { editClinicSlot } from '@/service/clinic/slotManagementService';
 
 interface EditModalProps {
   showEditModal: boolean;
@@ -11,6 +12,8 @@ interface EditModalProps {
   setEditingSlot: (slot: Slot | null) => void;
   handleSaveEdit: () => void;
   clinicServices: ClinicService[];
+  showNotification: (type: "success" | "error" | "warning", message: string) => void;
+  fetchSlots: () => void;
 }
 
 const EditModal: React.FC<EditModalProps> = ({
@@ -19,14 +22,49 @@ const EditModal: React.FC<EditModalProps> = ({
   editingSlot,
   setEditingSlot,
   handleSaveEdit,
-  clinicServices
+  clinicServices,
+  showNotification,
+  fetchSlots
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   if (!showEditModal || !editingSlot) return null;
 
   // Helper function to update editingSlot
   const updateEditingSlot = (updates: Partial<Slot>) => {
     if (editingSlot) {
       setEditingSlot({ ...editingSlot, ...updates });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editingSlot || !editingSlot.uuid) return;
+
+    setIsLoading(true);
+    try {
+      // Prepare the data for API call
+      const slotData = {
+        clinic_service: editingSlot.clinic_service,
+        start_time: editingSlot.start_time,
+        end_time: editingSlot.end_time,
+        max_bookings: editingSlot.max_bookings,
+        available_slots: editingSlot.available_slots,
+        status: editingSlot.status,
+        reason_for_rejection: editingSlot.reason_for_rejection || ''
+      };
+
+      await editClinicSlot(editingSlot.uuid, slotData);
+      
+      showNotification('success', 'Slot updated successfully');
+      fetchSlots(); // Refresh the slots list
+      setShowEditModal(false);
+      setEditingSlot(null);
+    } catch (error: any) {
+      console.error('Failed to update slot:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update slot';
+      showNotification('error', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -39,6 +77,7 @@ const EditModal: React.FC<EditModalProps> = ({
             <button
               onClick={() => setShowEditModal(false)}
               className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg"
+              disabled={isLoading}
             >
               <X className="w-5 h-5" />
             </button>
@@ -52,6 +91,7 @@ const EditModal: React.FC<EditModalProps> = ({
               value={editingSlot.clinic_service}
               onChange={(e) => updateEditingSlot({ clinic_service: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             >
               {clinicServices.map(service => (
                 <option key={service.id} value={service.id}>{service.name}</option>
@@ -81,6 +121,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 placeholderText="Select start time"
                 className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 wrapperClassName="w-full"
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -107,6 +148,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 placeholderText="Select end time"
                 className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 wrapperClassName="w-full"
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -121,6 +163,7 @@ const EditModal: React.FC<EditModalProps> = ({
               })}
               min="1"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             />
           </div>
           
@@ -135,6 +178,7 @@ const EditModal: React.FC<EditModalProps> = ({
               min="0"
               max={editingSlot.max_bookings}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             />
           </div>
           
@@ -144,6 +188,7 @@ const EditModal: React.FC<EditModalProps> = ({
               value={editingSlot.status}
               onChange={(e) => updateEditingSlot({ status: e.target.value as Slot['status'] })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
             >
               <option value="APPROVED">Approved</option>
               <option value="PENDING">Pending</option>
@@ -162,6 +207,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 placeholder="Enter reason for rejection..."
+                disabled={isLoading}
               />
             </div>
           )}
@@ -171,15 +217,21 @@ const EditModal: React.FC<EditModalProps> = ({
           <button
             onClick={() => setShowEditModal(false)}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
-            onClick={handleSaveEdit}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+            onClick={handleSave}
+            disabled={isLoading}
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="w-4 h-4" />
-            <span>Save Changes</span>
+            {isLoading ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{isLoading ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>

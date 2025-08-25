@@ -299,6 +299,7 @@ export default function AdminSidebar() {
         camps: campsCount || 0,
         blogs: blogsCount || 0
       });
+      console.log(counts,"count data here"  )
     } catch (error) {
       console.error('Failed to fetch counts:', error);
     } finally {
@@ -372,7 +373,7 @@ export default function AdminSidebar() {
   const menuItems2 = [
     { icon: <UserCheck size={20} strokeWidth={1.5} />,
       label: 'Expert Management',
-      badge: '89',
+      badge: loading ? '...' :  counts.experts,
       badgeColor: 'blue' as const, href: '/admin/experts' },
   ];
 
@@ -391,7 +392,7 @@ export default function AdminSidebar() {
     {
       icon: <Building2 size={20} strokeWidth={1.5} />,
       label: 'Clinic Management',
-      badge: counts.clinics,
+      badge:  loading ? '...' : counts.clinics,
       badgeColor: 'green' as const,
       children: [
         { label: 'All Clinics', href: '/admin/allclinics' },
@@ -596,7 +597,7 @@ export default function AdminSidebar() {
       </div>
       
       {/* System Status Card */}
-      {!collapsed && (
+      {/* {!collapsed && (
         <div className="px-4 sm:px-5 py-4">
           <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-purple-100">
             <div className="flex items-center mb-2">
@@ -612,7 +613,7 @@ export default function AdminSidebar() {
             </a>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* User Profile Section */}
       <div className={`px-3 sm:px-3 py-3 border-t border-gray-100 ${collapsed ? 'flex justify-center' : ''}`}>

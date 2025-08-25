@@ -13,18 +13,21 @@ import {
   Save,
   Edit3,
   Clock,
-  Eye
+  Eye,
+  XCircle,
+  AlertCircle
 } from "lucide-react";
 import { createClinicBlukSlot } from "@/service/clinic/slotManagementService";
 import type { ClinicService } from "@/types/common";
 import { Settings, Calendar, CheckCircle } from "lucide-react";
-
+import { motion, AnimatePresence } from "framer-motion";
 interface BulkCreationModalProps {
   showBulkForm: boolean;
   setShowBulkForm: (show: boolean) => void;
   currentPage: number;
   fetchSlots: (page?: number) => void;
   clinicServices: ClinicService[];
+    showNotification: (type: "success" | "error" | "warning", message: string) => void;
 }
 
 interface TimeSlot {
@@ -41,6 +44,12 @@ interface DaySlots {
   dayName: string;
   slots: TimeSlot[];
 }
+interface NotificationProps {
+  type: "success" | "error" | "warning";
+  message: string;
+  onClose: () => void;
+}
+
 
 const TimePicker: React.FC<{
   value: string;
@@ -370,7 +379,8 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   setShowBulkForm,
   currentPage,
   fetchSlots,
-  clinicServices
+  clinicServices,
+    showNotification
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [slotType, setSlotType] = useState<
@@ -392,7 +402,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   } | null>(null);
   const [timeGap, setTimeGap] = useState(1); // Default to 1 hour
   const [selectedDays, setSelectedDays] = useState<DaySlots[]>([]);
-
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+  } | null>(null);
   // Step 1 data
   const [femaleDoctors, setFemaleDoctors] = useState(2);
   const [maxBookings, setMaxBookings] = useState(6);
@@ -679,43 +692,61 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   };
 
   // Submit only selected days data to backend
-  const submitBulkSlots = async () => {
-    try {
-      // Collect all slots from selected days only
-      const allSlots: any[] = [];
-      const daysToSubmit = copyDays.some((day) => day.selected)
-        ? days.filter((_, index) => copyDays[index].selected)
-        : days;
+ // In submitBulkSlots function
+const submitBulkSlots = async () => {
+  try {
+    // Collect all slots from selected days only
+    const allSlots: any[] = [];
+    const daysToSubmit = copyDays.some((day) => day.selected)
+      ? days.filter((_, index) => copyDays[index].selected)
+      : days;
 
-      daysToSubmit.forEach((day) => {
-        day.slots.forEach((slot) => {
-          allSlots.push({
-            start_time: slot.start_time,
-            end_time: slot.end_time,
-            max_bookings: slot.max_bookings,
-            female_doctors: slot.female_doctors,
-            is_video_call: slot.is_video_call,
-            is_physical_visit: slot.is_physical_visit,
-            is_home_visit: slotType === "HOME_VISIT"
-          });
-        });
+    daysToSubmit.forEach((day) => {
+      day.slots.forEach((slot) => {
+        // Create base slot object
+        const slotData: any = {
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          max_bookings: slot.max_bookings,
+          female_doctor_count: slot.female_doctors,
+        };
+
+        // Add appropriate fields based on slot type with string boolean values
+        if (slotType === "HOME_VISIT") {
+          slotData.is_home_visit = "true";
+          // For HOME_VISIT, set the other two to "false"
+          slotData.is_video_call = "false";
+          slotData.is_physical_visit = "false";
+        } else if (slotType === "PHYSICAL_OR_VIDEO") {
+          slotData.is_video_call = slot.is_video_call ? "true" : "false";
+          slotData.is_physical_visit = slot.is_physical_visit ? "true" : "false";
+          slotData.is_home_visit = "false";
+        }
+
+        allSlots.push(slotData);
       });
+    });
 
-      const payload = {
-        clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-        slot_type: slotType,
-        slot_list: allSlots
-      };
+    const payload = {
+      clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
+      slot_type: slotType,
+      slot_list: allSlots
+    };
 
-      await createClinicBlukSlot(payload);
-      setShowBulkForm(false);
-      setActiveStep(0);
-      setSlotType("");
-      fetchSlots(currentPage);
-    } catch (error) {
-      console.error("Error creating bulk slots:", error);
-    }
-  };
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+    
+    await createClinicBlukSlot(payload);
+    showNotification('success', 'Slots loaded successfully');
+    setShowBulkForm(false);
+    setActiveStep(0);
+    setSlotType("");
+    fetchSlots(currentPage);
+  } catch (error: any) {
+    console.error("Error creating bulk slots:", error);
+     const errorMessage = error.response?.data?.message || 'Failed to load slots';
+      showNotification('error', errorMessage);
+  }
+};
 
   const handleSlotSelection = (slotIndex: number) => {
     setSelectedSlots((prev) =>
@@ -1617,6 +1648,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
           onCancelEdit={() => setIsEditingSlot(false)}
         />
       )}
+      
     </div>
   );
 };

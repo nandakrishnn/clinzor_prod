@@ -70,12 +70,35 @@ export const deleteClinicOffers = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/offer-rud/${Id}/`);
 };
 
-export const GetAllClinicOffers = async () => {
+// service/clinic/clinicOfferManagementService.ts
+
+export const GetAllClinicOffers = async (
+  page: number = 1,
+  pageSize: number = 10,
+  search: string = '',
+  status: string = '',
+  service: string = '',
+  dateFrom: string = '',
+  dateTo: string = '',
+  liveOnly: boolean = false
+) => {
   try {
-    const response = await axiosPrivate.get(`clinic/offer-lc/`);
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('page_size', pageSize.toString());
+    
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (service) params.append('clinic_service', service);
+    if (dateFrom) params.append('from_date', dateFrom);
+    if (dateTo) params.append('to_date', dateTo);
+    if (liveOnly) params.append('live_only', 'true');
+
+    const response = await axiosPrivate.get(`clinic/offer-lc/?${params.toString()}`);
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch offers", error);
     throw error;
   }
 };

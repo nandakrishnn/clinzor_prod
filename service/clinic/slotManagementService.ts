@@ -16,6 +16,7 @@ interface BulkSlotData {
     is_video_call: boolean;
     is_home_visit: boolean;
     is_physical_visit: boolean;
+    female_doctor_count?: number;
   }[];
 }
 // Slot Management Api 
@@ -43,17 +44,27 @@ export const createClinicBlukSlot = async (body:BulkSlotData) => {
     throw error;
   }
 };
-export const editClinicSlot = async (
-  id: string,
- body: Slot) => {
+// In your slotManagementService.ts file
+export const editClinicSlot = async (id: string, body: Partial<Slot>) => {
   try {
     const response = await axiosPrivate.put(
       `clinic/slot-rud/${id}/`,
       body
     );
     return response.data;
-  } catch (error) {
-    console.error("Expert update error:", error);
+  } catch (error: any) {
+    console.error("Slot update error:", error);
+    
+    // Throw the error with response data for better error handling
+    if (error.response) {
+      throw {
+        response: {
+          data: error.response.data,
+          status: error.response.status
+        }
+      };
+    }
+    
     throw error;
   }
 };
