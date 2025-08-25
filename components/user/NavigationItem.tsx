@@ -1,27 +1,35 @@
-// src/components/user/NavigationItem.tsx
-import { NavigationItemProps } from "@/types/user";
+"use client"
+
+import type { NavigationItemProps } from "@/types/user"
 
 export default function NavigationItem({
   icon,
   label,
   isActive,
   onClick,
-  showBadge
+  showBadge = false,
+  badge,
 }: NavigationItemProps) {
   return (
-    <div
-      className={`flex items-center p-3 cursor-pointer rounded-lg min-w-full ${
-        isActive ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"
-      }`}
+    <button
       onClick={onClick}
+      className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
+        isActive
+          ? "bg-primaryColor text-sidebar-accent-foreground shadow-sm text-white"
+          : "text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
+      }`}
     >
-      <span className="mr-3">{icon}</span>
-      <span className="font-medium">{label}</span>
-      {showBadge && (
-        <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-          3
+      <span
+        className={`mr-3 transition-colors ${isActive ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-sidebar-primary-foreground"}`}
+      >
+        {icon}
+      </span>
+      <span className="flex-1 text-left">{label}</span>
+      {showBadge && badge && (
+        <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-accent text-accent-foreground rounded-full">
+          {badge}
         </span>
       )}
-    </div>
-  );
+    </button>
+  )
 }

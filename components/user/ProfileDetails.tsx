@@ -1,45 +1,54 @@
-// src/components/user/ProfileDetails.tsx
-import { ProfileDetailsProps } from "@/types/user";
+import type { ProfileDetailsProps } from "@/types/user"
+import { Mail, Phone, MapPin, Edit3 } from "lucide-react"
 
 export default function ProfileDetails({ user }: ProfileDetailsProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 w-full">
-      <h2 className="text-xl font-semibold mb-6">Profile Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-500 mb-1">
-            Full Name
-          </label>
-          <p className="text-gray-800">{user.name}</p>
+    <div className="bg-card rounded-xl shadow-sm border border-border p-8">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-bold text-foreground">Profile Details</h2>
+        <button className="inline-flex items-center gap-2 bg-primaryColor text-white text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium">
+          <Edit3 size={16} />
+          Edit Profile
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Full Name</label>
+          <p className="text-foreground font-medium text-lg">{user.name}</p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-500 mb-1">
-            Email
-          </label>
-          <p className="text-gray-800">{user.email}</p>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
+          <div className="flex items-center gap-2">
+            <Mail size={16} className="text-muted-foreground" />
+            <p className="text-foreground">{user.email}</p>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-500 mb-1">
-            Phone
-          </label>
-          <p className="text-gray-800">{user.phone}</p>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Phone</label>
+          <div className="flex items-center gap-2">
+            <Phone size={16} className="text-muted-foreground" />
+            <p className="text-foreground">{user.phone}</p>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-500 mb-1">
-            Location
-          </label>
-          <p className="text-gray-800">{user.location}</p>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Location</label>
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-muted-foreground" />
+            <p className="text-foreground">{user.location}</p>
+          </div>
         </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-500 mb-1">
-            Bio
-          </label>
-          <p className="text-gray-800">{user.bio}</p>
+
+        <div className="md:col-span-2 space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Bio</label>
+          <p className="text-foreground leading-relaxed bg-background/50 p-4 rounded-lg border border-border">
+            {user.bio}
+          </p>
         </div>
       </div>
-      <button className="mt-6 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-        Edit Profile
-      </button>
     </div>
-  );
+  )
 }
