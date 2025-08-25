@@ -1,0 +1,259 @@
+import {
+  Star,
+  MapPin,
+  Phone,
+  Clock,
+  Award,
+  Users,
+  Stethoscope
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+
+const ClinicDetailedView = () => {
+  const clinicInfo = {
+    name: "MediCare Plus Clinic",
+    rating: 4.8,
+    reviews: 1247,
+    address: "123 Healthcare Avenue, Medical District, City 12345",
+    phone: "+1 (555) 123-4567",
+    hours: "Mon-Fri: 8:00 AM - 8:00 PM, Sat-Sun: 9:00 AM - 5:00 PM",
+    established: "2010",
+    patients: "50,000+",
+    description:
+      "MediCare Plus Clinic is a leading healthcare facility dedicated to providing comprehensive medical services with state-of-the-art technology and compassionate care. Our team of experienced professionals is committed to your health and well-being."
+  };
+
+  const specialties = [
+    {
+      name: "Cardiology",
+      icon: "",
+      description: "Heart and cardiovascular care"
+    },
+    {
+      name: "Dermatology",
+      icon: "",
+      description: "Skin and cosmetic treatments"
+    },
+    {
+      name: "Orthopedics",
+      icon: "",
+      description: "Bone and joint specialists"
+    },
+    { name: "Pediatrics", icon: "", description: "Children's healthcare" },
+    { name: "Neurology", icon: "", description: "Brain and nervous system" },
+    { name: "Gynecology", icon: "", description: "Women's health services" }
+  ];
+
+  const doctors = [
+    {
+      id: 1,
+      name: "Dr. Sarah Johnson",
+      specialty: "Cardiologist",
+      experience: "15 years",
+      rating: 4.9,
+      image: "/professional-female-doctor.png",
+      qualifications: "MD, FACC",
+      availability: "Mon, Wed, Fri"
+    },
+    {
+      id: 2,
+      name: "Dr. Michael Chen",
+      specialty: "Orthopedic Surgeon",
+      experience: "12 years",
+      rating: 4.8,
+      image: "/professional-male-doctor.png",
+      qualifications: "MD, FAAOS",
+      availability: "Tue, Thu, Sat"
+    },
+    {
+      id: 3,
+      name: "Dr. Emily Rodriguez",
+      specialty: "Dermatologist",
+      experience: "10 years",
+      rating: 4.9,
+      image: "/professional-female-dermatologist.png",
+      qualifications: "MD, FAAD",
+      availability: "Mon, Tue, Thu"
+    },
+    {
+      id: 4,
+      name: "Dr. James Wilson",
+      specialty: "Pediatrician",
+      experience: "18 years",
+      rating: 4.7,
+      image: "/professional-male-pediatrician.png",
+      qualifications: "MD, FAAP",
+      availability: "Wed, Fri, Sat"
+    }
+  ];
+
+  const services = [
+    "General Consultation",
+    "Diagnostic Imaging",
+    "Laboratory Services",
+    "Preventive Care",
+    "Emergency Care",
+    "Surgical Procedures",
+    "Physical Therapy",
+    "Mental Health Services"
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
+      {/* Clinic Header */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border ">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {clinicInfo.name}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-5 h-5 ${
+                      i < Math.floor(clinicInfo.rating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="font-semibold text-gray-900">
+                {clinicInfo.rating}
+              </span>
+              <span className="text-gray-600">
+                ({clinicInfo.reviews} reviews)
+              </span>
+            </div>
+
+            <p className="text-gray-700 mb-6 leading-relaxed">
+              {clinicInfo.description}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-[#033C8D]" />
+                <span className="text-gray-700">{clinicInfo.address}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-[#033C8D]" />
+                <span className="text-gray-700">{clinicInfo.phone}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-[#033C8D]" />
+                <span className="text-gray-700">{clinicInfo.hours}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:w-80">
+            <div className="bg-gradient-to-br from-[#033C8D] to-blue-700 rounded-xl p-6 text-white">
+              <h3 className="text-xl font-semibold mb-4">Quick Stats</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5" />
+                    <span>Established</span>
+                  </div>
+                  <span className="font-semibold">
+                    {clinicInfo.established}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    <span>Patients Served</span>
+                  </div>
+                  <span className="font-semibold">{clinicInfo.patients}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="w-5 h-5" />
+                    <span>Specialties</span>
+                  </div>
+                  <span className="font-semibold">{specialties.length}+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Specialties Section */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Our Specialties
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {specialties.map((specialty, index) => (
+            <Card
+              key={index}
+              className="hover:shadow-lg transition-shadow duration-300 border border-gray-200"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="text-3xl">{specialty.icon}</div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {specialty.name}
+                  </h3>
+                </div>
+                <p className="text-gray-600">{specialty.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Doctors Section */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Our Expert Doctors
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {doctors.map((doctor) => (
+            <Card
+              key={doctor.id}
+              className="hover:shadow-lg transition-shadow duration-300 border border-gray-200"
+            >
+              <CardContent className="p-6 text-center">
+                <div className="mb-4">
+                  <img
+                    src={doctor.image || "/placeholder.svg"}
+                    alt={doctor.name}
+                    className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-[#033C8D]/10"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  {doctor.name}
+                </h3>
+                <p className="text-[#033C8D] font-medium mb-2">
+                  {doctor.specialty}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {doctor.qualifications}
+                </p>
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-medium">{doctor.rating}</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  {doctor.experience} experience
+                </p>
+                <p className="text-xs text-gray-600 mb-4">
+                  Available: {doctor.availability}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ClinicDetailedView;
