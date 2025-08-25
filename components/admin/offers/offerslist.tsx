@@ -10,7 +10,7 @@ type Offer = {
   created_by: string;
   title: string;
   offer_type: 'ADMIN' | 'CLINIC' | 'PROMOTIONAL' | 'SYSTEM';
-  status: 'DRAFT'| 'APPROVED' | 'REJECTED';
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED';
   description: string;
   valid_from: string;
   valid_to: string;
@@ -126,13 +126,13 @@ const OfferManagementTable = () => {
     next: null,
     previous: null
   });
-  
-    useEffect(() => {
+
+  useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchOffers(currentPage, {
         search: searchTerm,
         status: statusFilter,
-        type:   offerViewType,
+        type: offerViewType,
       });
     }, 500); // 500ms debounce
 
@@ -158,7 +158,7 @@ const OfferManagementTable = () => {
         type: 'error',
         message: 'Failed to load offers. Please try again later.'
       });
-    }setLoading(false);
+    } setLoading(false);
   };
 
   useEffect(() => {
@@ -178,8 +178,8 @@ const OfferManagementTable = () => {
   //     return matchesViewType && matchesSearch && matchesStatus && matchesType;
   //   });
   // }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
-  
-    const displayedOffers = offers;
+
+  const displayedOffers = offers;
 
   const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
@@ -307,7 +307,7 @@ const OfferManagementTable = () => {
 
     }
   };
-  
+
   const deleteOffer = async (uuid: string) => {
     try {
       // Call the delete API
@@ -335,8 +335,8 @@ const OfferManagementTable = () => {
   const updateOfferStatus = async (uuid: string, newStatus: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'DRAFT', reason?: string) => {
     // Optimistically update the UI first
     setOffers(prev => prev.map(offer =>
-      offer.uuid === uuid ? { 
-        ...offer, 
+      offer.uuid === uuid ? {
+        ...offer,
         status: newStatus,
         ...(newStatus === 'REJECTED' && reason ? { reason_for_rejection: reason } : {})
       } : offer
@@ -344,7 +344,7 @@ const OfferManagementTable = () => {
 
     try {
       // Call the API to update status
-      await approveOrRejectOffers(uuid, { 
+      await approveOrRejectOffers(uuid, {
         status: newStatus,
         ...(newStatus === 'REJECTED' && reason ? { reason_for_rejection: reason } : {})
       });
@@ -415,13 +415,13 @@ const OfferManagementTable = () => {
   const getServiceName = (offer: Offer) => {
     return offer.service_name || offer.default_service_name || 'General';
   };
-  
+
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
   };
-    if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -441,7 +441,7 @@ const OfferManagementTable = () => {
               <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Offer Management</h1>
               <p className="text-gray-500 mt-2 text-lg">Manage your promotional offers and discounts</p>
             </div>
-            {offerViewType === 'ADMIN' && (
+            {(offerViewType === 'ADMIN' || offerViewType === 'ALL') && (
               <button
                 onClick={() => openModal()}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
@@ -653,48 +653,47 @@ const OfferManagementTable = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                   onClick={() => handlePageChange(currentPage - 1)}
+                    onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft size={20} />
                   </button>
 
-                                <div className="flex gap-1">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    const isCurrentPage = page === currentPage;
-                    const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                    
-                    if (!showPage && page === 2) {
-                      return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                    }
-                    
-                    if (!showPage && page === totalPages - 1) {
-                      return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                    }
-                    
-                    if (!showPage) return null;
-                    
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          isCurrentPage
-                            ? 'bg-blue-600 text-white shadow-lg'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-                
+                  <div className="flex gap-1">
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1;
+                      const isCurrentPage = page === currentPage;
+                      const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+
+                      if (!showPage && page === 2) {
+                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+                      }
+
+                      if (!showPage && page === totalPages - 1) {
+                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+                      }
+
+                      if (!showPage) return null;
+
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isCurrentPage
+                              ? 'bg-blue-600 text-white shadow-lg'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+
 
                   <button
-                   onClick={() => handlePageChange(currentPage + 1)}
+                    onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -883,7 +882,7 @@ const OfferManagementTable = () => {
           </div>
         </div>
       )}
-         {/* Rejection Modal */}
+      {/* Rejection Modal */}
       {showRejectionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
