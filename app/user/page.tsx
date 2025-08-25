@@ -35,6 +35,16 @@ export default function UserDash() {
       time: "7:30 - 10:30 PM",
       location: "Online",
       status: "Confirmed",
+      customer: {
+        name: "Anshuman Singh",
+        phone: "+1 (555) 123-4567",
+        email: "anshuman@example.com",
+      },
+      payment: {
+        amount: 150.0,
+        currency: "$",
+      },
+      notes: "Please join the session 15 minutes early. All materials will be provided digitally.",
     },
     {
       id: 2,
@@ -43,6 +53,16 @@ export default function UserDash() {
       time: "6:00 - 8:00 PM",
       location: "IIT Roorkee Campus",
       status: "Pending",
+      customer: {
+        name: "Anshuman Singh",
+        phone: "+1 (555) 123-4567",
+        email: "anshuman@example.com",
+      },
+      payment: {
+        amount: 0.0,
+        currency: "$",
+      },
+      notes: "Bring a valid ID and laptop. Parking is available on campus.",
     },
     {
       id: 3,
@@ -51,6 +71,34 @@ export default function UserDash() {
       time: "5:00 - 7:00 PM",
       location: "Online",
       status: "Confirmed",
+      customer: {
+        name: "Anshuman Singh",
+        phone: "+1 (555) 123-4567",
+        email: "anshuman@example.com",
+      },
+      payment: {
+        amount: 75.0,
+        currency: "$",
+      },
+      notes: "Mock interviews will be conducted. Resume review included in the session.",
+    },
+    {
+      id: 4,
+      title: "React Advanced Patterns Workshop",
+      date: "Jul 20, 2025",
+      time: "2:00 - 5:00 PM",
+      location: "Online",
+      status: "Confirmed",
+      customer: {
+        name: "Anshuman Singh",
+        phone: "+1 (555) 123-4567",
+        email: "anshuman@example.com",
+      },
+      payment: {
+        amount: 120.0,
+        currency: "$",
+      },
+      notes: "Workshop completed successfully. Certificate has been issued.",
     },
   ]
 

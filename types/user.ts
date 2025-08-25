@@ -17,6 +17,16 @@ export interface Booking {
   time: string
   location: string
   status: "Confirmed" | "Pending" | "Cancelled"
+  customer: {
+    name: string
+    phone: string
+    email: string
+  }
+  payment: {
+    amount: number
+    currency: string
+  }
+  notes?: string
 }
 
 export interface NavigationItem {
