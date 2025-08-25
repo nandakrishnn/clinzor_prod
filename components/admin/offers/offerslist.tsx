@@ -612,13 +612,13 @@ const OfferManagementTable = () => {
                             <Check size={18} />
                           </button>
                         )} */}
-                        <button
+                        {/* <button
                           onClick={() => openModal(offer)}
                           className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
                           title="Edit"
                         >
                           <Edit3 size={18} />
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => deleteOffer(offer.uuid)}
                           className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
