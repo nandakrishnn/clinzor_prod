@@ -742,9 +742,52 @@ const submitBulkSlots = async () => {
     setSlotType("");
     fetchSlots(currentPage);
   } catch (error: any) {
-    console.error("Error creating bulk slots:", error);
-     const errorMessage = error.response?.data?.message || 'Failed to load slots';
-      showNotification('error', errorMessage);
+     console.error("Error creating bulk slots:", error);
+
+  let errorMessage = "Failed to load slots";
+
+  if (error.response?.data) {
+    const data = error.response.data;
+
+    // Handle slot_list array with non_field_errors
+    if (Array.isArray(data.slot_list)) {
+      const messages: string[] = [];
+
+      data.slot_list.forEach((item: any) => {
+        if (item?.non_field_errors && Array.isArray(item.non_field_errors)) {
+          messages.push(...item.non_field_errors);
+        }
+      });
+
+      if (messages.length > 0) {
+        errorMessage = messages.join(", ");
+      }
+    }
+
+    // General error fields
+    else if (data.detail) {
+      errorMessage = data.detail;
+    } else if (data.message) {
+      errorMessage = data.message;
+    } else if (Array.isArray(data)) {
+      errorMessage = data.join(", ");
+    } else if (typeof data === "object") {
+      const firstKey = Object.keys(data)[0];
+      if (firstKey) {
+        const firstError = data[firstKey];
+        if (Array.isArray(firstError)) {
+          errorMessage = firstError[0];
+        } else if (typeof firstError === "string") {
+          errorMessage = firstError;
+        }
+      }
+    }
+  } else if (error.message) {
+    errorMessage = error.message;
+  }
+
+  // ✅ Always a string here
+  showNotification("error", errorMessage);
   }
 };
 
