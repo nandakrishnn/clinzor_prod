@@ -1,3 +1,4 @@
+"use client";
 import {
   IconStethoscope,
   IconHeart,
@@ -6,54 +7,23 @@ import {
   IconUserCheck,
   IconHospital
 } from "@tabler/icons-react";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import CardTwo from "@/components/ui/cardTwo";
 import Title from "@/components/ui/title";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import { useRouter } from "next/navigation";
+import { getServices } from "@/service/user/home";
+import DataPlaceholder from "@/components/common/DataPlaceholder";
+import LoadingSkeleton from "@/components/common/LoadingSkeleton";
+import CardTwoSkeleton from "@/components/skeltons/home/HomeServiceCardSketon";
+import { CardSkelton } from "@/components/skeltons/home/HomeServiceSkelton";
 
 export default function ServicesWeProvide() {
   const router = useRouter();
-  const services = [
-    {
-      title: "General Consultation",
-      description:
-        "Get professional advice for your health concerns from certified physicians.",
-      icon: IconStethoscope
-    },
-    {
-      title: "Cardiology",
-      description:
-        "Heart health assessments, ECGs, and specialist referrals at your fingertips.",
-      icon: IconHeart
-    },
-    {
-      title: "Dental Care",
-      description:
-        "Routine checkups, cleanings, and cosmetic dentistry from top dentists.",
-      icon: IconTool
-    },
-    {
-      title: "Neurology",
-      description:
-        "Advanced diagnosis and treatment for neurological disorders.",
-      icon: IconBrain
-    },
-    {
-      title: "Family Medicine",
-      description:
-        "Holistic care for every member of your family, all in one place.",
-      icon: IconUserCheck
-    },
-    {
-      title: "Emergency Services",
-      description:
-        "Round-the-clock urgent care and emergency response facilities.",
-      icon: IconHospital
-    }
-  ];
+  const [serviceData, setService] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -97,6 +67,35 @@ export default function ServicesWeProvide() {
     }
   };
 
+  const getServiceData = async () => {
+    setLoading(true);
+    try {
+      const res = await getServices();
+      if (res.status) {
+        setService(res?.data?.data);
+      }
+    } catch (error) {
+      console.log(error, "error form the home service list part");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getServiceData();
+  }, []);
+
+  if (isLoading) return <CardSkelton />;
+
+  if (serviceData.length === 0) {
+    return (
+      <DataPlaceholder
+        title="No Services Available"
+        description="There are no services to display at this time."
+      />
+    );
+  }
+
   return (
     <section className="overflow-hidden">
       <div className="@container mx-auto max-w-7xl px-6 ">
@@ -114,15 +113,13 @@ export default function ServicesWeProvide() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
         >
-          {services.map((service, index) => (
+          {serviceData?.slice(0, 6).map((service: any, index: any) => (
             <motion.div key={index} variants={itemVariants} whileHover="hover">
               <CardTwo
                 className="bg-[#F2F5FF] "
                 icon={<HealthAndSafetyIcon className="45" />}
-                title="General Consultation"
-                content="Get expert medical advice for your
-                general health concerns from
-                experienced doctors."
+                title={service?.name}
+                content={service?.description}
               />
             </motion.div>
           ))}

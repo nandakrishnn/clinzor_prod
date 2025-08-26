@@ -16,6 +16,16 @@ const privateInstance = axios.create({
   withCredentials: true
 });
 
+export const axiosPublic = axios.create({
+  baseURL: baseUrl,
+  timeout: 10000, // Add timeout
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  withCredentials: true
+})
+
 interface CustomSession {
   accessToken?: string;
   refreshToken?: string;
