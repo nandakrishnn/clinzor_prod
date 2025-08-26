@@ -37,6 +37,18 @@ export const createClinicService = async (body: NewClinicService) => {
     throw error;
   }
 };
+export const requestNewService = async (body: { name: string; description: string; tags: string }) => {
+  try {
+    const response = await axiosPrivate.post(
+      `clinic/request-service/`,
+      body
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Service request error:", error);
+    throw error;
+  }
+};
 
 export const editClinicService = async (id: string, body: Slot) => {
   try {

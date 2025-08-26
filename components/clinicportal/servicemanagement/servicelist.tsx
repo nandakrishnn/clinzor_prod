@@ -29,14 +29,16 @@ import {
   Building2,
   LayoutGrid,
   List as ListIcon,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Upload
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
-import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, updateRankClinicService } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, requestNewService, updateRankClinicService } from '@/service/clinic/serviceManagementService';
+import { uploadFiles } from '@/service/uploadService/uploadService';
 
 // Types
 interface Service {
@@ -137,25 +139,12 @@ const ServiceManagement: React.FC = () => {
   const [isLoadingServices, setIsLoadingServices] = useState(false);
 
   // Service request states
-  const [serviceRequest, setServiceRequest] = useState({
-    name: '',
-    image: '',
-    description: '',
-    type: '',
-    rates: '',
-    additionalInfo: '',
-    rank: '1',
-    consultation_charge_video_call: '',
-    consultation_charge_home_visit: '',
-    treatment_charge_video_call: '',
-    treatment_charge_physical_visit: '',
-    consultation_charge_physical_visit: '',
-    treatment_charge_home_visit: '',
-    is_video_call: false,
-    is_home_service: false,
-    is_clinic_visit: true,
-    clinic_provided_name: ''
-  });
+const [serviceRequest, setServiceRequest] = useState({
+  name: '',
+  description: '',
+  tags: '', // This will be a comma-separated string
+});
+
 
   const [newClinicService, setNewClinicService] = useState<NewClinicService>({
     clinic: '',
@@ -196,17 +185,20 @@ const ServiceManagement: React.FC = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-// Add state for filters
+const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+const [uploadingImage, setUploadingImage] = useState(false);
+  // Add state for filters
   const [statusFilter, setStatusFilter] = useState<string>('approved');
 
- // Modify the fetchService function to use parameters
+  // Modify the fetchService function to use parameters
   const fetchService = async (pageNum: number = currentPage, searchText: string = searchTerm, status: string = statusFilter) => {
     try {
       // Get clinic for current user first
       setLoading(true);
       const clinicUserData = await Clinic_by_clinic_user();
       const clinicId = clinicUserData?.uuid as string;
-      
+
       // Fetch services in parallel using clinic id with parameters
       const [servicesData, clinicServicesData] = await Promise.all([
         GetAllServiceForClinic(),
@@ -217,7 +209,7 @@ const ServiceManagement: React.FC = () => {
       setServices(servicesData.data || []);
       setAllServices(servicesData.data || []);
       setClinicServices(clinicServicesData.data || []);
-      
+
       setPaginationData({
         current_page: clinicServicesData.current_page || 1,
         total_pages: clinicServicesData.total_pages || 1,
@@ -227,7 +219,7 @@ const ServiceManagement: React.FC = () => {
       });
     } catch (error) {
       console.error("Error fetching data", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
 
@@ -255,13 +247,13 @@ const ServiceManagement: React.FC = () => {
   console.log(clinicServices, "service with data")
   console.log('Current session:', session);
 
-    const handleSearch = (term: string) => {
+  const handleSearch = (term: string) => {
     setSearchTerm(term);
     // Add debounce to avoid too many API calls
     const timeoutId = setTimeout(() => {
       fetchService(1, term, statusFilter);
     }, 500);
-    
+
     return () => clearTimeout(timeoutId);
   };
 
@@ -362,105 +354,152 @@ const ServiceManagement: React.FC = () => {
 
     return errors;
   };
+// Add the image selection handler
+const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+
+  const file = files[0];
+  setSelectedImageFile(file);
+  
+  // Create preview for immediate UI feedback
+  const previewUrl = URL.createObjectURL(file);
+  setImagePreviewUrl(previewUrl);
+};
+
+const removeImage = () => {
+  setSelectedImageFile(null);
+  setImagePreviewUrl(null);
+  setNewClinicService(prev => ({
+    ...prev,
+    image: ''
+  }));
+};
 
   // CRUD operations
-  const handleCreateClinicService = async () => {
-    console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
+const handleCreateClinicService = async () => {
+  console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
 
-    const errors = validateClinicServiceForm();
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      console.log('Validation errors:', errors);
+  const errors = validateClinicServiceForm();
+  setFormErrors(errors);
+  if (Object.keys(errors).length > 0) {
+    console.log('Validation errors:', errors);
+    return;
+  }
+
+  try {
+    // Check if this service already exists for the clinic
+    const existingService = clinicServices.find(
+      cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
+    );
+
+    if (existingService) {
+      showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
       return;
     }
 
-    try {
-      // Check if this service already exists for the clinic
-      const existingService = clinicServices.find(
-        cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
-      );
+    if (!clinicUser?.uuid) {
+      showToast('Clinic not loaded. Please try again.', 'error');
+      return;
+    }
 
-      if (existingService) {
-        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+    // Check if there's an image file to upload
+    let imageUrl = newClinicService.image;
+    
+    // If we have a selected image file, upload it using the presigned URL API
+    if (selectedImageFile) {
+      setUploadingImage(true);
+      
+      try {
+        // Upload the file using the presigned URL API
+        const uploadedUrls = await uploadFiles([selectedImageFile]);
+        
+        if (uploadedUrls && uploadedUrls.length > 0) {
+          imageUrl = uploadedUrls[0];
+          console.log('Image uploaded successfully. URL:', imageUrl);
+        }
+      } catch (uploadError) {
+        console.error("Error uploading image:", uploadError);
+        showToast("Failed to upload image. Please try again.", "error");
+        setUploadingImage(false);
         return;
-      }
-
-      if (!clinicUser?.uuid) {
-        showToast('Clinic not loaded. Please try again.', 'error');
-        return;
-      }
-
-      const requestBody: NewClinicService = {
-        clinic: clinicUser.uuid,
-        service: newClinicService.service,
-        clinic_provided_name: newClinicService.clinic_provided_name || '',
-        description: newClinicService.description || '',
-        image: newClinicService.image || '',
-        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-        is_video_call: newClinicService.is_video_call,
-        is_home_service: newClinicService.is_home_service,
-        is_clinic_visit: newClinicService.is_clinic_visit,
-        is_home_visit: newClinicService.is_home_service,
-        is_physical_visit: newClinicService.is_clinic_visit,
-        rank: newClinicService.rank,
-        start_time: newClinicService.start_time || '',
-        max_bookings: newClinicService.max_bookings || 0,
-      };
-
-      console.log('Sending requestBody to backend:', requestBody);
-
-      // Call the API
-      const response = await createClinicService(requestBody);
-
-      // Create the local clinic service object for state update
-      const clinicService: ClinicService = {
-        uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
-        service: newClinicService.service,
-        clinic: clinicUser.uuid,
-        service_name: getServiceName(newClinicService.service),
-        created_by: session?.user?.email || 'unknown',
-        clinic_provided_name: newClinicService.clinic_provided_name || null,
-        rank: parseInt(newClinicService.rank || '0'),
-        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-        status: 'PENDING',
-        is_video_call: newClinicService.is_video_call,
-        is_home_visit: newClinicService.is_home_service,
-        is_physical_visit: newClinicService.is_clinic_visit,
-        image: newClinicService.image || null,
-        description: newClinicService.description || null,
-        reason_for_rejection: null,
-        display_date: new Date().toISOString(),
-      };
-
-      // Update state and UI
-      setClinicServices([clinicService, ...clinicServices]);
-      resetClinicServiceForm();
-      setShowCreateModal(false);
-      showToast('Clinic service added successfully!', 'success');
-
-    } catch (error: any) {
-      console.error("Error creating clinic service:", error);
-
-      if (error.response?.data?.non_field_errors?.includes("unique set")) {
-        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
-      } else {
-        showToast(
-          error.response?.data?.message || "Failed to create clinic service. Please try again.",
-          "error"
-        );
+      } finally {
+        setUploadingImage(false);
       }
     }
-  };
+
+    const requestBody: NewClinicService = {
+      clinic: clinicUser.uuid,
+      service: newClinicService.service,
+      clinic_provided_name: newClinicService.clinic_provided_name || '',
+      description: newClinicService.description || '',
+      image: imageUrl || '',
+      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+      is_video_call: newClinicService.is_video_call,
+      is_home_service: newClinicService.is_home_service,
+      is_clinic_visit: newClinicService.is_clinic_visit,
+      is_home_visit: newClinicService.is_home_service,
+      is_physical_visit: newClinicService.is_clinic_visit,
+      rank: newClinicService.rank,
+      start_time: newClinicService.start_time || '',
+      max_bookings: newClinicService.max_bookings || 0,
+    };
+
+    console.log('Sending requestBody to backend:', requestBody);
+
+    // Call the API
+    const response = await createClinicService(requestBody);
+
+    // Create the local clinic service object for state update
+    const clinicService: ClinicService = {
+      uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
+      service: newClinicService.service,
+      clinic: clinicUser.uuid,
+      service_name: getServiceName(newClinicService.service),
+      created_by: session?.user?.email || 'unknown',
+      clinic_provided_name: newClinicService.clinic_provided_name || null,
+      rank: parseInt(newClinicService.rank || '0'),
+      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+      status: 'PENDING',
+      is_video_call: newClinicService.is_video_call,
+      is_home_visit: newClinicService.is_home_service,
+      is_physical_visit: newClinicService.is_clinic_visit,
+      image: imageUrl || null,
+      description: newClinicService.description || null,
+      reason_for_rejection: null,
+      display_date: new Date().toISOString(),
+    };
+
+    // Update state and UI
+    setClinicServices([clinicService, ...clinicServices]);
+    resetClinicServiceForm();
+    setShowCreateModal(false);
+    showToast('Clinic service added successfully!', 'success');
+
+  } catch (error: any) {
+    console.error("Error creating clinic service:", error);
+
+    if (error.response?.data?.non_field_errors?.includes("unique set")) {
+      showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+    } else {
+      showToast(
+        error.response?.data?.message || "Failed to create clinic service. Please try again.",
+        "error"
+      );
+    }
+  }
+};
+
 
   const handleDelete = async () => {
     if (!selectedItem) return;
@@ -591,36 +630,56 @@ const ServiceManagement: React.FC = () => {
     setShowServiceSearchModal(false);
     setServiceSearchTerm('');
   };
+const handleRequestService = async () => {
+  // Basic validation
+  if (!serviceRequest.name.trim()) {
+    showToast('Service name is required', 'error');
+    return;
+  }
+  
+  if (!serviceRequest.description.trim()) {
+    showToast('Service description is required', 'error');
+    return;
+  }
 
-  const handleRequestService = () => {
-    // In a real app, this would send the request to the backend
-    console.log('Service Request:', serviceRequest);
+  if (!serviceRequest.tags.trim()) {
+    showToast('At least one tag is required', 'error');
+    return;
+  }
+
+  try {
+    // Prepare the request body according to backend expectations
+    const requestBody = {
+      name: serviceRequest.name.trim(),
+      description: serviceRequest.description.trim(),
+      tags: serviceRequest.tags.trim()
+    };
+
+    console.log('Sending service request:', requestBody);
+
+    // Call the API
+    await requestNewService(requestBody);
+    
     showToast('Service request submitted successfully! We will review and add it soon.', 'success');
     setShowRequestServiceModal(false);
     resetServiceRequest();
-  };
+  } catch (error: any) {
+    console.error('Error requesting service:', error);
+    showToast(
+      error.response?.data?.message || "Failed to submit service request. Please try again.",
+      "error"
+    );
+  }
+};
 
-  const resetServiceRequest = () => {
-    setServiceRequest({
-      name: '',
-      image: '',
-      description: '',
-      type: '',
-      rates: '',
-      additionalInfo: '',
-      rank: '1',
-      consultation_charge_video_call: '',
-      consultation_charge_home_visit: '',
-      treatment_charge_video_call: '',
-      treatment_charge_physical_visit: '',
-      consultation_charge_physical_visit: '',
-      treatment_charge_home_visit: '',
-      is_video_call: false,
-      is_home_service: false,
-      is_clinic_visit: true,
-      clinic_provided_name: ''
-    });
-  };
+// 4. Update the resetServiceRequest function
+const resetServiceRequest = () => {
+  setServiceRequest({
+    name: '',
+    description: '',
+    tags: ''
+  });
+};
 
   const filteredAllServices = allServices.filter(service =>
     service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
@@ -676,7 +735,7 @@ const ServiceManagement: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [datePickerModal.open]);
 
-if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -778,7 +837,7 @@ if (loading) {
                     type="text"
                     placeholder="Search by service name, description, or clinic..."
                     value={searchTerm}
-                     onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => handleSearch(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
                   />
                 </div>
@@ -984,33 +1043,33 @@ if (loading) {
           )}
 
           {/* Pagination */}
-           {totalPages > 1 && (
-    <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
-      <button
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1 || !paginationData.previous}
-        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-      >
-        Prev
-      </button>
-      {Array.from({ length: totalPages }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => handlePageChange(i + 1)}
-          className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
-        >
-          {i + 1}
-        </button>
-      ))}
-      <button
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === totalPages || !paginationData.next}
-        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-      >
-        Next
-      </button>
-    </div>
-  )}
+          {totalPages > 1 && (
+            <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || !paginationData.previous}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || !paginationData.next}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1168,22 +1227,50 @@ if (loading) {
                 </div>
 
                 {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm sm:text-base"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // In a real app, you would upload the file to a server and get back a URL
-                        // For now, we'll create a local URL for preview
-                        const imageUrl = URL.createObjectURL(file);
-                        setNewClinicService(cs => ({ ...cs, image: imageUrl }));
-                      }
-                    }}
-                  />
+                {/* Image Upload Section */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2">Image</label>
+                  {imagePreviewUrl || newClinicService.image ? (
+                    <div className="relative group mb-3">
+                      <img
+                        src={imagePreviewUrl || newClinicService.image}
+                        alt="Service preview"
+                        className="h-32 w-full object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full mb-3">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 10MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleImageSelection}
+                          accept="image/*"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {uploadingImage && (
+                    <div className="mt-2 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Uploading image...</p>
+                    </div>
+                  )}
                 </div>
                 {/* Rank */}
                 <div>
@@ -1933,228 +2020,121 @@ if (loading) {
             </div>
 
             {/* Modal Content */}
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <form onSubmit={e => { e.preventDefault(); handleRequestService(); }} className="space-y-4 sm:space-y-5">
-                {/* Name of Service */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Name of Service <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-                    value={serviceRequest.name}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g. Dermatology, Cardiology"
-                  />
-                </div>
+           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form onSubmit={e => { e.preventDefault(); handleRequestService(); }} className="space-y-4 sm:space-y-5">
+          {/* Service Name */}
+          <div>
+            <label className="block text-sm font-semibold mb-1 sm:mb-2">
+              Service Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+              value={serviceRequest.name}
+              onChange={e => setServiceRequest(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g. Aerospace Medicine Specialist, Pediatric Cardiology"
+            />
+          </div>
 
-                {/* Clinic Provided Name (optional) */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Clinic Provided Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                    value={serviceRequest.clinic_provided_name}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, clinic_provided_name: e.target.value }))}
-                    placeholder="(Optional) Custom name for this service at the clinic"
-                  />
-                </div>
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold mb-1 sm:mb-2">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              required
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+              value={serviceRequest.description}
+              onChange={e => setServiceRequest(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Provide a detailed description of the service, including what conditions it treats, procedures involved, and target patient groups..."
+              rows={4}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Be specific about the medical specialty, conditions treated, and any unique aspects of this service.
+            </p>
+          </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Description <span className="text-red-500">*</span></label>
-                  <textarea
-                    required
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-                    value={serviceRequest.description}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe the service in detail..."
-                    rows={3}
-                  />
-                </div>
-
-                {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm sm:text-base"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const imageUrl = URL.createObjectURL(file);
-                        setServiceRequest(prev => ({ ...prev, image: imageUrl }));
-                      }
-                    }}
-                  />
-                </div>
-
-                {/* Rank */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Rank <span className="text-red-500">*</span></label>
-                  <input
-                    type="number"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                    value={serviceRequest.rank}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, rank: e.target.value }))}
-                    min={1}
-                    placeholder="e.g. 1"
-                  />
-                </div>
-
-                {/* Facility Toggles */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <label className="flex items-center gap-2 text-sm sm:text-base">
-                    <input
-                      type="checkbox"
-                      checked={serviceRequest.is_video_call}
-                      onChange={e => setServiceRequest(prev => ({ ...prev, is_video_call: e.target.checked }))}
-                    /> Video Call
-                  </label>
-                  <label className="flex items-center gap-2 text-sm sm:text-base">
-                    <input
-                      type="checkbox"
-                      checked={serviceRequest.is_clinic_visit}
-                      onChange={e => setServiceRequest(prev => ({ ...prev, is_clinic_visit: e.target.checked }))}
-                    /> Physical Visit
-                  </label>
-                  <label className="flex items-center gap-2 text-sm sm:text-base">
-                    <input
-                      type="checkbox"
-                      checked={serviceRequest.is_home_service}
-                      onChange={e => setServiceRequest(prev => ({ ...prev, is_home_service: e.target.checked }))}
-                    /> Home Visit
-                  </label>
-                </div>
-
-                {/* Charges - show fields as per toggles */}
-                {serviceRequest.is_video_call && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Consultation Charge (Video Call) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.consultation_charge_video_call}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, consultation_charge_video_call: e.target.value }))}
-                        placeholder="e.g. 400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Treatment Charge (Video Call) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.treatment_charge_video_call}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, treatment_charge_video_call: e.target.value }))}
-                        placeholder="e.g. 800"
-                      />
-                    </div>
-                  </div>
-                )}
-                {serviceRequest.is_clinic_visit && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Consultation Charge (Physical Visit) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.consultation_charge_physical_visit}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, consultation_charge_physical_visit: e.target.value }))}
-                        placeholder="e.g. 200"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Treatment Charge (Physical Visit) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.treatment_charge_physical_visit}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, treatment_charge_physical_visit: e.target.value }))}
-                        placeholder="e.g. 500"
-                      />
-                    </div>
-                  </div>
-                )}
-                {serviceRequest.is_home_service && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Consultation Charge (Home Visit) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.consultation_charge_home_visit}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, consultation_charge_home_visit: e.target.value }))}
-                        placeholder="e.g. 200"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 sm:mb-2">Treatment Charge (Home Visit) <span className="text-red-500">*</span></label>
-                      <input
-                        type="number"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm sm:text-base"
-                        value={serviceRequest.treatment_charge_home_visit}
-                        onChange={e => setServiceRequest(prev => ({ ...prev, treatment_charge_home_visit: e.target.value }))}
-                        placeholder="e.g. 600"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Type of Service */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Type of Service <span className="text-red-500">*</span></label>
-                  <select
-                    required
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-                    value={serviceRequest.type}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, type: e.target.value }))}
-                  >
-                    <option value="">Select Service Type</option>
-                    <option value="medical">Medical</option>
-                    <option value="surgical">Surgical</option>
-                    <option value="diagnostic">Diagnostic</option>
-                    <option value="therapeutic">Therapeutic</option>
-                    <option value="preventive">Preventive</option>
-                    <option value="rehabilitative">Rehabilitative</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                {/* Additional Information */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Additional Information</label>
-                  <textarea
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-                    value={serviceRequest.additionalInfo}
-                    onChange={e => setServiceRequest(prev => ({ ...prev, additionalInfo: e.target.value }))}
-                    placeholder="Any additional details, requirements, or special considerations..."
-                    rows={2}
-                  />
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-semibold mb-1 sm:mb-2">
+              Tags <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+              value={serviceRequest.tags}
+              onChange={e => setServiceRequest(prev => ({ ...prev, tags: e.target.value }))}
+              placeholder="e.g. aviation medicine,space medicine,altitude sickness,microgravity,flight safety"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Enter comma-separated tags that help categorize and search for this service. Include medical specialties, conditions, and relevant keywords.
+            </p>
+            
+            {/* Tag suggestions for common medical fields */}
+            <div className="mt-2">
+              <p className="text-xs font-medium text-slate-600 mb-2">Common medical tags:</p>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  'cardiology', 'neurology', 'orthopedics', 'dermatology', 'pediatrics',
+                  'psychiatry', 'oncology', 'emergency medicine', 'radiology', 'pathology'
+                ].map((tag) => (
                   <button
+                    key={tag}
                     type="button"
                     onClick={() => {
-                      setShowRequestServiceModal(false);
-                      resetServiceRequest();
+                      const currentTags = serviceRequest.tags;
+                      const newTag = currentTags ? `${currentTags},${tag}` : tag;
+                      setServiceRequest(prev => ({ ...prev, tags: newTag }));
                     }}
-                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold border border-slate-300 hover:bg-slate-300 transition-all duration-200 text-sm sm:text-base"
+                    className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
                   >
-                    Cancel
+                    + {tag}
                   </button>
-                  <button
-                    type="submit"
-                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
-                  >
-                    Submit Request
-                  </button>
-                </div>
-              </form>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-1">What happens next?</h4>
+                <p className="text-sm text-blue-800">
+                  Your service request will be reviewed by our team. Once approved, the service will be added to our catalog and you'll be able to add it to your clinic with specific pricing and availability.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowRequestServiceModal(false);
+                resetServiceRequest();
+              }}
+              className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold border border-slate-300 hover:bg-slate-300 transition-all duration-200 text-sm sm:text-base"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
+            >
+              Submit Request
+            </button>
+          </div>
+        </form>
+      </div>
           </div>
         </div>
       )}
