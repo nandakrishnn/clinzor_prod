@@ -309,18 +309,17 @@ const PaymentRecordsDashboard = () => {
             </div>
           </div>
 
-          <div 
-    className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${
-      activeStatFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-white/20'
-    }`}
-    onClick={() => {
-      const newFilter = activeStatFilter === 'COMPLETED' ? null : 'COMPLETED';
-      setActiveStatFilter(newFilter);
-      setStatusFilter('COMPLETED');
-      setCurrentPage(1);
-      fetchPayments(1, searchTerm);
-    }}
-  >
+          <div
+            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-white/20'
+              }`}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'COMPLETED' ? null : 'COMPLETED';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('COMPLETED');
+              setCurrentPage(1);
+              fetchPayments(1, searchTerm);
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Completed</p>
@@ -332,19 +331,18 @@ const PaymentRecordsDashboard = () => {
             </div>
           </div>
 
-        
-  <div 
-    className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${
-      activeStatFilter === 'PENDING' ? 'ring-2 ring-amber-500 border-amber-300' : 'border-white/20'
-    }`}
-    onClick={() => {
-      const newFilter = activeStatFilter === 'PENDING' ? null : 'PENDING';
-      setActiveStatFilter(newFilter);
-      setStatusFilter('PENDING');
-      setCurrentPage(1);
-      fetchPayments(1, searchTerm);
-    }}
-  >
+
+          <div
+            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'PENDING' ? 'ring-2 ring-amber-500 border-amber-300' : 'border-white/20'
+              }`}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'PENDING' ? null : 'PENDING';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('PENDING');
+              setCurrentPage(1);
+              fetchPayments(1, searchTerm);
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending/Created</p>
@@ -476,7 +474,7 @@ const PaymentRecordsDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <div className="text-sm font-medium text-gray-900">{record.patient_name}</div>
+                        <div className="text-sm font-medium text-gray-900">{record.patient_name || "No Name"}</div>
                         <div className="text-xs text-gray-500">{record.user}</div>
                       </div>
                     </td>
@@ -530,8 +528,8 @@ const PaymentRecordsDashboard = () => {
                 onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
                 className={`px-3 py-1 rounded-lg border ${currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
               >
                 <ChevronLeft size={16} />
@@ -553,8 +551,8 @@ const PaymentRecordsDashboard = () => {
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
                     className={`px-3 py-1 rounded-lg border ${currentPage === pageNum
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                       }`}
                   >
                     {pageNum}
@@ -568,8 +566,8 @@ const PaymentRecordsDashboard = () => {
                 <button
                   onClick={() => setCurrentPage(paginationData.total_pages)}
                   className={`px-3 py-1 rounded-lg border ${currentPage === paginationData.total_pages
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                     }`}
                 >
                   {paginationData.total_pages}
@@ -579,8 +577,8 @@ const PaymentRecordsDashboard = () => {
                 onClick={() => setCurrentPage(Math.min(currentPage + 1, paginationData.total_pages))}
                 disabled={currentPage === paginationData.total_pages}
                 className={`px-3 py-1 rounded-lg border ${currentPage === paginationData.total_pages
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
               >
                 <ChevronRight size={16} />
