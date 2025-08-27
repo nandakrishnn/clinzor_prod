@@ -10,7 +10,6 @@ import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
 import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
-import { BlogCard } from "@/components/blog/BlogCard";
 import BlogComponent from "@/components/blog/BlogComponent";
 
 export default function Home() {
