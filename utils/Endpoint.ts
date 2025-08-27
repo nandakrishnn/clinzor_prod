@@ -8,5 +8,6 @@ export const login = "user/login/"
 // User Endpoint
 export const USER_HOME = {
     GET_SERVICE: 'clinic/service-lc/',
-    GET_ALL_OFFERS: "clinic/offer-lc/"
+    GET_ALL_OFFERS: "clinic/offer-lc/",
+    GET_ALL_BLOGS: "user/blog-list-create/",
 }

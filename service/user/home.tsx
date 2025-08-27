@@ -13,3 +13,10 @@ export const getAllOffers = async () => {
   const res = await axiosPublic.get(USER_HOME.GET_ALL_OFFERS)
   return res?.data
 };
+
+
+// GET ALL BLOG DATA
+export const getAllBlogData = async () => {
+  const res = await axiosPublic.get(USER_HOME.GET_ALL_BLOGS)
+  return res?.data
+}
