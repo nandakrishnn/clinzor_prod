@@ -2,6 +2,7 @@ import CommonHeroSection from "@/components/common/CommonHeroSection";
 import FooterSection from "@/components/landingpage/footer/footer";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import BookingPage from "@/components/service/booking/BookingPage";
+import ClinicDetailedView from "@/components/service/booking/ClinicDetailedView";
 import React from "react";
 
 const ServiceBooking = () => {
@@ -15,6 +16,10 @@ const ServiceBooking = () => {
       {/* Hero section */}
       <section className="pb-10 md:pb-16">
         <CommonHeroSection className="h-[15vh]" />
+      </section>
+
+      <section className="">
+        <ClinicDetailedView />
       </section>
 
       {/* Available Clinic Section */}

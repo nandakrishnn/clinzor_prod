@@ -1,9 +1,32 @@
-import React from "react";
+'use client'
+import React, { useEffect, useState } from "react";
 import Title from "../ui/title";
 import { useRouter } from "next/navigation";
+import { getAllBlogData } from "@/service/user/home";
+import placeHolderImage from '../../public/blogs.png'
 
 const BlogComponent = () => {
   const navigate = useRouter();
+  const [blogData, setBlogData] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const getBlogData = async () => {
+    try {
+      const res = await getAllBlogData()
+      if (res.status === 200) {
+        setBlogData(res?.data?.data)
+      }
+    } catch (error) {
+      console.log(error, 'from the blog listing component')
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getBlogData()
+  }, [])
 
   // Example blog data (you can replace this with API data)
   const blogs = [
@@ -58,21 +81,21 @@ const BlogComponent = () => {
 
         {/* Blog Cards */}
         <div className="mt-10 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {blogs.map((blog) => (
+          {blogData?.slice(0, 4)?.map((blog: any) => (
             <div
-              key={blog.id}
+              key={blog?.uuid}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-              onClick={() => navigate.push(`/blog/${blog.id}`)}
+              onClick={() => navigate.push(`/blog/${blog?.uuid}`)}
             >
               <img
-                src={blog.image}
-                alt={blog.title}
+                src={blog?.image || placeHolderImage.src}
+                alt={blog?.title}
                 className="w-full h-48 object-cover"
               />
               <div className="p-5">
-                <p className="text-xs text-gray-500 mb-2">{blog.date}</p>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {blog.title}
+                <p className="text-xs text-gray-500 mb-2">{blog?.created_at.split('T')[0]}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 capitalize">
+                  {blog?.title}
                 </h3>
                 <p className="text-sm text-gray-600 line-clamp-3">
                   {blog.excerpt}
