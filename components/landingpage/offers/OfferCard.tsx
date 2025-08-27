@@ -2,20 +2,25 @@ import Image from "next/image";
 import React from "react";
 import { motion } from "framer-motion";
 
+import placeHolderImage from "../../../public/offer.png";
 interface OfferCardProps {
   title: string;
   description: string;
-  image: string;
-  discount: string;
-  tag: string;
+  image?: string;
+  discount_percentage?: string ;
+  valid_from: string;
+  valid_to: string;
+  offer_type: string;
 }
 
 const OfferCard: React.FC<OfferCardProps> = ({
   title,
   description,
   image,
-  discount,
-  tag
+  discount_percentage,
+  valid_from,
+  valid_to,
+  offer_type
 }) => {
   return (
     <motion.div
@@ -27,16 +32,15 @@ const OfferCard: React.FC<OfferCardProps> = ({
       transition={{ duration: 0.5, type: "spring" }}
     >
       {/* Tag Ribbon - Top Right */}
-      {tag && (
+      {offer_type &&
         <div className="absolute top-0 right-4 bg-primaryColor text-white font-bold px-3 py-1 rounded-b-lg z-10 text-xs uppercase tracking-wide">
-          {tag}
-        </div>
-      )}
+          {offer_type}
+        </div>}
 
       {/* Image Section */}
       <div className="h-48 w-full relative overflow-hidden">
         <Image
-          src={image}
+          src={placeHolderImage}
           alt={title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -48,7 +52,11 @@ const OfferCard: React.FC<OfferCardProps> = ({
 
         {/* Discount Badge - Bottom Left */}
         <div className="z-40 absolute bottom-4 left-4 bg-white  text-primaryColor font-bold w-14 h-14 rounded-full flex items-center justify-center shadow-md border-2 border-primaryColor/80">
-          <div className="text-xs text-center tracking-wide ">{discount}</div>
+          <div className="text-xs text-center tracking-wide ">
+            {discount_percentage && !isNaN(Number(discount_percentage))
+              ? `${Math.round(Number(discount_percentage))} % offer`
+              : "No offer"}
+          </div>
         </div>
       </div>
 
@@ -58,15 +66,16 @@ const OfferCard: React.FC<OfferCardProps> = ({
           <h2 className="text-xl font-bold text-gray-800 line-clamp-2 leading-tight">
             {title}
           </h2>
-          <div className="w-10 h-1 bg-primaryColor my-2 rounded-full"></div>
+          <div className="w-10 h-1 bg-primaryColor my-2 rounded-full" />
         </div>
 
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
-          {description}
+        <p className="capitalize text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+          {description} Valid From {valid_from?.split("T")[0]} to{" "}
+          {valid_to?.split("T")[0]}
         </p>
 
         {/* View Details Button */}
-        <button className="mt-auto w-full py-2 bg-gray-50 hover:bg-primaryColor/10 text-primaryColor font-medium rounded-lg text-sm transition-colors duration-300 flex items-center justify-center gap-1 border border-gray-200 group-hover:border-primaryColor/30">
+        {/* <button className="mt-auto w-full py-2 bg-gray-50 hover:bg-primaryColor/10 text-primaryColor font-medium rounded-lg text-sm transition-colors duration-300 flex items-center justify-center gap-1 border border-gray-200 group-hover:border-primaryColor/30">
           View Details
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -82,11 +91,11 @@ const OfferCard: React.FC<OfferCardProps> = ({
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </button>
+        </button> */}
       </div>
 
       {/* Hover Overlay Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primaryColor/90 to-primaryColorDark/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end p-5"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primaryColor/90 to-primaryColorDark/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end p-5" />
     </motion.div>
   );
 };

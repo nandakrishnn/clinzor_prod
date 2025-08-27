@@ -23,7 +23,7 @@ const useClinicByUser = () => {
       const response = await axiosPrivate.get(`clinic/get-clinic-by-user/`);
       setClinic(response.data.data);
       setError(null);
-    } catch (err:any) {
+    } catch (err: any) {
       console.error("Failed to fetch clinic", err);
       setError(err);
     } finally {
