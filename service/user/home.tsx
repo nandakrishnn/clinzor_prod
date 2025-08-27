@@ -20,3 +20,9 @@ export const getAllBlogData = async () => {
   const res = await axiosPublic.get(USER_HOME.GET_ALL_BLOGS)
   return res?.data
 }
+
+// GET ALL FAQ
+export const getFaq = async () => {
+  const res = await axiosPublic.get(USER_HOME.GET_ALL_FAQ)
+  return res?.data
+}

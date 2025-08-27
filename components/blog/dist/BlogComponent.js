@@ -43,9 +43,10 @@ var navigation_1 = require("next/navigation");
 var home_1 = require("@/service/user/home");
 var blogs_png_1 = require("../../public/blogs.png");
 var BlogComponent = function () {
+    var _a;
     var navigate = navigation_1.useRouter();
-    var _a = react_1.useState([]), blogData = _a[0], setBlogData = _a[1];
-    var _b = react_1.useState(true), isLoading = _b[0], setIsLoading = _b[1];
+    var _b = react_1.useState([]), blogData = _b[0], setBlogData = _b[1];
+    var _c = react_1.useState(true), isLoading = _c[0], setIsLoading = _c[1];
     var getBlogData = function () { return __awaiter(void 0, void 0, void 0, function () {
         var res, error_1;
         var _a;
@@ -56,7 +57,6 @@ var BlogComponent = function () {
                     return [4 /*yield*/, home_1.getAllBlogData()];
                 case 1:
                     res = _b.sent();
-                    console.log(res);
                     if (res.status === 200) {
                         setBlogData((_a = res === null || res === void 0 ? void 0 : res.data) === null || _a === void 0 ? void 0 : _a.data);
                     }
@@ -110,7 +110,7 @@ var BlogComponent = function () {
         react_1["default"].createElement("div", { className: "mx-auto max-w-7xl px-6" },
             react_1["default"].createElement("div", { className: "text-center" },
                 react_1["default"].createElement(title_1["default"], { title: "Our Blogs", subtitle: "Real stories from users who\u2019ve discovered, booked, and visited\r\n            clinics through our platform." })),
-            react_1["default"].createElement("div", { className: "mt-10 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" }, blogData === null || blogData === void 0 ? void 0 : blogData.map(function (blog) { return (react_1["default"].createElement("div", { key: blog === null || blog === void 0 ? void 0 : blog.uuid, className: "bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer", onClick: function () { return navigate.push("/blog/" + (blog === null || blog === void 0 ? void 0 : blog.uuid)); } },
+            react_1["default"].createElement("div", { className: "mt-10 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" }, (_a = blogData === null || blogData === void 0 ? void 0 : blogData.slice(0, 4)) === null || _a === void 0 ? void 0 : _a.map(function (blog) { return (react_1["default"].createElement("div", { key: blog === null || blog === void 0 ? void 0 : blog.uuid, className: "bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer", onClick: function () { return navigate.push("/blog/" + (blog === null || blog === void 0 ? void 0 : blog.uuid)); } },
                 react_1["default"].createElement("img", { src: (blog === null || blog === void 0 ? void 0 : blog.image) || blogs_png_1["default"].src, alt: blog === null || blog === void 0 ? void 0 : blog.title, className: "w-full h-48 object-cover" }),
                 react_1["default"].createElement("div", { className: "p-5" },
                     react_1["default"].createElement("p", { className: "text-xs text-gray-500 mb-2" }, blog === null || blog === void 0 ? void 0 : blog.created_at.split('T')[0]),

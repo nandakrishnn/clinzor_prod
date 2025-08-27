@@ -1,5 +1,6 @@
 "use client";
 
+import DataPlaceholder from "@/components/common/DataPlaceholder";
 import {
   Accordion,
   AccordionContent,
@@ -7,48 +8,48 @@ import {
   AccordionTrigger
 } from "@/components/ui/accordion";
 import Title from "@/components/ui/title";
+import { getFaq } from "@/service/user/home";
+import { useEffect, useState } from "react";
+
+type FaqItem = {
+  uuid: string;
+  question: string;
+  answer: string;
+};
 
 export default function FAQsTwo() {
-  const faqItems = [
-    {
-      id: "item-1",
-      question: "How do I book an appointment?",
-      answer:
-        "You can search for clinics by specialty, service type, or location. Once you find the right provider, click “Book Appointment” and select your preferred date and time."
-    },
-    {
-      id: "item-2",
-      question: "Is this platform free to use?",
-      answer:
-        "Yes! Browsing clinics and booking appointments is completely free for users. Clinics may charge fees for consultations, which will be displayed upfront."
-    },
-    {
-      id: "item-3",
-      question: "Can I reschedule or cancel my booking?",
-      answer:
-        "Yes, you can reschedule or cancel from your profile dashboard. Changes are allowed up to 24 hours before your scheduled time, depending on clinic policies."
-    },
-    {
-      id: "item-4",
-      question: "How do I know if a clinic is verified?",
-      answer:
-        "Verified clinics display a badge on their profile. Our team manually verifies credentials, licensing, and patient reviews to ensure quality and trust."
-    },
-    {
-      id: "item-5",
-      question: "Are online consultations available?",
-      answer:
-        "Yes. Many clinics offer telehealth services. Use the filter “Online Consultation” when searching to find providers who support virtual appointments."
+  const [faq, setFaq] = useState<FaqItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+
+  const getAllFaq = async () => {
+    try {
+      const res = await getFaq()
+      if (res.status === 200) {
+        setFaq(res?.data?.data)
+      }
+    } catch (error) {
+      console.log(error, 'error from faq part')
+    } finally {
+      setIsLoading(false)
     }
-  ];
+  }
+
+  useEffect(() => {
+    getAllFaq()
+  }, [])
+
+  if (faq.length === 0) {
+    return <DataPlaceholder />
+  }
 
   return (
     <section className="pb-16">
       <div className="mx-auto max-w-5xl px-4 md:px-6 ">
         <Title
           title="Frequently Asked Questions"
-          subtitle=" Everything you need to know about using our clinic platform — from
-            booking to rescheduling, and more."
+          subtitle="Find answers to common questions about using our clinic platform."
+          description="Frequently Asked Questions"
         />
 
         <div className="mx-auto mt-12 max-w-3xl ">
@@ -57,17 +58,17 @@ export default function FAQsTwo() {
             collapsible
             className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0 bg-white"
           >
-            {faqItems.map((item) => (
+            {faq.map((item) => (
               <AccordionItem
-                key={item.id}
-                value={item.id}
+                key={item?.uuid}
+                value={item?.uuid}
                 className="border-dashed"
               >
                 <AccordionTrigger className="cursor-pointer text-base hover:no-underline">
-                  {item.question}
+                  {item?.question}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-base">{item.answer}</p>
+                  <p className="text-base">{item?.answer}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}

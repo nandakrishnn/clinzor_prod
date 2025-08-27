@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.getAllBlogData = exports.getAllOffers = exports.getServices = void 0;
+exports.getFaq = exports.getAllBlogData = exports.getAllOffers = exports.getServices = void 0;
 var axios_1 = require("@/axios/axios");
 var Endpoint_1 = require("@/utils/Endpoint");
 // GET ALL SERVICE FOR HOME
@@ -69,6 +69,18 @@ exports.getAllBlogData = function () { return __awaiter(void 0, void 0, void 0, 
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, axios_1.axiosPublic.get(Endpoint_1.USER_HOME.GET_ALL_BLOGS)];
+            case 1:
+                res = _a.sent();
+                return [2 /*return*/, res === null || res === void 0 ? void 0 : res.data];
+        }
+    });
+}); };
+// GET ALL FAQ
+exports.getFaq = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var res;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, axios_1.axiosPublic.get(Endpoint_1.USER_HOME.GET_ALL_FAQ)];
             case 1:
                 res = _a.sent();
                 return [2 /*return*/, res === null || res === void 0 ? void 0 : res.data];

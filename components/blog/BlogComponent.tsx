@@ -13,7 +13,6 @@ const BlogComponent = () => {
   const getBlogData = async () => {
     try {
       const res = await getAllBlogData()
-      console.log(res)
       if (res.status === 200) {
         setBlogData(res?.data?.data)
       }
@@ -82,7 +81,7 @@ const BlogComponent = () => {
 
         {/* Blog Cards */}
         <div className="mt-10 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {blogData?.map((blog: any) => (
+          {blogData?.slice(0, 4)?.map((blog: any) => (
             <div
               key={blog?.uuid}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
