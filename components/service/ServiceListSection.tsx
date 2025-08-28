@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getAllService } from "@/service/user/sevicePage";
+
 import ServiceCard from "./ServiceCard";
 import ServiceCardSkeleton from "./ServiceSkelton";
-import { getAllService } from "@/service/user/sevicePage";
+import DataPlaceholder from "../common/DataPlaceholder";
 
 type Service = {
   uuid: string;
@@ -47,7 +49,6 @@ const ServiceListSection = () => {
     }
   };
 
-  // initial load (page 1)
   useEffect(() => {
     fetchServices(1);
   }, []);
@@ -60,8 +61,26 @@ const ServiceListSection = () => {
     }
   };
 
+
+  // Loading Skelton
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ServiceCardSkeleton key={`skeleton-${i}`} />
+        ))}
+      </div>
+    )
+  }
+
+  // No Data Placeholder
+  if (services.length === 0) {
+    return <DataPlaceholder />
+  }
+
   return (
     <div className="space-y-8">
+
       {/* Services grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
         {services.map((service) => (
@@ -75,15 +94,6 @@ const ServiceListSection = () => {
           />
         ))}
       </section>
-
-      {/* Skeleton loading */}
-      {isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ServiceCardSkeleton key={`skeleton-${i}`} />
-          ))}
-        </div>
-      )}
 
       {/* Load More button - Only show if there are more pages and not loading */}
       {hasMore && !isLoading && services.length > 0 && (
