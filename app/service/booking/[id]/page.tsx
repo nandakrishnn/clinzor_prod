@@ -3,6 +3,7 @@ import FooterSection from "@/components/landingpage/footer/footer";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import BookingPage from "@/components/service/booking/BookingPage";
 import ClinicDetailedView from "@/components/service/booking/ClinicDetailedView";
+import ClinicCarousal from "@/components/service/clinicDetailed/ClinicCarousal";
 import React from "react";
 
 const ServiceBooking = () => {
@@ -16,6 +17,10 @@ const ServiceBooking = () => {
       {/* Hero section */}
       <section className="pb-10 md:pb-16">
         <CommonHeroSection className="h-[15vh]" />
+      </section>
+
+      <section className="max-w-screen-xl mx-auto pb-5">
+        <ClinicCarousal />
       </section>
 
       <section className="">

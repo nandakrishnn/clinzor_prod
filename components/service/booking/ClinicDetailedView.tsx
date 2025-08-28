@@ -8,6 +8,8 @@ import {
   Stethoscope
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@mui/material";
+import { Button } from "@/components/ui/button";
 
 const ClinicDetailedView = () => {
   const clinicInfo = {
@@ -88,16 +90,49 @@ const ClinicDetailedView = () => {
   ];
 
   const services = [
-    "General Consultation",
-    "Diagnostic Imaging",
-    "Laboratory Services",
-    "Preventive Care",
-    "Emergency Care",
-    "Surgical Procedures",
-    "Physical Therapy",
-    "Mental Health Services"
-  ];
+    {
+      id: 1,
+      name: "General Consultation",
+      price: "₹800",
+      image: "/doctor-consultation.png",
+      description: "Complete health checkup with experienced doctors",
+      duration: "30 mins",
+      availability: "Available Today",
+      maleDoctors: 5,
+      femaleDoctors: 3,
+      serviceType: "consultation",
+    },
+    {
+      id: 2,
+      name: "Specialist Consultation",
+      price: "₹1200",
+      image: "/specialist-doctor.png",
+      description: "Expert consultation for specific health concerns",
+      duration: "45 mins",
+      availability: "Available Today",
+      maleDoctors: 3,
+      femaleDoctors: 2,
+      serviceType: "specialist",
+    },
+    {
+      id: 3,
+      name: "Health Checkup Package",
+      price: "₹2500",
+      image: "/health-checkup.png",
+      description: "Comprehensive health screening package",
+      duration: "2 hours",
+      availability: "Book in Advance",
+      maleDoctors: 4,
+      femaleDoctors: 3,
+      serviceType: "checkup",
+    },
+  ]
 
+    const offers = [
+    { text: "10% Off on First Visit", discount: "10%" },
+    { text: "Free Health Checkup", discount: "Free" },
+    { text: "Family Package Discount", discount: "20%" },
+  ]
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
       {/* Clinic Header */}
@@ -115,11 +150,10 @@ const ClinicDetailedView = () => {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(clinicInfo.rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
+                    className={`w-5 h-5 ${i < Math.floor(clinicInfo.rating)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                      }`}
                   />
                 ))}
               </div>
@@ -185,26 +219,67 @@ const ClinicDetailedView = () => {
       </div>
 
       {/* Specialties Section */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Our Specialties
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {specialties.map((specialty, index) => (
-            <Card
-              key={index}
-              className="hover:shadow-lg transition-shadow duration-300 border border-gray-200"
-            >
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Top Services</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {services.map((service) => (
+            <Card key={service.id} className="hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-6">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="text-3xl">{specialty.icon}</div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {specialty.name}
-                  </h3>
+                <div className="flex items-center gap-4 mb-4">
+                  <img
+                    src={service.image || "/placeholder.svg"}
+                    alt={service.name}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                    <p className="text-sm text-gray-600">{service.description}</p>
+                  </div>
                 </div>
-                <p className="text-gray-600">{specialty.description}</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-lg font-bold text-[#033C8D]">{service.price}</span>
+                    <span className="text-sm text-gray-600 ml-2">({service.duration})</span>
+                  </div>
+                  <Badge  className="text-green-600 bg-green-50">
+                    {service.availability}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>Male: {service.maleDoctors}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>Female: {service.femaleDoctors}</span>
+                  </div>
+                </div>
+                <Button
+                  className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
+                >
+                  Book Now
+                </Button>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </div>
+
+       {/* Offers Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Offers Going On</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {offers.map((offer, index) => (
+            <div
+              key={index}
+              className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-800">{offer.text}</span>
+                <Badge className="bg-green-500 text-white rounded-xl px-5">{offer.discount}</Badge>
+              </div>
+            </div>
           ))}
         </div>
       </div>

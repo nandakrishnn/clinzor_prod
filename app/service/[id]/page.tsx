@@ -7,7 +7,11 @@ import CommonHeroSection from "@/components/common/CommonHeroSection";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import Review from "@/components/service/Review";
 
-const ServiceDetailPage = () => {
+type ServiceDetailPageProps = {
+  params: { id: string }
+}
+
+const ServiceDetailPage = ({ params }: ServiceDetailPageProps) => {
   return (
     <main className="">
       {/* Nav bar section */}
@@ -22,20 +26,20 @@ const ServiceDetailPage = () => {
 
       {/* Service Detailed */}
       <section className="max-w-screen-xl mx-auto pb-5 md:pb-20">
-        <ServiceDetailed />
+        <ServiceDetailed id={params?.id} />
       </section>
 
       {/* Available Clinic Section */}
       <div className="w-full bg-gray-50">
         <section className="max-w-screen-xl mx-auto py-10 md:py-20">
-          <AvailableClinics />
+          <AvailableClinics id={params?.id} />
         </section>
       </div>
 
       {/* Review Part */}
-      <main className="max-w-screen-xl mx-auto py-10 md:py-20">
+      {/* <main className="max-w-screen-xl mx-auto py-10 md:py-20">
         <Review />
-      </main>
+      </main> */}
 
       {/* Footer */}
       <section>

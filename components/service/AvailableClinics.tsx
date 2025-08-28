@@ -8,7 +8,7 @@ import { Clinic, clinicData } from "@/types/common";
 import ClinicCard from "./ClinicCard";
 import Title from "../ui/title";
 
-const AvailableClinics = () => {
+const AvailableClinics = ({id}: {id:string}) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);

@@ -5,7 +5,7 @@ import { NavbarDemo } from '@/components/landingpage/navbar/navbar'
 import FooterSection from '@/components/landingpage/footer/footer'
 
 type BlogDetailedPageProps = {
-    params: { id: string } // from dynamic route
+    params: { id: string }
 }
 
 const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {

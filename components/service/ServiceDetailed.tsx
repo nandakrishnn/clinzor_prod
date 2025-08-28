@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 
-const ServiceDetailed = () => {
+const ServiceDetailed = ({ id }: { id: string }) => {
   return (
     <div className="p-4 md:p-6 font-inter">
       {/* Service Header Section */}
