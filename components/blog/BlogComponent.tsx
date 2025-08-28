@@ -91,6 +91,9 @@ const BlogComponent = () => {
                 src={blog?.image || placeHolderImage.src}
                 alt={blog?.title}
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = '/blogs.png';
+                }}
               />
               <div className="p-5">
                 <p className="text-xs text-gray-500 mb-2">{blog?.created_at.split('T')[0]}</p>
