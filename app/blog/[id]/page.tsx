@@ -1,17 +1,31 @@
-import { BlogDetailView } from '@/components/blog/BlogDetailView'
 import React from 'react'
+import { BlogDetailView } from '@/components/blog/BlogDetailView'
+import { getABlog } from '@/service/user/blogPage'
+import { NavbarDemo } from '@/components/landingpage/navbar/navbar'
+import FooterSection from '@/components/landingpage/footer/footer'
 
-const BlogDetailedPage = ({ post, savedPosts, goBack, toggleSavePost, blogPosts, handleReadMore }) => {
+type BlogDetailedPageProps = {
+    params: { id: string } // from dynamic route
+}
+
+const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
+
+    console.log(params)
+    const post = await getABlog(params.id).catch(() => null)
+
+    console.log(post, "detailed view of a blog")
+
     return (
         <div>
-            <BlogDetailView
-                post={blogPosts.find((p) => p.id === currentPostId)}
-                savedPosts={savedPosts}
-                toggleSavePost={toggleSavePost}
-                goBack={goBack}
-                blogPosts={blogPosts}
-                handleReadMore={handleReadMore}
-            />
+            {/* Navbar */}
+            <NavbarDemo />
+
+            <BlogDetailView post={post?.data} />
+
+            {/* Footer */}
+            <section>
+                <FooterSection />
+            </section>
         </div>
     )
 }

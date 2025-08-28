@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.getAllBlogs = void 0;
+exports.getABlog = exports.getAllBlogs = void 0;
 var axios_1 = require("@/axios/axios");
 var Endpoint_1 = require("@/utils/Endpoint");
 exports.getAllBlogs = function (pageNum) { return __awaiter(void 0, void 0, void 0, function () {
@@ -47,6 +47,25 @@ exports.getAllBlogs = function (pageNum) { return __awaiter(void 0, void 0, void
             case 1:
                 res = _a.sent();
                 return [2 /*return*/, res === null || res === void 0 ? void 0 : res.data];
+        }
+    });
+}); };
+exports.getABlog = function (id) { return __awaiter(void 0, void 0, void 0, function () {
+    var res, err_1;
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _c.trys.push([0, 2, , 3]);
+                return [4 /*yield*/, axios_1.axiosPublic.get("" + Endpoint_1.USER_BLOGS.GET_A_BLOG + id + "/")];
+            case 1:
+                res = _c.sent();
+                return [2 /*return*/, res === null || res === void 0 ? void 0 : res.data];
+            case 2:
+                err_1 = _c.sent();
+                console.error("Failed to fetch blog:", (_a = err_1 === null || err_1 === void 0 ? void 0 : err_1.response) === null || _a === void 0 ? void 0 : _a.status, (_b = err_1 === null || err_1 === void 0 ? void 0 : err_1.response) === null || _b === void 0 ? void 0 : _b.data);
+                throw new Error("Blog with id " + id + " not found");
+            case 3: return [2 /*return*/];
         }
     });
 }); };

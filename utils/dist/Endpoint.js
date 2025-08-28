@@ -15,5 +15,6 @@ exports.USER_SERVICE = {
     GET_ALL_SERVICE: "clinic/service-lc/"
 };
 exports.USER_BLOGS = {
-    GET_ALL_BLOGS: "user/blog-list-create/"
+    GET_ALL_BLOGS: "user/blog-list-create/",
+    GET_A_BLOG: "user/blog-rud/"
 };

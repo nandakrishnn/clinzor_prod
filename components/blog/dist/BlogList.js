@@ -51,6 +51,7 @@ var blogPage_1 = require("@/service/user/blogPage");
 var DataPlaceholder_1 = require("../common/DataPlaceholder");
 var SearchBar_1 = require("../common/SearchBar");
 var lucide_react_1 = require("lucide-react");
+var link_1 = require("next/link");
 var BlogList = function () {
     var _a = react_1.useState([]), blogData = _a[0], setBlogData = _a[1];
     var _b = react_1.useState(true), isLoading = _b[0], setIsLoading = _b[1];
@@ -114,8 +115,10 @@ var BlogList = function () {
     return (react_1["default"].createElement("div", null,
         react_1["default"].createElement(SearchBar_1["default"], { placeHolder: 'Search Bogs....' }),
         blogData.length > 0 && (react_1["default"].createElement("div", { className: "mb-16" },
-            react_1["default"].createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" }, blogData.slice(0, 4).map(function (post, index) { return (react_1["default"].createElement("div", { key: index, className: "bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" },
-                react_1["default"].createElement("img", { src: (post === null || post === void 0 ? void 0 : post.image) || '/blogs.png', alt: post === null || post === void 0 ? void 0 : post.title, className: "w-full h-48 object-cover" }),
+            react_1["default"].createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" }, blogData.slice(0, 4).map(function (post, index) { return (react_1["default"].createElement(link_1["default"], { href: "/blog/" + (post === null || post === void 0 ? void 0 : post.uuid), key: index, className: "bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" },
+                react_1["default"].createElement("img", { src: (post === null || post === void 0 ? void 0 : post.image) || '/blogs.png', alt: post === null || post === void 0 ? void 0 : post.title, className: "w-full h-48 object-cover", onError: function (e) {
+                        e.currentTarget.src = '/blogs.png';
+                    } }),
                 react_1["default"].createElement("div", { className: "p-6 text-start capitalize" },
                     react_1["default"].createElement("span", { className: "inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full mb-2" }, "Blogs"),
                     react_1["default"].createElement("h3", { className: "text-xl font-semibold text-gray-900 mb-2 line-clamp-2" }, post === null || post === void 0 ? void 0 : post.title),

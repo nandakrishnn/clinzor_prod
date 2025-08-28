@@ -8,6 +8,7 @@ import { getAllBlogs } from '@/service/user/blogPage';
 import DataPlaceholder from '../common/DataPlaceholder';
 import SearchBar from '../common/SearchBar';
 import { ChevronRight, Loader } from 'lucide-react';
+import Link from 'next/link';
 type Blogs = {
     uuid: string;
     user: string;
@@ -91,7 +92,7 @@ const BlogList = () => {
                 <div className="mb-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {blogData.slice(0, 4).map((post, index) => (
-                            <div
+                            <Link href={`/blog/${post?.uuid}`}
                                 key={index}
                                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                             >
@@ -99,6 +100,9 @@ const BlogList = () => {
                                     src={post?.image || '/blogs.png'}
                                     alt={post?.title}
                                     className="w-full h-48 object-cover"
+                                    onError={(e) => {
+                                        e.currentTarget.src = '/blogs.png';
+                                    }}
                                 />
                                 <div className="p-6 text-start capitalize">
                                     <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full mb-2">
@@ -111,7 +115,7 @@ const BlogList = () => {
                                         {post?.content}
                                     </p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
