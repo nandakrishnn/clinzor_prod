@@ -28,7 +28,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Image with overlay effect */}
       <div className="relative h-48 overflow-hidden">
         <Image
-          src={image && image.trim() !== "" ? image : "/service.png"}
+          src={image || "/service.png"}
           alt={name}
           width={500}
           height={500}
