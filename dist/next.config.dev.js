@@ -5,6 +5,11 @@ var nextConfig = {
   images: {
     remotePatterns: [{
       protocol: "https",
+      hostname: "clinzor.s3.amazonaws.com",
+      pathname: "/**" // ✅ allow all paths inside the bucket
+
+    }, {
+      protocol: "https",
       hostname: "clinzor.s3.ap-south-1.amazonaws.com",
       pathname: "/**" // ✅ allow all paths inside the bucket
 

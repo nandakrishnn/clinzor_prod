@@ -39,16 +39,14 @@ exports.__esModule = true;
 exports.getAllService = void 0;
 var axios_1 = require("@/axios/axios");
 var Endpoint_1 = require("@/utils/Endpoint");
-exports.getAllService = function (url) { return __awaiter(void 0, void 0, void 0, function () {
-    var endpoint, res;
+exports.getAllService = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+    var res;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                endpoint = url || Endpoint_1.USER_SERVICE.GET_ALL_SERVICE;
-                return [4 /*yield*/, axios_1.axiosPublic.get(endpoint)];
+            case 0: return [4 /*yield*/, axios_1.axiosPublic.get(Endpoint_1.USER_SERVICE.GET_ALL_SERVICE + "?page=" + page)];
             case 1:
                 res = _a.sent();
-                return [2 /*return*/, res];
+                return [2 /*return*/, res.data];
         }
     });
 }); };

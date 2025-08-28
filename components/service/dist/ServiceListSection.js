@@ -51,59 +51,63 @@ var sevicePage_1 = require("@/service/user/sevicePage");
 var ServiceListSection = function () {
     var _a = react_1.useState(false), isLoading = _a[0], setIsLoading = _a[1];
     var _b = react_1.useState([]), services = _b[0], setServices = _b[1];
-    var _c = react_1.useState(null), nextUrl = _c[0], setNextUrl = _c[1];
-    var fetchServices = function (url) { return __awaiter(void 0, void 0, void 0, function () {
-        var res, _a, pageData, serviceData_1, next, error_1;
-        var _b;
+    var _c = react_1.useState(1), page = _c[0], setPage = _c[1];
+    var _d = react_1.useState(1), totalPage = _d[0], setTotalPage = _d[1];
+    var _e = react_1.useState(true), hasMore = _e[0], setHasMore = _e[1];
+    var fetchServices = function (pageNum) { return __awaiter(void 0, void 0, void 0, function () {
+        var res, totalPages, pageData_1, error_1;
+        var _a, _b;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
-                    _c.trys.push([0, 5, 6, 7]);
+                    _c.trys.push([0, 2, 3, 4]);
                     setIsLoading(true);
-                    if (!url) return [3 /*break*/, 2];
-                    return [4 /*yield*/, sevicePage_1.getAllService(url)];
+                    return [4 /*yield*/, sevicePage_1.getAllService(pageNum)];
                 case 1:
-                    _a = _c.sent();
+                    res = _c.sent();
+                    console.log(res, "from the service listing part");
+                    totalPages = ((_a = res === null || res === void 0 ? void 0 : res.data) === null || _a === void 0 ? void 0 : _a.total_pages) || 1;
+                    setTotalPage(totalPages);
+                    // Check if there are more pages
+                    setHasMore(pageNum < totalPages);
+                    pageData_1 = ((_b = res === null || res === void 0 ? void 0 : res.data) === null || _b === void 0 ? void 0 : _b.data) || [];
+                    console.log(pageData_1, "from the data");
+                    // ✅ For page 1, replace the data. For other pages, append to existing data
+                    if (pageNum === 1) {
+                        setServices(pageData_1);
+                    }
+                    else {
+                        setServices(function (prev) { return __spreadArrays(prev, pageData_1); });
+                    }
+                    console.log("Fetched services count:", pageData_1.length);
                     return [3 /*break*/, 4];
-                case 2: return [4 /*yield*/, sevicePage_1.getAllService()];
-                case 3:
-                    _a = _c.sent();
-                    _c.label = 4;
-                case 4:
-                    res = _a;
-                    pageData = (_b = res === null || res === void 0 ? void 0 : res.data) === null || _b === void 0 ? void 0 : _b.data;
-                    serviceData_1 = (pageData === null || pageData === void 0 ? void 0 : pageData.data) || [];
-                    next = (pageData === null || pageData === void 0 ? void 0 : pageData.next) || null;
-                    // ✅ append only the fresh 10 items
-                    setServices(function (prev) { return __spreadArrays(prev, serviceData_1); });
-                    setNextUrl(next);
-                    console.log("Fetched services count:", serviceData_1.length);
-                    console.log("Total in state now:", __spreadArrays(services, serviceData_1).length);
-                    return [3 /*break*/, 7];
-                case 5:
+                case 2:
                     error_1 = _c.sent();
                     console.error("Error fetching services:", error_1);
-                    return [3 /*break*/, 7];
-                case 6:
+                    return [3 /*break*/, 4];
+                case 3:
                     setIsLoading(false);
                     return [7 /*endfinally*/];
-                case 7: return [2 /*return*/];
+                case 4: return [2 /*return*/];
             }
         });
     }); };
     // initial load (page 1)
     react_1.useEffect(function () {
-        fetchServices();
+        fetchServices(1);
     }, []);
     var handleLoadMore = function () {
-        if (nextUrl) {
-            fetchServices(nextUrl); // page 2, page 3 ...
+        if (page < totalPage) {
+            var nextPage = page + 1;
+            setPage(nextPage);
+            fetchServices(nextPage);
         }
     };
     return (react_1["default"].createElement("div", { className: "space-y-8" },
         react_1["default"].createElement("section", { className: "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9" }, services.map(function (service) { return (react_1["default"].createElement(ServiceCard_1["default"], { key: service.uuid, uuid: service.uuid, name: service.name, description: service.description, tags: service.tags, image: service.image })); })),
         isLoading && (react_1["default"].createElement("div", { className: "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9" }, Array.from({ length: 3 }).map(function (_, i) { return (react_1["default"].createElement(ServiceSkelton_1["default"], { key: "skeleton-" + i })); }))),
-        nextUrl && !isLoading && (react_1["default"].createElement("div", { className: "flex justify-center mt-8" },
-            react_1["default"].createElement("button", { onClick: handleLoadMore, className: "p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors" }, "Load More")))));
+        hasMore && !isLoading && services.length > 0 && (react_1["default"].createElement("div", { className: "flex justify-center mt-8" },
+            react_1["default"].createElement("button", { onClick: handleLoadMore, disabled: isLoading, className: "p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" }, "Load More"))),
+        !hasMore && services.length > 0 && (react_1["default"].createElement("div", { className: "text-center text-gray-500 mt-8" }, "No more services to load"))));
 };
 exports["default"] = ServiceListSection;

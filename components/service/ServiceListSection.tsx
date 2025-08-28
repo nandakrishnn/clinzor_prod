@@ -17,26 +17,36 @@ type Service = {
 const ServiceListSection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
-  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchServices = async (url?: string) => {
+  const fetchServices = async (pageNum: number) => {
     try {
       setIsLoading(true);
 
-      // 👇 first call or next page call
-      const res = url ? await getAllService(url) : await getAllService();
+      const res = await getAllService(pageNum);
+      console.log(res, "from the service listing part");
 
-      // ✅ API shape: res.data.data.data = [10 services]
-      const pageData = res?.data?.data;
-      const serviceData: Service[] = pageData?.data || [];
-      const next = pageData?.next || null;
+      const totalPages = res?.data?.total_pages || 1;
+      setTotalPage(totalPages);
+      
+      // Check if there are more pages
+      setHasMore(pageNum < totalPages);
 
-      // ✅ append only the fresh 10 items
-      setServices((prev) => [...prev, ...serviceData]);
-      setNextUrl(next);
+      // ✅ API shape: res.data.data = [10 services]
+      const pageData = res?.data?.data || [];
 
-      console.log("Fetched services count:", serviceData.length);
-      console.log("Total in state now:", [...services, ...serviceData].length);
+      console.log(pageData, "from the data");
+
+      // ✅ For page 1, replace the data. For other pages, append to existing data
+      if (pageNum === 1) {
+        setServices(pageData);
+      } else {
+        setServices((prev) => [...prev, ...pageData]);
+      }
+
+      console.log("Fetched services count:", pageData.length);
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
@@ -46,12 +56,14 @@ const ServiceListSection = () => {
 
   // initial load (page 1)
   useEffect(() => {
-    fetchServices();
+    fetchServices(1);
   }, []);
 
   const handleLoadMore = () => {
-    if (nextUrl) {
-      fetchServices(nextUrl); // page 2, page 3 ...
+    if (page < totalPage) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchServices(nextPage);
     }
   };
 
@@ -80,15 +92,23 @@ const ServiceListSection = () => {
         </div>
       )}
 
-      {/* Load More button */}
-      {nextUrl && !isLoading && (
+      {/* Load More button - Only show if there are more pages and not loading */}
+      {hasMore && !isLoading && services.length > 0 && (
         <div className="flex justify-center mt-8">
           <button
             onClick={handleLoadMore}
-            className="p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors"
+            disabled={isLoading}
+            className="p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Load More
           </button>
+        </div>
+      )}
+
+      {/* Show message when no more services to load */}
+      {!hasMore && services.length > 0 && (
+        <div className="text-center text-gray-500 mt-8">
+          No more services to load
         </div>
       )}
     </div>
