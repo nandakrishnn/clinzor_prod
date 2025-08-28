@@ -9,11 +9,7 @@ type BlogDetailedPageProps = {
 }
 
 const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
-
-    console.log(params)
     const post = await getABlog(params.id).catch(() => null)
-
-    console.log(post, "detailed view of a blog")
 
     return (
         <div>
