@@ -6,6 +6,8 @@ import { getAllService } from "@/service/user/sevicePage";
 import ServiceCard from "./ServiceCard";
 import ServiceCardSkeleton from "./ServiceSkelton";
 import DataPlaceholder from "../common/DataPlaceholder";
+import { ChevronRight, Loader } from "lucide-react";
+import { SearchSkeleton } from "../blog/skeltons/SearchSkeleton";
 
 type Service = {
   uuid: string;
@@ -17,16 +19,15 @@ type Service = {
 };
 
 const ServiceListSection = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const fetchServices = async (pageNum: number) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
       const res = await getAllService(pageNum);
 
       const totalPages = res?.data?.total_pages || 1;
@@ -65,11 +66,14 @@ const ServiceListSection = () => {
   // Loading Skelton
   if (isLoading) {
     return (
+      <>
+      <SearchSkeleton />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
         {Array.from({ length: 3 }).map((_, i) => (
           <ServiceCardSkeleton key={`skeleton-${i}`} />
         ))}
       </div>
+        </>
     )
   }
 
@@ -80,6 +84,33 @@ const ServiceListSection = () => {
 
   return (
     <div className="space-y-8">
+
+      {/* Blog Search part */}
+      <div className="mb-12 max-w-2xl mx-auto">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search Service..."
+            className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none"
+          />
+          <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
 
       {/* Services grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
@@ -98,12 +129,23 @@ const ServiceListSection = () => {
       {/* Load More button - Only show if there are more pages and not loading */}
       {hasMore && !isLoading && services.length > 0 && (
         <div className="flex justify-center mt-8">
+
           <button
             onClick={handleLoadMore}
             disabled={isLoading}
-            className="p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Load More
+            {isLoading ? (
+              <>
+                <Loader size={18} className="animate-spin mr-2" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Load More
+                <ChevronRight size={18} className="ml-2" />
+              </>
+            )}
           </button>
         </div>
       )}

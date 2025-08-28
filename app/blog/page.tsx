@@ -14,10 +14,7 @@ export default function BlogPage() {
 
       {/* Hero section */}
       <section className="pb-10 ">
-        <CommonHeroSection
-          title="Blogs"
-          subTitle="We offer a wide range of services to our clients"
-        />
+        <CommonHeroSection className="h-[15vh]" />
       </section>
 
       <main className="relative z-10">

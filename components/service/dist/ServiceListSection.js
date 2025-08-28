@@ -49,8 +49,10 @@ var sevicePage_1 = require("@/service/user/sevicePage");
 var ServiceCard_1 = require("./ServiceCard");
 var ServiceSkelton_1 = require("./ServiceSkelton");
 var DataPlaceholder_1 = require("../common/DataPlaceholder");
+var lucide_react_1 = require("lucide-react");
+var SearchSkeleton_1 = require("../blog/skeltons/SearchSkeleton");
 var ServiceListSection = function () {
-    var _a = react_1.useState(false), isLoading = _a[0], setIsLoading = _a[1];
+    var _a = react_1.useState(true), isLoading = _a[0], setIsLoading = _a[1];
     var _b = react_1.useState([]), services = _b[0], setServices = _b[1];
     var _c = react_1.useState(1), page = _c[0], setPage = _c[1];
     var _d = react_1.useState(1), totalPage = _d[0], setTotalPage = _d[1];
@@ -61,10 +63,12 @@ var ServiceListSection = function () {
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
-                    _c.trys.push([0, 2, 3, 4]);
                     setIsLoading(true);
-                    return [4 /*yield*/, sevicePage_1.getAllService(pageNum)];
+                    _c.label = 1;
                 case 1:
+                    _c.trys.push([1, 3, 4, 5]);
+                    return [4 /*yield*/, sevicePage_1.getAllService(pageNum)];
+                case 2:
                     res = _c.sent();
                     totalPages = ((_a = res === null || res === void 0 ? void 0 : res.data) === null || _a === void 0 ? void 0 : _a.total_pages) || 1;
                     setTotalPage(totalPages);
@@ -76,15 +80,15 @@ var ServiceListSection = function () {
                     else {
                         setServices(function (prev) { return __spreadArrays(prev, pageData_1); });
                     }
-                    return [3 /*break*/, 4];
-                case 2:
+                    return [3 /*break*/, 5];
+                case 3:
                     error_1 = _c.sent();
                     console.error("Error fetching services:", error_1);
-                    return [3 /*break*/, 4];
-                case 3:
+                    return [3 /*break*/, 5];
+                case 4:
                     setIsLoading(false);
                     return [7 /*endfinally*/];
-                case 4: return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); };
@@ -100,16 +104,28 @@ var ServiceListSection = function () {
     };
     // Loading Skelton
     if (isLoading) {
-        return (react_1["default"].createElement("div", { className: "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9" }, Array.from({ length: 3 }).map(function (_, i) { return (react_1["default"].createElement(ServiceSkelton_1["default"], { key: "skeleton-" + i })); })));
+        return (react_1["default"].createElement(react_1["default"].Fragment, null,
+            react_1["default"].createElement(SearchSkeleton_1.SearchSkeleton, null),
+            react_1["default"].createElement("div", { className: "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9" }, Array.from({ length: 3 }).map(function (_, i) { return (react_1["default"].createElement(ServiceSkelton_1["default"], { key: "skeleton-" + i })); }))));
     }
     // No Data Placeholder
     if (services.length === 0) {
         return react_1["default"].createElement(DataPlaceholder_1["default"], null);
     }
     return (react_1["default"].createElement("div", { className: "space-y-8" },
+        react_1["default"].createElement("div", { className: "mb-12 max-w-2xl mx-auto" },
+            react_1["default"].createElement("div", { className: "relative" },
+                react_1["default"].createElement("input", { type: "text", placeholder: "Search Service...", className: "w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none" }),
+                react_1["default"].createElement("button", { className: "absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" },
+                    react_1["default"].createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+                        react_1["default"].createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" }))))),
         react_1["default"].createElement("section", { className: "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9" }, services.map(function (service) { return (react_1["default"].createElement(ServiceCard_1["default"], { key: service.uuid, uuid: service.uuid, name: service.name, description: service.description, tags: service.tags, image: service.image })); })),
         hasMore && !isLoading && services.length > 0 && (react_1["default"].createElement("div", { className: "flex justify-center mt-8" },
-            react_1["default"].createElement("button", { onClick: handleLoadMore, disabled: isLoading, className: "p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" }, "Load More"))),
+            react_1["default"].createElement("button", { onClick: handleLoadMore, disabled: isLoading, className: "p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" }, isLoading ? (react_1["default"].createElement(react_1["default"].Fragment, null,
+                react_1["default"].createElement(lucide_react_1.Loader, { size: 18, className: "animate-spin mr-2" }),
+                "Loading...")) : (react_1["default"].createElement(react_1["default"].Fragment, null,
+                "Load More",
+                react_1["default"].createElement(lucide_react_1.ChevronRight, { size: 18, className: "ml-2" })))))),
         !hasMore && services.length > 0 && (react_1["default"].createElement("div", { className: "text-center text-gray-500 mt-8" }, "No more services to load"))));
 };
 exports["default"] = ServiceListSection;
