@@ -460,7 +460,7 @@ export default function ClinicManagement() {
   const [uploadedCertificateUrl, setUploadedCertificateUrl] = useState<string>("");
   const [selectedHeader, setSelectedHeader] = useState<
     "ALL" | "Approved" | "Pending" | "Active" | "Deactivated"
-  >("Approved");
+  >("ALL");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -551,7 +551,7 @@ export default function ClinicManagement() {
     clinicsToShow = filteredClinics.filter((c) => c.is_active);
   else if (selectedHeader === "Deactivated")
     clinicsToShow = filteredClinics.filter((c) => !c.is_active);
-
+console.log(selectedHeader ,"selectedHeader");
   // Use server-side pagination data
   // clinicsToShow already contains only the clinics for the current page from the API
   const totalPages = paginationData.total_pages;
@@ -1074,7 +1074,7 @@ const handleAddClinicStep1 = async () => {
                   Total Clinics
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.total}
+                  {paginationData.total_items}
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -1091,7 +1091,7 @@ const handleAddClinicStep1 = async () => {
             transition={{ delay: 0.1 }}
             onClick={() => {
               setSelectedHeader("Approved");
-              setSelectedStatus("ALL");
+              setSelectedStatus("APPROVED");
               setShowDeactivated(false);
             }}
           >

@@ -22,7 +22,7 @@ import {
   ChevronRight,
   Home
 } from 'lucide-react';
-import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, rejectExpertSlot } from '@/service/admin/expertManagementService';
+import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, rejectExpertSlot } from '@/service/admin/expertManagementService';
 import { approveSlot, getAllBookings, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
 import { getAllClinic } from '@/service/admin/clinicManagentService';
 import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
@@ -435,7 +435,7 @@ export default function ExpertManagement() {
     setLoadingBookings(prev => ({ ...prev, [expertUuid]: true }));
     try {
       const params = { expert: expertUuid };
-      const bookingsResponse = await getAllBookings(params);
+      const bookingsResponse = await getAllBookingforExpret(params);
 
       // Transform the API response to match our Booking type
       const transformedBookings = bookingsResponse.data.map((booking: any) => ({

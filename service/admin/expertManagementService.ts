@@ -155,6 +155,15 @@ export const getAllSlotsforExpret = async (params: any) => {
     throw error;
   }
 };
+export const getAllBookingforExpret = async (params: { expert: string }) => {
+  try {
+    const response = await axiosPrivate.get(`customer/expert_booking_info/${params.expert}`);
+    return response.data; // Return the full response data
+  } catch (error) {
+    console.error("Failed to fetch expert bookings", error);
+    throw error;
+  }
+};
 export const GetAllClinicServiceforDoc= async (page:number) => {
   try {
     const response = await axiosPrivate.get(

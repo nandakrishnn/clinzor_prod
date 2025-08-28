@@ -65,7 +65,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   // Static data for sections not provided by API
   const staticData = {
     rating: 4.9,
-    openHours: "8:00 AM – 6:00 PM",
+    openHours: "",
     phone: "123-456-7890",
     description: "Welcome to our healthcare facility—your premier healthcare destination. We deliver exceptional patient-centered care with innovative technology and a compassionate approach.",
     insurance: ["Apple Health", "Medicare", "Blue Cross", "Aetna"],
@@ -213,7 +213,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-green-600" />
-                    <span className="font-medium">{staticData.openHours}</span>
+                    <span className="font-medium">{staticData.openHours || 'Not Available'}</span>
                   </div>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Operating Hours</h3>
-                <p className="text-gray-600">{staticData.openHours}</p>
+                <p className="text-gray-600">{staticData.openHours ||0 }</p>
               </div>
             </div>
           </div>
