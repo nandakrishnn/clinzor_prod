@@ -111,7 +111,6 @@ var BlogList = function () {
             react_1["default"].createElement(SearchBar_1["default"], { placeHolder: 'Search Bogs....' }),
             react_1["default"].createElement(DataPlaceholder_1["default"], { title: 'Blog Data Not Available!' })));
     }
-    console.log(blogData);
     return (react_1["default"].createElement("div", null,
         react_1["default"].createElement(SearchBar_1["default"], { placeHolder: 'Search Bogs....' }),
         blogData.length > 0 && (react_1["default"].createElement("div", { className: "mb-16" },

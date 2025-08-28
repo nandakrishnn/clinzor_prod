@@ -81,8 +81,6 @@ const BlogList = () => {
         )
     }
 
-    console.log(blogData)
-
     return (
         <div>
             {/* Search Part */}

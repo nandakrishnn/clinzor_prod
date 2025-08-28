@@ -23,9 +23,7 @@ const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
             <BlogDetailView post={post?.data} />
 
             {/* Footer */}
-            <section>
-                <FooterSection />
-            </section>
+            <FooterSection />
         </div>
     )
 }
