@@ -26,27 +26,20 @@ const ServiceListSection = () => {
       setIsLoading(true);
 
       const res = await getAllService(pageNum);
-      console.log(res, "from the service listing part");
 
       const totalPages = res?.data?.total_pages || 1;
       setTotalPage(totalPages);
-      
-      // Check if there are more pages
+
       setHasMore(pageNum < totalPages);
 
-      // ✅ API shape: res.data.data = [10 services]
       const pageData = res?.data?.data || [];
 
-      console.log(pageData, "from the data");
-
-      // ✅ For page 1, replace the data. For other pages, append to existing data
       if (pageNum === 1) {
         setServices(pageData);
       } else {
         setServices((prev) => [...prev, ...pageData]);
       }
 
-      console.log("Fetched services count:", pageData.length);
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
