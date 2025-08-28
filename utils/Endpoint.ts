@@ -16,3 +16,6 @@ export const USER_HOME = {
 export const USER_SERVICE = {
     GET_ALL_SERVICE: "clinic/service-lc/"
 }
+export const USER_BLOGS = {
+    GET_ALL_BLOGS: "user/blog-list-create/"
+}

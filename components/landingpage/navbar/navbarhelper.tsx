@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import React, { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 // Props Interfaces
 interface NavbarProps {
@@ -74,9 +75,9 @@ export const Navbar = ({ children, className }: NavbarProps) => {
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
           ? React.cloneElement(child as React.ReactElement<any>, {
-              visible,
-              scrollProgress
-            })
+            visible,
+            scrollProgress
+          })
           : child
       )}
     </motion.div>
@@ -122,16 +123,17 @@ export const NavBody = ({
       borderWidth: "1px",
       color: visible ? "black" : "white",
       backgroundImage: visible
-        ? `linear-gradient(135deg, rgba(255,255,255,${
-            0.6 + scrollProgress * 0.3
-          }) ${scrollProgress * 100}%, rgba(240,242,245,${
-            0.6 + scrollProgress * 0.3
-          }) 100%)`
+        ? `linear-gradient(135deg, rgba(255,255,255,${0.6 + scrollProgress * 0.3
+        }) ${scrollProgress * 100}%, rgba(240,242,245,${0.6 + scrollProgress * 0.3
+        }) 100%)`
         : undefined
     }}
   >
     <>
-      <NavbarLogo visible={visible || false} />
+      <Link href="/" className="inline-block">
+        <NavbarLogo visible={visible || false} />
+      </Link>
+
       {children}
     </>
   </motion.div>
@@ -188,13 +190,15 @@ export const NavItems = ({
 };
 
 export const NavbarLogo = ({ visible }: { visible: boolean }) => (
-  <Image
-    src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
-    alt="Logo"
-    width={80}
-    height={80}
-    className="rounded-full z-50"
-  />
+  <Link href="/" className="inline-block">
+    <Image
+      src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
+      alt="Logo"
+      width={100}
+      height={100}
+      className="rounded-full z-50"
+    />
+  </Link>
 );
 
 // Mobile Nav
@@ -237,11 +241,9 @@ export const MobileNav = ({
     style={{
       borderWidth: "1px",
       backgroundImage: visible
-        ? `linear-gradient(135deg, rgba(255,255,255,${
-            0.6 + scrollProgress * 0.3
-          }) ${scrollProgress * 100}%, rgba(240,242,245,${
-            0.6 + scrollProgress * 0.3
-          }) 100%)`
+        ? `linear-gradient(135deg, rgba(255,255,255,${0.6 + scrollProgress * 0.3
+        }) ${scrollProgress * 100}%, rgba(240,242,245,${0.6 + scrollProgress * 0.3
+        }) 100%)`
         : undefined
     }}
   >
@@ -331,9 +333,9 @@ export const NavbarButton = ({
   className?: string;
   variant?: "primary" | "secondary" | "gradient";
 } & (
-  | React.ComponentPropsWithoutRef<"a">
-  | React.ComponentPropsWithoutRef<"button">
-)) => {
+    | React.ComponentPropsWithoutRef<"a">
+    | React.ComponentPropsWithoutRef<"button">
+  )) => {
   const baseStyles = "px-4 py-2 rounded-lg text-sm font-medium relative cursor-pointer transition duration-300 inline-block text-center overflow-hidden z-50";
 
   const variantStyles = {

@@ -106,7 +106,7 @@ export default function ServicesWeProvide() {
           {serviceData?.slice(0, 6).map((service: any, index: any) => (
             <motion.div key={index} variants={itemVariants} whileHover="hover">
               <CardTwo
-                className="bg-[#F2F5FF] "
+                className=""
                 icon={<HealthAndSafetyIcon className="45" />}
                 title={service?.name}
                 content={service?.description}

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import React from "react";
 import { motion, Variants } from "framer-motion";
+
+import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -73,18 +75,44 @@ const Camp = () => {
             <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
               {"Lorem Ipsum is simply dummy"}
             </h2>
-            <p className="mt-4 text-[#4B5563] md:text-[16px] ">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry's standard dummy text
-              ever since the 1500s, when an unknown printer took a galley of
-              type and scrambled it to make a type specimen book. It has
-              survived not only five centuries, but also the leap into
-              electronic typesetting, remaining essentially unchanged. It was
-              popularised in the 1960s with the release of Letraset sheets
-              containing Lorem Ipsum passages, and more recently with desktop
-              publishing software like Aldus PageMaker including versions of
-              Lorem Ipsum.
-            </p>
+            <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
+              <li className="flex gap-3 items-start">
+                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                  <HealthAndSafetyIcon className="45" />
+                </span>
+                <div>
+                  <strong>1. Find Your Expert</strong>
+                  <p className="text-gray-500 text-sm">
+                    Search for specialists based on their expertise and patient
+                    reviews.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3 items-start">
+                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                  <HealthAndSafetyIcon className="45" />
+                </span>
+                <div>
+                  <strong>2. Select a Slot</strong>
+                  <p className="text-gray-500 text-sm">
+                    Choose a date and time that works for you from the expert’s
+                    available slots.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3 items-start">
+                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                  <HealthAndSafetyIcon className="45" />
+                </span>
+                <div>
+                  <strong>3. Join the Call</strong>
+                  <p className="text-gray-500 text-sm">
+                    Receive a secure link to join your video consultation at the
+                    scheduled time.
+                  </p>
+                </div>
+              </li>
+            </ul>
           </div>
 
           <button className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8">

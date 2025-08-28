@@ -205,29 +205,29 @@ export const BlogListView = ({
                 <div className="space-y-4">
                   {isInitialLoading
                     ? Array.from({ length: 5 }).map((_, i) => (
-                        <PopularPostSkeleton key={i} />
-                      ))
+                      <PopularPostSkeleton key={i} />
+                    ))
                     : trendingPosts.slice(0, 5).map((post) => (
-                        <div
-                          key={post.id}
-                          className="flex items-start space-x-3 cursor-pointer border hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                          onClick={() => handleReadMore(post.id)}
-                        >
-                          <img
-                            src={post.image}
-                            alt={post.title}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
-                          <div className="text-start">
-                            <h4 className="font-medium text-gray-900 line-clamp-2">
-                              {post.title}
-                            </h4>
-                            <p className="text-xs text-gray-500">
-                              {post.readTime}
-                            </p>
-                          </div>
+                      <div
+                        key={post.id}
+                        className="flex items-start space-x-3 cursor-pointer border hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                        onClick={() => handleReadMore(post.id)}
+                      >
+                        <img
+                          src={post.image}
+                          alt={post.title}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <div className="text-start">
+                          <h4 className="font-medium text-gray-900 line-clamp-2">
+                            {post.title}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            {post.readTime}
+                          </p>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
