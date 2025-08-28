@@ -593,49 +593,126 @@ export default function ClinicManagement() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Add file input handlers
-  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setSelectedImages(prev => [...prev, ...filesArray]);
-    }
-  };
+// Add file input handlers with validation
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+const ALLOWED_CERTIFICATE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
-  const handleCertificateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedRegistrationCertificate(e.target.files[0]);
+const validateFile = (file: File, allowedTypes: string[]): string | null => {
+  if (!allowedTypes.includes(file.type)) {
+    return `Invalid file type: ${file.type}. Allowed types: ${allowedTypes.join(', ')}`;
+  }
+  
+  // Optional: Add file size validation
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    return `File too large: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size: 5MB`;
+  }
+  
+  return null;
+};
+
+const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files) {
+    const filesArray = Array.from(e.target.files);
+    
+    // Validate each file
+    const invalidFiles: string[] = [];
+    const validFiles: File[] = [];
+    
+    filesArray.forEach(file => {
+      const error = validateFile(file, ALLOWED_IMAGE_TYPES);
+      if (error) {
+        invalidFiles.push(`${file.name}: ${error}`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+    
+    if (invalidFiles.length > 0) {
+      setNotification({
+        type: "error",
+        message: `Invalid image files:\n${invalidFiles.join('\n')}`
+      });
     }
-  };
+    
+    if (validFiles.length > 0) {
+      setSelectedImages(prev => [...prev, ...validFiles]);
+    }
+  }
+};
+
+const handleCertificateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    const error = validateFile(file, ALLOWED_CERTIFICATE_TYPES);
+    
+    if (error) {
+      setNotification({
+        type: "error",
+        message: `Invalid certificate file: ${error}`
+      });
+      e.target.value = ''; // Clear the input
+      return;
+    }
+    
+    setSelectedRegistrationCertificate(file);
+  }
+};
 
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   }
 
-  const handleAddClinicStep1 = async () => {
-    if (
-      !newClinic.name ||
-      !newClinic.city ||
-      !newClinic.email ||
-      !newClinic.phone
-    ) {
-      setNotification({
-        type: "error",
-        message: "Please fill in all required fields"
-      });
-      return;
-    }
+const handleAddClinicStep1 = async () => {
+  if (
+    !newClinic.name ||
+    !newClinic.city ||
+    !newClinic.email ||
+    !newClinic.phone
+  ) {
+    setNotification({
+      type: "error",
+      message: "Please fill in all required fields"
+    });
+    return;
+  }
 
-    if (newClinic.workingDays.length === 0) {
-      setNotification({
-        type: "error",
-        message: "Please select at least one working day"
-      });
-      return;
-    }
+  if (newClinic.workingDays.length === 0) {
+    setNotification({
+      type: "error",
+      message: "Please select at least one working day"
+    });
+    return;
+  }
 
-     setIsSubmitting(true);
+  setIsSubmitting(true);
   setUploadingFiles(true);
+  
   try {
+    // Validate all files before uploading
+    const invalidImageFiles: string[] = [];
+    selectedImages.forEach(file => {
+      const error = validateFile(file, ALLOWED_IMAGE_TYPES);
+      if (error) {
+        invalidImageFiles.push(`${file.name}: ${error}`);
+      }
+    });
+
+    if (selectedRegistrationCertificate) {
+      const error = validateFile(selectedRegistrationCertificate, ALLOWED_CERTIFICATE_TYPES);
+      if (error) {
+        invalidImageFiles.push(`${selectedRegistrationCertificate.name}: ${error}`);
+      }
+    }
+
+    if (invalidImageFiles.length > 0) {
+      setNotification({
+        type: "error",
+        message: `Invalid files found:\n${invalidImageFiles.join('\n')}`
+      });
+      return;
+    }
+
     // Upload files if any are selected
     let imageUrls: string[] = [];
     let certificateUrl = "";
@@ -664,8 +741,8 @@ export default function ClinicManagement() {
       working_days: newClinic.workingDays,
       about_clinic: newClinic.about_clinic,
       gst_no: newClinic.gst_no,
-      images: imageUrls, // This should now be an array of full URLs
-      registration_certificate: certificateUrl // This should be a single URL string
+      images: imageUrls,
+      registration_certificate: certificateUrl
     };
 
     const createdClinic = await createClinic(clinicData);
@@ -680,7 +757,7 @@ export default function ClinicManagement() {
     setNewUser(prev => ({
       ...prev,
       clinic: createdClinic.data.uuid,
-      email: newClinic.email // Pre-fill email for user creation
+      email: newClinic.email
     }));
 
     // Move to next step
