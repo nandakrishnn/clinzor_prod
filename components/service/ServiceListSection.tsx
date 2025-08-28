@@ -1,40 +1,47 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getAllService } from "@/service/user/sevicePage";
+
 import ServiceCard from "./ServiceCard";
 import ServiceCardSkeleton from "./ServiceSkelton";
+import DataPlaceholder from "../common/DataPlaceholder";
 
 type Service = {
-  id: number;
-  title: string;
+  uuid: string;
+  name: string;
   description: string;
+  tags: string;
+  created_by: string;
+  image: string;
 };
 
 const ServiceListSection = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Mock fetch function - replace with your actual API call
   const fetchServices = async (pageNum: number) => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data - replace with your actual API call
-      const newServices = Array.from({ length: 6 }, (_, i) => ({
-        id: i + (pageNum - 1) * 6,
-        title: `Service ${i + (pageNum - 1) * 6 + 1}`,
-        description: `Description for service ${i + (pageNum - 1) * 6 + 1}`,
-      }));
+      setIsLoading(true);
 
-      // In a real app, you would get this from your API response
-      const moreDataAvailable = pageNum < 3; 
+      const res = await getAllService(pageNum);
 
-      setServices(prev => [...prev, ...newServices]);
-      setHasMore(moreDataAvailable);
-      setPage(prev => prev + 1);
+      const totalPages = res?.data?.total_pages || 1;
+      setTotalPage(totalPages);
+
+      setHasMore(pageNum < totalPages);
+
+      const pageData = res?.data?.data || [];
+
+      if (pageNum === 1) {
+        setServices(pageData);
+      } else {
+        setServices((prev) => [...prev, ...pageData]);
+      }
+
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
@@ -42,54 +49,69 @@ const ServiceListSection = () => {
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchServices(1);
   }, []);
 
   const handleLoadMore = () => {
-    if (!isLoading && hasMore) {
-      fetchServices(page);
+    if (page < totalPage) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchServices(nextPage);
     }
   };
 
-  if (isLoading && services.length === 0) {
+
+  // Loading Skelton
+  if (isLoading) {
     return (
-      <div className="space-y-8">
-        <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <ServiceCardSkeleton key={i} />
-          ))}
-        </section>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ServiceCardSkeleton key={`skeleton-${i}`} />
+        ))}
       </div>
-    );
+    )
+  }
+
+  // No Data Placeholder
+  if (services.length === 0) {
+    return <DataPlaceholder />
   }
 
   return (
     <div className="space-y-8">
+
+      {/* Services grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
         {services.map((service) => (
-          <ServiceCard />
+          <ServiceCard
+            key={service.uuid}
+            uuid={service.uuid}
+            name={service.name}
+            description={service.description}
+            tags={service.tags}
+            image={service.image}
+          />
         ))}
       </section>
 
-      {isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ServiceCardSkeleton key={`skeleton-${i}`} />
-          ))}
-        </div>
-      )}
-
-      {hasMore && !isLoading && (
+      {/* Load More button - Only show if there are more pages and not loading */}
+      {hasMore && !isLoading && services.length > 0 && (
         <div className="flex justify-center mt-8">
           <button
             onClick={handleLoadMore}
-            className="p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors"
             disabled={isLoading}
+            className="p-2.5 px-5 bg-primaryColor text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Load More
           </button>
+        </div>
+      )}
+
+      {/* Show message when no more services to load */}
+      {!hasMore && services.length > 0 && (
+        <div className="text-center text-gray-500 mt-8">
+          No more services to load
         </div>
       )}
     </div>

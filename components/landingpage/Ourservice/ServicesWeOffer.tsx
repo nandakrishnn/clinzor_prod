@@ -1,23 +1,13 @@
 "use client";
-import {
-  IconStethoscope,
-  IconHeart,
-  IconTool,
-  IconBrain,
-  IconUserCheck,
-  IconHospital
-} from "@tabler/icons-react";
 import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import CardTwo from "@/components/ui/cardTwo";
 import Title from "@/components/ui/title";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import DataPlaceholder from "@/components/common/DataPlaceholder";
 import { useRouter } from "next/navigation";
 import { getServices } from "@/service/user/home";
-import DataPlaceholder from "@/components/common/DataPlaceholder";
-import LoadingSkeleton from "@/components/common/LoadingSkeleton";
-import CardTwoSkeleton from "@/components/skeltons/home/HomeServiceCardSketon";
 import { CardSkelton } from "@/components/skeltons/home/HomeServiceSkelton";
 
 export default function ServicesWeProvide() {

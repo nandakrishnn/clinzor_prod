@@ -12,3 +12,7 @@ export const USER_HOME = {
     GET_ALL_BLOGS: "user/blog-list-create/",
     GET_ALL_FAQ: "clinic/faq-lc/",
 }
+
+export const USER_SERVICE = {
+    GET_ALL_SERVICE: "clinic/service-lc/"
+}
