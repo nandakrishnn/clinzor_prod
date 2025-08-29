@@ -29,7 +29,7 @@ const PERIODS: {
     label: "Afternoon",
     icon: (
       <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M12 2v20M2 12h20" />
+        <path d="M5 12a7 7 0 1 1 14 0H5Z" />
       </svg>
     ),
   },
@@ -38,7 +38,7 @@ const PERIODS: {
     label: "Evening",
     icon: (
       <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M3 12a9 9 0 0 0 18 0 9 9 0 1 1-18 0Z" />
+        <path d="M5 12a7 7 0 1 1 14 0H5Z" />
       </svg>
     ),
   },
@@ -84,7 +84,7 @@ export function DateSlots({
               onClick={() => onTabChange(key as keyof Tabs)}
               className={[
                 "rounded-md px-3 py-2 text-sm",
-                isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                isActive ? "bg-primaryColor text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
               ].join(" ")}
             >
               <div className="flex flex-col items-start">
@@ -115,8 +115,8 @@ export function DateSlots({
                     className={[
                       "rounded-md border px-3 py-2 text-sm",
                       isSelected
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-blue-200 bg-white text-blue-700 hover:bg-blue-50",
+                        ? "border-primaryColor bg-blue-50 text-primaryColor"
+                        : "border-blue-200 bg-white text-primaryColor hover:bg-blue-50",
                     ].join(" ")}
                   >
                     {slot.label}

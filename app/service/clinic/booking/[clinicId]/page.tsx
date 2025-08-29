@@ -15,6 +15,7 @@ import PreviewCard from "@/components/service/clinic/PreviewCard"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
 import Navbar from "@/components/shared/NavBar"
+import Title from "@/components/ui/title"
 import React from "react"
 
 type BookingMode = "home" | "video" | "clinic"
@@ -152,9 +153,16 @@ export default function ClinicBooking() {
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
+
+      <Title
+        title={"Book Now"}
+        subtitle={``}
+        description="Book an Appointment"
+      />
+
       <section aria-label="Clinic Booking" className="space-y-6 max-w-7xl mx-auto mb-10 md:mb-20 px-3">
         <header className="flex items-center justify-between">
-          <h1 className="text-pretty text-2xl font-semibold text-gray-900">Book an Appointment</h1>
+          {/* <h1 className="text-pretty text-2xl font-semibold text-gray-900">Book an Appointment</h1> */}
           <span className="text-sm text-gray-500">
             Step {step + 1} of {STEPS.length}
           </span>
