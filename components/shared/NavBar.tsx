@@ -15,6 +15,7 @@ import Image from "next/image";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(true)
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -73,12 +74,23 @@ const Navbar = () => {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/auth"
-              className="px-3 py-2 text-gray-700 rounded-full text-sm  hover:text-white hover:bg-primaryColor ease-in-out duration-500 transition-colors flex items-center justify-center"
-            >
-              <FiUser className="inline mr-1" /> Login
-            </Link>
+            {
+              user ?
+                <Link
+                  href="/user#bookings"
+                  className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <FiUser className="mr-2" /> My Bookings
+                </Link> :
+                <Link
+                  href="/auth"
+                  className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <FiUser className="mr-2" /> Login
+                </Link>
+            }
             <Link
               href="/expert-call"
               className="px-4 py-2 bg-primaryColor text-white rounded-full text-sm hover:primaryColor transition-colors flex items-center justify-center"
@@ -137,14 +149,26 @@ const Navbar = () => {
           >
             <FiPhone className="mr-2" /> Contact
           </Link>
+
           <div className="border-t border-gray-200 pt-2 mt-2">
-            <Link
-              href="/auth"
-              className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
-              onClick={() => setIsOpen(false)}
-            >
-              <FiUser className="mr-2" /> Login
-            </Link>
+            {
+              user ?
+                <Link
+                  href="/user"
+                  className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <FiUser className="mr-2" /> My Bookings
+                </Link> :
+                <Link
+                  href="/auth"
+                  className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <FiUser className="mr-2" /> Login
+                </Link>
+            }
+
             <Link
               href="/expert-call"
               className="flex items-center px-3 py-2 mt-2 bg-primaryColor text-white rounded-md hover:bg-blue-900"

@@ -30,7 +30,7 @@ const Input = ({
   placeholder,
   icon,
   showToggle = false,
-  toggleVisibility = () => {}
+  toggleVisibility = () => { }
 }: InputProps) => (
   <div className="mb-4">
     <label htmlFor={id} className="block text-sm font-medium text-black mb-1">
@@ -49,9 +49,8 @@ const Input = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`block w-full px-4 py-3 pl-10 rounded-xl border text-black placeholder:text-black ${
-          error ? "border-red-300" : "border-neutral-300"
-        } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+        className={`block w-full px-4 py-3 pl-10 rounded-xl border text-black placeholder:text-black ${error ? "border-red-300" : "border-neutral-300"
+          } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
       />
       {showToggle && (
         <button
@@ -242,8 +241,8 @@ function AuthContent({
               {isLoading
                 ? "Processing..."
                 : authMode === "login"
-                ? "Sign In"
-                : "Create Account"}
+                  ? "Sign In"
+                  : "Create Account"}
             </button>
 
             {/* Toggle mode */}
@@ -408,32 +407,28 @@ export default function AuthenticationGateway() {
 
   return (
     <div className="min-h-screen">
-      {isAuthenticated ? (
-        <UserDashboard user={user} handleLogout={handleLogout} />
-      ) : (
-        <AuthContent
-          authMode={authMode}
-          toggleAuthMode={toggleAuthMode}
-          handleGoogleSignIn={handleGoogleSignIn}
-          handleEmailAuth={handleEmailAuth}
-          isLoading={isLoading}
-          formError={formError}
-          name={name}
-          setName={setName}
-          nameError={nameError}
-          email={email}
-          setEmail={setEmail}
-          emailError={emailError}
-          password={password}
-          setPassword={setPassword}
-          passwordError={passwordError}
-          confirmPassword={confirmPassword}
-          setConfirmPassword={setConfirmPassword}
-          confirmPasswordError={confirmPasswordError}
-          showPassword={showPassword}
-          setShowPassword={setShowPassword}
-        />
-      )}
+      <AuthContent
+        authMode={authMode}
+        toggleAuthMode={toggleAuthMode}
+        handleGoogleSignIn={handleGoogleSignIn}
+        handleEmailAuth={handleEmailAuth}
+        isLoading={isLoading}
+        formError={formError}
+        name={name}
+        setName={setName}
+        nameError={nameError}
+        email={email}
+        setEmail={setEmail}
+        emailError={emailError}
+        password={password}
+        setPassword={setPassword}
+        passwordError={passwordError}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        confirmPasswordError={confirmPasswordError}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+      />
     </div>
   );
 }

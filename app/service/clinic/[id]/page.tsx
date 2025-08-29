@@ -4,7 +4,12 @@ import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import ClinicDetailed from "@/components/service/clinic/ClinicDetailed";
 import React from "react";
 
-const ServiceBooking = () => {
+type ServiceClinicBookingProps = {
+  params: { id: string }
+}
+
+
+const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
   return (
     <div>
       {/* Nav bar section */}

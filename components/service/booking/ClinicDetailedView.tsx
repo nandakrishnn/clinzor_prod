@@ -1,3 +1,4 @@
+'use client'
 import {
   Star,
   MapPin,
@@ -10,8 +11,10 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@mui/material";
 import { Button } from "@/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
 
 const ClinicDetailedView = () => {
+
   const clinicInfo = {
     name: "MediCare Plus Clinic",
     rating: 4.8,
@@ -128,7 +131,10 @@ const ClinicDetailedView = () => {
     },
   ]
 
-    const offers = [
+  const router = useRouter();
+  const { id } = useParams();
+
+  const offers = [
     { text: "10% Off on First Visit", discount: "10%" },
     { text: "Free Health Checkup", discount: "Free" },
     { text: "Family Package Discount", discount: "20%" },
@@ -219,7 +225,7 @@ const ClinicDetailedView = () => {
       </div>
 
       {/* Specialties Section */}
-      <div className="mb-8">
+      <div className="mb-8" id="service">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Top Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {services.map((service) => (
@@ -241,7 +247,7 @@ const ClinicDetailedView = () => {
                     <span className="text-lg font-bold text-[#033C8D]">{service.price}</span>
                     <span className="text-sm text-gray-600 ml-2">({service.duration})</span>
                   </div>
-                  <Badge  className="text-green-600 bg-green-50">
+                  <Badge className="text-green-600 bg-green-50">
                     {service.availability}
                   </Badge>
                 </div>
@@ -257,6 +263,7 @@ const ClinicDetailedView = () => {
                 </div>
                 <Button
                   className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
+                  onClick={() => router.push(`/service/clinic/booking/${'clinic id'}`)}
                 >
                   Book Now
                 </Button>
@@ -266,7 +273,7 @@ const ClinicDetailedView = () => {
         </div>
       </div>
 
-       {/* Offers Section */}
+      {/* Offers Section */}
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Offers Going On</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

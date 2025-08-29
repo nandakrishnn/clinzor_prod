@@ -1,7 +1,6 @@
 import React from 'react'
 import ClinicCarousal from '../clinicDetailed/ClinicCarousal'
 import ClinicDetailedView from '../booking/ClinicDetailedView'
-import BookingPage from '../booking/BookingPage'
 import ClinicBanner from './ClinicBanner'
 
 const ClinicDetailed = () => {

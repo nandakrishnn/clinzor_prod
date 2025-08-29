@@ -1,11 +1,14 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 const ClinicCarousal = () => {
     const [activeServiceTab, setActiveServiceTab] = useState("clinic-visit")
     const [selectedService, setSelectedService] = useState(null)
+    
 
     const serviceTabs = [
         { id: "home-service", label: "Home Service", icon: "🏠" },
@@ -52,12 +55,12 @@ const ClinicCarousal = () => {
                                     <p className="text-gray-600">Professional healthcare services</p>
                                 </div>
                             </div>
-                            <Button
-                                className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2"
-                                onClick={() => handleServiceSelect(serviceTabs.find(tab => tab.id === activeServiceTab))}
+                            <Link href={'#service'}
+                                className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2 rounded-lg"
+                            // onClick={() => router.push(`/service/clinic/booking/${'clinic id'}`)}
                             >
                                 Book Now
-                            </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>

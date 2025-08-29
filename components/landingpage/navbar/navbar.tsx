@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 
 export function NavbarDemo() {
+  const [user, setUser] = useState(false)
   const navItems = [
     { name: "Home", link: "/" },
     { name: "Service", link: "/service" },
@@ -28,7 +29,12 @@ export function NavbarDemo() {
       <NavBody>
         <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
-          <NavbarButton href={"/auth"}>Login</NavbarButton>
+          {
+            user ?
+              <NavbarButton href={"/user"}>My Bookings</NavbarButton>
+              :
+              <NavbarButton href={"/auth"}>Login</NavbarButton>
+          }
           <NavbarButton href={"/expert-call"} variant="primary">
             Book a call
           </NavbarButton>

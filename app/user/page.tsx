@@ -7,11 +7,19 @@ import NavigationItem from "@/components/user/NavigationItem"
 import ProfileDetails from "@/components/user/ProfileDetails"
 import UserProfile from "@/components/user/UserProfile"
 import type { User, Booking, NavigationItem as NavItemType } from "@/types/user"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { UserIcon, Calendar, Lock, LogOut } from "lucide-react"
 
 export default function UserDash() {
   const [activeSection, setActiveSection] = useState<string>("profile")
+
+  useEffect(() => {
+    // Read the hash part (#bookings) from the URL
+    const hash = window.location.hash.replace("#", "")
+    if (hash) {
+      setActiveSection(hash)
+    }
+  }, [])
 
   // Sample user data
   const user: User = {
@@ -151,7 +159,7 @@ export default function UserDash() {
       <Navbar />
       <div className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-1">
               <div className="bg-card rounded-xl shadow-sm border border-border p-6 sticky top-24">
                 <UserProfile
