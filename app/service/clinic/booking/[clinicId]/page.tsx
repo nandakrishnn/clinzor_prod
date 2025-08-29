@@ -155,7 +155,7 @@ export default function ClinicBooking() {
 
 
       <Title
-        title={"Book Now"}
+        title={""}
         subtitle={``}
         description="Book an Appointment"
       />
