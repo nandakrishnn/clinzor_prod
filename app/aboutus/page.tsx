@@ -19,10 +19,7 @@ const AboutPage = () => {
 
       {/* Hero section */}
       <section className="">
-        <CommonHeroSection
-          title="About Us"
-          subTitle="We offer a wide range of services to our clients"
-        />
+        <CommonHeroSection className="h-[15vh]"/>
       </section>
 
       {/* About*/}

@@ -14,11 +14,7 @@ const ContactUs = () => {
 
       {/* Hero section */}
       <section className="">
-        <CommonHeroSection
-          title="Contact Us"
-          subTitle="We’d love to hear from you. Fill out the form below or reach out using
-          the contact details."
-        />
+        <CommonHeroSection className="h-[15vh]"/>
       </section>
 
       {/* Main Section */}

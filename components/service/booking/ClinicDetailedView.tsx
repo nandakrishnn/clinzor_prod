@@ -286,9 +286,7 @@ const ClinicDetailedView = () => {
 
       {/* Doctors Section */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Our Expert Doctors
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6"> Our Expert Doctors</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {doctors.map((doctor) => (
             <Card

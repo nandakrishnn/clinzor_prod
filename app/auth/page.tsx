@@ -15,7 +15,7 @@ export default function AuthenticationPage() {
 
       {/* Hero section */}
       <section className="">
-        <CommonHeroSection className="h-[15vh] md:h-[17vh]"/>
+        <CommonHeroSection className="h-[15vh]"/>
       </section>
 
       {/* Main Content */}
