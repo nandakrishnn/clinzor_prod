@@ -191,8 +191,6 @@ const BlogList = () => {
                     </div>
                 )}
             </div>
-
-
         </div>
     )
 }
