@@ -99,8 +99,7 @@ exports.NavItems = function (_a) {
 };
 exports.NavbarLogo = function (_a) {
     var visible = _a.visible;
-    return (react_1["default"].createElement(link_1["default"], { href: "/", className: "inline-block" },
-        react_1["default"].createElement(image_1["default"], { src: visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png", alt: "Logo", width: 100, height: 100, className: "rounded-full z-50" })));
+    return (react_1["default"].createElement(image_1["default"], { src: visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png", alt: "Logo", width: 100, height: 100, className: "rounded-full z-50" }));
 };
 // Mobile Nav
 exports.MobileNav = function (_a) {

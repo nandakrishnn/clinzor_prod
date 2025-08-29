@@ -190,7 +190,6 @@ export const NavItems = ({
 };
 
 export const NavbarLogo = ({ visible }: { visible: boolean }) => (
-  <Link href="/" className="inline-block">
     <Image
       src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
       alt="Logo"
@@ -198,7 +197,6 @@ export const NavbarLogo = ({ visible }: { visible: boolean }) => (
       height={100}
       className="rounded-full z-50"
     />
-  </Link>
 );
 
 // Mobile Nav
