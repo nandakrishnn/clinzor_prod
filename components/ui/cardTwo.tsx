@@ -12,12 +12,9 @@ const CardTwo: React.FC<CardProps> = ({ className, icon, title, content }) => {
   return (
     <div
       className={cn(
-        "rounded-[8px] h-[220px] p-6 pb-10 flex flex-col items-center justify-center ",
+        "rounded-[8px] h-[220px] p-6 pb-10 flex flex-col items-center justify-center bg-[#F2F5FF] shadow",
         className
       )}
-      style={{
-        boxShadow: "4px 0px 6px -2px rgba(0,0,0,0.1), -4px 0px 6px -2px rgba(0,0,0,0.1)",
-      }}
     >
       <div className="bg-[#DBEAFE] p-3 rounded-full text-[#033C8D] ">
         {icon}

@@ -185,7 +185,7 @@ export default function ClinicBooking() {
             <Stepper steps={STEPS} current={step} onStepClick={goto} />
 
             {step === 0 && (
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-3 ">
                 <div className="md:col-span-2">
                   <ServiceSummary service={service} sessionType={sessionType} onSessionTypeChange={setSessionType} />
                 </div>
