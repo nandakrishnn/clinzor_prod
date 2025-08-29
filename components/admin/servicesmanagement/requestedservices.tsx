@@ -249,7 +249,7 @@ const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
         return 'text-green-600 bg-green-50 border-green-200';
       case 'REJECTED':
         return 'text-red-600 bg-red-50 border-red-200';
-      case 'PENDING':
+      case 'DRAFT':
         return 'text-orange-600 bg-orange-50 border-orange-200';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
@@ -396,7 +396,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
   const getStatusCounts = () => {
     return {
       ALL: requests.length,
-      PENDING: requests.filter(r => r.status === 'DRAFT').length,
+      DRAFT: requests.filter(r => r.status === 'DRAFT').length,
       APPROVED: requests.filter(r => r.status === 'APPROVED').length,
       REJECTED: requests.filter(r => r.status === 'REJECTED').length
     };
@@ -430,7 +430,7 @@ const handleStatusChange = async (id: string, newStatus: 'DRAFT' | 'APPROVED' | 
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Pending Requests</p>
-              <p className="text-2xl font-bold text-orange-600">{statusCounts.PENDING}</p>
+              <p className="text-2xl font-bold text-orange-600">{statusCounts.DRAFT}</p>
             </div>
           </div>
         </div>

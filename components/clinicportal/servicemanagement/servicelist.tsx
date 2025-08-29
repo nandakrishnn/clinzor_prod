@@ -139,11 +139,11 @@ const ServiceManagement: React.FC = () => {
   const [isLoadingServices, setIsLoadingServices] = useState(false);
 
   // Service request states
-const [serviceRequest, setServiceRequest] = useState({
-  name: '',
-  description: '',
-  tags: '', // This will be a comma-separated string
-});
+  const [serviceRequest, setServiceRequest] = useState({
+    name: '',
+    description: '',
+    tags: '', // This will be a comma-separated string
+  });
 
 
   const [newClinicService, setNewClinicService] = useState<NewClinicService>({
@@ -185,9 +185,9 @@ const [serviceRequest, setServiceRequest] = useState({
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   // Add state for filters
   const [statusFilter, setStatusFilter] = useState<string>('approved');
 
@@ -354,151 +354,151 @@ const [uploadingImage, setUploadingImage] = useState(false);
 
     return errors;
   };
-// Add the image selection handler
-const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+  // Add the image selection handler
+  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  const file = files[0];
-  setSelectedImageFile(file);
-  
-  // Create preview for immediate UI feedback
-  const previewUrl = URL.createObjectURL(file);
-  setImagePreviewUrl(previewUrl);
-};
+    const file = files[0];
+    setSelectedImageFile(file);
 
-const removeImage = () => {
-  setSelectedImageFile(null);
-  setImagePreviewUrl(null);
-  setNewClinicService(prev => ({
-    ...prev,
-    image: ''
-  }));
-};
+    // Create preview for immediate UI feedback
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviewUrl(previewUrl);
+  };
+
+  const removeImage = () => {
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+    setNewClinicService(prev => ({
+      ...prev,
+      image: ''
+    }));
+  };
 
   // CRUD operations
-const handleCreateClinicService = async () => {
-  console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
+  const handleCreateClinicService = async () => {
+    console.log('Starting handleCreateClinicService with newClinicService:', newClinicService);
 
-  const errors = validateClinicServiceForm();
-  setFormErrors(errors);
-  if (Object.keys(errors).length > 0) {
-    console.log('Validation errors:', errors);
-    return;
-  }
-
-  try {
-    // Check if this service already exists for the clinic
-    const existingService = clinicServices.find(
-      cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
-    );
-
-    if (existingService) {
-      showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+    const errors = validateClinicServiceForm();
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      console.log('Validation errors:', errors);
       return;
     }
 
-    if (!clinicUser?.uuid) {
-      showToast('Clinic not loaded. Please try again.', 'error');
-      return;
-    }
+    try {
+      // Check if this service already exists for the clinic
+      const existingService = clinicServices.find(
+        cs => cs.service === newClinicService.service && cs.clinic === newClinicService.clinic
+      );
 
-    // Check if there's an image file to upload
-    let imageUrl = newClinicService.image;
-    
-    // If we have a selected image file, upload it using the presigned URL API
-    if (selectedImageFile) {
-      setUploadingImage(true);
-      
-      try {
-        // Upload the file using the presigned URL API
-        const uploadedUrls = await uploadFiles([selectedImageFile]);
-        
-        if (uploadedUrls && uploadedUrls.length > 0) {
-          imageUrl = uploadedUrls[0];
-          console.log('Image uploaded successfully. URL:', imageUrl);
-        }
-      } catch (uploadError) {
-        console.error("Error uploading image:", uploadError);
-        showToast("Failed to upload image. Please try again.", "error");
-        setUploadingImage(false);
+      if (existingService) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
         return;
-      } finally {
-        setUploadingImage(false);
+      }
+
+      if (!clinicUser?.uuid) {
+        showToast('Clinic not loaded. Please try again.', 'error');
+        return;
+      }
+
+      // Check if there's an image file to upload
+      let imageUrl = newClinicService.image;
+
+      // If we have a selected image file, upload it using the presigned URL API
+      if (selectedImageFile) {
+        setUploadingImage(true);
+
+        try {
+          // Upload the file using the presigned URL API
+          const uploadedUrls = await uploadFiles([selectedImageFile]);
+
+          if (uploadedUrls && uploadedUrls.length > 0) {
+            imageUrl = uploadedUrls[0];
+            console.log('Image uploaded successfully. URL:', imageUrl);
+          }
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          showToast("Failed to upload image. Please try again.", "error");
+          setUploadingImage(false);
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
+      const requestBody: NewClinicService = {
+        clinic: clinicUser.uuid,
+        service: newClinicService.service,
+        clinic_provided_name: newClinicService.clinic_provided_name || '',
+        description: newClinicService.description || '',
+        image: imageUrl || '',
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        is_video_call: newClinicService.is_video_call,
+        is_home_service: newClinicService.is_home_service,
+        is_clinic_visit: newClinicService.is_clinic_visit,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        rank: newClinicService.rank,
+        start_time: newClinicService.start_time || '',
+        max_bookings: newClinicService.max_bookings || 0,
+      };
+
+      console.log('Sending requestBody to backend:', requestBody);
+
+      // Call the API
+      const response = await createClinicService(requestBody);
+
+      // Create the local clinic service object for state update
+      const clinicService: ClinicService = {
+        uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
+        service: newClinicService.service,
+        clinic: clinicUser.uuid,
+        service_name: getServiceName(newClinicService.service),
+        created_by: session?.user?.email || 'unknown',
+        clinic_provided_name: newClinicService.clinic_provided_name || null,
+        rank: parseInt(newClinicService.rank || '0'),
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        status: 'PENDING',
+        is_video_call: newClinicService.is_video_call,
+        is_home_visit: newClinicService.is_home_service,
+        is_physical_visit: newClinicService.is_clinic_visit,
+        image: imageUrl || null,
+        description: newClinicService.description || null,
+        reason_for_rejection: null,
+        display_date: new Date().toISOString(),
+      };
+
+      // Update state and UI
+      setClinicServices([clinicService, ...clinicServices]);
+      resetClinicServiceForm();
+      setShowCreateModal(false);
+      showToast('Clinic service added successfully!', 'success');
+
+    } catch (error: any) {
+      console.error("Error creating clinic service:", error);
+
+      if (error.response?.data?.non_field_errors?.includes("unique set")) {
+        showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+      } else {
+        showToast(
+          error.response?.data?.message || "Failed to create clinic service. Please try again.",
+          "error"
+        );
       }
     }
-
-    const requestBody: NewClinicService = {
-      clinic: clinicUser.uuid,
-      service: newClinicService.service,
-      clinic_provided_name: newClinicService.clinic_provided_name || '',
-      description: newClinicService.description || '',
-      image: imageUrl || '',
-      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-      is_video_call: newClinicService.is_video_call,
-      is_home_service: newClinicService.is_home_service,
-      is_clinic_visit: newClinicService.is_clinic_visit,
-      is_home_visit: newClinicService.is_home_service,
-      is_physical_visit: newClinicService.is_clinic_visit,
-      rank: newClinicService.rank,
-      start_time: newClinicService.start_time || '',
-      max_bookings: newClinicService.max_bookings || 0,
-    };
-
-    console.log('Sending requestBody to backend:', requestBody);
-
-    // Call the API
-    const response = await createClinicService(requestBody);
-
-    // Create the local clinic service object for state update
-    const clinicService: ClinicService = {
-      uuid: (response as any)?.uuid || `clinic-service-${Date.now()}`,
-      service: newClinicService.service,
-      clinic: clinicUser.uuid,
-      service_name: getServiceName(newClinicService.service),
-      created_by: session?.user?.email || 'unknown',
-      clinic_provided_name: newClinicService.clinic_provided_name || null,
-      rank: parseInt(newClinicService.rank || '0'),
-      consultation_charge_video_call: newClinicService.consultation_charge_video_call,
-      consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
-      consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
-      treatment_charge_video_call: newClinicService.treatment_charge_video_call,
-      treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
-      treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
-      status: 'PENDING',
-      is_video_call: newClinicService.is_video_call,
-      is_home_visit: newClinicService.is_home_service,
-      is_physical_visit: newClinicService.is_clinic_visit,
-      image: imageUrl || null,
-      description: newClinicService.description || null,
-      reason_for_rejection: null,
-      display_date: new Date().toISOString(),
-    };
-
-    // Update state and UI
-    setClinicServices([clinicService, ...clinicServices]);
-    resetClinicServiceForm();
-    setShowCreateModal(false);
-    showToast('Clinic service added successfully!', 'success');
-
-  } catch (error: any) {
-    console.error("Error creating clinic service:", error);
-
-    if (error.response?.data?.non_field_errors?.includes("unique set")) {
-      showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
-    } else {
-      showToast(
-        error.response?.data?.message || "Failed to create clinic service. Please try again.",
-        "error"
-      );
-    }
-  }
-};
+  };
 
 
   const handleDelete = async () => {
@@ -630,56 +630,56 @@ const handleCreateClinicService = async () => {
     setShowServiceSearchModal(false);
     setServiceSearchTerm('');
   };
-const handleRequestService = async () => {
-  // Basic validation
-  if (!serviceRequest.name.trim()) {
-    showToast('Service name is required', 'error');
-    return;
-  }
-  
-  if (!serviceRequest.description.trim()) {
-    showToast('Service description is required', 'error');
-    return;
-  }
+  const handleRequestService = async () => {
+    // Basic validation
+    if (!serviceRequest.name.trim()) {
+      showToast('Service name is required', 'error');
+      return;
+    }
 
-  if (!serviceRequest.tags.trim()) {
-    showToast('At least one tag is required', 'error');
-    return;
-  }
+    if (!serviceRequest.description.trim()) {
+      showToast('Service description is required', 'error');
+      return;
+    }
 
-  try {
-    // Prepare the request body according to backend expectations
-    const requestBody = {
-      name: serviceRequest.name.trim(),
-      description: serviceRequest.description.trim(),
-      tags: serviceRequest.tags.trim()
-    };
+    if (!serviceRequest.tags.trim()) {
+      showToast('At least one tag is required', 'error');
+      return;
+    }
 
-    console.log('Sending service request:', requestBody);
+    try {
+      // Prepare the request body according to backend expectations
+      const requestBody = {
+        name: serviceRequest.name.trim(),
+        description: serviceRequest.description.trim(),
+        tags: serviceRequest.tags.trim()
+      };
 
-    // Call the API
-    await requestNewService(requestBody);
-    
-    showToast('Service request submitted successfully! We will review and add it soon.', 'success');
-    setShowRequestServiceModal(false);
-    resetServiceRequest();
-  } catch (error: any) {
-    console.error('Error requesting service:', error);
-    showToast(
-      error.response?.data?.message || "Failed to submit service request. Please try again.",
-      "error"
-    );
-  }
-};
+      console.log('Sending service request:', requestBody);
 
-// 4. Update the resetServiceRequest function
-const resetServiceRequest = () => {
-  setServiceRequest({
-    name: '',
-    description: '',
-    tags: ''
-  });
-};
+      // Call the API
+      await requestNewService(requestBody);
+
+      showToast('Service request submitted successfully! We will review and add it soon.', 'success');
+      setShowRequestServiceModal(false);
+      resetServiceRequest();
+    } catch (error: any) {
+      console.error('Error requesting service:', error);
+      showToast(
+        error.response?.data?.message || "Failed to submit service request. Please try again.",
+        "error"
+      );
+    }
+  };
+
+  // 4. Update the resetServiceRequest function
+  const resetServiceRequest = () => {
+    setServiceRequest({
+      name: '',
+      description: '',
+      tags: ''
+    });
+  };
 
   const filteredAllServices = allServices.filter(service =>
     service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
@@ -1225,11 +1225,15 @@ const resetServiceRequest = () => {
                     rows={3}
                   />
                 </div>
-
-                {/* Image Upload */}
                 {/* Image Upload Section */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold mb-2">Image</label>
+
+                  {/* Disclaimer text */}
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                    <strong>Note:</strong> Please name your image file the same as your service name for better organization.
+                  </div>
+
                   {imagePreviewUrl || newClinicService.image ? (
                     <div className="relative group mb-3">
                       <img
@@ -2020,121 +2024,121 @@ const resetServiceRequest = () => {
             </div>
 
             {/* Modal Content */}
-           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        <form onSubmit={e => { e.preventDefault(); handleRequestService(); }} className="space-y-4 sm:space-y-5">
-          {/* Service Name */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 sm:mb-2">
-              Service Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-              value={serviceRequest.name}
-              onChange={e => setServiceRequest(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g. Aerospace Medicine Specialist, Pediatric Cardiology"
-            />
-          </div>
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <form onSubmit={e => { e.preventDefault(); handleRequestService(); }} className="space-y-4 sm:space-y-5">
+                {/* Service Name */}
+                <div>
+                  <label className="block text-sm font-semibold mb-1 sm:mb-2">
+                    Service Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+                    value={serviceRequest.name}
+                    onChange={e => setServiceRequest(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Aerospace Medicine Specialist, Pediatric Cardiology"
+                  />
+                </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 sm:mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-              value={serviceRequest.description}
-              onChange={e => setServiceRequest(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Provide a detailed description of the service, including what conditions it treats, procedures involved, and target patient groups..."
-              rows={4}
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              Be specific about the medical specialty, conditions treated, and any unique aspects of this service.
-            </p>
-          </div>
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-semibold mb-1 sm:mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+                    value={serviceRequest.description}
+                    onChange={e => setServiceRequest(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Provide a detailed description of the service, including what conditions it treats, procedures involved, and target patient groups..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Be specific about the medical specialty, conditions treated, and any unique aspects of this service.
+                  </p>
+                </div>
 
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 sm:mb-2">
-              Tags <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
-              value={serviceRequest.tags}
-              onChange={e => setServiceRequest(prev => ({ ...prev, tags: e.target.value }))}
-              placeholder="e.g. aviation medicine,space medicine,altitude sickness,microgravity,flight safety"
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              Enter comma-separated tags that help categorize and search for this service. Include medical specialties, conditions, and relevant keywords.
-            </p>
-            
-            {/* Tag suggestions for common medical fields */}
-            <div className="mt-2">
-              <p className="text-xs font-medium text-slate-600 mb-2">Common medical tags:</p>
-              <div className="flex flex-wrap gap-1">
-                {[
-                  'cardiology', 'neurology', 'orthopedics', 'dermatology', 'pediatrics',
-                  'psychiatry', 'oncology', 'emergency medicine', 'radiology', 'pathology'
-                ].map((tag) => (
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-semibold mb-1 sm:mb-2">
+                    Tags <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm sm:text-base"
+                    value={serviceRequest.tags}
+                    onChange={e => setServiceRequest(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="e.g. aviation medicine,space medicine,altitude sickness,microgravity,flight safety"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enter comma-separated tags that help categorize and search for this service. Include medical specialties, conditions, and relevant keywords.
+                  </p>
+
+                  {/* Tag suggestions for common medical fields */}
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-slate-600 mb-2">Common medical tags:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        'cardiology', 'neurology', 'orthopedics', 'dermatology', 'pediatrics',
+                        'psychiatry', 'oncology', 'emergency medicine', 'radiology', 'pathology'
+                      ].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            const currentTags = serviceRequest.tags;
+                            const newTag = currentTags ? `${currentTags},${tag}` : tag;
+                            setServiceRequest(prev => ({ ...prev, tags: newTag }));
+                          }}
+                          className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">What happens next?</h4>
+                      <p className="text-sm text-blue-800">
+                        Your service request will be reviewed by our team. Once approved, the service will be added to our catalog and you'll be able to add it to your clinic with specific pricing and availability.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Buttons */}
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
                   <button
-                    key={tag}
                     type="button"
                     onClick={() => {
-                      const currentTags = serviceRequest.tags;
-                      const newTag = currentTags ? `${currentTags},${tag}` : tag;
-                      setServiceRequest(prev => ({ ...prev, tags: newTag }));
+                      setShowRequestServiceModal(false);
+                      resetServiceRequest();
                     }}
-                    className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
+                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold border border-slate-300 hover:bg-slate-300 transition-all duration-200 text-sm sm:text-base"
                   >
-                    + {tag}
+                    Cancel
                   </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-white" />
+                  <button
+                    type="submit"
+                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
+                  >
+                    Submit Request
+                  </button>
                 </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-1">What happens next?</h4>
-                <p className="text-sm text-blue-800">
-                  Your service request will be reviewed by our team. Once approved, the service will be added to our catalog and you'll be able to add it to your clinic with specific pricing and availability.
-                </p>
-              </div>
+              </form>
             </div>
-          </div>
-
-          {/* Submit Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setShowRequestServiceModal(false);
-                resetServiceRequest();
-              }}
-              className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold border border-slate-300 hover:bg-slate-300 transition-all duration-200 text-sm sm:text-base"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
-            >
-              Submit Request
-            </button>
-          </div>
-        </form>
-      </div>
           </div>
         </div>
       )}

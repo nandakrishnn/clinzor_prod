@@ -467,7 +467,7 @@ const handleDateFilterChange = (date: string) => {
                       {/* Booking Details */}
                       <td className="hidden md:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex flex-col justify-center gap-1">
-                          <div className="font-medium text-slate-900 leading-tight">#{booking.uuid}</div>
+                          <div className="font-medium text-sm text-slate-900 leading-tight whitespace-nowrap">#{booking.uuid}</div>
                           <div className="text-xs text-slate-500 leading-tight">{booking.session_type}</div>
                           {booking.patient_address && (
                             <div className="text-xs text-slate-500 flex items-center leading-tight">
