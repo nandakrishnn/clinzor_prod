@@ -46,7 +46,7 @@ var AvailableClinics = function (_a) {
         setCurrentIndex(slideIndex * visibleCards);
     };
     var handleBookNow = function (clinic) {
-        router.push("/service/booking/" + clinic.id);
+        router.push("/service/clinic/" + clinic.id);
     };
     // Calculate the subset of clinics to display
     var visibleClinics = common_1.clinicData.slice(currentIndex, currentIndex + visibleCards);
