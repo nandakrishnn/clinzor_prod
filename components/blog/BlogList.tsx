@@ -126,26 +126,26 @@ const BlogList = () => {
             </div>
 
             {/* section for listing all page wise */}
-            <div className='w-full md:w-[70%]'>
+            <div className='w-full md:w-[70%] mb-10'>
                 {blogData?.length > 0 && (
                     <div className="mb-16">
                         {blogData.map((post, index) => (
                             <Link href={`/blog/${post?.uuid}`}
                                 key={index}
-                                className="bg-white rounded-xl overflow-hidden cursor-pointer flex mb-5 md:mb-10"
+                                className="bg-white rounded-xl overflow-hidden cursor-pointer flex flex-col md:flex-row mb-5 md:mb-10 gap-2 md:gap-5"
                             >
-                                <div className="pt-3 md:pt-0 text-start capitalize md:w-[90%]">
+                                <div className="text-start capitalize md:w-[90%]">
                                     <span className="inline-block  text-[#49739C] text-xs font-medium rounded-full mb-1">
                                         {"Blogs"}
                                     </span>
                                     <h3 className="text-[16px] font-semibold text-[#0D171C] mb-1 line-clamp-2">
                                         {post?.title}
                                     </h3>
-                                    <p className="text-[#4F7A96] text-sm line-clamp-5">
+                                    <p className="text-[#4F7A96] text-sm line-clamp-5 text-justify">
                                         {post?.content}
                                     </p>
                                 </div>
-                                <div>
+                                <div className=''>
                                     <img
                                         src={post?.image || '/blogs.png'}
                                         alt={post?.title}
@@ -159,38 +159,40 @@ const BlogList = () => {
                         ))}
                     </div>
                 )}
+
+                {/* Load More button - Only show if there are more pages and not loading */}
+                {hasMore && !isLoading && blogData.length > 0 && (
+                    <div className="flex justify-center mt-8">
+
+                        <button
+                            onClick={handleLoadMore}
+                            disabled={isLoading}
+                            className="p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader size={18} className="animate-spin mr-2" />
+                                    Loading...
+                                </>
+                            ) : (
+                                <>
+                                    Load More
+                                    <ChevronRight size={18} className="ml-2" />
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
+
+                {/* Show message when no more services to load */}
+                {!hasMore && blogData.length > 0 && (
+                    <div className="text-center text-gray-500 mt-8">
+                        No more Blogs to load
+                    </div>
+                )}
             </div>
 
-            {/* Load More button - Only show if there are more pages and not loading */}
-            {hasMore && !isLoading && blogData.length > 0 && (
-                <div className="flex justify-center mt-8">
 
-                    <button
-                        onClick={handleLoadMore}
-                        disabled={isLoading}
-                        className="p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader size={18} className="animate-spin mr-2" />
-                                Loading...
-                            </>
-                        ) : (
-                            <>
-                                Load More
-                                <ChevronRight size={18} className="ml-2" />
-                            </>
-                        )}
-                    </button>
-                </div>
-            )}
-
-            {/* Show message when no more services to load */}
-            {!hasMore && blogData.length > 0 && (
-                <div className="text-center text-gray-500 mt-8">
-                    No more Blogs to load
-                </div>
-            )}
         </div>
     )
 }

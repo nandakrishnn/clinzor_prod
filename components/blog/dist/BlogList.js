@@ -125,21 +125,22 @@ var BlogList = function () {
                     react_1["default"].createElement("p", { className: "text-[#4F7A96] text-sm line-clamp-2" }, post === null || post === void 0 ? void 0 : post.content)))); })))),
         react_1["default"].createElement("div", { className: "flex items-start mb-5" },
             react_1["default"].createElement("h2", { className: "text-[22px] font-bold" }, "Articles")),
-        react_1["default"].createElement("div", { className: 'w-full md:w-[70%]' }, (blogData === null || blogData === void 0 ? void 0 : blogData.length) > 0 && (react_1["default"].createElement("div", { className: "mb-16" }, blogData.map(function (post, index) { return (react_1["default"].createElement(link_1["default"], { href: "/blog/" + (post === null || post === void 0 ? void 0 : post.uuid), key: index, className: "bg-white rounded-xl overflow-hidden cursor-pointer flex mb-5 md:mb-10" },
-            react_1["default"].createElement("div", { className: "pt-3 md:pt-0 text-start capitalize md:w-[90%]" },
-                react_1["default"].createElement("span", { className: "inline-block  text-[#49739C] text-xs font-medium rounded-full mb-1" }, "Blogs"),
-                react_1["default"].createElement("h3", { className: "text-[16px] font-semibold text-[#0D171C] mb-1 line-clamp-2" }, post === null || post === void 0 ? void 0 : post.title),
-                react_1["default"].createElement("p", { className: "text-[#4F7A96] text-sm line-clamp-5" }, post === null || post === void 0 ? void 0 : post.content)),
-            react_1["default"].createElement("div", null,
-                react_1["default"].createElement("img", { src: (post === null || post === void 0 ? void 0 : post.image) || '/blogs.png', alt: post === null || post === void 0 ? void 0 : post.title, className: "w-full h-48 object-cover rounded-xl", onError: function (e) {
-                        e.currentTarget.src = '/blogs.png';
-                    } })))); })))),
-        hasMore && !isLoading && blogData.length > 0 && (react_1["default"].createElement("div", { className: "flex justify-center mt-8" },
-            react_1["default"].createElement("button", { onClick: handleLoadMore, disabled: isLoading, className: "p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" }, isLoading ? (react_1["default"].createElement(react_1["default"].Fragment, null,
-                react_1["default"].createElement(lucide_react_1.Loader, { size: 18, className: "animate-spin mr-2" }),
-                "Loading...")) : (react_1["default"].createElement(react_1["default"].Fragment, null,
-                "Load More",
-                react_1["default"].createElement(lucide_react_1.ChevronRight, { size: 18, className: "ml-2" })))))),
-        !hasMore && blogData.length > 0 && (react_1["default"].createElement("div", { className: "text-center text-gray-500 mt-8" }, "No more Blogs to load"))));
+        react_1["default"].createElement("div", { className: 'w-full md:w-[70%] mb-10' },
+            (blogData === null || blogData === void 0 ? void 0 : blogData.length) > 0 && (react_1["default"].createElement("div", { className: "mb-16" }, blogData.map(function (post, index) { return (react_1["default"].createElement(link_1["default"], { href: "/blog/" + (post === null || post === void 0 ? void 0 : post.uuid), key: index, className: "bg-white rounded-xl overflow-hidden cursor-pointer flex flex-col md:flex-row mb-5 md:mb-10 gap-2 md:gap-5" },
+                react_1["default"].createElement("div", { className: "text-start capitalize md:w-[90%]" },
+                    react_1["default"].createElement("span", { className: "inline-block  text-[#49739C] text-xs font-medium rounded-full mb-1" }, "Blogs"),
+                    react_1["default"].createElement("h3", { className: "text-[16px] font-semibold text-[#0D171C] mb-1 line-clamp-2" }, post === null || post === void 0 ? void 0 : post.title),
+                    react_1["default"].createElement("p", { className: "text-[#4F7A96] text-sm line-clamp-5 text-justify" }, post === null || post === void 0 ? void 0 : post.content)),
+                react_1["default"].createElement("div", { className: '' },
+                    react_1["default"].createElement("img", { src: (post === null || post === void 0 ? void 0 : post.image) || '/blogs.png', alt: post === null || post === void 0 ? void 0 : post.title, className: "w-full h-48 object-cover rounded-xl", onError: function (e) {
+                            e.currentTarget.src = '/blogs.png';
+                        } })))); }))),
+            hasMore && !isLoading && blogData.length > 0 && (react_1["default"].createElement("div", { className: "flex justify-center mt-8" },
+                react_1["default"].createElement("button", { onClick: handleLoadMore, disabled: isLoading, className: "p-2.5 px-5 bg-primaryColor flex items-center justify-center text-white rounded-full text-sm hover:bg-primaryColor/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" }, isLoading ? (react_1["default"].createElement(react_1["default"].Fragment, null,
+                    react_1["default"].createElement(lucide_react_1.Loader, { size: 18, className: "animate-spin mr-2" }),
+                    "Loading...")) : (react_1["default"].createElement(react_1["default"].Fragment, null,
+                    "Load More",
+                    react_1["default"].createElement(lucide_react_1.ChevronRight, { size: 18, className: "ml-2" })))))),
+            !hasMore && blogData.length > 0 && (react_1["default"].createElement("div", { className: "text-center text-gray-500 mt-8" }, "No more Blogs to load")))));
 };
 exports["default"] = BlogList;
