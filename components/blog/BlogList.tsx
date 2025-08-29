@@ -24,6 +24,7 @@ const BlogList = () => {
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [showBlog, setShowBlog] = useState<Blogs[]>([])
 
     const getBlogData = async (pageNum: number) => {
         try {
@@ -33,8 +34,10 @@ const BlogList = () => {
             setHasMore(pageNum < totalPages);
             const pageData = res?.data?.data || [];
 
+
             if (pageNum === 1) {
                 setBlogData(pageData);
+                setShowBlog(pageData.slice(0, 4))
             } else {
                 setBlogData((prev) => [...prev, ...pageData]);
             }
@@ -86,30 +89,28 @@ const BlogList = () => {
             {/* Search Part */}
             <SearchBar placeHolder='Search Bogs....' />
 
-            {blogData.length > 0 && (
+            {showBlog?.length > 0 && (
                 <div className="mb-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {blogData.slice(0, 4).map((post, index) => (
+                        {showBlog.map((post, index) => (
                             <Link href={`/blog/${post?.uuid}`}
                                 key={index}
-                                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                                className="bg-white rounded-xl overflow-hidden cursor-pointer"
                             >
                                 <img
                                     src={post?.image || '/blogs.png'}
                                     alt={post?.title}
-                                    className="w-full h-48 object-cover"
+                                    className="w-full h-48 object-cover rounded-xl"
                                     onError={(e) => {
                                         e.currentTarget.src = '/blogs.png';
                                     }}
                                 />
-                                <div className="p-6 text-start capitalize">
-                                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full mb-2">
-                                        {"Blogs"}
-                                    </span>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                                <div className="pt-3 text-start capitalize">
+
+                                    <h3 className="text-[18px] font-semibold text-[#0D171C] mb-1 line-clamp-2">
                                         {post?.title}
                                     </h3>
-                                    <p className="text-gray-600 text-sm line-clamp-2">
+                                    <p className="text-[#4F7A96] text-sm line-clamp-2">
                                         {post?.content}
                                     </p>
                                 </div>
@@ -118,6 +119,47 @@ const BlogList = () => {
                     </div>
                 </div>
             )}
+
+            {/* Title */}
+            <div className="flex items-start mb-5">
+                <h2 className="text-[22px] font-bold">Articles</h2>
+            </div>
+
+            {/* section for listing all page wise */}
+            <div className='w-full md:w-[70%]'>
+                {blogData?.length > 0 && (
+                    <div className="mb-16">
+                        {blogData.map((post, index) => (
+                            <Link href={`/blog/${post?.uuid}`}
+                                key={index}
+                                className="bg-white rounded-xl overflow-hidden cursor-pointer flex mb-5 md:mb-10"
+                            >
+                                <div className="pt-3 md:pt-0 text-start capitalize md:w-[90%]">
+                                    <span className="inline-block  text-[#49739C] text-xs font-medium rounded-full mb-1">
+                                        {"Blogs"}
+                                    </span>
+                                    <h3 className="text-[16px] font-semibold text-[#0D171C] mb-1 line-clamp-2">
+                                        {post?.title}
+                                    </h3>
+                                    <p className="text-[#4F7A96] text-sm line-clamp-5">
+                                        {post?.content}
+                                    </p>
+                                </div>
+                                <div>
+                                    <img
+                                        src={post?.image || '/blogs.png'}
+                                        alt={post?.title}
+                                        className="w-full h-48 object-cover rounded-xl"
+                                        onError={(e) => {
+                                            e.currentTarget.src = '/blogs.png';
+                                        }}
+                                    />
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {/* Load More button - Only show if there are more pages and not loading */}
             {hasMore && !isLoading && blogData.length > 0 && (
