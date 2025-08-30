@@ -20,7 +20,8 @@ import MapPicker from './MapPicker';
 import { useSession } from 'next-auth/react';
 import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 import { editClinicODetails } from '@/service/clinic/profileService';
-
+import axios from 'axios';
+import { axiosPrivate } from '@/axios/axios';
 
 // API Interface
 interface NewClinic {
@@ -32,8 +33,6 @@ interface NewClinic {
   flat_discount_amt: string;
   clinic: string;
 }
-
-
 
 // Type definitions
 interface ClinicData {
@@ -53,7 +52,6 @@ interface ClinicData {
     lat: number;
     lng: number;
   };
-  // Add any additional fields from your backend
   landmark?: string;
   gstNo?: string;
   foundedOn?: string | null;
@@ -108,6 +106,13 @@ interface NominatimResult {
 interface NominatimReverseResult {
   display_name?: string;
   address?: NominatimAddress;
+}
+
+// Timing interface for API
+interface TimingItem {
+  day: string;
+  opening_time: string;
+  closing_time: string;
 }
 
 function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
@@ -269,6 +274,50 @@ const ClinicSettingsDashboard = () => {
     sunday: 'Sunday'
   };
 
+  // Function to transform operating hours to API format
+  const transformOperatingHoursToAPI = (operatingHours: OperatingHours): TimingItem[] => {
+    const daysMapping: Record<keyof OperatingHours, string> = {
+      monday: 'monday',
+      tuesday: 'tuesday',
+      wednesday: 'wednesday',
+      thursday: 'thursday',
+      friday: 'friday',
+      saturday: 'saturday',
+      sunday: 'sunday'
+    };
+
+    const timingList: TimingItem[] = [];
+
+    Object.entries(operatingHours).forEach(([day, hours]) => {
+      if (!hours.closed && hours.open && hours.close) {
+        timingList.push({
+          day: daysMapping[day as keyof OperatingHours],
+          opening_time: `${hours.open}:00`,
+          closing_time: `${hours.close}:00`
+        });
+      }
+    });
+
+    return timingList;
+  };
+
+  // Function to save operating hours
+  const saveOperatingHours = async (clinicId: string, operatingHours: OperatingHours) => {
+    try {
+      const timingList = transformOperatingHoursToAPI(operatingHours);
+      const body = {
+        clinic: clinicId,
+        timing_list: timingList
+      };
+
+      const response = await axiosPrivate.post('/clinic/clinic-timing-create/', body);
+      return response.data;
+    } catch (error) {
+      console.error("Operating hours update error:", error);
+      throw error;
+    }
+  };
+
   const handleInputChange = (field: keyof ClinicData, value: string) => {
     setClinicData(prev => ({ ...prev, [field]: value }));
   };
@@ -321,35 +370,39 @@ const ClinicSettingsDashboard = () => {
     }));
   };
 
-const handleSave = async () => {
-  setSaveStatus('saving');
-  try {
-    const requestData = {
-      name: clinicData.name,
-      email: clinicData.email,
-      contact_number: clinicData.phone,
-      address: clinicData.address,
-      city: clinicData.city,
-      pincode: clinicData.postalCode,
-      about_clinic: clinicData.about,
-      coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`
-    };
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      const requestData = {
+        name: clinicData.name,
+        email: clinicData.email,
+        contact_number: clinicData.phone,
+        address: clinicData.address,
+        city: clinicData.city,
+        pincode: clinicData.postalCode,
+        about_clinic: clinicData.about,
+        coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`
+      };
 
-// Then use it like this:
-const clinicId = clinic ? (clinic as BackendClinic).uuid || '' : ''; // Use the actual ID field from your clinic data
-    
-    await editClinicODetails(clinicId, requestData);
-    
-    console.log('Clinic details updated successfully');
-    setSaveStatus('saved');
-    setIsEditMode(false);
-    setTimeout(() => setSaveStatus('idle'), 3000);
-  } catch (error) {
-    console.error('Failed to update clinic details:', error);
-    setSaveStatus('error');
-    setTimeout(() => setSaveStatus('idle'), 3000);
-  }
-};
+      const clinicId = clinic ? (clinic as BackendClinic).uuid || '' : '';
+      
+      // Save clinic details
+      await editClinicODetails(clinicId, requestData);
+      
+      // Save operating hours
+      await saveOperatingHours(clinicId, operatingHours);
+      
+      console.log('Clinic details and operating hours updated successfully');
+      setSaveStatus('saved');
+      setIsEditMode(false);
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Failed to update clinic details:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
   // Geocoding
   const fetchSearchResults = debounce(async (query: string) => {
     if (!query) {
@@ -521,8 +574,6 @@ const clinicId = clinic ? (clinic as BackendClinic).uuid || '' : ''; // Use the 
   }
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Floating Navigation */}
-
       {/* Header and Main Content */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5" />
