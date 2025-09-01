@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @custom-variant dark (&:is(.dark *));
+@import "slick-carousel/slick/slick.css";
+@import "slick-carousel/slick/slick-theme.css";
+
 
 :root {
   --background-start: #e6f2ff; /* very soft light bluish */
