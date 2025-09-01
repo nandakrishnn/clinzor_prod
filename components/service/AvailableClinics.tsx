@@ -8,13 +8,14 @@ import { Clinic, clinicData } from "@/types/common";
 import ClinicCard from "./ClinicCard";
 import Title from "../ui/title";
 import { getClinicListService } from "@/service/user/sevicePage";
+import DataPlaceholder from "../common/DataPlaceholder";
 
 const AvailableClinics = ({ id }: { id: string }) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [clinicList, setClinicList] = useState()
+  const [clinicList, setClinicList] = useState([])
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,6 +38,10 @@ const AvailableClinics = ({ id }: { id: string }) => {
       const res = await getClinicListService(id)
 
       console.log(res, "service related clinic")
+
+      if (res.status === 200) {
+        setClinicList(res.data.data)
+      }
 
     } catch (error) {
       console.log(error)
@@ -93,22 +98,27 @@ const AvailableClinics = ({ id }: { id: string }) => {
       </div>
 
       <div className="relative overflow-hidden">
-        <div className="flex justify-start gap-4">
-          {visibleClinics.map((clinic) => (
-            <div
-              key={clinic.id}
-              className="flex-shrink-0 pb-5"
-              style={{
-                width: `calc(${100 / visibleCards}% - 1rem)`,
-                minWidth: "280px" // Ensures cards don't get too small
-              }}
-            >
-              <ClinicCard clinic={clinic} onBookNow={handleBookNow} />
+        {
+          clinicList?.length === 0 ?
+            <DataPlaceholder title="No Clinics Available" description="There is no clinics available for this service" /> :
+            <div className="flex justify-start gap-4">
+              {visibleClinics.map((clinic) => (
+                <div
+                  key={clinic.id}
+                  className="flex-shrink-0 pb-5"
+                  style={{
+                    width: `calc(${100 / visibleCards}% - 1rem)`,
+                    minWidth: "280px" // Ensures cards don't get too small
+                  }}
+                >
+                  <ClinicCard clinic={clinic} onBookNow={handleBookNow} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+        }
       </div>
-      {totalSlides > 1 && (
+
+      {clinicList?.length === 0 ? "" : totalSlides > 1 && (
         <div className="flex gap-2 md:gap-5 items-center justify-center mt-5">
           <button
             onClick={handlePrev}
