@@ -3,7 +3,9 @@ import { axiosPrivate } from "@/axios/axios";
 
 export const findUsers = async (phone_number: string) => {
   return await axiosPrivate.get(`/user/find-user/`, {
-    phone_number
+    params: {
+      phone_number
+    }
   });
 };
 
