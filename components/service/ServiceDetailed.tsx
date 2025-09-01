@@ -23,7 +23,6 @@ const ServiceDetailed = ({ id }: { id: string }) => {
   const getServiceData = async () => {
     try {
       const res = await getAService(id)
-      console.log(res, 'get the individual service detailed view')
 
       if (res.status === 200) {
         setServiceData(res?.data)
@@ -38,8 +37,6 @@ const ServiceDetailed = ({ id }: { id: string }) => {
   useEffect(() => {
     getServiceData()
   }, []);
-
-  console.log(serviceData, 'service id from the service detailed page')
 
   if (isLoading) {
     return <ServiceDetailedVIewSkelton />

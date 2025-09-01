@@ -1,5 +1,8 @@
 "use client"
 
+import CommonHeroSection from "@/components/common/CommonHeroSection"
+import FooterSection from "@/components/landingpage/footer/footer"
+import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
 import { Confirmation } from "@/components/service/clinic/Confirmation"
 import { CouponApply } from "@/components/service/clinic/CouponApply"
 import { DateSlots } from "@/components/service/clinic/DateSlots"
@@ -140,108 +143,79 @@ export default function ClinicBooking() {
   }
 
   return (
-    <section aria-label="Clinic Booking" className="space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-pretty text-2xl font-semibold text-gray-900">Book an Appointment</h1>
-        <span className="text-sm text-gray-500">
-          Step {step + 1} of {STEPS.length}
-        </span>
-      </header>
+    <section aria-label="Clinic Booking" className="">
+      <nav>
+        <NavbarDemo />
+      </nav>
+      {/* Hero section */}
+      <section className="pb-10">
+        <CommonHeroSection className="h-[15vh]" />
+      </section>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Left sticky live preview */}
-        <div className="md:col-span-1">
-          <PreviewCard
-            service={{
-              title: service.title,
-              description: service.description,
-              imageUrl: service.image,
-              basePrice: price,
-            }}
-            clinic={DUMMY_CLINIC}
-            mode={mode}
-            dateLabel={dateLabel}
-            time={timeLabel}
-            doctorPreference={pref}
-            coupon={coupon ? { code: coupon.code, discountPct: coupon.percent } : null}
-            totals={{ subtotal: price, discount, total }}
-          />
-        </div>
+      <section className="pb-10 max-w-7xl mx-auto">
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Left sticky live preview */}
+          <div className="md:col-span-1">
+            <PreviewCard
+              service={{
+                title: service.title,
+                description: service.description,
+                imageUrl: service.image,
+                basePrice: price,
+              }}
+              clinic={DUMMY_CLINIC}
+              mode={mode}
+              dateLabel={dateLabel}
+              time={timeLabel}
+              doctorPreference={pref}
+              coupon={coupon ? { code: coupon.code, discountPct: coupon.percent } : null}
+              totals={{ subtotal: price, discount, total }}
+            />
+          </div>
 
-        {/* Right: stepper + step content */}
-        <div className="space-y-6 md:col-span-2">
-          <Stepper steps={STEPS} current={step} onStepClick={goto} />
+          {/* Right: stepper + step content */}
+          <div className="space-y-6 md:col-span-2">
+            <Stepper steps={STEPS} current={step} onStepClick={goto} />
 
-          {step === 0 && (
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="space-y-6 md:col-span-2">
-                <ServiceSummary service={service} sessionType={sessionType} onSessionTypeChange={setSessionType} />
-                <ModeSelector value={mode} onChange={setMode} />
-              </div>
-              <aside className="rounded-lg border border-gray-200 bg-white p-4">
-                <h3 className="mb-2 text-sm font-medium text-gray-900">Price Summary</h3>
-                <dl className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <dt>{sessionType === "consultation" ? "Consultation" : "Session"} fee</dt>
-                    <dd>₹{price}</dd>
-                  </div>
-                  <div className="flex justify-between text-gray-500">
-                    <dt>Coupon</dt>
-                    <dd>-₹{discount}</dd>
-                  </div>
-                  <div className="mt-2 flex justify-between border-t pt-2 font-semibold text-gray-900">
-                    <dt>To Pay</dt>
-                    <dd>₹{total}</dd>
-                  </div>
-                </dl>
-                <div className="mt-4 flex justify-end">
-                  <button onClick={next} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                    Choose Date & Time
-                  </button>
+            {step === 0 && (
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="space-y-6 md:col-span-2">
+                  <ServiceSummary service={service} sessionType={sessionType} onSessionTypeChange={setSessionType} />
+                  <ModeSelector value={mode} onChange={setMode} />
                 </div>
-              </aside>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="space-y-6">
-              <DateSlots
-                tabs={DUMMY_SLOTS}
-                selectedTab={selectedTab}
-                onTabChange={setSelectedTab}
-                selectedSlot={selectedSlot}
-                onSelectSlot={setSelectedSlot}
-              />
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={back}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
-                >
-                  Back
-                </button>
-                <button
-                  disabled={!selectedSlot}
-                  onClick={next}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Continue
-                </button>
+                <aside className="rounded-lg border border-gray-200 bg-white p-4">
+                  <h3 className="mb-2 text-sm font-medium text-gray-900">Price Summary</h3>
+                  <dl className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <dt>{sessionType === "consultation" ? "Consultation" : "Session"} fee</dt>
+                      <dd>₹{price}</dd>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <dt>Coupon</dt>
+                      <dd>-₹{discount}</dd>
+                    </div>
+                    <div className="mt-2 flex justify-between border-t pt-2 font-semibold text-gray-900">
+                      <dt>To Pay</dt>
+                      <dd>₹{total}</dd>
+                    </div>
+                  </dl>
+                  <div className="mt-4 flex justify-end">
+                    <button onClick={next} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                      Choose Date & Time
+                    </button>
+                  </div>
+                </aside>
               </div>
-            </div>
-          )}
+            )}
 
-          {step === 2 && (
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="space-y-6 md:col-span-2">
-                <DoctorPreference value={genderPref} onChange={setGenderPref} />
-                <PatientForm value={patient} onChange={setPatient} />
-              </div>
-              <aside className="space-y-6">
-                <CouponApply
-                  available={DUMMY_COUPONS}
-                  applied={coupon}
-                  onApply={setCoupon}
-                  onRemove={() => setCoupon(null)}
+            {step === 1 && (
+              <div className="space-y-6">
+                <DateSlots
+                  tabs={DUMMY_SLOTS}
+                  selectedTab={selectedTab}
+                  onTabChange={setSelectedTab}
+                  selectedSlot={selectedSlot}
+                  onSelectSlot={setSelectedSlot}
                 />
                 <div className="flex items-center justify-between">
                   <button
@@ -251,59 +225,96 @@ export default function ClinicBooking() {
                     Back
                   </button>
                   <button
-                    disabled={!patient.name || !patient.phone}
+                    disabled={!selectedSlot}
                     onClick={next}
                     className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Review & Pay
+                    Continue
                   </button>
                 </div>
-              </aside>
-            </div>
-          )}
+              </div>
+            )}
 
-          {step === 3 && (
-            <div className="grid gap-6 md:grid-cols-3">
-              <OrderSummary
+            {step === 2 && (
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="space-y-6 md:col-span-2">
+                  <DoctorPreference value={genderPref} onChange={setGenderPref} />
+                  <PatientForm value={patient} onChange={setPatient} />
+                </div>
+                <aside className="space-y-6">
+                  <CouponApply
+                    available={DUMMY_COUPONS}
+                    applied={coupon}
+                    onApply={setCoupon}
+                    onRemove={() => setCoupon(null)}
+                  />
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={back}
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      disabled={!patient.name || !patient.phone}
+                      onClick={next}
+                      className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Review & Pay
+                    </button>
+                  </div>
+                </aside>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="grid gap-6 md:grid-cols-3">
+                <OrderSummary
+                  service={service}
+                  sessionType={sessionType}
+                  mode={mode}
+                  slot={selectedSlot}
+                  genderPref={genderPref}
+                  coupon={coupon}
+                  price={price}
+                  discount={discount}
+                  total={total}
+                />
+                <PaymentOptions
+                  className="md:col-span-2"
+                  value={payMethod}
+                  onChange={setPayMethod}
+                  onConfirm={handleConfirm}
+                />
+                <div className="md:col-span-3">
+                  <button
+                    onClick={back}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <Confirmation
+                orderId={orderId || "—"}
                 service={service}
-                sessionType={sessionType}
-                mode={mode}
                 slot={selectedSlot}
-                genderPref={genderPref}
-                coupon={coupon}
-                price={price}
-                discount={discount}
+                patient={patient}
+                mode={mode}
                 total={total}
               />
-              <PaymentOptions
-                className="md:col-span-2"
-                value={payMethod}
-                onChange={setPayMethod}
-                onConfirm={handleConfirm}
-              />
-              <div className="md:col-span-3">
-                <button
-                  onClick={back}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
-                >
-                  Back
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <Confirmation
-              orderId={orderId || "—"}
-              service={service}
-              slot={selectedSlot}
-              patient={patient}
-              mode={mode}
-              total={total}
-            />
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <section>
+        <FooterSection />
+      </section>
     </section>
   )
 }

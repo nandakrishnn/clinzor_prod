@@ -7,11 +7,14 @@ import { Clinic, clinicData } from "@/types/common";
 
 import ClinicCard from "./ClinicCard";
 import Title from "../ui/title";
+import { getClinicListService } from "@/service/user/sevicePage";
 
-const AvailableClinics = ({id}: {id:string}) => {
+const AvailableClinics = ({ id }: { id: string }) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [clinicList, setClinicList] = useState()
 
   useEffect(() => {
     const handleResize = () => {
@@ -27,6 +30,25 @@ const AvailableClinics = ({id}: {id:string}) => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const getClinicList = async () => {
+    try {
+
+      const res = await getClinicListService(id)
+
+      console.log(res, "service related clinic")
+
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getClinicList()
+  }, [])
+
 
   // Calculate total slides and current slide
   const totalSlides = Math.ceil(clinicData.length / visibleCards);

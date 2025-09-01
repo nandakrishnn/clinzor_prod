@@ -20,18 +20,18 @@ const ServiceDetailPage = ({ params }: ServiceDetailPageProps) => {
       </nav>
 
       {/* Hero section */}
-      <section className="pb-10 md:pb-16">
+      <section className="pb-10 md:pb-10">
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
       {/* Service Detailed */}
-      <section className="max-w-screen-xl mx-auto pb-5 md:pb-20">
+      <section className="max-w-screen-xl mx-auto pb-5 md:pb-10">
         <ServiceDetailed id={params?.id} />
       </section>
 
       {/* Available Clinic Section */}
       <div className="w-full bg-gray-50">
-        <section className="max-w-screen-xl mx-auto py-10 md:py-20">
+        <section className="max-w-screen-xl mx-auto py-10 ">
           <AvailableClinics id={params?.id} />
         </section>
       </div>
