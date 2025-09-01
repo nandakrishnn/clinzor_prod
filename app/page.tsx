@@ -11,6 +11,7 @@ import Booking from "@/components/landingpage/booking/Booking";
 import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
 import BlogComponent from "@/components/blog/BlogComponent";
+import FloatingBanner from "@/components/FloatingBanner";
 
 export default function Home() {
   return (
@@ -83,6 +84,8 @@ export default function Home() {
           <FooterSection />
         </section>
       </main>
+
+      <FloatingBanner />
     </div>
   );
 }
