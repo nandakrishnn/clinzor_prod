@@ -67,13 +67,13 @@ const ServiceListSection = () => {
   if (isLoading) {
     return (
       <>
-      <SearchSkeleton />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <ServiceCardSkeleton key={`skeleton-${i}`} />
-        ))}
-      </div>
-        </>
+        <SearchSkeleton />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ServiceCardSkeleton key={`skeleton-${i}`} />
+          ))}
+        </div>
+      </>
     )
   }
 

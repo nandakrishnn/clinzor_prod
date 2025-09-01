@@ -46,7 +46,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Card content */}
       <div className="p-4 md:p-5">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary line-clamp-1">
+          <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary line-clamp-1 capitalize">
             {name}
           </h3>
         </div>

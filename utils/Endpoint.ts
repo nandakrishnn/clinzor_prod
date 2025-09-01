@@ -15,7 +15,8 @@ export const USER_HOME = {
 
 export const USER_SERVICE = {
     GET_ALL_SERVICE: "clinic/service-lc/",
-    GET_SERVICE_RELATED_CLINIC: "clinic/search/"
+    GET_A_SERVICE: "clinic/service-rud/",
+    GET_SERVICE_RELATED_CLINIC: "clinic/search/",
 }
 export const USER_CLINIC = {
     

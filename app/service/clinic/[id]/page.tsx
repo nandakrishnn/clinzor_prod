@@ -23,7 +23,7 @@ const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
       </section>
 
       <section>
-        <ClinicDetailed />
+        <ClinicDetailed id={params.id} />
       </section>
 
       {/* Footer */}

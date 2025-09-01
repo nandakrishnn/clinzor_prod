@@ -29,7 +29,7 @@ const PERIODS: {
     label: "Afternoon",
     icon: (
       <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M5 12a7 7 0 1 1 14 0H5Z" />
+        <path d="M12 2v20M2 12h20" />
       </svg>
     ),
   },
@@ -38,7 +38,7 @@ const PERIODS: {
     label: "Evening",
     icon: (
       <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M5 12a7 7 0 1 1 14 0H5Z" />
+        <path d="M3 12a9 9 0 0 0 18 0 9 9 0 1 1-18 0Z" />
       </svg>
     ),
   },
@@ -66,10 +66,26 @@ export function DateSlots({
   selectedSlot: Slot | null
   onSelectSlot: (s: Slot) => void
 }) {
+  function parse12hToMinutes(label: string) {
+    // expects "HH:MM AM/PM"
+    const [time, meridian] = label.split(" ")
+    let [h, m] = time.split(":").map((n) => Number.parseInt(n, 10))
+    if (meridian === "PM" && h !== 12) h += 12
+    if (meridian === "AM" && h === 12) h = 0
+    return h * 60 + (m || 0)
+  }
+
   const periods = PERIODS.map((p) => p.key)
   const current = tabs[selectedTab as string]
+
+  const isToday = String(selectedTab).toLowerCase() === "today"
+  const now = new Date()
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
+  const visibleSlots = isToday ? current.slots.filter((s) => parse12hToMinutes(s.label) > nowMinutes) : current.slots
+
   const byPeriod: Record<string, Slot[]> = Object.fromEntries(
-    periods.map((p) => [p, current.slots.filter((s) => s.period === p)]),
+    periods.map((p) => [p, visibleSlots.filter((s) => s.period === p)]),
   )
 
   return (
@@ -84,7 +100,7 @@ export function DateSlots({
               onClick={() => onTabChange(key as keyof Tabs)}
               className={[
                 "rounded-md px-3 py-2 text-sm",
-                isActive ? "bg-primaryColor text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
               ].join(" ")}
             >
               <div className="flex flex-col items-start">
@@ -96,6 +112,11 @@ export function DateSlots({
         })}
       </div>
 
+      {/* Helper note for today */}
+      {isToday && (
+        <p className="px-4 pt-3 text-xs text-gray-500">Showing only slots after the current time for today.</p>
+      )}
+
       {/* Slots grouped by time of day */}
       <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2">
         {PERIODS.map((p) => (
@@ -105,7 +126,11 @@ export function DateSlots({
               {p.label}
             </div>
             <div className="flex flex-wrap gap-2">
-              {byPeriod[p.key].length === 0 && <span className="text-xs text-gray-500">No slots in this period</span>}
+              {byPeriod[p.key].length === 0 && (
+                <span className="text-xs text-gray-500">
+                  {isToday ? "No upcoming slots" : "No slots in this period"}
+                </span>
+              )}
               {byPeriod[p.key].map((slot) => {
                 const isSelected = selectedSlot?.label === slot.label && selectedSlot?.dateKey === slot.dateKey
                 return (
@@ -115,8 +140,8 @@ export function DateSlots({
                     className={[
                       "rounded-md border px-3 py-2 text-sm",
                       isSelected
-                        ? "border-primaryColor bg-blue-50 text-primaryColor"
-                        : "border-blue-200 bg-white text-primaryColor hover:bg-blue-50",
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-blue-200 bg-white text-blue-700 hover:bg-blue-50",
                     ].join(" ")}
                   >
                     {slot.label}

@@ -1,63 +1,92 @@
+'use client'
+import { getAService } from "@/service/user/sevicePage";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import ServiceDetailedVIewSkelton from "../skeltons/service/ServiceDetailedVIewSkelton";
+
+type ServiceData = {
+  image?: string | null;
+  created_by: string;
+  description: string;
+  name: string;
+  reason_for_rejection?: string | null;
+  status: string;
+  tags: string;
+  uuid: string;
+  rating?: string;
+};
 
 const ServiceDetailed = ({ id }: { id: string }) => {
+  const [serviceData, setServiceData] = useState<ServiceData | undefined>(undefined)
+  const [isLoading, setLoading] = useState(true)
+
+  const getServiceData = async () => {
+    try {
+      const res = await getAService(id)
+      console.log(res, 'get the individual service detailed view')
+
+      if (res.status === 200) {
+        setServiceData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getServiceData()
+  }, []);
+
+  console.log(serviceData, 'service id from the service detailed page')
+
+  if (isLoading) {
+    return <ServiceDetailedVIewSkelton />
+  }
+
   return (
-    <div className="p-4 md:p-6 font-inter">
+    <div className="p-4 md:p-6 font-inter  w-full">
       {/* Service Header Section */}
-      <section className="flex flex-col md:flex-row gap-5 md:gap-10">
-        <div className="w-full md:h-[400px] ">
+      <section className="flex flex-col md:flex-row gap-5 md:gap-10 items-start justify-start ">
+        <div className="w-full md:w-[60%] max-h-[400px] md:min-h-[400px] overflow-hidden rounded-xl shadow-lg">
           <Image
-            src={"/admin.jpg"}
+            src={serviceData?.image ? serviceData?.image : "/bannerService.png"}
             alt=""
             width={500}
             height={500}
-            className="w-full h-full object-cover rounded-xl"
+            className="w-full max-h-[400px] md:min-h-[400px] object-cover rounded-xl"
           />
         </div>
-        <div className="rounded-lg mb-8">
+        <div className="w-full md:w-[40%] rounded-lg mb-8">
           <h1 className="text-3xl font-bold text-[#424141] mb-2 capitalize">
-            Cardiologist Consultation
+            {serviceData?.name}
           </h1>
 
           <div className="flex items-center mb-3">
             <div className="text-yellow-400 text-xl mr-2">★★★★☆</div>
-            <span className="text-gray-600 text-sm">428 Reviews</span>
+            <span className="text-gray-600 text-sm">{serviceData?.rating ? serviceData?.rating : "428"} Reviews</span>
           </div>
 
-          <p className="italic text-gray-700 mb-4">
+          {/* <p className="italic text-gray-700 mb-4">
             Highly rated by patients for: expert care, diagnosis accuracy,
             treatment results
-          </p>
+          </p> */}
 
           <div className="mb-4 space-y-3 text-gray-700 leading-relaxed">
             <p>
-              A comprehensive skin examination by certified dermatologists. Our
-              dermatology consultations include detailed analysis of skin
-              conditions, personalized treatment plans, and follow-up
-              recommendations. Services cover acne treatment, eczema, psoriasis,
-              skin cancer screening, and cosmetic dermatology.
-            </p>
-            <p className="bg-blue-50 p-3 rounded italic">
-              "The dermatologist was extremely thorough and explained everything
-              clearly. My skin has improved significantly after just one visit."
-              - Priya K.
+              {serviceData?.description}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3 mt-4 capitalize">
-            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
-              ✔️ heart
-            </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
-              ✔️ cardiology
-            </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
-              ✔️ blood pressure
-            </span>
-            <span className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
-              ✔️ chest pain
-            </span>
+            {
+              serviceData?.tags.split(',').map((tags, index) => (
+                <span key={index} className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
+                  ✔️ {tags}
+                </span>
+              ))
+            }
           </div>
         </div>
       </section>
