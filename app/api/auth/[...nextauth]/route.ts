@@ -21,7 +21,21 @@ interface ApiResponse {
     is_superuser: boolean;
   };
 }
-
+interface VerifyOtpResponse {
+  access: string;
+  refresh: string;
+  user: {
+    uuid: string;
+    email: string;
+    full_name: string;
+    phone_number: string;
+    country_code: string;
+    role: string;
+    is_active: boolean;
+    is_staff: boolean;
+    is_superuser: boolean;
+  };
+}
 const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -73,6 +87,72 @@ const authOptions: NextAuthOptions = {
           return null;
         } catch (err) {
           console.error("Login error:", err);
+          return null;
+        }
+      },
+    }),
+       CredentialsProvider({
+      id: "otp",
+      name: "otp",
+      credentials: {
+        phone_number: { label: "Phone Number", type: "text" },
+        otp: { label: "OTP", type: "text" },
+        refrence_id: { label: "Reference ID", type: "text" },
+        full_name: { label: "Full Name", type: "text", optional: true },
+        email: { label: "Email", type: "email", optional: true },
+        address: { label: "Address", type: "text", optional: true },
+        authMode: { label: "Auth Mode", type: "text" }
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
+
+        const { phone_number, otp, refrence_id, full_name, email, address, authMode } = credentials;
+
+        try {
+          // Verify OTP for customer authentication
+          const verifyResponse = await fetch(`${API_BASE_URL}/user/validate-otp/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              otp,
+              refrence_id,
+              ...(authMode === "register" && {
+                full_name,
+                email,
+                address
+              })
+            }),
+          });
+
+          if (!verifyResponse.ok) {
+            const errorData = await verifyResponse.json();
+            throw new Error(errorData.message || "OTP verification failed");
+          }
+
+          const verifyData: VerifyOtpResponse = await verifyResponse.json();
+
+          if (verifyResponse.ok && verifyData.access) {
+            // For OTP authentication, always set role as CUSTOMER
+            return {
+              id: verifyData.user.uuid,
+              uuid: verifyData.user.uuid,
+              email: verifyData.user.email,
+              name: verifyData.user.full_name,
+              full_name: verifyData.user.full_name,
+              phone_number: verifyData.user.phone_number,
+              country_code: verifyData.user.country_code,
+              role: "CUSTOMER",
+              accessToken: verifyData.access,
+              refreshToken: verifyData.refresh,
+            };
+          }
+
+          console.error("OTP verification failed:", verifyData);
+          return null;
+        } catch (err) {
+          console.error("OTP verification error:", err);
           return null;
         }
       },
