@@ -28,7 +28,6 @@ type Booking = {
   clinic_id: string;
   service_type: string;
 };
-
 interface PaginationData {
   current_page: number;
   total_pages: number;

@@ -29,15 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           flexDirection: "column",
           minWidth: 0,
           height: "100dvh",
-          px: { xs: 2, md: 6 },
-          pt: {
-            xs: "calc(12px + var(--Header-height))",
-            sm: "calc(12px + var(--Header-height))",
-            md: 3,
-          },
-          pb: { xs: 2, sm: 2, md: 3 },
-          gap: 1,
-          overflow: "auto", // enable scroll inside main content
+          overflow: "auto", 
         }}
       >
 

@@ -7,10 +7,9 @@ import ExpertBookingManager from "@/components/expert/BookingManagement/BookingM
 
 export default function Slotmanagement() {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column" }}>
       {/* Breadcrumb Navigation */}
-      <Box sx={{ display: "flex", alignItems: "center" }}>
-      </Box>
+      <Box sx={{ display: "flex", alignItems: "center" }}></Box>
 
       {/* Table Section */}
       <ExpertBookingManager />
