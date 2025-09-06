@@ -1,29 +1,26 @@
-import { axiosPrivate } from "@/axios/axios";
+import { axiosPrivate, axiosPublic } from "@/axios/axios";
 
 
-export const findUsers = async (phone_number: string) => {
-  return await axiosPrivate.get(`/user/find-user/`, {
-    params: {
-      phone_number
-    }
-  });
+export const findUsers = async (body: { phone_number: string }) => {
+  return await axiosPublic.post(`/user/find-user/`, body);
 };
 
 export const sendOTP = async (body: {
   phone_number: string;
-
 }) => {
   try {
-    const response = await axiosPrivate.post(
-      `/user/send-otp/`, 
+    const response = await axiosPublic.post(
+      `/user/send-otp/`,
       body
     );
+    console.log(response?.data, "fromt he otp send option")
     return response.data;
   } catch (error) {
     console.error("Failed to send OTP error:", error);
     throw error;
   }
 };
+
 export const verifyOTP = async (body: {
   otp: string;
   refrence_id: string;
@@ -33,8 +30,8 @@ export const verifyOTP = async (body: {
 
 }) => {
   try {
-    const response = await axiosPrivate.post(
-      `/user/validate-otp/`, 
+    const response = await axiosPublic.post(
+      `/user/validate-otp/`,
       body
     );
     return response.data;
