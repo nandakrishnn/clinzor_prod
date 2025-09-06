@@ -456,7 +456,7 @@ export default function AuthenticationGateway() {
       };
 
       // This will trigger the NextAuth authorize function
-      const result = await signIn("credentials", {
+      const result = await signIn("otp", {
         redirect: false,
         ...otpData,
         phone_number,
