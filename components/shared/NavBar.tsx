@@ -12,10 +12,12 @@ import {
 } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(true)
+  const { data: session, status } = useSession();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -75,7 +77,7 @@ const Navbar = () => {
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             {
-              user ?
+              session?.user ?
                 <Link
                   href="/user#bookings"
                   className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -152,7 +154,7 @@ const Navbar = () => {
 
           <div className="border-t border-gray-200 pt-2 mt-2">
             {
-              user ?
+              session?.user ?
                 <Link
                   href="/user"
                   className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"

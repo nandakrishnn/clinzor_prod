@@ -12,6 +12,7 @@ import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
 import BlogComponent from "@/components/blog/BlogComponent";
 import FloatingBanner from "@/components/FloatingBanner";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   return (

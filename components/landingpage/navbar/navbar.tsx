@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import {
   Navbar,
   NavBody,
@@ -23,6 +24,7 @@ export function NavbarDemo() {
     { name: "Contact us", link: "/contact-us" }
   ];
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   return (
     <Navbar>
@@ -30,7 +32,7 @@ export function NavbarDemo() {
         <NavItems items={navItems} visible={isMobileMenuOpen ? true : false} />
         <div className="flex items-center gap-4">
           {
-            user ?
+            session?.user ?
               <NavbarButton href={"/user"}>My Bookings</NavbarButton>
               :
               <NavbarButton href={"/auth"}>Login</NavbarButton>
@@ -65,13 +67,24 @@ export function NavbarDemo() {
             </a>
           ))}
           <div className="flex w-full flex-col gap-4">
-            <NavbarButton
-              href={"/auth"}
-              variant="primary"
-              className="w-full cursor-pointer"
-            >
-              Login
-            </NavbarButton>
+            {
+              session?.user ?
+                <NavbarButton
+                  href={"/user"}
+                  variant="primary"
+                  className="w-full cursor-pointer"
+                >
+                  My Bookings
+                </NavbarButton>
+                :
+                <NavbarButton
+                  href={"/auth"}
+                  variant="primary"
+                  className="w-full cursor-pointer"
+                >
+                  Login
+                </NavbarButton>
+            }
             <NavbarButton
               href={"/expert-call"}
               variant="primary"

@@ -455,24 +455,21 @@ export default function AuthenticationGateway() {
     try {
       // Checking if the user exists
       const isUserExist = await findUsers({ phone_number });
+      console.log(isUserExist)
 
       if (isUserExist?.data?.user_in_db) {
         const response = await sendOTP({ phone_number });
-        console.log(response, "from the user side api call");
 
         if (response?.status === 200 && response?.message === "OTP sent") {
-          console.log(response, "Api enter in to the response if condition");
           setReferenceId(response?.data?.refrence_id);
           setShowOtpField(true);
         } else {
-          console.log(response, "User might not have a registered account");
           setFormError("Failed to send OTP. Please try again.");
         }
       } else {
         setFormError("User not found. Please register first.");
       }
     } catch (error: any) {
-      console.error("Login error:", error);
       setFormError(error.response?.data?.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
@@ -489,17 +486,14 @@ export default function AuthenticationGateway() {
 
     try {
       const response = await sendOTP({ phone_number });
-      console.log(response, "from the user side api call");
 
       if (response?.status === 200) {
-        console.log(response, "Api enter in to the response if condition");
         setReferenceId(response?.data?.refrence_id);
         setShowOtpField(true);
       } else {
         setFormError("Failed to send OTP. Please try again.");
       }
     } catch (error: any) {
-      console.error("Registration error:", error);
       setFormError(error.response?.data?.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
@@ -515,8 +509,7 @@ export default function AuthenticationGateway() {
     setIsLoading(true);
 
     try {
-      let result;
-
+      let result
       if (authMode === "register") {
         // For registration, verify OTP with all user details
         result = await signIn("otp", {
@@ -526,26 +519,30 @@ export default function AuthenticationGateway() {
           email,
           address,
           dob,
-          gender
+          gender,
+          authMode,
+          redirect: false,
         });
-        console.log(result, 'from the register otp verifying')
         // setFormError("OTP verification failed");
       } else {
         result = await signIn("otp", {
           otp,
-          refrence_id: referenceId
+          refrence_id: referenceId,
+          authMode,
+          redirect: false,
         });
-        console.log(result, 'from the login otp verifying')
         // setFormError("OTP verification failed");
       }
 
       if (result?.error) {
         setFormError(result.error);
-      } else {
+      } else if (result?.ok) {
         router.push("/");
+      } else {
+        setFormError("Authentication failed");
       }
     } catch (error: any) {
-      console.error("OTP verification error:", error);
+      console.error("OTP verification error ui:", error);
       setFormError(error.response?.data?.message || "An error occurred during OTP verification");
     } finally {
       setIsLoading(false);

@@ -39,6 +39,7 @@ interface VerifyOtpResponse {
     };
   }
 }
+
 const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -114,36 +115,42 @@ const authOptions: NextAuthOptions = {
         const { phone_number, otp, refrence_id, full_name, email, address, authMode, dob, gender } = credentials;
 
         try {
+          // Prepare the request body based on auth mode
+          let requestBody: any = {
+            otp,
+            refrence_id
+          };
+
+          // Only include user details for registration, not for login
+          if (authMode === "register") {
+            requestBody = {
+              ...requestBody,
+              full_name,
+              email,
+              address,
+              dob,
+              gender
+            };
+          }
+
           // Verify OTP for customer authentication
           const verifyResponse = await fetch(`${API_BASE_URL}user/validate-otp/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              otp,
-              refrence_id,
-              ...(authMode === "register" && {
-                full_name,
-                email,
-                address,
-                dob,
-                gender
-              })
-            }),
+            body: JSON.stringify(requestBody),
           });
 
-          console.log(verifyResponse, "response once the otp verifying")
+          const verifyData: VerifyOtpResponse = await verifyResponse.json();
 
           if (!verifyResponse.ok) {
-            const errorData = await verifyResponse.json();
-            throw new Error(errorData.message || "OTP verification failed");
+            // Extract error message from response
+            const errorMessage = verifyData?.message || "OTP verification failed";
+            throw new Error(errorMessage);
           }
 
-          const verifyData: VerifyOtpResponse = await verifyResponse.json();
-          console.error("OTP verification Json Converted data:", verifyData);
-
-          if (verifyResponse.ok && verifyData?.data?.access) {
+          if (verifyData?.data && verifyData?.data?.access) {
             // For OTP authentication, always set role as CUSTOMER
             return {
               id: verifyData?.data?.user.uuid,
@@ -158,11 +165,10 @@ const authOptions: NextAuthOptions = {
               refreshToken: verifyData?.data?.refresh,
             };
           }
-          
-          return null;
-        } catch (err) {
-          console.error("OTP verification error:", err);
-          return null;
+
+          throw new Error("Invalid response from server");
+        } catch (err: any) {
+          throw new Error(err.message || "OTP verification failed");
         }
       },
     }),
