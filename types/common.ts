@@ -8,11 +8,16 @@ export interface CommonHeroSectionProps {
 export interface Clinic {
   id: number;
   name: string;
+  clinic_name?: string;
+  clinic_uuid?: string;
   rating: number;
+  avg_rating?: number;
   reviews: number;
+  total_reviews?: number;
   address: string;
   distance: string;
   price: string;
+  min_price?: string;
   image: string;
   description: string;
   services: string[];

@@ -77,6 +77,7 @@ const SlotManagementSystem = () => {
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
+  
   const [filters, setFilters] = useState<FilterState>({
     fromDate: null,
     toDate: null,
@@ -93,6 +94,7 @@ const SlotManagementSystem = () => {
     { id: "359e3627-65eb-40b2-b535-37cbb6535ac0", name: "Dermatology" },
     { id: "459e3627-65eb-40b2-b535-37cbb6535ac1", name: "Pediatrics" }
   ];
+
   const showNotification = (type: "success" | "error" | "warning", message: string) => {
     setNotification({ type, message });
     // Auto-hide after 5 seconds
@@ -100,6 +102,7 @@ const SlotManagementSystem = () => {
       setNotification(null);
     }, 5000);
   };
+
   const fetchSlots = async (page = 1) => {
     try {
       setLoading(true);

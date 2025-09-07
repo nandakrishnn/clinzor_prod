@@ -20,7 +20,7 @@ interface BulkSlotData {
   }[];
 }
 // Slot Management Api 
-export const createClinicSlot = async (body:Slot) => {
+export const createClinicSlot = async (body: Slot) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/expert-slot-lc/`, // Changed from PUT to POST for creation
@@ -32,7 +32,7 @@ export const createClinicSlot = async (body:Slot) => {
     throw error;
   }
 };
-export const createClinicBlukSlot = async (body:BulkSlotData) => {
+export const createClinicBlukSlot = async (body: BulkSlotData) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/bulk-slot-create/`, // Changed from PUT to POST for creation
@@ -54,7 +54,7 @@ export const editClinicSlot = async (id: string, body: Partial<Slot>) => {
     return response.data;
   } catch (error: any) {
     console.error("Slot update error:", error);
-    
+
     // Throw the error with response data for better error handling
     if (error.response) {
       throw {
@@ -64,7 +64,7 @@ export const editClinicSlot = async (id: string, body: Partial<Slot>) => {
         }
       };
     }
-    
+
     throw error;
   }
 };
@@ -85,8 +85,12 @@ export const deleteClinicSlot = async (Id: string) => {
 export const GetAClinicSlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/expert-slot-rud/${Id}`);
 };
+export const getClinicDataService = async () => {
+  const res = await axiosPrivate.get(`clinic/get-clinic-by-user/`);
+  return res?.data
+};
 
-export const GetAllClinicSlot= async (page:number) => {
+export const GetAllClinicSlot = async (page: number) => {
   try {
     const response = await axiosPrivate.get(
       `clinic/slot-lc/?page=${page}`
@@ -97,3 +101,4 @@ export const GetAllClinicSlot= async (page:number) => {
     throw error;
   }
 };
+

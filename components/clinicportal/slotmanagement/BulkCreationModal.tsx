@@ -17,17 +17,18 @@ import {
   XCircle,
   AlertCircle
 } from "lucide-react";
-import { createClinicBlukSlot } from "@/service/clinic/slotManagementService";
+import { createClinicBlukSlot, getClinicDataService } from "@/service/clinic/slotManagementService";
 import type { ClinicService } from "@/types/common";
 import { Settings, Calendar, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 interface BulkCreationModalProps {
   showBulkForm: boolean;
   setShowBulkForm: (show: boolean) => void;
   currentPage: number;
   fetchSlots: (page?: number) => void;
   clinicServices: ClinicService[];
-    showNotification: (type: "success" | "error" | "warning", message: string) => void;
+  showNotification: (type: "success" | "error" | "warning", message: string) => void;
 }
 
 interface TimeSlot {
@@ -380,7 +381,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   currentPage,
   fetchSlots,
   clinicServices,
-    showNotification
+  showNotification
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [slotType, setSlotType] = useState<
@@ -414,6 +415,19 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
 
+  const [clinicInfo, setClinicInfo] = useState<any>(null)
+
+  const { data } = useSession();
+  // Extend the user type to include uuid if available
+  type ClinicUser = {
+    role?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    uuid?: string;
+  };
+  const clinicUserInfo = data?.user as ClinicUser;
+
   // Step 2 data - days and slots
   const [days, setDays] = useState<DaySlots[]>([]);
   const [editingSlotIndex, setEditingSlotIndex] = useState<number | null>(null);
@@ -432,6 +446,23 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     const hour12 = h % 12 || 12;
     return `${hour12}:${minutes} ${period}`;
   };
+
+  const getUserClinic = async () => {
+    try {
+      const res = await getClinicDataService();
+      if (res.status === 200) {
+        setClinicInfo(res.data)
+      }
+    } catch (err) {
+      console.error(err, 'error from the clinic get')
+    } finally {
+
+    }
+  }
+
+  useEffect(() => {
+    getUserClinic()
+  }, [])
 
   // Initialize days for the next 7 days
   useEffect(() => {
@@ -692,104 +723,106 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   };
 
   // Submit only selected days data to backend
- // In submitBulkSlots function
-const submitBulkSlots = async () => {
-  try {
-    // Collect all slots from selected days only
-    const allSlots: any[] = [];
-    const daysToSubmit = copyDays.some((day) => day.selected)
-      ? days.filter((_, index) => copyDays[index].selected)
-      : days;
+  // In submitBulkSlots function
+  const submitBulkSlots = async () => {
+    try {
+      // Collect all slots from selected days only
+      const allSlots: any[] = [];
+      const daysToSubmit = copyDays.some((day) => day.selected)
+        ? days.filter((_, index) => copyDays[index].selected)
+        : days;
 
-    daysToSubmit.forEach((day) => {
-      day.slots.forEach((slot) => {
-        // Create base slot object
-        const slotData: any = {
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          max_bookings: slot.max_bookings,
-          female_doctor_count: slot.female_doctors,
-        };
+      daysToSubmit.forEach((day) => {
+        day.slots.forEach((slot) => {
+          // Create base slot object
+          const slotData: any = {
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+            max_bookings: slot.max_bookings,
+            female_doctor_count: slot.female_doctors,
+          };
 
-        // Add appropriate fields based on slot type with string boolean values
-        if (slotType === "HOME_VISIT") {
-          slotData.is_home_visit = "true";
-          // For HOME_VISIT, set the other two to "false"
-          slotData.is_video_call = "false";
-          slotData.is_physical_visit = "false";
-        } else if (slotType === "PHYSICAL_OR_VIDEO") {
-          slotData.is_video_call = slot.is_video_call ? "true" : "false";
-          slotData.is_physical_visit = slot.is_physical_visit ? "true" : "false";
-          slotData.is_home_visit = "false";
-        }
+          // Add appropriate fields based on slot type with string boolean values
+          if (slotType === "HOME_VISIT") {
+            slotData.is_home_visit = "true";
+            // For HOME_VISIT, set the other two to "false"
+            slotData.is_video_call = "false";
+            slotData.is_physical_visit = "false";
+          } else if (slotType === "PHYSICAL_OR_VIDEO") {
+            slotData.is_video_call = slot.is_video_call ? "true" : "false";
+            slotData.is_physical_visit = slot.is_physical_visit ? "true" : "false";
+            slotData.is_home_visit = "false";
+          }
 
-        allSlots.push(slotData);
-      });
-    });
-
-    const payload = {
-      clinic: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f",
-      slot_type: slotType,
-      slot_list: allSlots
-    };
-
-    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
-    
-    await createClinicBlukSlot(payload);
-    showNotification('success', 'Slots loaded successfully');
-    setShowBulkForm(false);
-    setActiveStep(0);
-    setSlotType("");
-    fetchSlots(currentPage);
-  } catch (error: any) {
-     console.error("Error creating bulk slots:", error);
-
-  let errorMessage = "Failed to load slots";
-
-  if (error.response?.data) {
-    const data = error.response.data;
-
-    // Handle slot_list array with non_field_errors
-    if (Array.isArray(data.slot_list)) {
-      const messages: string[] = [];
-
-      data.slot_list.forEach((item: any) => {
-        if (item?.non_field_errors && Array.isArray(item.non_field_errors)) {
-          messages.push(...item.non_field_errors);
-        }
+          allSlots.push(slotData);
+        });
       });
 
-      if (messages.length > 0) {
-        errorMessage = messages.join(", ");
+      if (!clinicUserInfo?.uuid || !clinicInfo?.uuid) {
+        showNotification('error', 'Clinic information is missing.');
+        return;
       }
-    }
+      const payload = {
+        clinic: clinicInfo?.uuid,
+        slot_type: slotType,
+        slot_list: allSlots
+      };
 
-    // General error fields
-    else if (data.detail) {
-      errorMessage = data.detail;
-    } else if (data.message) {
-      errorMessage = data.message;
-    } else if (Array.isArray(data)) {
-      errorMessage = data.join(", ");
-    } else if (typeof data === "object") {
-      const firstKey = Object.keys(data)[0];
-      if (firstKey) {
-        const firstError = data[firstKey];
-        if (Array.isArray(firstError)) {
-          errorMessage = firstError[0];
-        } else if (typeof firstError === "string") {
-          errorMessage = firstError;
+      await createClinicBlukSlot(payload);
+      showNotification('success', 'Slots loaded successfully');
+      setShowBulkForm(false);
+      setActiveStep(0);
+      setSlotType("");
+      fetchSlots(currentPage);
+    } catch (error: any) {
+      console.error("Error creating bulk slots:", error);
+
+      let errorMessage = "Failed to load slots";
+
+      if (error.response?.data) {
+        const data = error.response.data;
+
+        // Handle slot_list array with non_field_errors
+        if (Array.isArray(data.slot_list)) {
+          const messages: string[] = [];
+
+          data.slot_list.forEach((item: any) => {
+            if (item?.non_field_errors && Array.isArray(item.non_field_errors)) {
+              messages.push(...item.non_field_errors);
+            }
+          });
+
+          if (messages.length > 0) {
+            errorMessage = messages.join(", ");
+          }
         }
-      }
-    }
-  } else if (error.message) {
-    errorMessage = error.message;
-  }
 
-  // ✅ Always a string here
-  showNotification("error", errorMessage);
-  }
-};
+        // General error fields
+        else if (data.detail) {
+          errorMessage = data.detail;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (Array.isArray(data)) {
+          errorMessage = data.join(", ");
+        } else if (typeof data === "object") {
+          const firstKey = Object.keys(data)[0];
+          if (firstKey) {
+            const firstError = data[firstKey];
+            if (Array.isArray(firstError)) {
+              errorMessage = firstError[0];
+            } else if (typeof firstError === "string") {
+              errorMessage = firstError;
+            }
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // ✅ Always a string here
+      showNotification("error", errorMessage);
+    }
+  };
 
   const handleSlotSelection = (slotIndex: number) => {
     setSelectedSlots((prev) =>
@@ -903,25 +936,23 @@ const submitBulkSlots = async () => {
                 className="flex flex-col items-center relative z-10"
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${
-                    activeStep === index
-                      ? "bg-gray-800 text-white shadow-lg scale-110"
-                      : index < activeStep
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${activeStep === index
+                    ? "bg-gray-800 text-white shadow-lg scale-110"
+                    : index < activeStep
                       ? "bg-gray-600 text-white shadow-md"
                       : "bg-white border-2 border-gray-300 text-gray-400"
-                  }`}
+                    }`}
                 >
                   {index < activeStep ? <Check size={20} /> : step.icon}
                 </div>
                 <div className="mt-2 text-center">
                   <div
-                    className={`font-semibold text-sm ${
-                      activeStep === index
-                        ? "text-gray-800"
-                        : index < activeStep
+                    className={`font-semibold text-sm ${activeStep === index
+                      ? "text-gray-800"
+                      : index < activeStep
                         ? "text-gray-600"
                         : "text-gray-500"
-                    }`}
+                      }`}
                   >
                     {step.title}
                   </div>
@@ -1143,11 +1174,10 @@ const submitBulkSlots = async () => {
                     <div
                       key={index}
                       onClick={() => handleDaySelect(index)}
-                      className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${
-                        selectedDayIndex === index
-                          ? "border-gray-800 bg-gray-100 shadow-md"
-                          : "border-gray-200 hover:border-gray-400"
-                      }`}
+                      className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${selectedDayIndex === index
+                        ? "border-gray-800 bg-gray-100 shadow-md"
+                        : "border-gray-200 hover:border-gray-400"
+                        }`}
                     >
                       <span className="font-bold text-gray-800">
                         {day.dayName.substring(0, 3)}
@@ -1190,11 +1220,10 @@ const submitBulkSlots = async () => {
                     return (
                       <div
                         key={index}
-                        className={`p-4 border-2 rounded-xl relative cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? "border-gray-800 bg-gray-100 shadow-md"
-                            : "border-gray-200 hover:border-gray-400 bg-white"
-                        }`}
+                        className={`p-4 border-2 rounded-xl relative cursor-pointer transition-all duration-200 ${isSelected
+                          ? "border-gray-800 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-400 bg-white"
+                          }`}
                         onClick={() => handleSlotSelection(index)}
                       >
                         {editingSlotIndex === index ? (
@@ -1426,11 +1455,10 @@ const submitBulkSlots = async () => {
                       <div
                         key={index}
                         onClick={() => handleCopyDaySelect(index)}
-                        className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${
-                          day.selected
-                            ? "border-gray-800 bg-gray-100 shadow-md"
-                            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                        }`}
+                        className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all duration-300 ${day.selected
+                          ? "border-gray-800 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                          }`}
                       >
                         <span className="text-sm font-bold text-gray-800">
                           {day.dayName}
@@ -1691,7 +1719,7 @@ const submitBulkSlots = async () => {
           onCancelEdit={() => setIsEditingSlot(false)}
         />
       )}
-      
+
     </div>
   );
 };

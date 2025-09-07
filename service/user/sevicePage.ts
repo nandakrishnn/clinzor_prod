@@ -11,7 +11,14 @@ export const getAService = async (id?: string) => {
   return res.data;
 };
 
-export const getClinicListService = async (id?: string) => {
-  const res = await axiosPublic.get(`${USER_SERVICE.GET_CLINIC_SERVICE_RELATED}${id}`);
-  return res?.data
+export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null) => {
+  let url = `${USER_SERVICE.GET_CLINIC_SERVICE_RELATED}${id}/`;
+
+  // Add location query parameters if available
+  if (location && location.lat && location.lng) {
+    url += `?lat=${location.lat}&lng=${location.lng}`;
+  }
+
+  const res = await axiosPublic.get(url);
+  return res?.data;
 }
