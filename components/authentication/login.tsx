@@ -1,11 +1,10 @@
 "use client";
 import { JSX, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, AlertCircle, Phone, User, MapPin, Key } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Phone, User, MapPin, Key, Calendar, VenetianMask } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { axiosPrivate } from "@/axios/axios";
-import { findUsers, sendOTP } from "@/service/user/userAuthService/userAuthService";
+import { findUsers, sendOTP, verifyOTP } from "@/service/user/userAuthService/userAuthService";
 
 // =======================
 // Reusable Input Component
@@ -15,12 +14,13 @@ type InputProps = {
   label: string;
   type: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   error?: string;
   placeholder?: string;
   icon?: JSX.Element;
   showToggle?: boolean;
   toggleVisibility?: () => void;
+  options?: { value: string; label: string }[];
 };
 
 const Input = ({
@@ -33,7 +33,8 @@ const Input = ({
   placeholder,
   icon,
   showToggle = false,
-  toggleVisibility = () => { }
+  toggleVisibility = () => { },
+  options
 }: InputProps) => (
   <div className="mb-4">
     <label htmlFor={id} className="block text-sm font-medium text-black mb-1">
@@ -45,24 +46,44 @@ const Input = ({
           {icon}
         </div>
       )}
-      <input
-        id={id}
-        name={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`block w-full px-4 py-3 ${icon ? 'pl-10' : 'pl-4'} rounded-xl border text-black placeholder:text-black ${error ? "border-red-300" : "border-neutral-300"
-          } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
-      />
-      {showToggle && (
-        <button
-          type="button"
-          onClick={toggleVisibility}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-neutral-600"
+      {type === "select" ? (
+        <select
+          id={id}
+          name={id}
+          value={value}
+          onChange={onChange}
+          className={`block w-full px-4 py-3 ${icon ? 'pl-10' : 'pl-4'} rounded-xl border text-black ${error ? "border-red-300" : "border-neutral-300"
+            } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
         >
-          {type === "text" ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
+          <option value="">Select {label}</option>
+          {options?.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <>
+          <input
+            id={id}
+            name={id}
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={`block w-full px-4 py-3 ${icon ? 'pl-10' : 'pl-4'} rounded-xl border text-black placeholder:text-black ${error ? "border-red-300" : "border-neutral-300"
+              } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+          />
+          {showToggle && (
+            <button
+              type="button"
+              onClick={toggleVisibility}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-neutral-600"
+            >
+              {type === "text" ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          )}
+        </>
       )}
     </div>
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
@@ -92,6 +113,12 @@ type AuthContentProps = {
   address: string;
   setAddress: React.Dispatch<React.SetStateAction<string>>;
   addressError: string;
+  dob: string;
+  setDob: React.Dispatch<React.SetStateAction<string>>;
+  dobError: string;
+  gender: string;
+  setGender: React.Dispatch<React.SetStateAction<string>>;
+  genderError: string;
   otp: string;
   setOtp: React.Dispatch<React.SetStateAction<string>>;
   otpError: string;
@@ -119,6 +146,12 @@ function AuthContent({
   address,
   setAddress,
   addressError,
+  dob,
+  setDob,
+  dobError,
+  gender,
+  setGender,
+  genderError,
   otp,
   setOtp,
   otpError,
@@ -161,17 +194,6 @@ function AuthContent({
           {/* Form */}
           {!showOtpField ? (
             <form onSubmit={authMode === "login" ? handleLogin : handleRegister}>
-              <Input
-                id="phone"
-                label="Phone Number"
-                type="tel"
-                value={phone_number}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                error={phoneError}
-                placeholder="Your phone number"
-                icon={<Phone size={18} />}
-              />
-
               {authMode === "register" && (
                 <>
                   <Input
@@ -195,6 +217,30 @@ function AuthContent({
                     icon={<Mail size={18} />}
                   />
                   <Input
+                    id="dob"
+                    label="Date of Birth"
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    error={dobError}
+                    placeholder="Your date of birth"
+                    icon={<Calendar size={18} />}
+                  />
+                  <Input
+                    id="gender"
+                    label="Gender"
+                    type="select"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    error={genderError}
+                    icon={<VenetianMask size={18} />}
+                    options={[
+                      { value: "MALE", label: "Male" },
+                      { value: "FEMALE", label: "Female" },
+                      { value: "OTHER", label: "Other" }
+                    ]}
+                  />
+                  <Input
                     id="address"
                     label="Address"
                     type="text"
@@ -206,6 +252,17 @@ function AuthContent({
                   />
                 </>
               )}
+
+              <Input
+                id="phone"
+                label="Phone Number"
+                type="tel"
+                value={phone_number}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                error={phoneError}
+                placeholder="Your phone number"
+                icon={<Phone size={18} />}
+              />
 
               {/* Submit */}
               <button
@@ -296,6 +353,8 @@ export default function AuthenticationGateway() {
   const [name, setName] = useState("");
   const [phone_number, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
   const [otp, setOtp] = useState("");
   const [showOtpField, setShowOtpField] = useState(false);
   const [referenceId, setReferenceId] = useState("");
@@ -305,6 +364,8 @@ export default function AuthenticationGateway() {
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [addressError, setAddressError] = useState("");
+  const [dobError, setDobError] = useState("");
+  const [genderError, setGenderError] = useState("");
   const [otpError, setOtpError] = useState("");
   const [formError, setFormError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -329,6 +390,8 @@ export default function AuthenticationGateway() {
     setNameError("");
     setPhoneError("");
     setAddressError("");
+    setDobError("");
+    setGenderError("");
     setFormError("");
 
     let hasErrors = false;
@@ -348,6 +411,16 @@ export default function AuthenticationGateway() {
       hasErrors = true;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       setEmailError("Invalid email address");
+      hasErrors = true;
+    }
+
+    if (!dob.trim()) {
+      setDobError("Date of birth is required");
+      hasErrors = true;
+    }
+
+    if (!gender.trim()) {
+      setGenderError("Gender is required");
       hasErrors = true;
     }
 
@@ -375,26 +448,27 @@ export default function AuthenticationGateway() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (showOtpField) {
-      // This is a resend OTP request
-      if (!validateLoginForm()) return;
-    } else {
-      // This is an initial login request
-      if (!validateLoginForm()) return;
-    }
+    if (!validateLoginForm()) return;
 
     setIsLoading(true);
 
     try {
-      const response = await sendOTP({ phone_number });
-      console.log(response, "from the user side api call");
+      // Checking if the user exists
+      const isUserExist = await findUsers({ phone_number });
 
-      if (response?.status === 200 && response?.data?.is_verified === true) {
-        console.log(response, "Api enter in to the response if condition");
-        setReferenceId(response?.data?.refrence_id);
-        setShowOtpField(true);
+      if (isUserExist?.data?.user_in_db) {
+        const response = await sendOTP({ phone_number });
+        console.log(response, "from the user side api call");
+
+        if (response?.status === 200 && response?.message === "OTP sent") {
+          console.log(response, "Api enter in to the response if condition");
+          setReferenceId(response?.data?.refrence_id);
+          setShowOtpField(true);
+        } else {
+          console.log(response, "User might not have a registered account");
+          setFormError("Failed to send OTP. Please try again.");
+        }
       } else {
-        console.log(response, "User might not have a registered account");
         setFormError("User not found. Please register first.");
       }
     } catch (error: any) {
@@ -409,13 +483,7 @@ export default function AuthenticationGateway() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (showOtpField) {
-      // This is a resend OTP request
-      if (!validateRegisterForm()) return;
-    } else {
-      // This is an initial registration request
-      if (!validateRegisterForm()) return;
-    }
+    if (!validateRegisterForm()) return;
 
     setIsLoading(true);
 
@@ -423,10 +491,12 @@ export default function AuthenticationGateway() {
       const response = await sendOTP({ phone_number });
       console.log(response, "from the user side api call");
 
-      if (response?.status === 200 && response?.data?.is_verified === true) {
+      if (response?.status === 200) {
         console.log(response, "Api enter in to the response if condition");
         setReferenceId(response?.data?.refrence_id);
         setShowOtpField(true);
+      } else {
+        setFormError("Failed to send OTP. Please try again.");
       }
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -445,23 +515,29 @@ export default function AuthenticationGateway() {
     setIsLoading(true);
 
     try {
-      const otpData = {
-        otp,
-        refrence_id: referenceId,
-        ...(authMode === "register" && {
+      let result;
+
+      if (authMode === "register") {
+        // For registration, verify OTP with all user details
+        result = await signIn("otp", {
+          otp,
+          refrence_id: referenceId,
           full_name: name,
           email,
-          address
-        })
-      };
-
-      // This will trigger the NextAuth authorize function
-      const result = await signIn("otp", {
-        redirect: false,
-        ...otpData,
-        phone_number,
-        authMode
-      });
+          address,
+          dob,
+          gender
+        });
+        console.log(result, 'from the register otp verifying')
+        // setFormError("OTP verification failed");
+      } else {
+        result = await signIn("otp", {
+          otp,
+          refrence_id: referenceId
+        });
+        console.log(result, 'from the login otp verifying')
+        // setFormError("OTP verification failed");
+      }
 
       if (result?.error) {
         setFormError(result.error);
@@ -488,6 +564,8 @@ export default function AuthenticationGateway() {
     setNameError("");
     setPhoneError("");
     setAddressError("");
+    setDobError("");
+    setGenderError("");
     setOtpError("");
     setFormError("");
   };
@@ -523,6 +601,12 @@ export default function AuthenticationGateway() {
         address={address}
         setAddress={setAddress}
         addressError={addressError}
+        dob={dob}
+        setDob={setDob}
+        dobError={dobError}
+        gender={gender}
+        setGender={setGender}
+        genderError={genderError}
         otp={otp}
         setOtp={setOtp}
         otpError={otpError}
