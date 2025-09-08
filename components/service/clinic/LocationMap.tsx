@@ -1,7 +1,7 @@
 import React from "react";
 
 type LocationMapProps = {
-    iframeString: string; 
+    iframeString: string;
 };
 
 const LocationMap: React.FC<LocationMapProps> = ({ iframeString }) => {

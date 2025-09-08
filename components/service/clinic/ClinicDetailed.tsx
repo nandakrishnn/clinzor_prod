@@ -79,8 +79,6 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         }
     }, []);
 
-    console.log(clinicData)
-
     return (
         <>
             <section className="max-w-screen-xl mx-auto pb-10">
