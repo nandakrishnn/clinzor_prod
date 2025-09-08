@@ -26,23 +26,6 @@ interface ClinicDetailedViewProps {
 const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ data, services, activeServiceTab, doctors }) => {
   const router = useRouter();
   const clinicInfo = data?.clinic
-
-  // const doctors = [
-  //   {
-  //     id: 1,
-  //     name: "Dr. Sarah Johnson",
-  //     specialty: "Cardiologist",
-  //     experience: "15 years",
-  //     rating: 4.9,
-  //     image: "/professional-female-doctor.png",
-  //     qualifications: "MD, FACC",
-  //     availability: "Mon, Wed, Fri"
-  //   },
-  // ];
-
-
-  console.log(doctors, 'clinic offers data')
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
       {/* Clinic Header */}
