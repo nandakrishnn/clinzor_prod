@@ -97,8 +97,6 @@ export const deleteClinic = async (Id: string) => {
 export const getAClinic = async (Id: string) => {
   return await axiosPrivate.get(`/clinic/clinic-rud/${Id}`);
 };
-
-
 export const getAllClinic = async (params: any = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString();

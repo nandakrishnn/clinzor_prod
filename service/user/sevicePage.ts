@@ -15,6 +15,10 @@ export const getAClinic = async (id?: string) => {
   const res = await axiosPublic.get(`${USER_SERVICE.GET_A_SERVICE}${id}`);
   return res.data;
 };
+export const getAllClinicRelatedService = async (id?: string) => {
+  const res = await axiosPublic.get(`${USER_CLINIC.GET_CLINIC_RELATED_SERVICE}?clinic=${id}`);
+  return res.data;
+};
 
 export const getAClinicDetailed = async (id?: string) => {
   const res = await axiosPublic.get(`${USER_CLINIC.GET_A_CLINIC}${id}`);

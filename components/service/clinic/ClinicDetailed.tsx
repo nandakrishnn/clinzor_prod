@@ -6,11 +6,12 @@ import ClinicCarousal from '../clinicDetailed/ClinicCarousal'
 import ClinicDetailedView from '../booking/ClinicDetailedView'
 import ClinicBanner from './ClinicBanner'
 import { useParams, useSearchParams } from 'next/navigation'
-import { getAClinicDetailed, getAService } from '@/service/user/sevicePage'
+import { getAClinicDetailed, getAllClinicRelatedService, getAService } from '@/service/user/sevicePage'
 
 const ClinicDetailed = ({ id }: { id: string }) => {
     const [clinicData, setClinicData] = useState<any>(null)
-    const [selectedService, setService] = useState()
+    const [selectedService, setService] = useState<any>()
+    const [clinicService, setClinicService] = useState<any>()
     const [activeServiceTab, setActiveServiceTab] = useState("clinic-visit")
     const [loading, setLoading] = useState(true)
     const params = useSearchParams();
@@ -19,10 +20,8 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const getClinicData = async () => {
         try {
             const res = await getAClinicDetailed(id)
-            console.log(res, 'get the individual clinic detailed view')
-
             if (res.status === 200) {
-                setClinicData(res?.data?.clinic)
+                setClinicData(res?.data)
             }
         } catch (error) {
             console.log(error)
@@ -34,8 +33,6 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const getServiceData = async (id: string) => {
         try {
             const res = await getAService(id)
-
-            console.log(res, 'from the service call')
             if (res.status === 200) {
                 setService(res?.data)
             }
@@ -46,19 +43,34 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         }
     }
 
+    const getAllServiceClinic = async () => {
+        try {
+            const res = await getAllClinicRelatedService(id)
+            console.log(res, 'clinic related all service')
+            if (res.status === 200) {
+                setClinicService(res?.data?.data)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
         getClinicData()
+        getAllServiceClinic()
         if (service) {
             getServiceData(service)
         }
     }, []);
 
-    console.log(id, clinicData, selectedService, 'clinic id from the service detailed page')
+    // console.log(id, clinicData, selectedService, 'clinic id from the service detailed page')
 
     return (
         <>
             <section className="max-w-screen-xl mx-auto pb-10">
-                <ClinicBanner images={clinicData?.images} />
+                <ClinicBanner images={clinicData?.clinic?.images} />
             </section>
 
             <section className="max-w-screen-xl mx-auto pb-5">
@@ -66,7 +78,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
             </section>
 
             <section className="">
-                <ClinicDetailedView />
+                <ClinicDetailedView data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} />
             </section>
 
             {/* Available Clinic Section */}

@@ -21,7 +21,8 @@ export const USER_SERVICE = {
 }
 
 export const USER_CLINIC = {
-    GET_A_CLINIC : 'clinic/clinic-detail/'
+    GET_A_CLINIC : 'clinic/clinic-detail/',
+    GET_CLINIC_RELATED_SERVICE : 'clinic/clinic-service-lc/',
 }
 
 export const USER_BLOGS = {
