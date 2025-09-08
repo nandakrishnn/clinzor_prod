@@ -16,7 +16,6 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({ id, serviceDetailed, ac
         { id: "clinic-visit", label: "Clinic Visit", icon: "🏥" },
         { id: "online-service", label: "Online Service", icon: "💻" },
     ]
-
     return (
         <div className=' className="max-w-7xl mx-auto px-4 sm:px-6 '>
             {/* Header Navigation */}

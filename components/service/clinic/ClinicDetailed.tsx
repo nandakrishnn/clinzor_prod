@@ -90,7 +90,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
             </section>
 
             <section className="pb-5">
-                <ClinicDetailedView data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
+                <ClinicDetailedView serviceId={service} data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
             </section>
 
             <section className="max-w-screen-xl mx-auto pb-5">

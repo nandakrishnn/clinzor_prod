@@ -14,9 +14,11 @@ import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
 import PreviewCard from "@/components/service/clinic/PreviewCard"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import React from "react"
+import { getAService } from "@/service/user/sevicePage"
+import { useSearchParams } from "next/navigation"
+import React, { useEffect } from "react"
 
-type BookingMode = "home" | "video" | "clinic"
+// type BookingMode = "home" | "video" | "clinic"
 type SessionType = "consultation" | "session"
 
 type Slot = {
@@ -98,11 +100,17 @@ const DUMMY_CLINIC = {
 }
 
 export default function ClinicBooking() {
+  const params = useSearchParams()
+  const serviceId = params.get("serviceId");
+  const serviceType = params.get("selectedService");
+
+  console.log(serviceId, serviceType, 'service id get from the params');
+
   // Global booking state (replace with API-fed state later)
   const [step, setStep] = React.useState(0)
-  const [service] = React.useState<Service>(DUMMY_SERVICE)
+  const [service, setService] = React.useState<any>(DUMMY_SERVICE)
   const [sessionType, setSessionType] = React.useState<SessionType>("consultation")
-  const [mode, setMode] = React.useState<BookingMode>("clinic")
+  const [mode, setMode] = React.useState<any>(serviceType)
   const [selectedTab, setSelectedTab] = React.useState<keyof typeof DUMMY_SLOTS>("today")
   const [selectedSlot, setSelectedSlot] = React.useState<Slot | null>(null)
   const [genderPref, setGenderPref] = React.useState<"female" | "male" | "none">("none")
@@ -116,7 +124,7 @@ export default function ClinicBooking() {
   const [payMethod, setPayMethod] = React.useState<"online" | "clinic">("clinic")
   const [orderId, setOrderId] = React.useState<string | null>(null)
 
-  const price = sessionType === "consultation" ? service.basePrices.consultation : service.basePrices.session
+  const price = sessionType === "consultation" ? service?.basePrices?.consultation : service?.basePrices?.session
   const discount = coupon ? Math.round((price * coupon.percent) / 100) : 0
   const total = Math.max(price - discount, 0)
   const dateLabel = DUMMY_SLOTS[selectedTab].dateTitle
@@ -142,6 +150,26 @@ export default function ClinicBooking() {
     }
   }
 
+  const getService = async (id: string) => {
+    try {
+      const res = await getAService(id)
+      console.log(res, 'from the data')
+      if (res?.status === 200) {
+        setService(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+
+    }
+  }
+
+  useEffect(() => {
+    if (serviceId) {
+      getService(serviceId)
+    }
+  }, [])
+
   return (
     <section aria-label="Clinic Booking" className="">
       <nav>
@@ -152,15 +180,15 @@ export default function ClinicBooking() {
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
-      <section className="pb-10 max-w-7xl mx-auto">
+      <section className="pb-10 md:mb-20 max-w-7xl mx-auto ">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Left sticky live preview */}
           <div className="md:col-span-1">
             <PreviewCard
               service={{
-                title: service.title,
-                description: service.description,
-                imageUrl: service.image,
+                title: service?.name,
+                description: service?.description,
+                imageUrl: service?.image || '/clinic.png',
                 basePrice: price,
               }}
               clinic={DUMMY_CLINIC}

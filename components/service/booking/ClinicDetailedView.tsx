@@ -20,10 +20,11 @@ interface ClinicDetailedViewProps {
   data: any,
   services: any,
   activeServiceTab: string,
-  doctors: any
+  doctors: any,
+  serviceId: any,
 }
 
-const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ data, services, activeServiceTab, doctors }) => {
+const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data, services, activeServiceTab, doctors }) => {
   const router = useRouter();
   const clinicInfo = data?.clinic
   return (
@@ -156,7 +157,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ data, services,
                     </div>
                     <Button
                       className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
-                      onClick={() => router.push(`/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&&serviceId=${service?.uuid}`)}
+                      onClick={() => router.push(`/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&&serviceId=${service?.service}`)}
                     >
                       Book Now
                     </Button>
