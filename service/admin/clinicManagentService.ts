@@ -1,5 +1,5 @@
 
-import  { axiosPrivate } from "../../axios/axios";
+import { axiosPrivate } from "../../axios/axios";
 
 
 // Clinic
@@ -12,10 +12,10 @@ export const createClinic = async (clinicData: {
   address?: string;
   map_link?: string;
   gps_coordinates?: string;
-gst_no?: string;
-about_clinic?: string;
+  gst_no?: string;
+  about_clinic?: string;
   registration_certificate?: string;
-    opening_time?: string;
+  opening_time?: string;
   closing_time?: string;
   working_days: string[];
   images: string[];
@@ -25,7 +25,7 @@ about_clinic?: string;
     const response = await axiosPrivate.post('/clinic/', {
       name: clinicData.name,
       email: clinicData.email,
-      contact_number:clinicData.phone,
+      contact_number: clinicData.phone,
       city: clinicData.city,
       address: clinicData.address,
       map_link: clinicData.map_link,
@@ -33,7 +33,7 @@ about_clinic?: string;
       registration_certificate: clinicData.registration_certificate,
       gst_no: clinicData.gst_no,
       about_clinic: clinicData.about_clinic,
-        opening_time: clinicData.opening_time,
+      opening_time: clinicData.opening_time,
       closing_time: clinicData.closing_time,
       working_days: clinicData.working_days,
       images: clinicData.images
@@ -58,8 +58,8 @@ export const createUserForClinic = async (clinicData: {
       full_name: clinicData.full_name,
       email: clinicData.email,
       password: clinicData.password,
-      phone_number:clinicData.phone_number,
-  
+      phone_number: clinicData.phone_number,
+
     });
     return response.data;
   } catch (error) {
@@ -91,16 +91,17 @@ export const toggleActiveClinic = async (id: string, body: {
   }
 };
 
-export const deleteClinic= async (Id:string) => {
+export const deleteClinic = async (Id: string) => {
   return await axiosPrivate.delete(`/clinic/clinic-service-rud/${Id}/`);
 };
-export const getAClinic = async (Id:string) => {
+export const getAClinic = async (Id: string) => {
   return await axiosPrivate.get(`/clinic/clinic-rud/${Id}`);
 };
 
+
 export const getAllClinic = async (params: any = {}) => {
   try {
-      const queryString = new URLSearchParams(params).toString();
+    const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(`clinic/?${queryString}`);
     return response.data.data;
   } catch (error) {
@@ -116,14 +117,14 @@ export const getAllClinic = async (params: any = {}) => {
 export const GetAllDoctor = async (page: number, clinicId?: string, status?: string) => {
   try {
     const params: any = { page };
-    
+
     if (clinicId) {
       params.clinic = clinicId;
     }
     if (status) {
       params.status = status;
     }
-    
+
     const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(`/clinic/doctor-lc/?${queryString}`);
     return response.data.data.data;
@@ -133,17 +134,17 @@ export const GetAllDoctor = async (page: number, clinicId?: string, status?: str
   }
 };
 
-export const GetAllSpecialties  = async (page: number, clinicId?: string, status?: string) => {
+export const GetAllSpecialties = async (page: number, clinicId?: string, status?: string) => {
   try {
     const params: any = { page };
-    
+
     if (clinicId) {
       params.clinic = clinicId;
     }
     if (status) {
       params.status = status;
     }
-    
+
     const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(`/clinic/service-lc/?${queryString}`);
     return response.data.data.data;

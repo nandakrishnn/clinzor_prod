@@ -1,14 +1,15 @@
 'use client'
-import { Button } from '@/components/ui/button'
-import { Star } from 'lucide-react'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+interface ClinicCarousalProps {
+    id: string,
+    serviceDetailed: any,
+    setActiveServiceTab: any,
+    activeServiceTab: any
+}
 
-const ClinicCarousal = () => {
-    const [activeServiceTab, setActiveServiceTab] = useState("clinic-visit")
-    const [selectedService, setSelectedService] = useState(null)
-    
+const ClinicCarousal: React.FC<ClinicCarousalProps> = ({ id, serviceDetailed, activeServiceTab, setActiveServiceTab }) => {
+    const router = useRouter()
 
     const serviceTabs = [
         { id: "home-service", label: "Home Service", icon: "🏠" },
@@ -16,9 +17,6 @@ const ClinicCarousal = () => {
         { id: "online-service", label: "Online Service", icon: "💻" },
     ]
 
-    const handleServiceSelect = (service: any) => {
-        setSelectedService(service)
-    }
     return (
         <div className=' className="max-w-7xl mx-auto px-4 sm:px-6 '>
             {/* Header Navigation */}
@@ -50,17 +48,19 @@ const ClinicCarousal = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900">
-                                        {serviceTabs.find((tab) => tab.id === activeServiceTab)?.label}
+                                        {serviceDetailed?.name} (<span className="text-gray-600">  {serviceTabs.find((tab) => tab.id === activeServiceTab)?.label}</span>)
                                     </h3>
+
                                     <p className="text-gray-600">Professional healthcare services</p>
+
                                 </div>
                             </div>
-                            <Link href={'#service'}
+                            <button
                                 className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2 rounded-lg"
-                            // onClick={() => router.push(`/service/clinic/booking/${'clinic id'}`)}
+                                onClick={() => router.push(`/service/clinic/booking/${id}?selectedService=${activeServiceTab}&&serviceId=${serviceDetailed?.uuid}`)}
                             >
                                 Book Now
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>

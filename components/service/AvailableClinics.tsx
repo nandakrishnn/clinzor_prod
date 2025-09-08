@@ -115,7 +115,7 @@ const AvailableClinics = ({ id }: { id: string }) => {
   };
 
   const handleBookNow = (clinic: Clinic) => {
-    router.push(`/service/clinic/${clinic?.clinic_uuid}`);
+    router.push(`/service/clinic/${clinic?.clinic_uuid}?serviceId=${id}`);
   };
 
   // Calculate the subset of clinics to display

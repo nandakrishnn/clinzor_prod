@@ -19,8 +19,9 @@ export const USER_SERVICE = {
     GET_CLINIC_SERVICE_RELATED: "clinic/top-clinics-by-service/",
     GET_SERVICE_RELATED_CLINIC: "clinic/search/",
 }
+
 export const USER_CLINIC = {
-    
+    GET_A_CLINIC : 'clinic/clinic-detail/'
 }
 
 export const USER_BLOGS = {

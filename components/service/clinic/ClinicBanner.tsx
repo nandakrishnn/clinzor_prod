@@ -4,13 +4,7 @@ import Image from "next/image";
 import React from "react";
 import Slider from "react-slick";
 
-const ClinicBanner = () => {
-  const banners = [
-    "/admin.jpg",
-    "/banner.png",
-    "/blogs.png",
-  ];
-
+const ClinicBanner = ({ images }: { images: any }) => {
   const settings = {
     dots: true,
     infinite: true,
@@ -21,11 +15,10 @@ const ClinicBanner = () => {
     slidesToScroll: 1,
     arrows: false,
   };
-
   return (
     <div className="h-[50vh] rounded-xl overflow-hidden">
       <Slider {...settings}>
-        {banners.map((src, i) => (
+        {images?.map((src: any, i: any) => (
           <div key={i} className="h-[50vh]">
             <Image
               src={src}

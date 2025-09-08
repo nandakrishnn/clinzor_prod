@@ -19,6 +19,7 @@ interface BulkSlotData {
     female_doctor_count?: number;
   }[];
 }
+
 // Slot Management Api 
 export const createClinicSlot = async (body: Slot) => {
   try {
@@ -32,6 +33,7 @@ export const createClinicSlot = async (body: Slot) => {
     throw error;
   }
 };
+
 export const createClinicBlukSlot = async (body: BulkSlotData) => {
   try {
     const response = await axiosPrivate.post(
@@ -44,6 +46,7 @@ export const createClinicBlukSlot = async (body: BulkSlotData) => {
     throw error;
   }
 };
+
 // In your slotManagementService.ts file
 export const editClinicSlot = async (id: string, body: Partial<Slot>) => {
   try {
@@ -68,6 +71,7 @@ export const editClinicSlot = async (id: string, body: Partial<Slot>) => {
     throw error;
   }
 };
+
 export const approveOrRejectClinicSlot = async (id: string, body: {
   status: string;
 }) => {
@@ -79,12 +83,15 @@ export const approveOrRejectClinicSlot = async (id: string, body: {
     throw error;
   }
 };
+
 export const deleteClinicSlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/slot-rud/${Id}/`);
 };
+
 export const GetAClinicSlot = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/expert-slot-rud/${Id}`);
 };
+
 export const getClinicDataService = async () => {
   const res = await axiosPrivate.get(`clinic/get-clinic-by-user/`);
   return res?.data

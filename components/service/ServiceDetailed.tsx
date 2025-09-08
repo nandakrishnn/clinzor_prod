@@ -49,7 +49,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
         <div className="w-full md:w-[60%] max-h-[400px] md:min-h-[400px] overflow-hidden rounded-xl shadow-lg">
           <Image
             src={serviceData?.image ? serviceData?.image : "/bannerService.png"}
-            alt=""
+            alt="banner"
             width={500}
             height={500}
             className="w-full max-h-[400px] md:min-h-[400px] object-cover rounded-xl"
