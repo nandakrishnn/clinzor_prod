@@ -1,17 +1,18 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { getAClinic } from '@/service/admin/clinicManagentService'
 
 import ClinicCarousal from '../clinicDetailed/ClinicCarousal'
 import ClinicDetailedView from '../booking/ClinicDetailedView'
 import ClinicBanner from './ClinicBanner'
-import { useParams, useSearchParams } from 'next/navigation'
-import { getAClinicDetailed, getAllClinicRelatedService, getAService } from '@/service/user/sevicePage'
+import { useSearchParams } from 'next/navigation'
+import { getAClinicDetailed, getAllClinicDoctorsService, getAllClinicRelatedService, getAService } from '@/service/user/sevicePage'
+import LocationMap from './LocationMap'
 
 const ClinicDetailed = ({ id }: { id: string }) => {
     const [clinicData, setClinicData] = useState<any>(null)
     const [selectedService, setService] = useState<any>()
     const [clinicService, setClinicService] = useState<any>()
+    const [doctorsService, setDoctorsService] = useState<any>()
     const [activeServiceTab, setActiveServiceTab] = useState("clinic-visit")
     const [loading, setLoading] = useState(true)
     const params = useSearchParams();
@@ -46,9 +47,21 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const getAllServiceClinic = async () => {
         try {
             const res = await getAllClinicRelatedService(id)
-            console.log(res, 'clinic related all service')
             if (res.status === 200) {
                 setClinicService(res?.data?.data)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const getAllDoctorsClinic = async () => {
+        try {
+            const res = await getAllClinicDoctorsService(id)
+            if (res.status === 200) {
+                setDoctorsService(res?.data?.data)
             }
         } catch (error) {
             console.log(error)
@@ -60,12 +73,13 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     useEffect(() => {
         getClinicData()
         getAllServiceClinic()
+        getAllDoctorsClinic()
         if (service) {
             getServiceData(service)
         }
     }, []);
 
-    // console.log(id, clinicData, selectedService, 'clinic id from the service detailed page')
+    console.log(clinicData)
 
     return (
         <>
@@ -77,8 +91,12 @@ const ClinicDetailed = ({ id }: { id: string }) => {
                 <ClinicCarousal id={id} serviceDetailed={selectedService} setActiveServiceTab={setActiveServiceTab} activeServiceTab={activeServiceTab} />
             </section>
 
-            <section className="">
-                <ClinicDetailedView data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} />
+            <section className="pb-5">
+                <ClinicDetailedView data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
+            </section>
+
+            <section className="max-w-screen-xl mx-auto pb-5">
+                <LocationMap iframeString={clinicData?.clinic?.map_link} />
             </section>
 
             {/* Available Clinic Section */}

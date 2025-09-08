@@ -23,6 +23,7 @@ export const USER_SERVICE = {
 export const USER_CLINIC = {
     GET_A_CLINIC : 'clinic/clinic-detail/',
     GET_CLINIC_RELATED_SERVICE : 'clinic/clinic-service-lc/',
+    GET_CLINIC_RELATED_DOCTORS : 'clinic/doctor-lc/', //clinic id need to pass for
 }
 
 export const USER_BLOGS = {
