@@ -13,12 +13,16 @@ const FloatingBanner = () => {
     <>
 
       <div className={`${hidden && "hidden"} fixed z-50 bottom-5 right-5 w-[190px] h-[255px] md:w-[350px] md:h-[185px] shadow-xl`}>
-        {/* Left side with content */}
+        {/* Close button*/}
         <div onClick={handleHide} className='absolute -top-10 md:-top-9 right-0 z-50 border rounded-full border-black cursor-pointer md:hidden'>
           <Close className='text-black' />
         </div>
+
+        {/* Floating Content */}
         <div className='flex relative w-full h-full overflow-hidden rounded-xl bg-gradient-to-r from-[#000E50] to-[#00D0FD]'>
           <div className="flex-1 p-4 flex flex-col md:justify-between">
+
+            {/* Top Clinzor Logo */}
             <div className="text-white">
               <Image src={'/logoF.png'} alt='' width={600} height={600} className='w-[70px] object-contain' />
             </div>
@@ -36,7 +40,7 @@ const FloatingBanner = () => {
             </Link>
           </div>
 
-          {/* Right side with decorative element (replacing the image) */}
+          {/* Right Side image*/}
           <div className="md:w-[35%]">
             <Image src={'/bg.png'} alt='' width={600} height={600} className='w-[150px] md:w-[190px] object-cover absolute -bottom-4 -right-5' />
           </div>
