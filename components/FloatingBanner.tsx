@@ -28,8 +28,8 @@ const FloatingBanner = () => {
             </div>
 
             <div className="text-white mt-2">
-              <p className="text-[12px] md:text-[15px] font-bold uppercase md:leading-5">Not Sure Which Service To Choose?</p>
-              <p className="text-[8px] font-semibold mt-2 w-[80%] md:w-full">Get a free call with our care advisor</p>
+              <p className="text-[12px] md:text-[16px] font-bold uppercase md:leading-5">Not Sure Which Service To Choose?</p>
+              <p className="text-[9px] font-semibold mt-1.5 w-[80%] md:w-full">Get a free call with our care advisor</p>
               <p className="text-[6px] mt-0.5 w-[60%] md:w-full">We'll guide you to the right clinic & service for your needs</p>
             </div>
 
