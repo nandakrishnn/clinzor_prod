@@ -68,18 +68,16 @@ const BookingFlow = () => {
               {[1, 2, 3].map((stepNumber) => (
                 <div
                   key={stepNumber}
-                  className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    step === stepNumber
+                  className={`flex items-center space-x-3 p-3 rounded-lg ${step === stepNumber
                       ? "bg-blue-50 border-l-4 border-primaryColor"
                       : "text-gray-500"
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`flex items-center justify-center w-6 h-6 rounded-full ${
-                      step === stepNumber
+                    className={`flex items-center justify-center w-6 h-6 rounded-full ${step === stepNumber
                         ? "bg-primaryColor text-white"
                         : "bg-gray-200 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {stepNumber}
                   </div>
@@ -212,11 +210,10 @@ const BookingFlow = () => {
                           <button
                             key={time}
                             onClick={() => setSelectedTime(time)}
-                            className={`p-2 text-xs sm:text-sm rounded border transition-all ${
-                              selectedTime === time
+                            className={`p-2 text-xs sm:text-sm rounded border transition-all ${selectedTime === time
                                 ? "bg-primaryColor text-white border-primaryColor"
                                 : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
-                            }`}
+                              }`}
                           >
                             {time}
                           </button>
