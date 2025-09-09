@@ -11,11 +11,15 @@ type PreviewProps = {
     name: string
     address: string
   }
-  mode?: "home" | "video" | "clinic"
+  mode?: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
   dateLabel?: string
   time?: string
   doctorPreference?: "female" | "male" | "no-preference"
-  coupon?: { code: string; discountPct: number } | null
+  coupon?: {
+    code: string;
+    discountPct: number | null;
+    flatDiscount: number | null;
+  } | null
   totals: {
     subtotal: number
     discount: number
@@ -39,21 +43,21 @@ export default function PreviewCard({
 
       <div className="flex items-center gap-3">
         <img
-          src={service.imageUrl || "/placeholder.svg?height=64&width=64&query=service%20image"}
+          src={service?.imageUrl || "/placeholder.svg?height=64&width=64&query=service%20image"}
           alt="Selected service"
           className="size-16 rounded-md object-cover"
         />
         <div>
-          <p className="font-medium">{service.title}</p>
-          <p className="text-sm text-muted-foreground">{service.description}</p>
+          <p className="font-medium">{service?.title}</p>
+          <p className="text-sm text-muted-foreground">{service?.description}</p>
         </div>
       </div>
 
       <div className="mt-4 space-y-3 text-sm">
         <div className="rounded-md border p-3">
           <p className="font-medium">Clinic</p>
-          <p className="text-muted-foreground">{clinic.name}</p>
-          <p className="text-muted-foreground">{clinic.address}</p>
+          <p className="text-muted-foreground">{clinic?.name}</p>
+          <p className="text-muted-foreground">{clinic?.address}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -95,9 +99,9 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function labelForMode(m?: "home" | "video" | "clinic") {
+function labelForMode(m?: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT") {
   if (!m) return "—"
-  return m === "home" ? "Home visit" : m === "video" ? "Video call" : "In-clinic"
+  return m === "HOME_VISIT" ? "Home visit" : m === "VIDEO_CALL" ? "Video call" : "In-clinic"
 }
 
 function prettyPref(p?: "female" | "male" | "no-preference") {

@@ -9,7 +9,7 @@ export function Confirmation({
   orderId: string
   service: { title: string }
   slot: { label: string } | null
-  patient: { name: string; phone: string }
+  patient: { name: string; phone_number: string }
   mode: "home" | "video" | "clinic"
   total: number
 }) {
@@ -40,11 +40,11 @@ export function Confirmation({
           <dl className="space-y-1 text-sm">
             <div className="flex justify-between">
               <dt>Name</dt>
-              <dd>{patient.name || "—"}</dd>
+              <dd>{patient?.name || "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Mobile</dt>
-              <dd>{patient.phone || "—"}</dd>
+              <dd>{patient?.phone_number || "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt>Amount</dt>

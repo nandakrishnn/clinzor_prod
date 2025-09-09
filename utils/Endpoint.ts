@@ -4,13 +4,13 @@ export const baseUrl = "https://bkd.clinzor.com/"
 
 export const login = "user/login/"
 
-
 // User Endpoint
 export const USER_HOME = {
     GET_SERVICE: 'clinic/service-lc/',
     GET_ALL_OFFERS: "clinic/offer-lc/",
     GET_ALL_BLOGS: "user/blog-list-create/",
     GET_ALL_FAQ: "clinic/faq-lc/",
+    GET_USER: "user/me/",
 }
 
 export const USER_SERVICE = {
@@ -18,12 +18,15 @@ export const USER_SERVICE = {
     GET_A_SERVICE: "clinic/service-rud/",
     GET_CLINIC_SERVICE_RELATED: "clinic/top-clinics-by-service/",
     GET_SERVICE_RELATED_CLINIC: "clinic/search/",
+    GET_SERVICE_CHARGES: "clinic/service-card-based/",
+    GET_SERVICE_SLOT: "customer/slots/",
+    GET_COUPON: "clinic/offer-lc/",
 }
 
 export const USER_CLINIC = {
-    GET_A_CLINIC : 'clinic/clinic-detail/',
-    GET_CLINIC_RELATED_SERVICE : 'clinic/clinic-service-lc/',
-    GET_CLINIC_RELATED_DOCTORS : 'clinic/doctor-lc/', //clinic id need to pass for
+    GET_A_CLINIC: 'clinic/clinic-detail/',
+    GET_CLINIC_RELATED_SERVICE: 'clinic/clinic-service-lc/',
+    GET_CLINIC_RELATED_DOCTORS: 'clinic/doctor-lc/', //clinic id need to pass for
 }
 
 export const USER_BLOGS = {

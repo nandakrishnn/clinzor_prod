@@ -13,7 +13,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const [selectedService, setService] = useState<any>()
     const [clinicService, setClinicService] = useState<any>()
     const [doctorsService, setDoctorsService] = useState<any>()
-    const [activeServiceTab, setActiveServiceTab] = useState("clinic-visit")
+    const [activeServiceTab, setActiveServiceTab] = useState("PHYSICAL_VISIT")
     const [loading, setLoading] = useState(true)
     const params = useSearchParams();
     const service = params.get("serviceId")

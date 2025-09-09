@@ -1,9 +1,19 @@
+"use client"
+
 type Service = {
   title: string
   image: string
 }
 
-type Coupon = { code: string; label: string; percent: number } | null
+type Coupon = { 
+  uuid: string;
+  title: string;
+  description: string;
+  discount_percentage: string | null;
+  flat_discount_amt: number | null;
+  valid_from: string;
+  valid_to: string;
+} | null
 
 export function OrderSummary({
   service,
@@ -17,8 +27,8 @@ export function OrderSummary({
   total,
 }: {
   service: Service
-  sessionType: "consultation" | "session"
-  mode: "home" | "video" | "clinic"
+  sessionType: "CONSULTATION" | "SESSION"
+  mode: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
   slot: { label: string; dateKey: string } | null
   genderPref: "female" | "male" | "none"
   coupon: Coupon
@@ -26,6 +36,13 @@ export function OrderSummary({
   discount: number
   total: number
 }) {
+  const getDiscountText = (coupon: Coupon) => {
+    if (!coupon) return "";
+    if (coupon.discount_percentage) return `${coupon.discount_percentage}%`;
+    if (coupon.flat_discount_amt) return `₹${coupon.flat_discount_amt}`;
+    return "";
+  };
+
   return (
     <aside className="rounded-lg border border-gray-200 bg-white p-4">
       <h3 className="mb-3 text-sm font-medium text-gray-900">Order Summary</h3>
@@ -38,15 +55,15 @@ export function OrderSummary({
         <div>
           <p className="text-sm font-medium text-gray-900">{service.title}</p>
           <ul className="mt-2 space-y-1 text-sm text-gray-600">
-            <li>Mode: {mode === "clinic" ? "In-Clinic" : mode === "home" ? "Home Visit" : "Video Call"}</li>
-            <li>Type: {sessionType === "consultation" ? "Consultation" : "Session"}</li>
+            <li>Mode: {mode === "PHYSICAL_VISIT" ? "In-Clinic" : mode === "HOME_VISIT" ? "Home Visit" : "Video Call"}</li>
+            <li>Type: {sessionType === "CONSULTATION" ? "Consultation" : "Session"}</li>
             <li>Time: {slot ? slot.label : "Not selected"}</li>
             <li>
               Preferred Doctor: {genderPref === "none" ? "No preference" : genderPref === "female" ? "Female" : "Male"}
             </li>
             {coupon && (
               <li>
-                Coupon: {coupon.code} ({coupon.percent}%)
+                Coupon: {coupon.title} ({getDiscountText(coupon)})
               </li>
             )}
           </ul>

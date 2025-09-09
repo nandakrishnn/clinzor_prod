@@ -1,7 +1,7 @@
 import type { ProfileDetailsProps } from "@/types/user"
 import { Mail, Phone, MapPin, Edit3 } from "lucide-react"
 
-export default function ProfileDetails({ user }: ProfileDetailsProps) {
+export default function ProfileDetails({ user }: any) {
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border p-8">
       <div className="flex items-center justify-between mb-5">
@@ -15,14 +15,14 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-muted-foreground mb-1">Full Name</label>
-          <p className="text-foreground font-medium text-lg">{user.name}</p>
+          <p className="text-foreground font-medium text-lg">{user?.full_name}</p>
         </div>
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
           <div className="flex items-center gap-2">
             <Mail size={16} className="text-muted-foreground" />
-            <p className="text-foreground">{user.email}</p>
+            <p className="text-foreground">{user?.email}</p>
           </div>
         </div>
 
@@ -30,24 +30,39 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
           <label className="block text-sm font-medium text-muted-foreground mb-1">Phone</label>
           <div className="flex items-center gap-2">
             <Phone size={16} className="text-muted-foreground" />
-            <p className="text-foreground">{user.phone}</p>
+            <p className="text-foreground">{user?.phone_number}</p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Location</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Gender</label>
           <div className="flex items-center gap-2">
             <MapPin size={16} className="text-muted-foreground" />
-            <p className="text-foreground">{user.location}</p>
+            <p className="text-foreground">{user?.gender}</p>
           </div>
         </div>
 
-        <div className="md:col-span-2 space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Bio</label>
-          <p className="text-foreground leading-relaxed bg-background/50 p-4 rounded-lg border border-border">
-            {user.bio}
-          </p>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">DOB</label>
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-muted-foreground" />
+            <p className="text-foreground">{user?.dob}</p>
+          </div>
         </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-muted-foreground" />
+            <p className="text-foreground">{user?.address}</p>
+          </div>
+        </div>
+
+        {/* <div className="md:col-span-2 space-y-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
+          <p className="text-foreground leading-relaxed bg-background/50 p-4 rounded-lg border border-border">
+            {user?.address}
+          </p>
+        </div> */}
       </div>
     </div>
   )

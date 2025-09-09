@@ -1,20 +1,20 @@
 "use client"
 
 type Props = {
-  value: "home" | "video" | "clinic"
-  onChange: (m: "home" | "video" | "clinic") => void
+  value: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
+  onChange: (m: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT") => void
 }
 
 export function ModeSelector({ value, onChange }: Props) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div className="">
       <h3 className="text-sm font-medium text-gray-900">Booking Mode</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {(
           [
-            { key: "home", label: "Home Visit" },
-            { key: "video", label: "Video Call" },
-            { key: "clinic", label: "In-Clinic" },
+            { key: "HOME_VISIT", label: "Home Visit" },
+            { key: "VIDEO_CALL", label: "Video Call" },
+            { key: "PHYSICAL_VISIT", label: "In-Clinic" },
           ] as const
         ).map((opt) => (
           <label
@@ -22,7 +22,7 @@ export function ModeSelector({ value, onChange }: Props) {
             className={[
               "flex cursor-pointer items-center justify-between rounded-md border p-3 transition",
               value === opt.key
-                ? "border-blue-600 bg-blue-50 text-blue-700"
+                ? "border-primaryColor bg-blue-50 text-primaryColor"
                 : "border-gray-200 bg-white hover:bg-gray-50",
             ].join(" ")}
           >
@@ -30,7 +30,7 @@ export function ModeSelector({ value, onChange }: Props) {
             <input
               type="radio"
               name="mode"
-              className="size-4 accent-blue-600"
+              className="size-4 accent-primaryColor"
               checked={value === opt.key}
               onChange={() => onChange(opt.key)}
             />

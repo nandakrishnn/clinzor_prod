@@ -1,4 +1,4 @@
- export interface User {
+export interface User {
   uuid: string;
   email: string;
   full_name: string;
@@ -12,9 +12,12 @@
   last_login: string | null;
   created_by: string | null;
   created_at: string;
-  profile_image: string;
+  profile_image?: string;
+  dob?: string,
+  address?: string,
+  profile_url?: string,
 }
- export interface Booking  {
+export interface Booking {
   uuid: string;
   created_by: string;
   booking_type: 'VIDEO_CALL' | 'PHYSICAL_VISIT';
@@ -30,7 +33,7 @@
   clinic_name: string;
   clinic_id: string;
   service_type: string;
-};
+}
 
 
 interface NotificationProps {

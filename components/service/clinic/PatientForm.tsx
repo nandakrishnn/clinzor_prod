@@ -1,10 +1,9 @@
 "use client"
 
 type Patient = {
-  name: string
-  email: string
-  phone: string
-  isSelf: boolean
+  name?: string
+  email?: string
+  phone_number?: string
 }
 
 export function PatientForm({
@@ -12,7 +11,7 @@ export function PatientForm({
   onChange,
 }: {
   value: Patient
-  onChange: (p: Patient) => void
+  onChange: (p: any) => void
 }) {
   function set<K extends keyof Patient>(k: K, v: Patient[K]) {
     onChange({ ...value, [k]: v })
@@ -25,7 +24,7 @@ export function PatientForm({
           <span className="text-gray-700">Full Name</span>
           <input
             type="text"
-            value={value.name}
+            value={value?.name}
             onChange={(e) => set("name", e.target.value)}
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
             placeholder="Enter full name"
@@ -36,8 +35,8 @@ export function PatientForm({
           <span className="text-gray-700">Mobile</span>
           <input
             type="tel"
-            value={value.phone}
-            onChange={(e) => set("phone", e.target.value)}
+            value={value?.phone_number}
+            onChange={(e) => set("phone_number", e.target.value)}
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
             placeholder="+91XXXXXXXXXX"
             required
@@ -47,7 +46,7 @@ export function PatientForm({
           <span className="text-gray-700">Email (optional)</span>
           <input
             type="email"
-            value={value.email}
+            value={value?.email}
             onChange={(e) => set("email", e.target.value)}
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
             placeholder="name@example.com"
@@ -55,14 +54,14 @@ export function PatientForm({
         </label>
       </div>
 
-      <fieldset className="mt-3">
+      {/* <fieldset className="mt-3">
         <legend className="mb-2 text-sm text-gray-700">This appointment is for:</legend>
         <div className="flex gap-3">
           <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-2 pr-3 text-sm">
             <input
               type="radio"
               className="size-4 accent-blue-600"
-              checked={value.isSelf}
+              checked={value?.isSelf}
               onChange={() => set("isSelf", true)}
             />
             <span>Myself</span>
@@ -71,13 +70,13 @@ export function PatientForm({
             <input
               type="radio"
               className="size-4 accent-blue-600"
-              checked={!value.isSelf}
+              checked={!value?.isSelf}
               onChange={() => set("isSelf", false)}
             />
             <span>Someone else</span>
           </label>
         </div>
-      </fieldset>
+      </fieldset> */}
     </form>
   )
 }

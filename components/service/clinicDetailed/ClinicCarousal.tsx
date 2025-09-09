@@ -12,9 +12,9 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({ id, serviceDetailed, ac
     const router = useRouter()
 
     const serviceTabs = [
-        { id: "home-service", label: "Home Service", icon: "🏠" },
-        { id: "clinic-visit", label: "Clinic Visit", icon: "🏥" },
-        { id: "online-service", label: "Online Service", icon: "💻" },
+        { id: "HOME_VISIT", label: "Home Service", icon: "🏠" },
+        { id: "PHYSICAL_VISIT", label: "Clinic Visit", icon: "🏥" },
+        { id: "VIDEO_CALL", label: "Online Service", icon: "💻" },
     ]
     return (
         <div className=' className="max-w-7xl mx-auto px-4 sm:px-6 '>

@@ -1,8 +1,10 @@
 "use client"
 
 import type React from "react"
+import { Sun, Plus, Moon, Star } from "lucide-react"
 
 type Slot = {
+  uuid: string // Added to store the slot identifier
   dateKey: string
   label: string
   period: "morning" | "afternoon" | "evening" | "night"
@@ -18,40 +20,95 @@ const PERIODS: {
   {
     key: "morning",
     label: "Morning",
-    icon: (
-      <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M5 12a7 7 0 1 1 14 0H5Z" />
-      </svg>
-    ),
+    icon: <Sun className="size-4" />,
   },
   {
     key: "afternoon",
     label: "Afternoon",
-    icon: (
-      <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M12 2v20M2 12h20" />
-      </svg>
-    ),
+    icon: <Plus className="size-4" />,
   },
   {
     key: "evening",
     label: "Evening",
-    icon: (
-      <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M3 12a9 9 0 0 0 18 0 9 9 0 1 1-18 0Z" />
-      </svg>
-    ),
+    icon: <Moon className="size-4" />,
   },
   {
     key: "night",
     label: "Night",
-    icon: (
-      <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3c.47 3.53 3.26 6.32 6.79 6.79A7.5 7.5 0 0 0 21 12.79Z" />
-      </svg>
-    ),
+    icon: <Star className="size-4" />,
   },
 ]
+
+// Helper function to convert API response to component format
+export function transformApiDataToTabs(apiData: any): Tabs {
+  const tabs: Tabs = {}
+  
+  apiData.data.forEach((dateSlot: any) => {
+    const dateKey = dateSlot.slot_date
+    const dateObj = new Date(dateSlot.slot_date)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    let dateTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    
+    // Check if it's today or tomorrow for more user-friendly labels
+    if (dateObj.toDateString() === today.toDateString()) {
+      dateTitle = "Today"
+    } else if (dateObj.toDateString() === tomorrow.toDateString()) {
+      dateTitle = "Tomorrow"
+    }
+    
+    const slots: Slot[] = []
+    let availableCount = 0
+    
+    dateSlot.slot_details.forEach((slotDetail: any) => {
+      const startTime = new Date(slotDetail.start_time)
+      const endTime = new Date(slotDetail.end_time)
+      
+      // Format time as "HH:MM AM/PM"
+      const startFormatted = startTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      })
+      
+      const endFormatted = endTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      })
+      
+      const label = `${startFormatted} - ${endFormatted}`
+      
+      // Determine period of day
+      const hour = startTime.getHours()
+      let period: Slot["period"] = "morning"
+      
+      if (hour >= 5 && hour < 12) period = "morning"
+      else if (hour >= 12 && hour < 17) period = "afternoon"
+      else if (hour >= 17 && hour < 21) period = "evening"
+      else period = "night"
+      
+      slots.push({
+        uuid: slotDetail.uuid,
+        dateKey,
+        label,
+        period
+      })
+      
+      availableCount += slotDetail.available_slots
+    })
+    
+    tabs[dateKey] = {
+      dateTitle,
+      availableCount,
+      slots
+    }
+  })
+  
+  return tabs
+}
 
 export function DateSlots({
   tabs,
@@ -61,14 +118,15 @@ export function DateSlots({
   onSelectSlot,
 }: {
   tabs: Tabs
-  selectedTab: keyof Tabs
-  onTabChange: (k: keyof Tabs) => void
+  selectedTab: string
+  onTabChange: (k: string) => void
   selectedSlot: Slot | null
   onSelectSlot: (s: Slot) => void
 }) {
-  function parse12hToMinutes(label: string) {
-    // expects "HH:MM AM/PM"
-    const [time, meridian] = label.split(" ")
+  function parseTimeToMinutes(label: string) {
+    // Extract start time from label (format: "HH:MM AM/PM - HH:MM AM/PM")
+    const startTimeStr = label.split(' - ')[0]
+    const [time, meridian] = startTimeStr.split(" ")
     let [h, m] = time.split(":").map((n) => Number.parseInt(n, 10))
     if (meridian === "PM" && h !== 12) h += 12
     if (meridian === "AM" && h === 12) h = 0
@@ -76,13 +134,13 @@ export function DateSlots({
   }
 
   const periods = PERIODS.map((p) => p.key)
-  const current = tabs[selectedTab as string]
+  const current = tabs[selectedTab]
 
-  const isToday = String(selectedTab).toLowerCase() === "today"
+  const isToday = current?.dateTitle.toLowerCase() === "today"
   const now = new Date()
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
-  const visibleSlots = isToday ? current.slots.filter((s) => parse12hToMinutes(s.label) > nowMinutes) : current.slots
+  const visibleSlots = isToday && current ? current.slots.filter((s) => parseTimeToMinutes(s.label) > nowMinutes) : (current?.slots || [])
 
   const byPeriod: Record<string, Slot[]> = Object.fromEntries(
     periods.map((p) => [p, visibleSlots.filter((s) => s.period === p)]),
@@ -97,10 +155,10 @@ export function DateSlots({
           return (
             <button
               key={key}
-              onClick={() => onTabChange(key as keyof Tabs)}
+              onClick={() => onTabChange(key)}
               className={[
                 "rounded-md px-3 py-2 text-sm",
-                isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                isActive ? "bg-primaryColor text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
               ].join(" ")}
             >
               <div className="flex flex-col items-start">
@@ -132,16 +190,16 @@ export function DateSlots({
                 </span>
               )}
               {byPeriod[p.key].map((slot) => {
-                const isSelected = selectedSlot?.label === slot.label && selectedSlot?.dateKey === slot.dateKey
+                const isSelected = selectedSlot?.uuid === slot.uuid
                 return (
                   <button
-                    key={`${slot.dateKey}-${slot.label}`}
+                    key={slot.uuid}
                     onClick={() => onSelectSlot(slot)}
                     className={[
                       "rounded-md border px-3 py-2 text-sm",
                       isSelected
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-blue-200 bg-white text-blue-700 hover:bg-blue-50",
+                        ? "border-primaryColor bg-blue-50 text-primaryColor"
+                        : "border-blue-200 bg-white text-primaryColor hover:bg-blue-50",
                     ].join(" ")}
                   >
                     {slot.label}

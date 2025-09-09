@@ -1,143 +1,147 @@
 "use client"
 
-import CommonHeroSection from "@/components/common/CommonHeroSection"
+import React, { useEffect, useState } from "react"
 import FooterSection from "@/components/landingpage/footer/footer"
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
 import { Confirmation } from "@/components/service/clinic/Confirmation"
 import { CouponApply } from "@/components/service/clinic/CouponApply"
-import { DateSlots } from "@/components/service/clinic/DateSlots"
+import { DateSlots, transformApiDataToTabs } from "@/components/service/clinic/DateSlots"
 import { DoctorPreference } from "@/components/service/clinic/DoctorPreference"
 import { ModeSelector } from "@/components/service/clinic/ModeSelector"
 import { OrderSummary } from "@/components/service/clinic/OrderSummary"
 import { PatientForm } from "@/components/service/clinic/PatientForm"
 import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
-import PreviewCard from "@/components/service/clinic/PreviewCard"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import { getAService } from "@/service/user/sevicePage"
+import { getAClinicDetailed, getAService, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
 import { useSearchParams } from "next/navigation"
-import React, { useEffect } from "react"
 
-// type BookingMode = "home" | "video" | "clinic"
-type SessionType = "consultation" | "session"
+import PreviewCard from "@/components/service/clinic/PreviewCard"
+import CommonHeroSection from "@/components/common/CommonHeroSection"
+import { useSession } from "next-auth/react"
+
+type clinicBookingProps = {
+  params: {
+    clinicId: string
+  }
+}
+
+type SessionType = "CONSULTATION" | "SESSION"
 
 type Slot = {
+  uuid: string
   dateKey: string
   label: string
   period: "morning" | "afternoon" | "evening" | "night"
 }
 
-type Service = {
-  id: string
-  title: string
-  description: string
-  image: string
-  basePrices: { consultation: number; session: number }
+type TabData = {
+  dateTitle: string;
+  availableCount: number;
+  slots: Slot[];
+};
+
+type PatientProps = {
+  email?: string
+  name: string
+  phone_number: string
 }
 
-type Coupon = { code: string; label: string; percent: number }
+type Tabs = Record<string, TabData>;
 
-const DUMMY_SERVICE: Service = {
-  id: "svc-1",
-  title: "Acupuncture Consultation",
-  description: "A 20 min consultation to understand your symptoms and plan your care.",
-  image: "/abstract-service.png",
-  basePrices: { consultation: 300, session: 800 },
-}
-
-const DUMMY_COUPONS: Coupon[] = [
-  { code: "ONAM20", label: "Onam Offer — 20% off", percent: 20 },
-  { code: "XMAS30", label: "Christmas Offer — 30% off", percent: 30 },
-]
-
-const DUMMY_SLOTS: Record<string, { dateTitle: string; availableCount: number; slots: Slot[] }> = {
-  today: {
-    dateTitle: "Today",
-    availableCount: 24,
-    slots: [
-      { dateKey: "today", label: "10:00 AM", period: "morning" },
-      { dateKey: "today", label: "10:20 AM", period: "morning" },
-      { dateKey: "today", label: "11:00 AM", period: "morning" },
-      { dateKey: "today", label: "11:20 AM", period: "morning" },
-      { dateKey: "today", label: "12:00 PM", period: "afternoon" },
-      { dateKey: "today", label: "12:40 PM", period: "afternoon" },
-      { dateKey: "today", label: "04:00 PM", period: "evening" },
-      { dateKey: "today", label: "05:00 PM", period: "evening" },
-      { dateKey: "today", label: "06:10 PM", period: "evening" },
-      { dateKey: "today", label: "08:00 PM", period: "night" },
-    ],
-  },
-  tomorrow: {
-    dateTitle: "Tomorrow",
-    availableCount: 24,
-    slots: [
-      { dateKey: "tomorrow", label: "10:40 AM", period: "morning" },
-      { dateKey: "tomorrow", label: "11:00 AM", period: "morning" },
-      { dateKey: "tomorrow", label: "02:40 PM", period: "afternoon" },
-      { dateKey: "tomorrow", label: "04:40 PM", period: "evening" },
-      { dateKey: "tomorrow", label: "07:20 PM", period: "evening" },
-      { dateKey: "tomorrow", label: "08:40 PM", period: "night" },
-    ],
-  },
-  next: {
-    dateTitle: "Sun, 31 Aug",
-    availableCount: 24,
-    slots: [
-      { dateKey: "next", label: "11:40 AM", period: "morning" },
-      { dateKey: "next", label: "03:20 PM", period: "afternoon" },
-      { dateKey: "next", label: "05:40 PM", period: "evening" },
-      { dateKey: "next", label: "07:40 PM", period: "evening" },
-      { dateKey: "next", label: "09:00 PM", period: "night" },
-    ],
-  },
+type Coupon = {
+  uuid: string;
+  title: string;
+  description: string;
+  discount_percentage: string | null;
+  flat_discount_amt: number | null;
+  valid_from: string;
+  valid_to: string;
 }
 
 const STEPS = ["Service & Mode", "Date & Time", "Details", "Review & Pay", "Done"]
 
-const DUMMY_CLINIC = {
-  name: "Sunrise Dental Clinic",
-  address: "104, 2nd Cross, 1st Main, Koramangala, Bangalore",
-}
+export default function ClinicBooking({ params }: clinicBookingProps) {
+  const paramsData = useSearchParams()
+  const serviceId = paramsData.get("serviceId");
+  const serviceType = paramsData.get("selectedService");
+  const clinicId = params.clinicId
+  const { data: session } = useSession()
 
-export default function ClinicBooking() {
-  const params = useSearchParams()
-  const serviceId = params.get("serviceId");
-  const serviceType = params.get("selectedService");
+  // console.log(serviceId, serviceType, clinicId, session, 'service id get from the params');
 
-  console.log(serviceId, serviceType, 'service id get from the params');
-
-  // Global booking state (replace with API-fed state later)
+  const [isLoading, setIsLoading] = useState(true);
   const [step, setStep] = React.useState(0)
-  const [service, setService] = React.useState<any>(DUMMY_SERVICE)
-  const [sessionType, setSessionType] = React.useState<SessionType>("consultation")
+  const [service, setService] = React.useState<any>({})
+  const [clinic, setClinic] = useState<any>({})
+  const [priceData, setPriceData] = useState<any>({})
+  const [slotsData, setSlotsData] = useState<any>({})
+
+  const [sessionType, setSessionType] = React.useState<SessionType>("CONSULTATION")
   const [mode, setMode] = React.useState<any>(serviceType)
-  const [selectedTab, setSelectedTab] = React.useState<keyof typeof DUMMY_SLOTS>("today")
+  const [tabs, setTabs] = React.useState<Tabs>({});
+  const [selectedTab, setSelectedTab] = React.useState<string>("")
   const [selectedSlot, setSelectedSlot] = React.useState<Slot | null>(null)
   const [genderPref, setGenderPref] = React.useState<"female" | "male" | "none">("none")
-  const [patient, setPatient] = React.useState({
-    name: "Adhil k",
-    email: "name@example.com",
-    phone: "+917306464285",
-    isSelf: true,
+  const [patient, setPatient] = React.useState<PatientProps>({
+    name: "",
+    phone_number: "",
+    email: "",
   })
   const [coupon, setCoupon] = React.useState<Coupon | null>(null)
+  const [allCoupon, setAllCoupon] = React.useState<Coupon[]>([])
   const [payMethod, setPayMethod] = React.useState<"online" | "clinic">("clinic")
   const [orderId, setOrderId] = React.useState<string | null>(null)
 
-  const price = sessionType === "consultation" ? service?.basePrices?.consultation : service?.basePrices?.session
-  const discount = coupon ? Math.round((price * coupon.percent) / 100) : 0
-  const total = Math.max(price - discount, 0)
-  const dateLabel = DUMMY_SLOTS[selectedTab].dateTitle
+  const getPriceFromServiceCharges = (sessionType: SessionType, mode: string) => {
+    if (!priceData) return 0;
+
+    const baseKey = sessionType === "CONSULTATION" ? "consultation" : "treatment";
+    const modeKey = mode === "HOME_VISIT" ? "home_visit" : mode === "VIDEO_CALL" ? "video_call" : "clinic";
+
+    const minKey = `min_${baseKey}_charge_${modeKey}` as keyof typeof priceData;
+    const maxKey = `max_${baseKey}_charge_${modeKey}` as keyof typeof priceData;
+
+    const minPrice = priceData[minKey];
+    const maxPrice = priceData[maxKey];
+
+    if (minPrice && maxPrice && minPrice === maxPrice) {
+      return parseFloat(minPrice);
+    }
+
+    if (minPrice && maxPrice) {
+      return maxPrice;
+    }
+
+    return 0;
+  };
+
+  const calculateDiscount = (price: number, coupon: Coupon | null) => {
+    if (!coupon) return 0;
+
+    if (coupon.discount_percentage) {
+      const percentage = parseFloat(coupon.discount_percentage);
+      return Math.round((price * percentage) / 100);
+    } else if (coupon.flat_discount_amt) {
+      return coupon.flat_discount_amt;
+    }
+
+    return 0;
+  };
+
+  const price = getPriceFromServiceCharges(sessionType, mode);
+  const discount = calculateDiscount(price, coupon);
+  const total = Math.max(price - discount, 0);
+
+  const dateLabel = tabs[selectedTab]?.dateTitle || ""
   const timeLabel = selectedSlot?.label || undefined
-  const pref: "female" | "male" | "no-preference" =
-    genderPref === "none" ? "no-preference" : (genderPref as "female" | "male")
+  const pref: "female" | "male" | "no-preference" = genderPref === "none" ? "no-preference" : (genderPref as "female" | "male")
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1))
   const back = () => setStep((s) => Math.max(s - 1, 0))
   const goto = (idx: number) => setStep(idx)
 
   function handleConfirm() {
-    // TODO: Integrate Razorpay or server-side payment intent
     if (payMethod === "online") {
       console.log("[v0] Simulating online payment...")
       setTimeout(() => {
@@ -150,25 +154,111 @@ export default function ClinicBooking() {
     }
   }
 
+  const getConsultationPrice = (mode: string) => {
+    return getPriceFromServiceCharges("CONSULTATION", mode);
+  };
+
+  const getSessionPrice = (mode: string) => {
+    return getPriceFromServiceCharges("SESSION", mode);
+  };
+
   const getService = async (id: string) => {
     try {
       const res = await getAService(id)
-      console.log(res, 'from the data')
       if (res?.status === 200) {
         setService(res?.data)
       }
     } catch (error) {
       console.log(error)
     } finally {
+      setIsLoading(false)
+    }
+  }
 
+  const getClinic = async () => {
+    try {
+      const res = await getAClinicDetailed(clinicId)
+      console.log(res, 'from the data clinic')
+      if (res?.status === 200) {
+        setClinic(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getServiceChanges = async (id: string) => {
+    try {
+      const res = await getServiceCharges(id)
+      console.log(res, 'service changes')
+      if (res?.status === 200) {
+        setPriceData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getSlotService = async (serviceId: string) => {
+    try {
+      const res = await getServiceSlots(clinicId, mode, serviceId)
+      console.log(res.data, 'from the slot in the booking')
+      if (res?.status === 200) {
+        setSlotsData(res?.data)
+        const transformedTabs = transformApiDataToTabs(res?.data)
+        setTabs(transformedTabs)
+
+        const firstTabKey = Object.keys(transformedTabs)[0]
+        if (firstTabKey) {
+          setSelectedTab(firstTabKey)
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getCoupon = async (serviceId: string) => {
+    try {
+      const res = await getCouponService(serviceId)
+      if (res?.status === 200) {
+        setAllCoupon(res?.data?.data || [])
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
+    getClinic()
     if (serviceId) {
       getService(serviceId)
+      getServiceChanges(serviceId)
+      getSlotService(serviceId)
+      getCoupon(serviceId)
     }
-  }, [])
+  }, [mode, serviceId])
+
+  useEffect(() => {
+    if (session?.user) {
+      setPatient(
+        {
+          name: session.user.name || "",
+          phone_number: session?.user?.phone_number || "",
+          email: session?.user?.email || "",
+        }
+      )
+    }
+  }, [session])
+
 
   return (
     <section aria-label="Clinic Booking" className="">
@@ -191,12 +281,16 @@ export default function ClinicBooking() {
                 imageUrl: service?.image || '/clinic.png',
                 basePrice: price,
               }}
-              clinic={DUMMY_CLINIC}
+              clinic={clinic?.clinic}
               mode={mode}
               dateLabel={dateLabel}
               time={timeLabel}
               doctorPreference={pref}
-              coupon={coupon ? { code: coupon.code, discountPct: coupon.percent } : null}
+              coupon={coupon ? {
+                code: coupon.title,
+                discountPct: coupon.discount_percentage ? parseFloat(coupon.discount_percentage) : null,
+                flatDiscount: coupon.flat_discount_amt
+              } : null}
               totals={{ subtotal: price, discount, total }}
             />
           </div>
@@ -207,28 +301,34 @@ export default function ClinicBooking() {
 
             {step === 0 && (
               <div className="grid gap-6 md:grid-cols-3">
-                <div className="space-y-6 md:col-span-2">
-                  <ServiceSummary service={service} sessionType={sessionType} onSessionTypeChange={setSessionType} />
+                <div className="space-y-6 md:col-span-2 rounded-lg border border-gray-200 bg-white p-4">
+                  <ServiceSummary
+                    consultationPrice={getConsultationPrice(mode)}
+                    sessionPrice={getSessionPrice(mode)}
+                    service={service}
+                    sessionType={sessionType}
+                    onSessionTypeChange={setSessionType}
+                  />
                   <ModeSelector value={mode} onChange={setMode} />
                 </div>
-                <aside className="rounded-lg border border-gray-200 bg-white p-4">
-                  <h3 className="mb-2 text-sm font-medium text-gray-900">Price Summary</h3>
+                <aside className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col justify-between">
                   <dl className="space-y-1 text-sm">
+                    <h3 className="mb-2 text-sm font-medium text-gray-900">Price Summary</h3>
                     <div className="flex justify-between">
-                      <dt>{sessionType === "consultation" ? "Consultation" : "Session"} fee</dt>
-                      <dd>₹{price}</dd>
+                      <dt>{sessionType === "CONSULTATION" ? "Consultation" : "Session"} fee</dt>
+                      <dd>₹ {price}</dd>
                     </div>
-                    <div className="flex justify-between text-gray-500">
+                    <div className="flex justify-between text-gray-500 pb-2">
                       <dt>Coupon</dt>
-                      <dd>-₹{discount}</dd>
+                      <dd>-₹ {discount}</dd>
                     </div>
-                    <div className="mt-2 flex justify-between border-t pt-2 font-semibold text-gray-900">
+                    <div className="mt-2 flex justify-between border-t border-b pt-2 pb-2 font-semibold text-gray-900">
                       <dt>To Pay</dt>
-                      <dd>₹{total}</dd>
+                      <dd>₹ {total}</dd>
                     </div>
                   </dl>
-                  <div className="mt-4 flex justify-end">
-                    <button onClick={next} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                  <div className="mt-4 flex justify-center items-center">
+                    <button onClick={next} className="rounded-md w-full bg-primaryColor px-5 py-2 text-white hover:bg-primaryColor">
                       Choose Date & Time
                     </button>
                   </div>
@@ -239,7 +339,7 @@ export default function ClinicBooking() {
             {step === 1 && (
               <div className="space-y-6">
                 <DateSlots
-                  tabs={DUMMY_SLOTS}
+                  tabs={tabs}
                   selectedTab={selectedTab}
                   onTabChange={setSelectedTab}
                   selectedSlot={selectedSlot}
@@ -271,7 +371,7 @@ export default function ClinicBooking() {
                 </div>
                 <aside className="space-y-6">
                   <CouponApply
-                    available={DUMMY_COUPONS}
+                    available={allCoupon}
                     applied={coupon}
                     onApply={setCoupon}
                     onRemove={() => setCoupon(null)}
@@ -284,9 +384,9 @@ export default function ClinicBooking() {
                       Back
                     </button>
                     <button
-                      disabled={!patient.name || !patient.phone}
+                      disabled={!patient?.name || !patient?.phone_number}
                       onClick={next}
-                      className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-md bg-primaryColor px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Review & Pay
                     </button>

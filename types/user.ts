@@ -1,13 +1,18 @@
 import type React from "react"
 export interface User {
-  id: string
-  name: string
-  title: string
-  profileImage: string
-  email: string
-  phone: string
-  location: string
-  bio: string
+  uuid?: string
+  id?: string
+  full_name?: string
+  title?: string
+  profile_url?: string
+  email?: string
+  phone_number?: string
+  location?: string
+  role?: string
+  address?: string
+  bio?: string
+  dob?: string
+  gender?: string
 }
 
 export interface Booking {
@@ -37,13 +42,13 @@ export interface NavigationItem {
 }
 
 export interface UserProfileProps {
-  user: User
-  isActive: boolean
-  onClick: () => void
+  user?: User
+  isActive?: boolean
+  onClick?: () => void
 }
 
 export interface ProfileDetailsProps {
-  user: User
+  user?: User
 }
 
 export interface MyBookingsProps {

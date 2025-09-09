@@ -1,6 +1,5 @@
 "use client"
 
-import Navbar from "@/components/shared/NavBar"
 import ChangePassword from "@/components/user/ChangePassword"
 import MyBookings from "@/components/user/MyBookings"
 import NavigationItem from "@/components/user/NavigationItem"
@@ -9,30 +8,35 @@ import UserProfile from "@/components/user/UserProfile"
 import type { User, Booking, NavigationItem as NavItemType } from "@/types/user"
 import { useEffect, useState } from "react"
 import { UserIcon, Calendar, Lock, LogOut } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { getUserService } from "@/service/user/sevicePage"
+import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
+import CommonHeroSection from "@/components/common/CommonHeroSection"
 
 export default function UserDash() {
+  const { data } = useSession()
+  const [user, setUser] = useState(data?.user || {})
   const [activeSection, setActiveSection] = useState<string>("profile")
 
+  const getUser = async () => {
+    try {
+      const res = await getUserService()
+      if (res.status === 200) {
+        setUser(res.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
+    getUser()
     // Read the hash part (#bookings) from the URL
     const hash = window.location.hash.replace("#", "")
     if (hash) {
       setActiveSection(hash)
     }
   }, [])
-
-  // Sample user data
-  const user: User = {
-    id: "1",
-    name: "Anshuman Singh",
-    title: "RusTech Land, Facebook Messenger",
-    profileImage:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    email: "anshuman@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    bio: "Software engineer with expertise in distributed systems and real-time messaging platforms. Currently working on scalable solutions at RusTech Land.",
-  }
 
   // Sample bookings data
   const bookings: Booking[] = [
@@ -156,8 +160,15 @@ export default function UserDash() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="pt-16">
+      <nav>
+        <NavbarDemo />
+      </nav>
+      {/* Hero section */}
+      <section className="pb-5">
+        <CommonHeroSection className="h-[15vh]" />
+      </section>
+
+      <div className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-1">

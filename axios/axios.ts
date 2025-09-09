@@ -46,7 +46,7 @@ privateInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${session.accessToken}`;
       } else {
         console.warn("No access token - redirecting to login");
-        window.location.href = "/login";
+        window.location.href = "/auth";
         return Promise.reject(new Error("Missing access token"));
       }
     } catch (error) {
