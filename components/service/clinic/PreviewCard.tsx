@@ -14,7 +14,7 @@ type PreviewProps = {
   mode?: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
   dateLabel?: string
   time?: string
-  doctorPreference?: "female" | "male" | "no-preference"
+  doctorPreference?: "FEMALE" | "MALE" | "no-preference"
   coupon?: {
     code: string;
     discountPct: number | null;
@@ -104,8 +104,8 @@ function labelForMode(m?: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT") {
   return m === "HOME_VISIT" ? "Home visit" : m === "VIDEO_CALL" ? "Video call" : "In-clinic"
 }
 
-function prettyPref(p?: "female" | "male" | "no-preference") {
+function prettyPref(p?: "FEMALE" | "MALE" | "no-preference") {
   if (!p) return "—"
   if (p === "no-preference") return "No preference"
-  return p === "female" ? "Prefer Female" : "Prefer Male"
+  return p === "FEMALE" ? "Prefer Female" : "Prefer Male"
 }

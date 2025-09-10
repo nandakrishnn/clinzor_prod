@@ -30,7 +30,7 @@ export function OrderSummary({
   sessionType: "CONSULTATION" | "SESSION"
   mode: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
   slot: { label: string; dateKey: string } | null
-  genderPref: "female" | "male" | "none"
+  genderPref: "FEMALE" | "MALE" | "none"
   coupon: Coupon
   price: number
   discount: number
@@ -59,7 +59,7 @@ export function OrderSummary({
             <li>Type: {sessionType === "CONSULTATION" ? "Consultation" : "Session"}</li>
             <li>Time: {slot ? slot.label : "Not selected"}</li>
             <li>
-              Preferred Doctor: {genderPref === "none" ? "No preference" : genderPref === "female" ? "Female" : "Male"}
+              Preferred Doctor: {genderPref === "none" ? "No preference" : genderPref === "FEMALE" ? "FEMALE" : "MALE"}
             </li>
             {coupon && (
               <li>

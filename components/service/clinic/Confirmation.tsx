@@ -59,8 +59,8 @@ export function Confirmation({
       </div>
 
       <div className="mt-6">
-        <a href="/booking" className="text-sm text-primaryColor hover:underline">
-          Go back to results
+        <a href="/user" className="text-sm text-primaryColor hover:underline">
+          My Bookings
         </a>
       </div>
     </section>

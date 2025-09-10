@@ -7,8 +7,8 @@ export function PaymentOptions({
   onConfirm,
 }: {
   className?: string
-  value: "online" | "clinic"
-  onChange: (v: "online" | "clinic") => void
+  value: "ONLINE" | "OFFLINE"
+  onChange: (v: "ONLINE" | "OFFLINE") => void
   onConfirm: () => void
 }) {
   return (
@@ -24,8 +24,8 @@ export function PaymentOptions({
             type="radio"
             name="pay"
             className="size-4 accent-primaryColor"
-            checked={value === "online"}
-            onChange={() => onChange("online")}
+            checked={value === "ONLINE"}
+            onChange={() => onChange("ONLINE")}
           />
         </label>
         <label className="flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-white p-3 hover:bg-gray-50">
@@ -37,14 +37,14 @@ export function PaymentOptions({
             type="radio"
             name="pay"
             className="size-4 accent-blue-600"
-            checked={value === "clinic"}
-            onChange={() => onChange("clinic")}
+            checked={value === "OFFLINE"}
+            onChange={() => onChange("OFFLINE")}
           />
         </label>
       </div>
 
       <button onClick={onConfirm} className="mt-4 w-full rounded-md bg-primaryColor px-4 py-2 text-white hover:bg-primaryColor">
-        {value === "online" ? "Pay & Confirm" : "Confirm Clinic Visit"}
+        {value === "ONLINE" ? "Pay & Confirm" : "Confirm Clinic Visit"}
       </button>
 
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-xs text-gray-500">

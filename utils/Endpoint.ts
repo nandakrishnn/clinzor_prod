@@ -21,6 +21,9 @@ export const USER_SERVICE = {
     GET_SERVICE_CHARGES: "clinic/service-card-based/",
     GET_SERVICE_SLOT: "customer/slots/",
     GET_COUPON: "clinic/offer-lc/",
+    CREATE_BOOKING: "customer/booking-lc/",
+    CREATE_RAYZOR_PAY: "customer/create-payment/",
+    VERIFY_STATUS: "customer/create-payment/",
 }
 
 export const USER_CLINIC = {

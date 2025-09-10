@@ -1,28 +1,57 @@
 "use client"
 
-import { X, Calendar, Clock, MapPin, User, CreditCard, Mail, Phone, Info, Download } from "lucide-react"
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  CreditCard,
+  Mail,
+  Phone,
+  Info,
+} from "lucide-react"
 import type { Booking } from "@/types/user"
 
-
-export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
+export default function BookingDetailsModal({ booking, isOpen, onClose }: { booking: any; isOpen: boolean; onClose: () => void }) {
   if (!isOpen || !booking) return null
+
+  const formatDate = (isoDate: string) => {
+    if (!isoDate) return "-"
+    return new Date(isoDate).toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    })
+  }
+
+  const getStatusClasses = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return "bg-green-100 text-green-800"
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800"
+      case "CANCELLED":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-blue-100 text-blue-800"
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 hide-scrollbar">
+
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 bg-white rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
-          <button
-            onClick={onClose}
-            className="p-2 transition-colors rounded-full hover:bg-gray-100"
-          >
+          <button onClick={onClose} className="p-2 transition-colors rounded-full hover:bg-gray-100">
             <X size={24} className="text-gray-500" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
+
           {/* Booking Summary */}
           <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -36,7 +65,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900">{booking?.start_time}</p>
+                  <p className="font-medium text-gray-900">{formatDate(booking?.start_time)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -44,8 +73,8 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
                   <Clock size={20} className="text-primaryColor" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Time</p>
-                  <p className="font-medium text-gray-900">{booking?.start_time}</p>
+                  <p className="text-sm text-gray-500">End Time</p>
+                  <p className="font-medium text-gray-900">{formatDate(booking?.end_time)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -53,7 +82,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
                   <MapPin size={20} className="text-primaryColor" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="text-sm text-gray-500">Session Type</p>
                   <p className="font-medium text-gray-900">{booking?.booking_type}</p>
                 </div>
               </div>
@@ -63,9 +92,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Total Amount</p>
-                  <p className="font-medium text-gray-900">
-                    {booking?.booking_charge.toFixed(2)}
-                  </p>
+                  <p className="font-medium text-gray-900">₹ {booking?.booking_charge}</p>
                 </div>
               </div>
             </div>
@@ -76,11 +103,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
             <h3 className="text-lg font-semibold text-gray-900">Service Details</h3>
             <div className="p-4 border border-gray-200 rounded-lg">
               <h4 className="font-medium text-gray-900 mb-2">{booking?.clinic_name}</h4>
-              {booking.notes && (
-                <p className="text-gray-600 mt-2">
-                  <span className="font-medium">Additional Notes:</span> {booking.notes}
-                </p>
-              )}
+              <p className="text-sm text-gray-600">Service: {booking?.service_default_name}</p>
             </div>
           </div>
 
@@ -120,8 +143,10 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
                   <CreditCard size={18} className="text-primaryColor" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p className="font-medium text-gray-900">Credit Card •••• 4567</p>
+                  <p className="text-sm text-gray-500">Payment</p>
+                  <p className="font-medium text-gray-900">
+                    {booking?.payment_mode} ({booking?.payment_status})
+                  </p>
                 </div>
               </div>
             </div>
@@ -131,23 +156,12 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
           <div className="flex flex-col sm:flex-row items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div className="flex items-center gap-3 mb-4 sm:mb-0">
               <span className="text-sm font-medium text-gray-700">Status:</span>
-              <span
-                className={`px-3 py-1.5 rounded-full text-xs font-medium ${booking.booking_status === "Confirmed"
-                    ? "bg-green-100 text-green-800"
-                    : booking.status === "Pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-              >
-                {booking.status}
+              <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClasses(booking?.booking_status)}`}>
+                {booking?.booking_status}
               </span>
             </div>
             <div className="flex gap-3">
-              {/* <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                <Download size={16} />
-                Download Invoice
-              </button> */}
-              {booking.booking_status !== "CANCELED" && (
+              {booking?.booking_status !== "COMPLETED" && booking?.booking_status !== "CANCELLED" && (
                 <button className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
                   Cancel Booking
                 </button>

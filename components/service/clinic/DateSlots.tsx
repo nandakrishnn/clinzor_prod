@@ -17,98 +17,123 @@ const PERIODS: {
   label: string
   icon: React.ReactNode
 }[] = [
-  {
-    key: "morning",
-    label: "Morning",
-    icon: <Sun className="size-4" />,
-  },
-  {
-    key: "afternoon",
-    label: "Afternoon",
-    icon: <Plus className="size-4" />,
-  },
-  {
-    key: "evening",
-    label: "Evening",
-    icon: <Moon className="size-4" />,
-  },
-  {
-    key: "night",
-    label: "Night",
-    icon: <Star className="size-4" />,
-  },
-]
+    {
+      key: "morning",
+      label: "Morning",
+      icon: <Sun className="size-4" />,
+    },
+    {
+      key: "afternoon",
+      label: "Afternoon",
+      icon: <Plus className="size-4" />,
+    },
+    {
+      key: "evening",
+      label: "Evening",
+      icon: <Moon className="size-4" />,
+    },
+    {
+      key: "night",
+      label: "Night",
+      icon: <Star className="size-4" />,
+    },
+  ]
 
+// Helper function to convert API response to component format
 // Helper function to convert API response to component format
 export function transformApiDataToTabs(apiData: any): Tabs {
   const tabs: Tabs = {}
-  
+
   apiData.data.forEach((dateSlot: any) => {
     const dateKey = dateSlot.slot_date
     const dateObj = new Date(dateSlot.slot_date)
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    
-    let dateTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-    
-    // Check if it's today or tomorrow for more user-friendly labels
-    if (dateObj.toDateString() === today.toDateString()) {
+
+    // Create today & tomorrow in IST
+    const now = new Date()
+    const todayIST = new Date(
+      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    )
+    const tomorrowIST = new Date(todayIST)
+    tomorrowIST.setDate(tomorrowIST.getDate() + 1)
+
+    // Format date title in IST
+    let dateTitle = dateObj.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone: "Asia/Kolkata",
+    })
+
+    // Compare in IST
+    const dateObjIST = new Date(
+      dateObj.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    )
+
+    if (dateObjIST.toDateString() === todayIST.toDateString()) {
       dateTitle = "Today"
-    } else if (dateObj.toDateString() === tomorrow.toDateString()) {
+    } else if (dateObjIST.toDateString() === tomorrowIST.toDateString()) {
       dateTitle = "Tomorrow"
     }
-    
+
     const slots: Slot[] = []
     let availableCount = 0
-    
+
     dateSlot.slot_details.forEach((slotDetail: any) => {
       const startTime = new Date(slotDetail.start_time)
       const endTime = new Date(slotDetail.end_time)
-      
-      // Format time as "HH:MM AM/PM"
-      const startFormatted = startTime.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
+
+      // Format time in IST
+      const startFormatted = startTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
       })
-      
-      const endFormatted = endTime.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
+
+      const endFormatted = endTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
       })
-      
+
       const label = `${startFormatted} - ${endFormatted}`
-      
-      // Determine period of day
-      const hour = startTime.getHours()
+
+      // Determine period of day (convert to IST first)
+      const hourIST = Number(
+        startTime.toLocaleString("en-US", {
+          hour: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Kolkata",
+        })
+      )
+
       let period: Slot["period"] = "morning"
-      
-      if (hour >= 5 && hour < 12) period = "morning"
-      else if (hour >= 12 && hour < 17) period = "afternoon"
-      else if (hour >= 17 && hour < 21) period = "evening"
+      if (hourIST >= 5 && hourIST < 12) period = "morning"
+      else if (hourIST >= 12 && hourIST < 17) period = "afternoon"
+      else if (hourIST >= 17 && hourIST < 21) period = "evening"
       else period = "night"
-      
+
       slots.push({
         uuid: slotDetail.uuid,
         dateKey,
         label,
-        period
+        period,
       })
-      
+
       availableCount += slotDetail.available_slots
     })
-    
+
     tabs[dateKey] = {
       dateTitle,
       availableCount,
-      slots
+      slots,
     }
   })
-  
+
   return tabs
 }
+
 
 export function DateSlots({
   tabs,

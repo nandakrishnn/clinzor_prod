@@ -13,12 +13,13 @@ import { PatientForm } from "@/components/service/clinic/PatientForm"
 import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import { getAClinicDetailed, getAService, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
+import { createBookingService, getAClinicDetailed, getAService, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
 import { useSearchParams } from "next/navigation"
 
 import PreviewCard from "@/components/service/clinic/PreviewCard"
 import CommonHeroSection from "@/components/common/CommonHeroSection"
 import { useSession } from "next-auth/react"
+import { ConfirmationModal } from "@/components/common/ConfirmationModal"
 
 type clinicBookingProps = {
   params: {
@@ -76,13 +77,17 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const [clinic, setClinic] = useState<any>({})
   const [priceData, setPriceData] = useState<any>({})
   const [slotsData, setSlotsData] = useState<any>({})
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const [sessionType, setSessionType] = React.useState<SessionType>("CONSULTATION")
   const [mode, setMode] = React.useState<any>(serviceType)
   const [tabs, setTabs] = React.useState<Tabs>({});
   const [selectedTab, setSelectedTab] = React.useState<string>("")
   const [selectedSlot, setSelectedSlot] = React.useState<Slot | null>(null)
-  const [genderPref, setGenderPref] = React.useState<"female" | "male" | "none">("none")
+  const [genderPref, setGenderPref] = React.useState<"FEMALE" | "MALE" | "none">("none")
   const [patient, setPatient] = React.useState<PatientProps>({
     name: "",
     phone_number: "",
@@ -90,7 +95,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   })
   const [coupon, setCoupon] = React.useState<Coupon | null>(null)
   const [allCoupon, setAllCoupon] = React.useState<Coupon[]>([])
-  const [payMethod, setPayMethod] = React.useState<"online" | "clinic">("clinic")
+  const [payMethod, setPayMethod] = React.useState<"ONLINE" | "OFFLINE">("OFFLINE")
   const [orderId, setOrderId] = React.useState<string | null>(null)
 
   const getPriceFromServiceCharges = (sessionType: SessionType, mode: string) => {
@@ -135,22 +140,69 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
 
   const dateLabel = tabs[selectedTab]?.dateTitle || ""
   const timeLabel = selectedSlot?.label || undefined
-  const pref: "female" | "male" | "no-preference" = genderPref === "none" ? "no-preference" : (genderPref as "female" | "male")
+  const pref: "FEMALE" | "MALE" | "no-preference" = genderPref === "none" ? "no-preference" : (genderPref as "FEMALE" | "MALE")
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1))
   const back = () => setStep((s) => Math.max(s - 1, 0))
   const goto = (idx: number) => setStep(idx)
 
-  function handleConfirm() {
-    if (payMethod === "online") {
-      console.log("[v0] Simulating online payment...")
-      setTimeout(() => {
-        setOrderId(`ORD-${Math.floor(Math.random() * 9_999_999)}`)
-        next()
-      }, 600)
-    } else {
-      setOrderId(`ORD-${Math.floor(Math.random() * 9_999_999)}`)
-      next()
+  async function handleConfirm() {
+    setIsConfirming(true);
+    setBookingError(null);
+    try {
+      // Prepare the booking data according to the API requirements
+      const bookingData = {
+        slot: selectedSlot?.uuid,
+        clinic: clinicId,
+        service: serviceId,
+        booking_type: mode === "CLINIC_VISIT" ? "PHYSICAL_VISIT" : mode, // Adjust mapping as needed
+        doctor_gender_preference: genderPref === "none" ? null : genderPref,
+        payment_mode: payMethod,
+        session_type: sessionType,
+        patient_name: patient.name,
+        patient_address: session?.user?.address || "Address not provided", // You might want to get this from patient form
+        patient_mobile: patient.phone_number,
+        patient_email: patient.email || "",
+        offers_applied: coupon ? [coupon.uuid] : [],
+        booking_charge: total
+      };
+
+      // Make the API call
+      const response = await createBookingService(bookingData);
+      if (response?.status == 200 && response?.message === 'Booking Created') {
+        console.log(response, 'response da')
+        setOrderId(response.order_id || `ORD-${Math.floor(Math.random() * 9_999_999)}`);
+        setBookingSuccess(true);
+        next();
+      }
+
+    } catch (error: any) {
+      console.error("Booking failed:", error);
+
+      // Extract error message from the response
+      let errorMessage = "Failed to complete booking. Please try again.";
+
+      if (error.response?.data) {
+        // Handle non_field_errors
+        if (error.response.data.non_field_errors) {
+          errorMessage = error.response.data.non_field_errors[0];
+        }
+        // Handle field-specific errors
+        else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        }
+        // Handle other error formats
+        else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setBookingError(errorMessage);
+    } finally {
+      setIsConfirming(false);
+      setShowConfirmModal(false);
     }
   }
 
@@ -237,6 +289,10 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
 
+  const handleConfirmBooking = () => {
+    setShowConfirmModal(true);
+  };
+
   useEffect(() => {
     getClinic()
     if (serviceId) {
@@ -258,8 +314,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       )
     }
   }, [session])
-
-
   return (
     <section aria-label="Clinic Booking" className="">
       <nav>
@@ -269,6 +323,23 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       <section className="pb-10">
         <CommonHeroSection className="h-[15vh]" />
       </section>
+
+      {/* Error display */}
+      {bookingError && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <strong className="font-bold">Booking Error: </strong>
+            <span className="block sm:inline">{bookingError}</span>
+            <button
+              onClick={() => setBookingError(null)}
+              className="absolute top-0 right-0 px-2 py-1"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
 
       <section className="pb-10 md:mb-20 max-w-7xl mx-auto ">
         <div className="grid gap-6 md:grid-cols-3">
@@ -355,7 +426,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                   <button
                     disabled={!selectedSlot}
                     onClick={next}
-                    className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-md bg-primaryColor px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Continue
                   </button>
@@ -412,7 +483,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                   className="md:col-span-2"
                   value={payMethod}
                   onChange={setPayMethod}
-                  onConfirm={handleConfirm}
+                  onConfirm={handleConfirmBooking}
                 />
                 <div className="md:col-span-3">
                   <button
@@ -438,6 +509,17 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
           </div>
         </div>
       </section>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirm}
+        title="Confirm Booking"
+        message="Are you sure you want to confirm this booking? This action cannot be undone."
+        confirmText="Confirm Booking"
+        isLoading={isConfirming}
+      />
 
       {/* Footer */}
       <section>

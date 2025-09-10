@@ -64,3 +64,34 @@ export const getClinicListService = async (id?: string, location?: { lat: number
   const res = await axiosPublic.get(url);
   return res?.data;
 }
+
+export const createBookingService = async (data?: any) => {
+  const res = await axiosPrivate.post(`${USER_SERVICE.CREATE_BOOKING}`, data);
+  return res.data;
+};
+
+
+export const createRazorpayOrder = async (bookingId: string) => {
+  try {
+    const response = await axiosPrivate.post(`${USER_SERVICE.CREATE_RAYZOR_PAY}`, {
+      booking: bookingId,
+      payment_purpose: "NORMAL_BOOKING",
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    throw error;
+  }
+};
+
+
+export const verifyPayment = async (id: any) => {
+  try {
+    const response = await axiosPrivate.post(`${USER_SERVICE.VERIFY_STATUS}?order_id=${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    throw error;
+  }
+};
