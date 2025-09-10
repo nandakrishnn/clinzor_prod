@@ -13,10 +13,6 @@ const FloatingBanner = () => {
     <>
 
       <div className={`${hidden && "hidden"} fixed z-50 bottom-5 right-5 w-[190px] h-[255px] md:w-[350px] md:h-[185px] shadow-xl`}>
-        {/* Close button*/}
-        <div onClick={handleHide} className='absolute -top-10 md:-top-9 right-0 z-50 border rounded-full border-black cursor-pointer md:hidden'>
-          <Close className='text-black' />
-        </div>
 
         {/* Floating Content */}
         <div className='flex relative w-full h-full overflow-hidden rounded-xl bg-gradient-to-r from-[#000E50] to-[#00D0FD]'>
@@ -38,6 +34,11 @@ const FloatingBanner = () => {
                 BOOK NOW
               </button>
             </Link>
+          </div>
+
+          {/* Close button*/}
+          <div onClick={handleHide} className='absolute top-2 right-2 z-50 border rounded-full flex items-center justify-center border-white cursor-pointer md:hidden'>
+            <Close className='text-white text-lg' />
           </div>
 
           {/* Right Side image*/}
