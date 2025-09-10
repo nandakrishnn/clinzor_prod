@@ -327,7 +327,7 @@ function AuthContent({
                 <p className="text-xs py-1.5 flex text-center items-center justify-center gap-1">
                   OTP send to
                   <span className="text-primaryColor">{" "} {phone_number}</span>
-                  <Edit size={14} className="cursor-pointer" onClick={() => setShowOtpField(false)}  />
+                  <Edit size={14} className="cursor-pointer" onClick={() => setShowOtpField(false)} />
                 </p>
                 {resendTimer > 0 ? (
                   <>
