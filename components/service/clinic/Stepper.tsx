@@ -18,9 +18,9 @@ export function Stepper({
           <li key={label}>
             <button
               type="button"
-              onClick={() => onStepClick?.(i)}
+              // onClick={() => onStepClick?.(i)}
               className={[
-                "w-full rounded-md border px-3 py-2 text-left text-sm transition",
+                "w-full rounded-md border px-3 py-2 text-left text-sm transition cursor-default",
                 isActive
                   ? "border-primaryColor bg-blue-50 text-primaryColor"
                   : isDone

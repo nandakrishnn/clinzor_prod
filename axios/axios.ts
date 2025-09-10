@@ -1,7 +1,7 @@
 // axios.ts
 import { baseUrl } from "@/utils/Endpoint";
 import axios from "axios";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 const BASE_URL = "http://13.235.72.88:8000"; // Explicitly define your base URL
 
@@ -45,8 +45,8 @@ privateInstance.interceptors.request.use(
       if (session?.accessToken) {
         config.headers.Authorization = `Bearer ${session.accessToken}`;
       } else {
+        signOut({ callbackUrl: "/auth" })
         console.warn("No access token - redirecting to login");
-        window.location.href = "/auth";
         return Promise.reject(new Error("Missing access token"));
       }
     } catch (error) {
