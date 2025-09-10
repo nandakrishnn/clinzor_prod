@@ -16,6 +16,6 @@ export const getExpertSlotBookingService = async (slot: any) => {
     return res.data
 }
 export const getAllExpertBookingService = async (status: any) => {
-    const res = await axiosPrivate.post(`${USER_EXPERT.GET_EXPERT_SLOT_BOOKING}?booking_status=${status}`)
+    const res = await axiosPrivate.get(`${USER_EXPERT.GET_EXPERT_SLOT_BOOKING}?booking_status=${status}`)
     return res.data
 }

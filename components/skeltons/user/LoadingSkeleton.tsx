@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export function UserProfileSkeleton() {
     return (
         <div className="flex items-center p-4 rounded-lg bg-gray-100 animate-pulse">
@@ -30,12 +32,21 @@ export function ProfileDetailsSkeleton() {
 }
 
 export function BookingsSkeleton() {
+    const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
     return (
         <div className="bg-card rounded-xl shadow-sm border border-border p-8">
-            <div className="h-8 bg-gray-300 rounded w-1/4 mb-5 animate-pulse"></div>
-            <div className="flex gap-1 mb-4 bg-background/50 p-1 rounded-lg border border-border">
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-10 bg-gray-300 rounded w-24 animate-pulse"></div>
+            <h2 className="text-2xl font-bold text-foreground mb-5">My Expert Bookings</h2>
+
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-1 mb-4 bg-background/50 p-1 rounded-lg border border-border">
+                {["PENDING", "SCHEDULED", "COMPLETED"].map((tab) => (
+                    <button
+                        key={tab}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 "text-muted-foreground hover:text-foreground hover:bg-background/80"
+                            `}
+                    >
+                        {tab === "PENDING" ? "Incomplete" : tab === "SCHEDULED" ? "Upcoming" : "Completed"}
+                    </button>
                 ))}
             </div>
             <div className="space-y-6">

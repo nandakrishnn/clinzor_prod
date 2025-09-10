@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { getBookingService } from "@/service/user/profileService"
 import type { Booking } from "@/types/user"
 import BookingDetailsModal from "./BookingDetailsModal"
+import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
 
 export default function MyBookings() {
   const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
@@ -48,6 +49,7 @@ export default function MyBookings() {
     setSelectedBooking(null)
   }
 
+  if (isLoading) return <BookingsSkeleton />
   return (
     <>
       <div className="bg-card rounded-xl shadow-sm border border-border p-8">
@@ -60,8 +62,8 @@ export default function MyBookings() {
               key={tab}
               onClick={() => setActiveTab(tab as any)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab
-                  ? "bg-primaryColor text-white shadow-sm border border-border"
-                  : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+                ? "bg-primaryColor text-white shadow-sm border border-border"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/80"
                 }`}
             >
               {tab === "PENDING" ? "Incomplete" : tab === "SCHEDULED" ? "Upcoming" : "Completed"}
@@ -73,7 +75,7 @@ export default function MyBookings() {
         <div className="space-y-6">
           {bookings?.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-muted-foreground text-lg mb-2 capitalize">No {activeTab} bookings</div>
+              <div className="text-muted-foreground text-lg mb-2 uppercase">No {activeTab} bookings</div>
               <p className="text-sm text-muted-foreground">
                 {activeTab === "COMPLETED" && "All your bookings are confirmed or completed."}
                 {activeTab === "SCHEDULED" && "You don't have any upcoming bookings."}
@@ -101,10 +103,10 @@ export default function MyBookings() {
 
                   <span
                     className={`px-3 py-1.5 rounded-full text-xs font-medium self-start ${booking?.booking_status === "COMPLETED"
-                        ? "bg-accent/20 text-accent border border-accent/30"
-                        : booking?.booking_status === "PENDING"
-                          ? "bg-secondary/20 text-secondary border border-secondary/30"
-                          : "bg-primary/20 text-primary border border-primary/30"
+                      ? "bg-accent/20 text-accent border border-accent/30"
+                      : booking?.booking_status === "PENDING"
+                        ? "bg-secondary/20 text-secondary border border-secondary/30"
+                        : "bg-primary/20 text-primary border border-primary/30"
                       }`}
                   >
                     {booking?.booking_status}
@@ -142,7 +144,7 @@ export default function MyBookings() {
                     <Eye size={14} />
                     View Details
                   </button>
-                  {activeTab !== "COMPLETED" && (
+                  {activeTab == "SCHEDULED" && (
                     <button className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors">
                       <X size={14} />
                       Cancel

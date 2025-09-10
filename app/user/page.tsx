@@ -13,6 +13,7 @@ import { getUserService } from "@/service/user/sevicePage"
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
 import { logOutService } from "@/service/user/profileService"
 import { BookingsSkeleton, ProfileDetailsSkeleton, UserProfileSkeleton } from "@/components/skeltons/user/LoadingSkeleton"
+import MyExpertBooking from "@/components/user/MyExpertBooking"
 export default function UserDash() {
   const { data } = useSession()
   const [user, setUser] = useState(data?.user || {});
@@ -44,6 +45,7 @@ export default function UserDash() {
   const navItems: NavItemType[] = [
     { id: "profile", label: "Profile Details", icon: "profile" },
     { id: "bookings", label: "My Bookings", icon: "bookings" },
+    { id: "expert_bookings", label: "Expert Bookings", icon: "bookings" },
     { id: "logout", label: "Logout", icon: "logout" },
   ]
 
@@ -88,6 +90,8 @@ export default function UserDash() {
           return <ProfileDetailsSkeleton />
         case "bookings":
           return <BookingsSkeleton />
+        case "expert_bookings":
+          return <BookingsSkeleton />
         default:
           return <ProfileDetailsSkeleton />
       }
@@ -98,6 +102,8 @@ export default function UserDash() {
         return <ProfileDetails user={user} onUpdate={getUser} />
       case "bookings":
         return <MyBookings />
+      case "expert_bookings":
+        return <MyExpertBooking />
       default:
         return <ProfileDetails user={user} onUpdate={getUser} />
     }
