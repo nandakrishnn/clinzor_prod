@@ -1,7 +1,7 @@
 "use client";
 import { JSX, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, AlertCircle, Phone, User, MapPin, Key, Calendar, VenetianMask } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Phone, User, MapPin, Key, Calendar, VenetianMask, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { findUsers, sendOTP, verifyOTP } from "@/service/user/userAuthService/userAuthService";
@@ -122,8 +122,12 @@ type AuthContentProps = {
   otp: string;
   setOtp: React.Dispatch<React.SetStateAction<string>>;
   otpError: string;
+  setShowOtpField: any;
   showOtpField: boolean;
   referenceId: string;
+  resendTimer: number;
+  handleResendOtp: () => void;
+  isResending: boolean;
 };
 
 function AuthContent({
@@ -155,8 +159,12 @@ function AuthContent({
   otp,
   setOtp,
   otpError,
+  setShowOtpField,
   showOtpField,
-  referenceId
+  referenceId,
+  resendTimer,
+  handleResendOtp,
+  isResending
 }: AuthContentProps) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -316,21 +324,28 @@ function AuthContent({
               </button>
 
               <div className="mt-4 text-center text-sm text-black">
-                Didn't receive the code?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Resend OTP logic
-                    if (authMode === "login") {
-                      handleLogin({ preventDefault: () => { } } as React.FormEvent<HTMLFormElement>);
-                    } else {
-                      handleRegister({ preventDefault: () => { } } as React.FormEvent<HTMLFormElement>);
-                    }
-                  }}
-                  className="font-semibold text-blue-600 hover:underline"
-                >
-                  Resend OTP
-                </button>
+                <p className="text-xs py-1.5 flex text-center items-center justify-center gap-1">
+                  OTP send to
+                  <span className="text-primaryColor">{" "} {phone_number}</span>
+                  <Edit size={14} className="cursor-pointer" onClick={() => setShowOtpField(false)}  />
+                </p>
+                {resendTimer > 0 ? (
+                  <>
+                    <p>Resend OTP in {resendTimer} seconds</p>
+                  </>
+                ) : (
+                  <>
+                    Didn't receive the code?{" "}
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={isResending}
+                      className="font-semibold text-blue-600 hover:underline disabled:opacity-50"
+                    >
+                      {isResending ? "Resending..." : "Resend OTP"}
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           )}
@@ -358,6 +373,8 @@ export default function AuthenticationGateway() {
   const [otp, setOtp] = useState("");
   const [showOtpField, setShowOtpField] = useState(false);
   const [referenceId, setReferenceId] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+  const [isResending, setIsResending] = useState(false);
 
   // Errors
   const [emailError, setEmailError] = useState("");
@@ -369,6 +386,26 @@ export default function AuthenticationGateway() {
   const [otpError, setOtpError] = useState("");
   const [formError, setFormError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  // Start timer when OTP field is shown
+  useEffect(() => {
+    if (showOtpField) {
+      setResendTimer(30);
+    }
+  }, [showOtpField]);
 
   // Validation functions
   const validateLoginForm = () => {
@@ -442,6 +479,39 @@ export default function AuthenticationGateway() {
     }
 
     return true;
+  };
+
+  // Handle Resend OTP
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    setFormError("");
+
+    try {
+      if (authMode === "login") {
+        // For login, check if user exists first
+        const isUserExist = await findUsers({ phone_number });
+
+        if (!isUserExist?.data?.user_in_db) {
+          setFormError("User not found. Please register first.");
+          setIsResending(false);
+          return;
+        }
+      }
+
+      const response = await sendOTP({ phone_number });
+
+      if (response?.status === 200) {
+        setReferenceId(response?.data?.refrence_id);
+        setResendTimer(30); // Reset the timer
+        setFormError(""); // Clear any previous errors
+      } else {
+        setFormError("Failed to resend OTP. Please try again.");
+      }
+    } catch (error: any) {
+      setFormError(error.response?.data?.message || "An error occurred while resending OTP");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   // Handle Login
@@ -523,7 +593,6 @@ export default function AuthenticationGateway() {
           authMode,
           redirect: false,
         });
-        // setFormError("OTP verification failed");
       } else {
         result = await signIn("otp", {
           otp,
@@ -531,7 +600,6 @@ export default function AuthenticationGateway() {
           authMode,
           redirect: false,
         });
-        // setFormError("OTP verification failed");
       }
 
       if (result?.error) {
@@ -565,6 +633,7 @@ export default function AuthenticationGateway() {
     setGenderError("");
     setOtpError("");
     setFormError("");
+    setResendTimer(0);
   };
 
   useEffect(() => {
@@ -607,8 +676,12 @@ export default function AuthenticationGateway() {
         otp={otp}
         setOtp={setOtp}
         otpError={otpError}
+        setShowOtpField={setShowOtpField}
         showOtpField={showOtpField}
         referenceId={referenceId}
+        resendTimer={resendTimer}
+        handleResendOtp={handleResendOtp}
+        isResending={isResending}
       />
     </div>
   );
