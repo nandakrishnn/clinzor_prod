@@ -15,6 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Email } from "@mui/icons-material";
 import DataPlaceholder from "@/components/common/DataPlaceholder";
+import { useSession } from "next-auth/react";
 
 interface ClinicDetailedViewProps {
   data: any,
@@ -27,6 +28,9 @@ interface ClinicDetailedViewProps {
 const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data, services, activeServiceTab, doctors }) => {
   const router = useRouter();
   const clinicInfo = data?.clinic
+
+  // user data
+  const { data: session } = useSession()
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
       {/* Clinic Header */}
@@ -157,7 +161,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                     </div>
                     <Button
                       className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
-                      onClick={() => router.push(`/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&&serviceId=${service?.service}`)}
+                      onClick={() => { session?.accessToken ? router.push(`/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&&serviceId=${service?.service}`) : router.push('/auth') }}
                     >
                       Book Now
                     </Button>

@@ -1,4 +1,5 @@
 'use client'
+import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 interface ClinicCarousalProps {
@@ -10,6 +11,7 @@ interface ClinicCarousalProps {
 
 const ClinicCarousal: React.FC<ClinicCarousalProps> = ({ id, serviceDetailed, activeServiceTab, setActiveServiceTab }) => {
     const router = useRouter()
+    const { data } = useSession()
 
     const serviceTabs = [
         { id: "HOME_VISIT", label: "Home Service", icon: "🏠" },
@@ -56,7 +58,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({ id, serviceDetailed, ac
                             </div>
                             <button
                                 className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2 rounded-lg"
-                                onClick={() => router.push(`/service/clinic/booking/${id}?selectedService=${activeServiceTab}&&serviceId=${serviceDetailed?.uuid}`)}
+                                onClick={() => { data?.accessToken ? router.push(`/service/clinic/booking/${id}?selectedService=${activeServiceTab}&&serviceId=${serviceDetailed?.uuid}`) : router.push('/auth') }}
                             >
                                 Book Now
                             </button>

@@ -12,6 +12,7 @@ declare module "next-auth" {
       role?: string;
       address?: string;
       phone_number?: string;
+      phone_number?: string;
     } & DefaultSession["user"];
   }
 }
