@@ -42,3 +42,9 @@ export const USER_PROFILE = {
     GET_LOGOUT: 'user/logout/',
     GET_UPDATE_USER_DETAILS: 'customer/update-customer-detail/',
 }
+export const USER_EXPERT = {
+    GET_EXPERT: 'clinic/list-experts/',
+    GET_EXPERT_SLOT: 'customer/expert-slots/',
+    GET_EXPERT_SLOT_BOOKING: 'customer/expert-booking-lc/',
+    GET_EXPERT_SLOT_ALL_BOOKING: 'customer/expert-booking-lc/',
+}
