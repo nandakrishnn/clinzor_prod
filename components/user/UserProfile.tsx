@@ -1,7 +1,5 @@
 "use client";
 
-import type { UserProfileProps } from "@/types/user";
-
 export default function UserProfile({
   user,
   isActive,
@@ -10,10 +8,7 @@ export default function UserProfile({
   console.log(user)
   return (
     <div
-      className={`flex items-center p-4 cursor-pointer rounded-lg transition-all duration-200 ${isActive
-        ? "bg-sidebar-primary border border-sidebar-border shadow-sm"
-        : "hover:bg-sidebar-accent/10 hover:shadow-sm"
-        }`}
+      className={`flex items-center p-4 cursor-pointer rounded-lg transition-all duration-200 bg-sidebar-primary border border-sidebar-border shadow-sm`}
       onClick={onClick}
     >
       <div className="relative">

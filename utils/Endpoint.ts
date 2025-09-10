@@ -33,3 +33,9 @@ export const USER_BLOGS = {
     GET_ALL_BLOGS: "user/blog-list-create/",
     GET_A_BLOG: "user/blog-rud/"
 }
+
+export const USER_PROFILE = {
+    GET_BOOKINGS: 'customer/booking-lc/',
+    GET_LOGOUT: 'user/logout/',
+    GET_UPDATE_USER_DETAILS: 'customer/update-customer-detail/',
+}

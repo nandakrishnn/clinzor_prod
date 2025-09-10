@@ -1,15 +1,36 @@
 "use client"
 
-import type { MyBookingsProps } from "@/types/user"
 import { Calendar, Clock, MapPin, Eye, X } from "lucide-react"
-import { useState } from "react"
-import BookingDetailsModal from "./BookingDetailsModal"
+import { useEffect, useState } from "react"
+import { getBookingService } from "@/service/user/profileService"
 import type { Booking } from "@/types/user"
+import BookingDetailsModal from "./BookingDetailsModal"
 
-export default function MyBookings({ bookings }: MyBookingsProps) {
-  const [activeTab, setActiveTab] = useState<"incomplete" | "upcoming" | "completed">("upcoming")
+export default function MyBookings() {
+  const [activeTab, setActiveTab] = useState<"PENDING" | "SHEDULED" | "COMPLETED">("SHEDULED")
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [bookings, setBookings] = useState<any>();
+  const [isLoading, setLoading] = useState(true)
+
+  const getBookings = async () => {
+    try {
+      const res = await getBookingService(activeTab);
+      console.log(res)
+      if (res.status === 200) {
+        setBookings(res?.data?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getBookings()
+  }, [activeTab])
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking)
@@ -21,22 +42,6 @@ export default function MyBookings({ bookings }: MyBookingsProps) {
     setSelectedBooking(null)
   }
 
-  const filteredBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.date)
-    const today = new Date()
-
-    switch (activeTab) {
-      case "incomplete":
-        return booking.status === "Pending" || booking.status === "Cancelled"
-      case "upcoming":
-        return booking.status === "Confirmed" && bookingDate >= today
-      case "completed":
-        return booking.status === "Confirmed" && bookingDate < today
-      default:
-        return true
-    }
-  })
-
   return (
     <>
       <div className="bg-card rounded-xl shadow-sm border border-border p-8">
@@ -44,84 +49,80 @@ export default function MyBookings({ bookings }: MyBookingsProps) {
 
         <div className="flex flex-wrap gap-1 mb-4 bg-background/50 p-1 rounded-lg border border-border">
           <button
-            onClick={() => setActiveTab("incomplete")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-              activeTab === "incomplete"
-                ? "bg-primaryColor text-white shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/80"
-            }`}
+            onClick={() => setActiveTab("PENDING")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === "PENDING"
+              ? "bg-primaryColor text-white shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+              }`}
           >
-            Incomplete ({bookings.filter((b) => b.status === "Pending" || b.status === "Cancelled").length})
+            Incomplete
           </button>
           <button
-            onClick={() => setActiveTab("upcoming")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-              activeTab === "upcoming"
-                ? "bg-primaryColor text-white shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/80"
-            }`}
+            onClick={() => setActiveTab("SHEDULED")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === "SHEDULED"
+              ? "bg-primaryColor text-white shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+              }`}
           >
-            Upcoming ({bookings.filter((b) => b.status === "Confirmed" && new Date(b.date) >= new Date()).length})
+            Upcoming
           </button>
           <button
-            onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-              activeTab === "completed"
-                ? "bg-primaryColor text-white shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/80"
-            }`}
+            onClick={() => setActiveTab("COMPLETED")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === "COMPLETED"
+              ? "bg-primaryColor text-white shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+              }`}
           >
-            Completed ({bookings.filter((b) => b.status === "Confirmed" && new Date(b.date) < new Date()).length})
+            Completed
           </button>
         </div>
 
         <div className="space-y-6">
-          {filteredBookings.length === 0 ? (
+          {bookings?.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-muted-foreground text-lg mb-2">No {activeTab} bookings</div>
+              <div className="text-muted-foreground text-lg mb-2 capitalize">No {activeTab} bookings</div>
               <p className="text-sm text-muted-foreground">
-                {activeTab === "incomplete" && "All your bookings are confirmed or completed."}
-                {activeTab === "upcoming" && "You don't have any upcoming bookings."}
-                {activeTab === "completed" && "You haven't completed any bookings yet."}
+                {activeTab === "COMPLETED" && "All your bookings are confirmed or completed."}
+                {activeTab === "SHEDULED" && "You don't have any upcoming bookings."}
+                {activeTab === "PENDING" && "You haven't completed any bookings yet."}
               </p>
             </div>
           ) : (
-            filteredBookings.map((booking) => (
+            bookings?.map((booking: any) => (
               <div
-                key={booking.id}
+                key={booking.uuid}
                 className="bg-background/50 border border-border rounded-lg p-6 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1 space-y-3">
-                    <h3 className="font-semibold text-foreground text-lg leading-tight">{booking.title}</h3>
+                    <h3 className="font-semibold text-foreground text-lg leading-tight">{booking?.clinic_name}</h3>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar size={16} />
-                        <span>{booking.date}</span>
+                        <span>{booking?.start_time}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock size={16} />
-                        <span>{booking.time}</span>
+                        <span>{booking?.start_time}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin size={16} />
-                        <span>{booking.location}</span>
+                        <span>{booking?.session_type}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                        booking.status === "Confirmed"
-                          ? "bg-accent/20 text-accent border border-accent/30"
-                          : booking.status === "Pending"
-                            ? "bg-secondary/20 text-secondary border border-secondary/30"
-                            : "bg-destructive/20 text-destructive border border-destructive/30"
-                      }`}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium ${booking?.booking_status === "COMPLETED"
+                        ? "bg-accent/20 text-accent border border-accent/30"
+                        : booking?.booking_status === "PENDING"
+                          ? "bg-secondary/20 text-secondary border border-secondary/30"
+                          : "bg-destructive/20 text-destructive border border-destructive/30"
+                        }`}
                     >
-                      {booking.status}
+                      {booking?.booking_status}
                     </span>
                   </div>
                 </div>
@@ -134,7 +135,7 @@ export default function MyBookings({ bookings }: MyBookingsProps) {
                     <Eye size={14} />
                     View Details
                   </button>
-                  {activeTab !== "completed" && (
+                  {activeTab !== "COMPLETED" && (
                     <button className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors">
                       <X size={14} />
                       Cancel

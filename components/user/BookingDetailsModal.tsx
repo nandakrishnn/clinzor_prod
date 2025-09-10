@@ -3,13 +3,8 @@
 import { X, Calendar, Clock, MapPin, User, CreditCard, Mail, Phone, Info, Download } from "lucide-react"
 import type { Booking } from "@/types/user"
 
-interface BookingDetailsModalProps {
-  booking: Booking | null
-  isOpen: boolean
-  onClose: () => void
-}
 
-export default function BookingDetailsModal({ booking, isOpen, onClose }: BookingDetailsModalProps) {
+export default function BookingDetailsModal({ booking, isOpen, onClose }: any) {
   if (!isOpen || !booking) return null
 
   return (
@@ -31,45 +26,45 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
           {/* Booking Summary */}
           <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Info size={18} className="text-blue-600" />
+              <Info size={18} className="text-primaryColor" />
               Booking Summary
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Calendar size={20} className="text-blue-600" />
+                  <Calendar size={20} className="text-primaryColor" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900">{booking.date}</p>
+                  <p className="font-medium text-gray-900">{booking?.start_time}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Clock size={20} className="text-blue-600" />
+                  <Clock size={20} className="text-primaryColor" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Time</p>
-                  <p className="font-medium text-gray-900">{booking.time}</p>
+                  <p className="font-medium text-gray-900">{booking?.start_time}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <MapPin size={20} className="text-blue-600" />
+                  <MapPin size={20} className="text-primaryColor" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Location</p>
-                  <p className="font-medium text-gray-900">{booking.location}</p>
+                  <p className="font-medium text-gray-900">{booking?.booking_type}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <CreditCard size={20} className="text-blue-600" />
+                  <CreditCard size={20} className="text-primaryColor" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Total Amount</p>
                   <p className="font-medium text-gray-900">
-                    {booking.payment.currency} {booking.payment.amount.toFixed(2)}
+                    {booking?.booking_charge.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -80,7 +75,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Service Details</h3>
             <div className="p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">{booking.title}</h4>
+              <h4 className="font-medium text-gray-900 mb-2">{booking?.clinic_name}</h4>
               {booking.notes && (
                 <p className="text-gray-600 mt-2">
                   <span className="font-medium">Additional Notes:</span> {booking.notes}
@@ -99,7 +94,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Customer Name</p>
-                  <p className="font-medium text-gray-900">{booking.customer.name}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -108,7 +103,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium text-gray-900">{booking.customer.email}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -117,12 +112,12 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium text-gray-900">{booking.customer.phone}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_mobile}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <CreditCard size={18} className="text-blue-600" />
+                  <CreditCard size={18} className="text-primaryColor" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Payment Method</p>
@@ -137,23 +132,22 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
             <div className="flex items-center gap-3 mb-4 sm:mb-0">
               <span className="text-sm font-medium text-gray-700">Status:</span>
               <span
-                className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                  booking.status === "Confirmed"
+                className={`px-3 py-1.5 rounded-full text-xs font-medium ${booking.booking_status === "Confirmed"
                     ? "bg-green-100 text-green-800"
                     : booking.status === "Pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-red-100 text-red-800"
-                }`}
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
               >
                 {booking.status}
               </span>
             </div>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              {/* <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                 <Download size={16} />
                 Download Invoice
-              </button>
-              {booking.status !== "Cancelled" && (
+              </button> */}
+              {booking.booking_status !== "CANCELED" && (
                 <button className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
                   Cancel Booking
                 </button>
