@@ -36,10 +36,10 @@ export default function MyExpertBooking() {
     const shouldShowJoinButton = (booking: any) => {
         const startTime = new Date(booking.start_time);
         const endTime = new Date(booking.end_time);
-        
+
         // Show button 5 minutes before start time until end time
         const fiveMinutesBeforeStart = new Date(startTime.getTime() - 5 * 60000);
-        
+
         return currentTime >= fiveMinutesBeforeStart && currentTime <= endTime;
     }
 
@@ -174,20 +174,20 @@ export default function MyExpertBooking() {
                                             </button>
                                         )}
                                     </div>
-                                    
+
                                     {/* Conditional Join Button */}
-                                    {booking.booking_type === "VIDEO_CALL" && 
-                                     booking.booking_status === "SCHEDULED" && 
-                                     shouldShowJoinButton(booking) && (
-                                        <a 
-                                            href={booking?.customer_meeting_link} 
-                                            target="_blank"
-                                            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors mt-4"
-                                        >
-                                            <Laptop size={14} />
-                                            Join Now
-                                        </a>
-                                    )}
+                                    {booking.booking_type === "VIDEO_CALL" &&
+                                        booking.booking_status === "SCHEDULED" &&
+                                        shouldShowJoinButton(booking) && (
+                                            <a
+                                                href={booking?.customer_meeting_link}
+                                                target="_blank"
+                                                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors mt-4"
+                                            >
+                                                <Laptop size={14} />
+                                                Join Now
+                                            </a>
+                                        )}
                                 </div>
                             </div>
                         ))
