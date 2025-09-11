@@ -43,10 +43,10 @@ export const CustomCalendar = ({
     startDay === 0
       ? []
       : Array.from({ length: startDay }, (_, i) => {
-          const date = new Date(monthStart);
-          date.setDate(-i);
-          return date;
-        }).reverse();
+        const date = new Date(monthStart);
+        date.setDate(-i);
+        return date;
+      }).reverse();
 
   // Get days from next month to fill the last week
   const endDay = monthEnd.getDay();
@@ -54,10 +54,10 @@ export const CustomCalendar = ({
     endDay === 6
       ? []
       : Array.from({ length: 6 - endDay }, (_, i) => {
-          const date = new Date(monthEnd);
-          date.setDate(monthEnd.getDate() + i + 1);
-          return date;
-        });
+        const date = new Date(monthEnd);
+        date.setDate(monthEnd.getDate() + i + 1);
+        return date;
+      });
 
   const allDays = [...prevMonthDays, ...daysInMonth, ...nextMonthDays];
 
@@ -87,9 +87,8 @@ export const CustomCalendar = ({
         <button
           onClick={prevMonth}
           disabled={!canNavigatePrev}
-          className={`p-1 rounded ${
-            canNavigatePrev ? "hover:bg-gray-100" : "opacity-50"
-          }`}
+          className={`p-1 rounded ${canNavigatePrev ? "hover:bg-gray-100" : "opacity-50"
+            }`}
         >
           <svg
             className="w-5 h-5 text-gray-500"
@@ -111,9 +110,8 @@ export const CustomCalendar = ({
         <button
           onClick={nextMonth}
           disabled={!canNavigateNext}
-          className={`p-1 rounded ${
-            canNavigateNext ? "hover:bg-gray-100" : "opacity-50"
-          }`}
+          className={`p-1 rounded ${canNavigateNext ? "hover:bg-gray-100" : "opacity-50"
+            }`}
         >
           <svg
             className="w-5 h-5 text-primaryColor"
@@ -132,9 +130,9 @@ export const CustomCalendar = ({
       </div>
 
       <div className="grid grid-cols-7 gap-1 p-2">
-        {["S", "T", "W", "T", "F", "S", "S"].map((day) => (
+        {["S", "T", "W", "T", "F", "S", "S"].map((day, index) => (
           <div
-            key={day}
+            key={index}
             className="text-center text-xs font-medium text-gray-500 py-2"
           >
             {day}

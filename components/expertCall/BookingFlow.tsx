@@ -350,7 +350,7 @@ const BookingFlow = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {experts.map((expert) => (
                       <div
-                        key={expert.uuid}
+                        key={expert?.uuid}
                         className={`border rounded-lg p-4 cursor-pointer transition-all ${selectedExpert?.uuid === expert.uuid
                           ? "border-primaryColor bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
@@ -411,9 +411,9 @@ const BookingFlow = () => {
                             </div>
                           ) : availableTimeSlots.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                              {availableTimeSlots.map((slot) => (
+                              {availableTimeSlots.map((slot,index) => (
                                 <button
-                                  key={slot.uuid}
+                                  key={slot?.uuid}
                                   onClick={() => handleTimeSelect(slot)}
                                   className={`p-2 text-xs sm:text-sm rounded border transition-all ${selectedTime?.uuid === slot.uuid
                                     ? "bg-primaryColor text-white border-primaryColor"
