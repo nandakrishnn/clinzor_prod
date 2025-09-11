@@ -43,10 +43,8 @@ const headingVariants = {
 
 // Dummy images for the carousel
 const carouselImages = [
-  "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
-  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
-  "https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
-  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280"
+  "/banner1.jpg",
+  "/clinic.png",
 ];
 
 // Side image for the modal
@@ -179,12 +177,10 @@ const Camp = () => {
             <Slider {...settings}>
               {carouselImages.map((image, index) => (
                 <div key={index} className="h-[235px] md:h-[550px] relative">
-                  <Image
+                  <img
                     src={image}
                     alt={`Camp image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    priority={index === 0}
+                    className="object-cover w-full h-full"
                   />
                 </div>
               ))}
@@ -247,7 +243,7 @@ const Camp = () => {
 
             <button
               onClick={openModal}
-              className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+              className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
             >
               Register Now
             </button>
@@ -298,8 +294,8 @@ const Camp = () => {
                     <label className="block text-sm font-medium mb-1 text-gray-700">
                       Organization Name *
                     </label>
-                    <div className="relative">
-                      <BusinessIcon className="absolute left-3 top-3 text-gray-400" />
+                    <div className="relative flex ">
+                      <BusinessIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                       <input
                         type="text"
                         name="org_name"
@@ -319,7 +315,7 @@ const Camp = () => {
                       How did you hear about us? *
                     </label>
                     <div className="relative">
-                      <CampaignIcon className="absolute left-3 top-3 text-gray-400" />
+                      <CampaignIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                       <select
                         name="hear_about_us"
                         value={formData.hear_about_us}
@@ -349,7 +345,7 @@ const Camp = () => {
                         Association Type *
                       </label>
                       <div className="relative">
-                        <GroupsIcon className="absolute left-3 top-3 text-gray-400" />
+                        <GroupsIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                         <select
                           name="association_type"
                           value={formData.association_type}
@@ -379,7 +375,7 @@ const Camp = () => {
                         Expected Participants *
                       </label>
                       <div className="relative">
-                        <GroupsIcon className="absolute left-3 top-3 text-gray-400" />
+                        <GroupsIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                         <input
                           type="number"
                           name="expected_participants"
@@ -401,7 +397,7 @@ const Camp = () => {
                       Preferred Date *
                     </label>
                     <div className="relative">
-                      <CalendarTodayIcon className="absolute left-3 top-3 text-gray-400" />
+                      <CalendarTodayIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                       <input
                         type="date"
                         name="preferred_date"
@@ -421,7 +417,7 @@ const Camp = () => {
                         Contact Person *
                       </label>
                       <div className="relative">
-                        <PersonIcon className="absolute left-3 top-3 text-gray-400" />
+                        <PersonIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                         <input
                           type="text"
                           name="contact_person"
@@ -441,7 +437,7 @@ const Camp = () => {
                         Email *
                       </label>
                       <div className="relative">
-                        <EmailIcon className="absolute left-3 top-3 text-gray-400" />
+                        <EmailIcon className="absolute left-3 top-3 text-gray-400 text-lg" />
                         <input
                           type="email"
                           name="email"

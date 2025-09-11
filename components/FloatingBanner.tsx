@@ -12,7 +12,7 @@ const FloatingBanner = () => {
   return (
     <>
 
-      <div className={`${hidden && "hidden"} fixed z-50 bottom-5 right-5 w-[190px] h-[255px] md:w-[350px] md:h-[185px] shadow-xl`}>
+      <div className={`${hidden && "hidden"} fixed z-40 bottom-5 right-5 w-[190px] h-[255px] md:w-[350px] md:h-[185px] shadow-xl`}>
 
         {/* Floating Content */}
         <div className='flex relative w-full h-full overflow-hidden rounded-xl bg-gradient-to-r from-[#000E50] to-[#00D0FD]'>
