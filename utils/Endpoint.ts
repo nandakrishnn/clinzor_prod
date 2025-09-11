@@ -24,6 +24,7 @@ export const USER_SERVICE = {
     CREATE_BOOKING: "customer/booking-lc/",
     CREATE_RAYZOR_PAY: "customer/create-payment/",
     VERIFY_STATUS: "customer/create-payment/",
+    CREATE_CAMP: "clinic/camp-lc/",
 }
 
 export const USER_CLINIC = {

@@ -102,3 +102,13 @@ export const verifyPayment = async (id: any) => {
     throw error;
   }
 };
+
+export const createCampRegistration = async (data: any) => {
+  try {
+    const response = await axiosPrivate.post(`${USER_SERVICE.CREATE_CAMP}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    throw error;
+  }
+}

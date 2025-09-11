@@ -1,11 +1,31 @@
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import { motion, Variants } from "framer-motion";
 
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import CloseIcon from "@mui/icons-material/Close";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import GroupsIcon from "@mui/icons-material/Groups";
+import BusinessIcon from "@mui/icons-material/Business";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { createCampRegistration } from "@/service/user/sevicePage";
+
+// Types for form data
+interface CampRegistrationData {
+  org_name: string;
+  hear_about_us: string;
+  association_type: string;
+  expected_participants: number;
+  preferred_date: string;
+  contact_person: string;
+  email: string;
+  additional_info?: string;
+}
 
 const headingVariants = {
   hidden: { opacity: 0, y: -20 },
@@ -24,12 +44,30 @@ const headingVariants = {
 // Dummy images for the carousel
 const carouselImages = [
   "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
-  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280", // assuming you have these images
+  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
   "https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280",
   "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=1280"
 ];
 
+// Side image for the modal
+const modalSideImage = "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80";
+
 const Camp = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
+  const [formData, setFormData] = useState<CampRegistrationData>({
+    org_name: "",
+    hear_about_us: "",
+    association_type: "",
+    expected_participants: 0,
+    preferred_date: "",
+    contact_person: "",
+    email: "",
+    additional_info: ""
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof CampRegistrationData, string>>>({});
+
   const settings = {
     dots: true,
     infinite: true,
@@ -42,85 +80,448 @@ const Camp = () => {
     pauseOnHover: true,
   };
 
-  return (
-    <section className="overflow-hidden">
-      <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-20 flex flex-col md:flex-row gap-5 md:gap-14">
-        <div className="md:h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg ">
-          <Slider {...settings}>
-            {carouselImages.map((image, index) => (
-              <div key={index} className="h-[235px] md:h-[550px] relative">
-                <Image
-                  src={image}
-                  alt={`Camp image ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            ))}
-          </Slider>
-        </div>
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof CampRegistrationData, string>> = {};
 
-        <motion.div
-          className="text-start w-full md:w-[50%] flex flex-col items-center justify-center"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={headingVariants}
-        >
-          <div className="text-start flex flex-col items-start justify-center">
-            <h3 className="font-semibold text-[18px] italic ">
-              {"Clinic Camp"}
-            </h3>
-            <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
-              {"Lorem Ipsum is simply dummy"}
-            </h2>
-            <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
-              <li className="flex gap-3 items-start">
-                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
-                  <HealthAndSafetyIcon className="45" />
-                </span>
-                <div>
-                  <strong>1. Find Your Expert</strong>
-                  <p className="text-gray-500 text-sm">
-                    Search for specialists based on their expertise and patient
-                    reviews.
-                  </p>
+    if (!formData.org_name.trim()) newErrors.org_name = "Organization name is required";
+    if (!formData.hear_about_us) newErrors.hear_about_us = "This field is required";
+    if (!formData.association_type) newErrors.association_type = "Association type is required";
+    if (!formData.expected_participants || formData.expected_participants < 1)
+      newErrors.expected_participants = "Must be at least 1";
+    if (!formData.preferred_date) newErrors.preferred_date = "Preferred date is required";
+    if (!formData.contact_person.trim()) newErrors.contact_person = "Contact person is required";
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Invalid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'expected_participants' ? parseInt(value) || 0 : value
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name as keyof CampRegistrationData]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name as keyof CampRegistrationData];
+        return newErrors;
+      });
+    }
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    setSubmitStatus(null);
+    setErrors({});
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      org_name: "",
+      hear_about_us: "",
+      association_type: "",
+      expected_participants: 0,
+      preferred_date: "",
+      contact_person: "",
+      email: "",
+      additional_info: ""
+    });
+    setSubmitStatus(null);
+    setErrors({});
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await createCampRegistration(formData);
+
+
+      console.log(response)
+      if (response.status === 200) {
+        console.log('Registration successful:', response);
+        setSubmitStatus('success');
+        // Auto-close modal after 3 seconds on success
+        setTimeout(() => {
+          closeModal();
+        }, 3000);
+      } else {
+        console.error('Registration failed:', response.statusText);
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <section className="overflow-hidden">
+        <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-20 flex flex-col md:flex-row gap-5 md:gap-14">
+          <div className="md:h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg ">
+            <Slider {...settings}>
+              {carouselImages.map((image, index) => (
+                <div key={index} className="h-[235px] md:h-[550px] relative">
+                  <Image
+                    src={image}
+                    alt={`Camp image ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                  />
                 </div>
-              </li>
-              <li className="flex gap-3 items-start">
-                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
-                  <HealthAndSafetyIcon className="45" />
-                </span>
-                <div>
-                  <strong>2. Select a Slot</strong>
-                  <p className="text-gray-500 text-sm">
-                    Choose a date and time that works for you from the expert’s
-                    available slots.
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-3 items-start">
-                <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
-                  <HealthAndSafetyIcon className="45" />
-                </span>
-                <div>
-                  <strong>3. Join the Call</strong>
-                  <p className="text-gray-500 text-sm">
-                    Receive a secure link to join your video consultation at the
-                    scheduled time.
-                  </p>
-                </div>
-              </li>
-            </ul>
+              ))}
+            </Slider>
           </div>
 
-          <button className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8">
-            Register Now
-          </button>
-        </motion.div>
-      </div>
-    </section>
+          <motion.div
+            className="text-start w-full md:w-[50%] flex flex-col items-center justify-center"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={headingVariants}
+          >
+            <div className="text-start flex flex-col items-start justify-center">
+              <h3 className="font-semibold text-[18px] italic ">
+                {"Clinic Camp"}
+              </h3>
+              <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
+                {"Lorem Ipsum is simply dummy"}
+              </h2>
+              <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
+                <li className="flex gap-3 items-start">
+                  <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                    <HealthAndSafetyIcon className="45" />
+                  </span>
+                  <div>
+                    <strong>1. Find Your Expert</strong>
+                    <p className="text-gray-500 text-sm">
+                      Search for specialists based on their expertise and patient
+                      reviews.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                    <HealthAndSafetyIcon className="45" />
+                  </span>
+                  <div>
+                    <strong>2. Select a Slot</strong>
+                    <p className="text-gray-500 text-sm">
+                      Choose a date and time that works for you from the expert's
+                      available slots.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
+                    <HealthAndSafetyIcon className="45" />
+                  </span>
+                  <div>
+                    <strong>3. Join the Call</strong>
+                    <p className="text-gray-500 text-sm">
+                      Receive a secure link to join your video consultation at the
+                      scheduled time.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={openModal}
+              className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+            >
+              Register Now
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Registration Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row shadow-2xl">
+            {/* Left side with image */}
+            <div className="hidden md:block md:w-2/5 relative">
+              <Image
+                src={modalSideImage}
+                alt="Camp registration"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-primaryColor/70 flex items-center justify-center p-6">
+                <div className="text-white text-center">
+                  <h3 className="text-2xl font-bold mb-4">Organize a Health Camp</h3>
+                  <p className="text-lg">Bring healthcare expertise to your organization with our specialized health camps.</p>
+                  <div className="mt-6 flex justify-center">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <HealthAndSafetyIcon className="text-4xl" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side with form */}
+            <div className="w-full md:w-3/5">
+              <div className="flex justify-between items-center px-5 pt-5  text-black">
+                <h3 className="text-xl font-bold">Camp Registration</h3>
+                <button
+                  onClick={closeModal}
+                  className="text-black hover:text-gray-200 transition-colors"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+
+              <form onSubmit={onSubmit} className="p-5 max-h-[70vh] overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                      Organization Name *
+                    </label>
+                    <div className="relative">
+                      <BusinessIcon className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="text"
+                        name="org_name"
+                        value={formData.org_name}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                        placeholder="Enter organization name"
+                      />
+                    </div>
+                    {errors.org_name && (
+                      <p className="text-red-500 text-xs mt-1">{errors.org_name}</p>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                      How did you hear about us? *
+                    </label>
+                    <div className="relative">
+                      <CampaignIcon className="absolute left-3 top-3 text-gray-400" />
+                      <select
+                        name="hear_about_us"
+                        value={formData.hear_about_us}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent appearance-none"
+                      >
+                        <option value="">Select an option</option>
+                        <option value="through a friend">Through a friend</option>
+                        <option value="social media">Social Media</option>
+                        <option value="search engine">Search Engine</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <div className="absolute right-3 top-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    {errors.hear_about_us && (
+                      <p className="text-red-500 text-xs mt-1">{errors.hear_about_us}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-1 text-gray-700">
+                        Association Type *
+                      </label>
+                      <div className="relative">
+                        <GroupsIcon className="absolute left-3 top-3 text-gray-400" />
+                        <select
+                          name="association_type"
+                          value={formData.association_type}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent appearance-none"
+                        >
+                          <option value="">Select type</option>
+                          <option value="Coaching Institute">Coaching Institute</option>
+                          <option value="School">School</option>
+                          <option value="College">College</option>
+                          <option value="Corporate">Corporate</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <div className="absolute right-3 top-3 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                          </svg>
+                        </div>
+                      </div>
+                      {errors.association_type && (
+                        <p className="text-red-500 text-xs mt-1">{errors.association_type}</p>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-1 text-gray-700">
+                        Expected Participants *
+                      </label>
+                      <div className="relative">
+                        <GroupsIcon className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="number"
+                          name="expected_participants"
+                          min="1"
+                          value={formData.expected_participants || ''}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                          placeholder="Number of participants"
+                        />
+                      </div>
+                      {errors.expected_participants && (
+                        <p className="text-red-500 text-xs mt-1">{errors.expected_participants}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                      Preferred Date *
+                    </label>
+                    <div className="relative">
+                      <CalendarTodayIcon className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="date"
+                        name="preferred_date"
+                        value={formData.preferred_date}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                      />
+                    </div>
+                    {errors.preferred_date && (
+                      <p className="text-red-500 text-xs mt-1">{errors.preferred_date}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-1 text-gray-700">
+                        Contact Person *
+                      </label>
+                      <div className="relative">
+                        <PersonIcon className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="text"
+                          name="contact_person"
+                          value={formData.contact_person}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                          placeholder="Full name"
+                        />
+                      </div>
+                      {errors.contact_person && (
+                        <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-1 text-gray-700">
+                        Email *
+                      </label>
+                      <div className="relative">
+                        <EmailIcon className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                      Additional Information
+                    </label>
+                    <textarea
+                      name="additional_info"
+                      value={formData.additional_info}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primaryColor focus:border-transparent"
+                      placeholder="Any special requirements or notes..."
+                    />
+                  </div>
+                </div>
+
+                {submitStatus === 'success' && (
+                  <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                    </svg>
+                    Registration successful! We'll be in touch soon.
+                  </div>
+                )}
+
+                {submitStatus === 'error' && (
+                  <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                    </svg>
+                    There was an error submitting your registration. Please try again.
+                  </div>
+                )}
+
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-primaryColor text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Registration'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
