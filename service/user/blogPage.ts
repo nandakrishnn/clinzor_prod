@@ -1,9 +1,13 @@
 import { axiosPublic } from "@/axios/axios"
 import { USER_BLOGS } from "@/utils/Endpoint"
 
-export const getAllBlogs = async (pageNum?: number) => {
-    const res = await axiosPublic.get(`${USER_BLOGS.GET_ALL_BLOGS}?page=${pageNum}`)
-    return res?.data
+export const getAllBlogs = async (pageNum?: number, search?: string) => {
+  let url = `${USER_BLOGS.GET_ALL_BLOGS}?page=${pageNum}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  const res = await axiosPublic.get(url);
+  return res?.data;
 }
 
 export const getABlog = async (id?: string) => {

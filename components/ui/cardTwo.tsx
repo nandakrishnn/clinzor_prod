@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import React, { ReactNode } from "react";
 
 interface CardProps {
@@ -6,15 +7,18 @@ interface CardProps {
   icon?: ReactNode;
   title: string;
   content: string;
+  service: any;
 }
 
-const CardTwo: React.FC<CardProps> = ({ className, icon, title, content }) => {
+const CardTwo: React.FC<CardProps> = ({ className, icon, title, content, service }) => {
+  const router = useRouter()
   return (
     <div
       className={cn(
-        "rounded-[8px] h-[220px] p-6 pb-10 flex flex-col items-center justify-center bg-[#F2F5FF] shadow",
+        "rounded-[8px] h-[220px] p-6 pb-10 flex flex-col cursor-pointer items-center justify-center bg-[#F2F5FF] shadow",
         className
       )}
+      onClick={() => router.push(`/service/${service?.uuid}`)}
     >
       <div className="bg-[#DBEAFE] p-3 rounded-full text-[#033C8D] ">
         {icon}

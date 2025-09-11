@@ -9,6 +9,7 @@ import DataPlaceholder from '../common/DataPlaceholder';
 import SearchBar from '../common/SearchBar';
 import { ChevronRight, Loader } from 'lucide-react';
 import Link from 'next/link';
+
 type Blogs = {
     uuid: string;
     user: string;
@@ -25,15 +26,17 @@ const BlogList = () => {
     const [totalPage, setTotalPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [showBlog, setShowBlog] = useState<Blogs[]>([])
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
 
-    const getBlogData = async (pageNum: number) => {
+    const getBlogData = async (pageNum: number, search: string = '') => {
         try {
-            const res = await getAllBlogs(pageNum);
+            // Update the getAllBlogs function to accept search parameter
+            const res = await getAllBlogs(pageNum, search);
             const totalPages = res?.data?.total_pages || 1;
             setTotalPage(totalPages);
             setHasMore(pageNum < totalPages);
             const pageData = res?.data?.data || [];
-
 
             if (pageNum === 1) {
                 setBlogData(pageData);
@@ -45,6 +48,7 @@ const BlogList = () => {
             console.log(error, 'error message')
         } finally {
             setIsLoading(false)
+            setIsSearching(false)
         }
     }
 
@@ -56,8 +60,15 @@ const BlogList = () => {
         if (page < totalPage) {
             const nextPage = page + 1;
             setPage(nextPage);
-            getBlogData(nextPage);
+            getBlogData(nextPage, searchQuery);
         }
+    };
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setIsSearching(true);
+        setPage(1); // Reset to first page when searching
+        getBlogData(1, query);
     };
 
     if (isLoading) {
@@ -75,10 +86,14 @@ const BlogList = () => {
         )
     }
 
-    if (blogData.length === 0) {
+    if (blogData.length === 0 && !isSearching) {
         return (
             <>
-                <SearchBar placeHolder='Search Bogs....' />
+                <SearchBar 
+                    placeHolder='Search Blogs....' 
+                    onSearch={handleSearch}
+                    isLoading={isSearching}
+                />
                 <DataPlaceholder title='Blog Data Not Available!' />
             </>
         )
@@ -87,9 +102,13 @@ const BlogList = () => {
     return (
         <div>
             {/* Search Part */}
-            <SearchBar placeHolder='Search Bogs....' />
+            <SearchBar 
+                placeHolder='Search Blogs....' 
+                onSearch={handleSearch}
+                isLoading={isSearching}
+            />
 
-            {showBlog?.length > 0 && (
+            {showBlog?.length > 0 && !searchQuery && (
                 <div className="mb-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {showBlog.map((post, index) => (
@@ -121,13 +140,17 @@ const BlogList = () => {
             )}
 
             {/* Title */}
-            <div className="flex items-start mb-5">
-                <h2 className="text-[22px] font-bold">Articles</h2>
-            </div>
+            {blogData.length > 0 && (
+                <div className="flex items-start mb-5">
+                    <h2 className="text-[22px] font-bold">
+                        {searchQuery ? `Search Results for "${searchQuery}"` : 'Articles'}
+                    </h2>
+                </div>
+            )}
 
             {/* section for listing all page wise */}
             <div className='w-full md:w-[70%] mb-10'>
-                {blogData?.length > 0 && (
+                {blogData?.length > 0 ? (
                     <div className="mb-16">
                         {blogData.map((post, index) => (
                             <Link href={`/blog/${post?.uuid}`}
@@ -158,12 +181,13 @@ const BlogList = () => {
                             </Link>
                         ))}
                     </div>
-                )}
+                ) : !isSearching ? (
+                    <DataPlaceholder title='No blogs found matching your search!' />
+                ) : null}
 
-                {/* Load More button - Only show if there are more pages and not loading */}
-                {hasMore && !isLoading && blogData.length > 0 && (
+                {/* Load More button - Only show if there are more pages and not searching */}
+                {hasMore && !isSearching && blogData.length > 0 && (
                     <div className="flex justify-center mt-8">
-
                         <button
                             onClick={handleLoadMore}
                             disabled={isLoading}

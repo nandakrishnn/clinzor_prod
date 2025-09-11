@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, Suspense } from "react";
 import { getAllService } from "@/service/user/sevicePage";
 import { useRouter, useSearchParams } from "next/navigation";
 import ServiceCard from "./ServiceCard";
@@ -18,7 +18,8 @@ type Service = {
   image: string;
 };
 
-const ServiceListSection = () => {
+// Create a wrapper component that uses Suspense
+function ServiceListContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +64,7 @@ const ServiceListSection = () => {
     const search = searchParams.get("search") || "";
     setSearchQuery(search);
     fetchServices(1, search);
-  }, []);
+  }, [searchParams, fetchServices]);
 
   const handleLoadMore = () => {
     if (page < totalPage && !isLoading) {
@@ -192,6 +193,24 @@ const ServiceListSection = () => {
         </>
       )}
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+const ServiceListSection = () => {
+  return (
+    <Suspense fallback={
+      <>
+        <SearchSkeleton />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ServiceCardSkeleton key={`skeleton-${i}`} />
+          ))}
+        </div>
+      </>
+    }>
+      <ServiceListContent />
+    </Suspense>
   );
 };
 

@@ -110,6 +110,7 @@ export default function ServicesWeProvide() {
                 icon={<HealthAndSafetyIcon className="45" />}
                 title={service?.name}
                 content={service?.description}
+                service={service}
               />
             </motion.div>
           ))}
