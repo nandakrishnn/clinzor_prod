@@ -175,3 +175,14 @@ export const GetAllClinicServiceforDoc= async (page:number) => {
     throw error;
   }
 };
+export const getStatsAdminExpertService= async () => {
+  try {
+    const response = await axiosPrivate.get(
+      `clinic/clinic-service-lc/?page=${page}&status=APPROVED`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};

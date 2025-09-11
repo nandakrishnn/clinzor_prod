@@ -22,7 +22,7 @@ import {
   ChevronRight,
   Home
 } from 'lucide-react';
-import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, rejectExpertSlot } from '@/service/admin/expertManagementService';
+import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
 import { approveSlot, getAllBookings, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
 import { getAllClinic } from '@/service/admin/clinicManagentService';
 import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
@@ -345,6 +345,7 @@ export default function ExpertManagement() {
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
+
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -371,7 +372,7 @@ export default function ExpertManagement() {
         genderParam
       );
 
-      setExperts(expertsResponse.data);
+      setExperts(expertsResponse?.data?.data);
       setPaginationData({
         current_page: expertsResponse.current_page,
         total_pages: expertsResponse.total_pages,
@@ -482,32 +483,6 @@ export default function ExpertManagement() {
     fetchAdditionalData();
   }, []);
 
-  // Client-side filtering for display (server-side pagination handles the main data)
-  // useEffect(() => {
-  //   let filtered = [...experts];
-
-  //   if (searchQuery) {
-  //     filtered = filtered.filter(expert =>
-  //       expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //       expert?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //       expert.phone_number?.includes(searchQuery) ||
-  //       expert.specializaton?.toLowerCase().includes(searchQuery.toLowerCase())
-  //     );
-  //   }
-
-  //   if (selectedStatus !== 'ALL') {
-  //     filtered = filtered.filter(expert =>
-  //       selectedStatus === 'ENABLED' ? expert.enabled : !expert.enabled
-  //     );
-  //   }
-
-  //   if (selectedGender !== 'ALL') {
-  //     filtered = filtered.filter(expert => expert.gender === selectedGender);
-  //   }
-
-  //   setFilteredExperts(filtered);
-  // }, [experts, searchQuery, selectedStatus, selectedGender]);
-
   // Handle page change
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= paginationData.total_pages) {
@@ -559,12 +534,24 @@ export default function ExpertManagement() {
   };
 
   const stats = {
-    total: experts.length,
-    enabled: experts.filter(e => e.status === 'APPROVED').length,
-    disabled: experts.filter(e => e.status !== 'APPROVED').length,
-    male: experts.filter(e => e.gender === 'MALE').length,
-    female: experts.filter(e => e.gender === 'FEMALE').length
+    total: experts?.length,
+    enabled: experts?.filter(e => e.status === 'APPROVED').length,
+    disabled: experts?.filter(e => e.status !== 'APPROVED').length,
+    male: experts?.filter(e => e.gender === 'MALE').length,
+    female: experts?.filter(e => e.gender === 'FEMALE').length
   };
+
+  const getStatsAdminExpert = async () => {
+    try {
+      const res = await getStatsAdminExpertService()
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  useEffect(() => {
+    getStatsAdminExpert()
+  }, [])
 
   const handleView = (expert: Expert) => {
     setSelectedExpert(expert);
@@ -796,6 +783,8 @@ export default function ExpertManagement() {
       setLoadingSlotAction(false);
     }
   };
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
