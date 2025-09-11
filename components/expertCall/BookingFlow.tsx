@@ -55,7 +55,7 @@ const BookingFlow = () => {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [slots, setSlots] = useState<SlotData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>();
 
   // get session user data
   const { data: session } = useSession()
@@ -88,8 +88,8 @@ const BookingFlow = () => {
         } else {
           setError("Failed to load experts");
         }
-      } catch (err) {
-        setError("Failed to connect to server");
+      } catch (err: any) {
+        setError(err?.response?.data[0] || "Failed to connect to server");
         console.error("Error fetching experts:", err);
       } finally {
         setLoading(false);
@@ -120,8 +120,8 @@ const BookingFlow = () => {
         } else {
           setError("Failed to load available slots");
         }
-      } catch (err) {
-        setError("Failed to connect to server");
+      } catch (err: any) {
+        setError(err?.response?.data[0] || "Failed to connect to server");
         console.error("Error fetching slots:", err);
       } finally {
         setLoading(false);
@@ -198,9 +198,9 @@ const BookingFlow = () => {
         <div className="hidden md:block w-64">
           <div className="sticky top-24 ">
             <div className="space-y-2">
-              {[1, 2, 3].map((stepNumber) => (
+              {[1, 2, 3].map((stepNumber, index) => (
                 <div
-                  key={stepNumber}
+                  key={index}
                   className={`flex items-center space-x-3 p-3 rounded-lg ${step === stepNumber
                     ? "bg-blue-50 border-l-4 border-primaryColor"
                     : "text-gray-500"
@@ -360,14 +360,8 @@ const BookingFlow = () => {
                         <div className="flex items-center">
                           <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center mr-3">
                             {expert?.profile_url ? (
-                              // <Image
-                              //   src={expert?.profile_url || ""}
-                              //   alt={expert?.name}
-                              //   width={48}
-                              //   height={48}
-                              //   className="rounded-full"
-                              // />
-                              <img src={expert?.profile_url || "/clinic.png"} alt={expert?.name} className="w-[48px] h-[48]" />
+
+                              <img src={"/clinic.png"} alt={expert?.name} className="w-full h-full object-cover rounded-full" />
                             ) : (
                               <User className="h-6 w-6 text-gray-400" />
                             )}

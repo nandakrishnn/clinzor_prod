@@ -6,13 +6,21 @@ export const getAllExpertService = async () => {
     return res.data
 }
 export const getExpertSlotService = async (expertId: string, fromDate?: any, toDate?: any) => {
-    const res = await axiosPrivate.get(`${USER_EXPERT.GET_EXPERT_SLOT}?expert=${expertId}&&pgn=false&&from_date=${fromDate}&&to_date=${toDate}`)
-    return res.data
+    const formatDateForAPI = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().replace(/\.[\d]{3}Z/, '');
+    };
+
+    const url = `${USER_EXPERT.GET_EXPERT_SLOT}?expert=${expertId}&pgn=false&from_date=${formatDateForAPI(fromDate)}&to_date=${formatDateForAPI(toDate)}`;
+
+    const res = await axiosPrivate.get(url);
+    return res.data;
 }
 
 export const getExpertSlotBookingService = async (slot: any) => {
     console.log(slot)
-    const res = await axiosPrivate.post(`${USER_EXPERT.GET_EXPERT_SLOT_BOOKING}`,{ slot })
+    const res = await axiosPrivate.post(`${USER_EXPERT.GET_EXPERT_SLOT_BOOKING}`, { slot })
     return res.data
 }
 export const getAllExpertBookingService = async (status: any) => {
