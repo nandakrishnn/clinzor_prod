@@ -12,12 +12,18 @@ import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
 import BlogComponent from "@/components/blog/BlogComponent";
 import FloatingBanner from "@/components/FloatingBanner";
+import CampMarquee from "@/components/landingpage/camp/CampMarquee";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b  to-white overflow-hidden">
       {/* Navbar */}
       <NavbarDemo />
+
+      {/* Marque */}
+      <section>
+        <CampMarquee />
+      </section>
 
       <main className="z-10">
         {/* Hero + Search */}
@@ -45,7 +51,7 @@ export default function Home() {
         </section>
 
         {/* Camp */}
-        <section className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
+        <section id='camp-registration' className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
             <Camp />
           </div>

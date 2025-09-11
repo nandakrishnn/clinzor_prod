@@ -67,7 +67,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
   return (
     <motion.div
       ref={ref}
-      className={cn("fixed inset-x-0 top-5 z-50 w-full", className)}
+      className={cn(`fixed inset-x-0 z-50 w-full ${visible ? 'top-5' : 'top-12'}`, className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -190,13 +190,13 @@ export const NavItems = ({
 };
 
 export const NavbarLogo = ({ visible }: { visible: boolean }) => (
-    <Image
-      src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
-      alt="Logo"
-      width={100}
-      height={100}
-      className="rounded-full z-50"
-    />
+  <Image
+    src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
+    alt="Logo"
+    width={100}
+    height={100}
+    className="rounded-full z-50"
+  />
 );
 
 // Mobile Nav

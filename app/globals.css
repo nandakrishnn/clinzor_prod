@@ -6,7 +6,6 @@
 @import "slick-carousel/slick/slick.css";
 @import "slick-carousel/slick/slick-theme.css";
 
-
 :root {
   --background-start: #e6f2ff; /* very soft light bluish */
   --background-end: #f8fbff; /* slightly deeper but still very light */
@@ -139,7 +138,6 @@
   }
 }
 
-
 /* Custom dot styles */
 .slick-dots {
   bottom: 20px !important;
@@ -162,11 +160,11 @@
 }
 
 .slick-dots li button:before {
-  content: '' !important;
+  content: "" !important;
   width: 10px !important;
   height: 10px !important;
   border-radius: 50% !important;
-  background: rgba(255,255,255,0.5) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   opacity: 1 !important;
 }
 
@@ -176,10 +174,22 @@
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none; /* Chrome, Safari and Opera */
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 50s linear infinite;
 }

@@ -45,7 +45,7 @@ const Camp = () => {
   return (
     <section className="overflow-hidden">
       <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-20 flex flex-col md:flex-row gap-5 md:gap-14">
-        <div className="md:h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg">
+        <div className="md:h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg ">
           <Slider {...settings}>
             {carouselImages.map((image, index) => (
               <div key={index} className="h-[235px] md:h-[550px] relative">
