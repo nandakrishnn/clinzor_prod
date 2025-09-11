@@ -21,7 +21,7 @@ type Expert = {
 };
 
 // Epert Management Api 
-export const createExpert = async (body:Expert) => {
+export const createExpert = async (body: Expert) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/expert-user-create/`, // Changed from PUT to POST for creation
@@ -35,7 +35,7 @@ export const createExpert = async (body:Expert) => {
 };
 export const editExpert = async (
   id: string,
- body: Expert) => {
+  body: Expert) => {
   try {
     const response = await axiosPrivate.put(
       `clinic/doctor-rud/${id}/`,
@@ -85,7 +85,7 @@ export const rejectExpertSlot = async (slotId: string, reason: string) => {
   }
 };
 // doc
-export const createDoc = async (body:Expert) => {
+export const createDoc = async (body: Expert) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/doctor-lc/`, // Changed from PUT to POST for creation
@@ -99,7 +99,7 @@ export const createDoc = async (body:Expert) => {
 };
 export const editDoc = async (
   id: string,
- body: Expert) => {
+  body: Expert) => {
   try {
     const response = await axiosPrivate.put(
       `clinic/doctor-rud/${id}/`,
@@ -132,7 +132,7 @@ export const GetAExpert = async (Id: string) => {
 export const GetAllExpert = async (page: number = 1, search?: string, status?: string, gender?: string) => {
   try {
     const params: any = { page };
-    
+
     if (search) params.search = search;
     if (status && status !== 'ALL') params.status = status;
     if (gender && gender !== 'ALL') params.gender = gender;
@@ -164,7 +164,7 @@ export const getAllBookingforExpret = async (params: { expert: string }) => {
     throw error;
   }
 };
-export const GetAllClinicServiceforDoc= async (page:number) => {
+export const GetAllClinicServiceforDoc = async (page: number) => {
   try {
     const response = await axiosPrivate.get(
       `clinic/clinic-service-lc/?page=${page}&status=APPROVED`
@@ -175,7 +175,7 @@ export const GetAllClinicServiceforDoc= async (page:number) => {
     throw error;
   }
 };
-export const getStatsAdminExpertService= async () => {
+export const getStatsAdminExpertService = async (page?: any) => {
   try {
     const response = await axiosPrivate.get(
       `clinic/clinic-service-lc/?page=${page}&status=APPROVED`
