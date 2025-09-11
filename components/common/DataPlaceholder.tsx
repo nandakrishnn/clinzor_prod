@@ -17,7 +17,7 @@ const DataPlaceholder: React.FC<DataPlaceholderProps> = ({
   icon = null,
   action = null,
   className = "",
-  size = "md"
+  size = "md",
 }) => {
   // Default icon if none provided
   const defaultIcon = (
@@ -40,9 +40,8 @@ const DataPlaceholder: React.FC<DataPlaceholderProps> = ({
       className={`flex flex-col items-center justify-center p-8 text-center ${className}`}
     >
       <div
-        className={`mb-4 text-gray-400 ${
-          size === "lg" ? "p-3 bg-gray-100 rounded-full" : ""
-        }`}
+        className={`mb-4 text-gray-400 ${size === "lg" ? "p-3 bg-gray-100 rounded-full" : ""
+          }`}
       >
         {icon || defaultIcon}
       </div>

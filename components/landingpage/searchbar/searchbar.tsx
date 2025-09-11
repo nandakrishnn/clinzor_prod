@@ -14,6 +14,7 @@ import useMedia from "@/src/hooks/useMedia";
 // Import our dropdown components
 import useDropdown from "./use";
 import ResponsiveDropdown from "./responsivedropdown";
+import { useRouter } from "next/navigation";
 
 interface SearchParams {
   keyword: string;
@@ -86,6 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isMobileView = useMedia("(max-width: 768px)");
+  const router = useRouter()
 
   // Initialize filters visibility based on view
   useEffect(() => {
@@ -361,7 +363,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     placeholder={
                       isMobileView
                         ? "Search healthcare"
-                        : "Search doctors, clinics or services"
+                        : "Search services"
                     }
                     className="w-full bg-transparent border-none text-gray-800 focus:outline-none text-sm md:text-base py-1"
                   />
@@ -463,7 +465,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
               </div>
 
               {/* Specialty */}
-              <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
+              {/* <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
                 <div className="flex flex-col">
                   <label className="text-xs text-gray-500 mb-1.5 font-medium">
                     SPECIALTY
@@ -531,7 +533,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     )}
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Search Button (Desktop) */}
@@ -546,6 +548,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 className="w-full h-10 bg-primaryColor hover:bg-blue-800 text-white rounded-full px-6 flex items-center justify-center gap-2 transition-colors"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => router.push(`/service/?search=${keyword}`)}
               >
                 <span className="font-medium">Search</span>
                 <IconArrowRight size={16} className="ml-1" />

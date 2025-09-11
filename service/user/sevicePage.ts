@@ -6,10 +6,17 @@ export const getUserService = async () => {
   return res.data;
 };
 
-export const getAllService = async (page?: number) => {
-  const res = await axiosPublic.get(`${USER_SERVICE.GET_ALL_SERVICE}?page=${page}`);
+export const getAllService = async (page?: number, search?: string) => {
+  let url = `${USER_SERVICE.GET_ALL_SERVICE}?page=${page || 1}`;
+
+  if (search && search.trim() !== "") {
+    url += `&search=${encodeURIComponent(search.trim())}`;
+  }
+
+  const res = await axiosPublic.get(url);
   return res.data;
 };
+
 export const getCouponService = async (serviceId: string) => {
   const res = await axiosPublic.get(`${USER_SERVICE.GET_COUPON}?clinic_service=${serviceId}`);
   return res.data;
