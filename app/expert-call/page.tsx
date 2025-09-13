@@ -52,7 +52,7 @@ const ExpertCall = () => {
         <FAQSection />
       </section> */}
       <section className="bg-white py-10 sm:py-14 sm:px-6">
-        <div className="max-w-screen-xl mx-auto relative mt-20">
+        <div className="max-w-screen-xl mx-auto relative mt-5">
           <FAQsTwo />
         </div>
       </section>
