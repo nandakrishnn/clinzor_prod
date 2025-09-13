@@ -11,6 +11,7 @@ import {
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // Props Interfaces
 interface NavbarProps {
@@ -55,6 +56,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     target: ref,
     offset: ["start start", "end start"]
   });
+  const location = usePathname()
   const [visible, setVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -64,10 +66,12 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     setScrollProgress(Math.min(latest / (maxScroll || 1), 1));
   });
 
+  console.log(location, 'path name')
+
   return (
     <motion.div
       ref={ref}
-      className={cn(`fixed inset-x-0 z-50 w-full ${visible ? 'top-5' : 'top-12'}`, className)}
+      className={cn(`fixed inset-x-0 z-50 w-full ${visible ? 'top-5' : location == '/' ? 'top-12' : 'top-3'}`, className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -123,9 +127,9 @@ export const NavBody = ({
       borderWidth: "1px",
       color: visible ? "black" : "white",
       backgroundImage: visible
-        ? `linear-gradient(135deg, rgba(255,255,255,${0.6 + scrollProgress * 0.3
-        }) ${scrollProgress * 100}%, rgba(240,242,245,${0.6 + scrollProgress * 0.3
-        }) 100%)`
+        ? `linear - gradient(135deg, rgba(255, 255, 255, ${0.6 + scrollProgress * 0.3
+        }) ${scrollProgress * 100} %, rgba(240, 242, 245, ${0.6 + scrollProgress * 0.3
+        }) 100 %)`
         : undefined
     }}
   >
@@ -171,7 +175,7 @@ export const NavItems = ({
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className={`absolute inset-0 rounded-full  bg-gradient-to-r from-slate-100 to-slate-200 `}
+              className={`absolute inset - 0 rounded - full  bg - gradient - to - r from - slate - 100 to - slate - 200 `}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -179,7 +183,7 @@ export const NavItems = ({
             />
           )}
           <span
-            className={cn(`relative z-10 font-medium group-hover:text-black`)}
+            className={cn(`relative z - 10 font - medium group - hover: text - black`)}
           >
             {item.name}
           </span>
@@ -239,9 +243,9 @@ export const MobileNav = ({
     style={{
       borderWidth: "1px",
       backgroundImage: visible
-        ? `linear-gradient(135deg, rgba(255,255,255,${0.6 + scrollProgress * 0.3
-        }) ${scrollProgress * 100}%, rgba(240,242,245,${0.6 + scrollProgress * 0.3
-        }) 100%)`
+        ? `linear - gradient(135deg, rgba(255, 255, 255, ${0.6 + scrollProgress * 0.3
+        }) ${scrollProgress * 100} %, rgba(240, 242, 245, ${0.6 + scrollProgress * 0.3
+        }) 100 %)`
         : undefined
     }}
   >
