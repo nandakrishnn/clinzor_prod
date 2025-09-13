@@ -58,7 +58,7 @@ const CampMarquee: React.FC<MarqueeProps> = ({
                 className="text-xs sm:text-sm"
             >
                 <span className="mx-5 flex items-center">
-                    <h3 className="text-[11px]">{text}</h3>
+                    <h3 className="text-[12px] font-semibold">{text}</h3>
                     {showButton && (
                         <a
                             href={buttonHref}
