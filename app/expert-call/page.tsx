@@ -10,6 +10,7 @@ import ExpertBenefits from "@/components/expertCall/ExpertBenefits";
 import { HowItWorks } from "@/components/aboutus/HowItWorks";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
+import FAQsTwo from "@/components/landingpage/faq/Faq";
 
 const ExpertCall = () => {
   return (
@@ -23,13 +24,13 @@ const ExpertCall = () => {
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
-      <section className="pb-10 md:pb-16">
+      <section className="">
         <ExpertHeroSection />
       </section>
 
-      <section className="pb-16 ">
+      {/* <section className="pb-16 ">
         <HowItWorks />
-      </section>
+      </section> */}
 
       <section className="py-16 bg-gray-50" >
         <ExpertBenefits />
@@ -43,12 +44,17 @@ const ExpertCall = () => {
         <WallOfLoveSection />
       </section>
 
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-white">
         <PricingSection />
-      </section>
+      </section> */}
 
-      <section className="py-16 bg-gray-50">
+      {/* <section className="py-16 bg-gray-50">
         <FAQSection />
+      </section> */}
+      <section className="bg-white py-10 sm:py-14 sm:px-6">
+        <div className="max-w-screen-xl mx-auto relative mt-20">
+          <FAQsTwo />
+        </div>
       </section>
 
       <footer>
