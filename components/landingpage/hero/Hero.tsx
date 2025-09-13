@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { TextEffect } from "./text-effect";
 import { AnimatedGroup } from "./animated-group";
 import { useEffect, useState } from "react";
+import SearchBar from "../searchbar/searchbar";
 
 // Animation variants
 const transitionVariants = {
@@ -39,7 +40,7 @@ export default function HeroSection() {
       )}
 
       {/* Content Container */}
-      <div className="mx-auto max-w-screen-xl text-center flex flex-col items-center gap-6">
+      <div className="mx-auto max-w-screen-xl text-center flex flex-col items-center gap-8">
         {/* Heading */}
         <TextEffect
           preset="fade-in-blur"
@@ -52,7 +53,7 @@ export default function HeroSection() {
         </TextEffect>
 
         {/* Subtitle */}
-        <TextEffect
+        {/* <TextEffect
           preset="fade-in-blur"
           speedSegment={1.5}
           delay={0.05}
@@ -61,7 +62,7 @@ export default function HeroSection() {
         >
           Instantly find clinics, book telehealth consultations, or schedule
           home visits with top specialists in your area.
-        </TextEffect>
+        </TextEffect> */}
 
         {/* CTA Link */}
         <AnimatedGroup variants={transitionVariants}>
@@ -71,7 +72,7 @@ export default function HeroSection() {
             aria-label="Jump to search section"
           >
             <span>Search Clinics Near You</span>
-            <div className="flex overflow-hidden rounded-full  p-1 group-hover:bg-blue-800 transition-colors">
+            <div className="flex overflow-hidden rounded-full p-1 group-hover:bg-blue-800 transition-colors">
               <ArrowRight
                 size={14}
                 className="text-blue-900 group-hover:text-white transform transition-transform group-hover:translate-x-0.5"
@@ -79,6 +80,10 @@ export default function HeroSection() {
             </div>
           </a>
         </AnimatedGroup>
+
+        <div className="md:max-w-screen-6xl mx-auto rounded-2xl ">
+          <SearchBar />
+        </div>
       </div>
     </div>
   );

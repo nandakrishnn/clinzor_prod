@@ -12,7 +12,7 @@ const FloatingBanner = () => {
   return (
     <>
 
-      <div className={`${hidden && "hidden"} fixed z-40 bottom-5 right-5 w-[190px] h-[255px] md:w-[350px] md:h-[185px] shadow-xl`}>
+      <div className={`${hidden && "hidden"} fixed z-40 bottom-5 right-5 w-[190px] h-[255px] md:w-[325px] md:h-[185px] shadow-xl`}>
 
         {/* Floating Content */}
         <div className='flex relative w-full h-full overflow-hidden rounded-xl bg-gradient-to-r from-[#000E50] to-[#00D0FD]'>
@@ -23,10 +23,10 @@ const FloatingBanner = () => {
               <Image src={'/logoF.png'} alt='' width={600} height={600} className='w-[70px] object-contain' />
             </div>
 
-            <div className="text-white mt-2">
-              <p className="text-[12px] md:text-[16px] font-bold uppercase md:leading-5">Not Sure Which Service To Choose?</p>
+            <div className="text-white ">
+              <p className="text-[12px] md:text-[15px] font-bold uppercase md:leading-5">Not Sure Which Service To Choose?</p>
               <p className="text-[9px] font-semibold mt-1.5 w-[80%] md:w-full">Get a free call with our care advisor</p>
-              <p className="text-[6px] mt-0.5 w-[60%] md:w-full">We'll guide you to the right clinic & service for your needs</p>
+              <p className="text-[6px] mt-0.5 w-[60%] md:w-[80%]">We'll guide you to the right clinic & service for your needs</p>
             </div>
 
             <Link href={'/expert-call'}>
@@ -43,7 +43,7 @@ const FloatingBanner = () => {
 
           {/* Right Side image*/}
           <div className="md:w-[35%]">
-            <Image src={'/bg.png'} alt='' width={600} height={600} className='w-[150px] md:w-[190px] object-cover absolute -bottom-4 -right-5' />
+            <Image src={'/bg.png'} alt='' width={600} height={600} className='w-[150px] md:w-[180px] object-cover absolute -bottom-4 -right-5' />
           </div>
         </div>
       </div>

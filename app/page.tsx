@@ -31,9 +31,6 @@ export default function Home() {
           <div className="min-h-[70vh] sm:min-h-[95vh] w-full flex flex-col justify-center items-center px-4 pt-20 pb-4 bg-gradient-to-t from-[#3A68AA] to-[#1C3455]">
             <HeroSection />
           </div>
-          <div className="md:max-w-screen-6xl mx-auto md:absolute md:bottom-10 bg-white md:p-5 pt-5 md:pt-8 rounded-2xl">
-            <SearchBar />
-          </div>
         </section>
 
         {/* Services */}

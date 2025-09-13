@@ -247,9 +247,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   );
 
   return (
-    <div className={cn("w-full max-w-6xl mx-auto px-4 md:px-6 ", className)}>
+    <div className={cn("w-full max-w-6xl mx-auto  ", className)}>
       <motion.div
-        className="flex justify-center mb-4 "
+        className="flex justify-center "
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -770,7 +770,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         transition={{ duration: 0.4, delay: 0.3 }}
         className="mt-4 flex flex-wrap justify-center gap-2"
       >
-        <span className="text-xs text-gray-500 font-medium mr-1 self-center">
+        <span className="text-xs text-white font-medium mr-1 self-center">
           Popular:
         </span>
         {popularSearches.map((term) => (
@@ -782,7 +782,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
               "px-3 py-1 text-xs rounded-full border transition-all",
               activePopular === term
                 ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                : "border-gray-200 text-white hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
             )}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
