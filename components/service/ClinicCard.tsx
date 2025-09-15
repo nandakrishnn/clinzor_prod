@@ -22,7 +22,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
         />
         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded-md flex items-center">
           <FiStar className="text-yellow-400 mr-1" />
-          <span className="text-sm font-medium">{clinic?.avg_rating || "0"}</span>
+          <span className="text-sm font-medium">{clinic?.avg_rating ? clinic.avg_rating.toFixed(1) : "0"}</span>
           <span className="text-xs text-gray-500 ml-1">({clinic.total_reviews})</span>
         </div>
       </div>

@@ -66,8 +66,6 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     setScrollProgress(Math.min(latest / (maxScroll || 1), 1));
   });
 
-  console.log(location, 'path name')
-
   return (
     <motion.div
       ref={ref}

@@ -129,7 +129,7 @@ const AvailableClinics = ({ id }: { id: string }) => {
       <div className="flex justify-center items-center mb-6 w-full">
         <Title
           title="Select your Clinic"
-          description="Available at these clinics"
+          description="Clinics near to you"
           subtitle=""
         />
       </div>
