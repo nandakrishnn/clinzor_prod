@@ -20,6 +20,8 @@ import PreviewCard from "@/components/service/clinic/PreviewCard"
 import CommonHeroSection from "@/components/common/CommonHeroSection"
 import { useSession } from "next-auth/react"
 import { ConfirmationModal } from "@/components/common/ConfirmationModal"
+import { initializeRazorpayPayment, RazorpayResponse } from "@/utils/razorpay"
+import { baseUrl } from "@/utils/Endpoint"
 
 type clinicBookingProps = {
   params: {
@@ -44,8 +46,8 @@ type TabData = {
 
 type PatientProps = {
   email?: string
-  name: string
-  phone_number: string
+  name?: string
+  phone_number?: string
 }
 
 type Tabs = Record<string, TabData>;
@@ -171,28 +173,39 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       const response = await createBookingService(bookingData);
       if (response?.status == 200 && response?.message === 'Booking Created') {
         console.log(response, 'response da')
-        setOrderId(response.order_id || `ORD-${Math.floor(Math.random() * 9_999_999)}`);
-        setBookingSuccess(true);
-        next();
-      }
+        const bookingId = response.uuid;
+        if (payMethod === "ONLINE") {
+          // For online payment, create Razorpay order
+          const razorpayOrder = await createRazorpayOrder(bookingId);
 
+          // Initialize Razorpay payment
+          await initializeRazorpayPayment(
+            razorpayOrder,
+            bookingId,
+            patient,
+            handlePaymentSuccess,
+            (error) => {
+              setBookingError(`Payment initialization failed: ${error.message}`);
+              setIsConfirming(false);
+            }
+          );
+        } else {
+          // For offline payment, proceed directly to confirmation
+          setOrderId(response.order_id || `ORD-${Math.floor(Math.random() * 9_999_999)}`);
+          setBookingSuccess(true);
+          next();
+        }
+      }
     } catch (error: any) {
       console.error("Booking failed:", error);
-
-      // Extract error message from the response
       let errorMessage = "Failed to complete booking. Please try again.";
 
       if (error.response?.data) {
-        // Handle non_field_errors
         if (error.response.data.non_field_errors) {
           errorMessage = error.response.data.non_field_errors[0];
-        }
-        // Handle field-specific errors
-        else if (error.response.data.detail) {
+        } else if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
-        }
-        // Handle other error formats
-        else {
+        } else {
           errorMessage = JSON.stringify(error.response.data);
         }
       } else if (error.message) {
@@ -205,6 +218,49 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       setShowConfirmModal(false);
     }
   }
+
+  // Add this function to create Razorpay payment
+  const createRazorpayOrder = async (bookingId: string) => {
+    try {
+      const response = await fetch(`${baseUrl}customer/create-payment/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          booking: bookingId,
+          payment_purpose: "NORMAL_BOOKING"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create Razorpay order');
+      }
+
+      const data: RazorpayResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      throw error;
+    }
+  };
+
+  // Add this function to handle payment success
+  const handlePaymentSuccess = async (razorpayResponse: any) => {
+    try {
+      // Verify payment on your server if needed
+      console.log('Payment successful:', razorpayResponse);
+
+      // Update booking status to confirmed
+      // You might want to call another API endpoint here to confirm the payment
+      setBookingSuccess(true);
+      next();
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      setBookingError('Payment verification failed. Please contact support.');
+    }
+  };
 
   const getConsultationPrice = (mode: string) => {
     return getPriceFromServiceCharges("CONSULTATION", mode);
@@ -484,6 +540,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                   value={payMethod}
                   onChange={setPayMethod}
                   onConfirm={handleConfirmBooking}
+                  isLoading={isConfirming}
                 />
                 <div className="md:col-span-3">
                   <button
