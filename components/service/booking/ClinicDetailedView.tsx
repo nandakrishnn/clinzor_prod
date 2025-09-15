@@ -35,6 +35,8 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
   // user data
   const { data: session } = useSession()
 
+
+  console.log(services,'from the clinic')
   if (loading) return <ClinicDetailedViewSkeleton />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
@@ -134,15 +136,15 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
               {services?.map((service: any) => (
                 <Card key={service?.uuid} className="hover:shadow-lg transition-shadow duration-300">
                   <CardContent className="">
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-start gap-4 mb-4">
                       <img
                         src={service?.image || "/clinic.png"}
                         alt={service?.service_name}
                         className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{service?.clinic_provided_name || service?.service_name}</h3>
-                        <p className="text-sm text-gray-600">{service?.description}</p>
+                        <h3 className="font-semibold text-gray-900 capitalize">{service?.clinic_provided_name || service?.service_name}</h3>
+                        <p className="text-sm text-gray-600 line-clamp-3">{service?.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between mb-4">

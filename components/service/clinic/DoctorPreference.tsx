@@ -4,8 +4,8 @@ export function DoctorPreference({
   value,
   onChange,
 }: {
-  value: "FEMALE" | "MALE" | "none"
-  onChange: (v: "FEMALE" | "MALE" | "none") => void
+  value: "FEMALE" | "MALE" | "NONE"
+  onChange: (v: "FEMALE" | "MALE" | "NONE") => void
 }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -16,7 +16,7 @@ export function DoctorPreference({
           [
             { key: "FEMALE", label: "Prefer Female" },
             { key: "MALE", label: "Prefer Male" },
-            { key: "none", label: "No Preference" },
+            { key: "NONE", label: "No Preference" },
           ] as const
         ).map((opt) => (
           <label

@@ -87,7 +87,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const [tabs, setTabs] = React.useState<Tabs>({});
   const [selectedTab, setSelectedTab] = React.useState<string>("")
   const [selectedSlot, setSelectedSlot] = React.useState<Slot | null>(null)
-  const [genderPref, setGenderPref] = React.useState<"FEMALE" | "MALE" | "none">("none")
+  const [genderPref, setGenderPref] = React.useState<"FEMALE" | "MALE" | "NONE">("NONE")
   const [patient, setPatient] = React.useState<PatientProps>({
     name: "",
     phone_number: "",
@@ -140,7 +140,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
 
   const dateLabel = tabs[selectedTab]?.dateTitle || ""
   const timeLabel = selectedSlot?.label || undefined
-  const pref: "FEMALE" | "MALE" | "no-preference" = genderPref === "none" ? "no-preference" : (genderPref as "FEMALE" | "MALE")
+  const pref: "FEMALE" | "MALE" | "no-preference" = genderPref === "NONE" ? "no-preference" : (genderPref as "FEMALE" | "MALE")
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1))
   const back = () => setStep((s) => Math.max(s - 1, 0))
@@ -156,7 +156,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
         clinic: clinicId,
         service: serviceId,
         booking_type: mode === "CLINIC_VISIT" ? "PHYSICAL_VISIT" : mode, // Adjust mapping as needed
-        doctor_gender_preference: genderPref === "none" ? null : genderPref,
+        doctor_gender_preference: genderPref === "NONE" ? "OTHER" : genderPref,
         payment_mode: payMethod,
         session_type: sessionType,
         patient_name: patient.name,

@@ -41,7 +41,7 @@ export default function PreviewCard({
     <aside className="rounded-lg border bg-card p-4 shadow-sm md:sticky md:top-6">
       <h2 className="mb-3 text-lg font-semibold">Live Preview</h2>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <img
           src={service?.imageUrl || "/placeholder.svg?height=64&width=64&query=service%20image"}
           alt="Selected service"
@@ -49,7 +49,7 @@ export default function PreviewCard({
         />
         <div>
           <p className="font-medium">{service?.title}</p>
-          <p className="text-sm text-muted-foreground">{service?.description}</p>
+          <p className="text-[13px] text-gray-600 text-muted-foreground text-justify">{service?.description}</p>
         </div>
       </div>
 

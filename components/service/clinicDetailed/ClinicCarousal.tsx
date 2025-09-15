@@ -93,8 +93,8 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
                     {/* Selected Service Display */}
                     {activeTabObj && (
                         <div className="bg-gray-50 rounded-xl p-6">
-                            <div className="flex flex-col md:flex-row items-center justify-between">
-                                <div className="flex items-center gap-4">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between">
+                                <div className="flex items-start gap-4">
                                     <div className="w-20 h-20 bg-[#033C8D] rounded-lg flex items-center justify-center text-white">
                                         <activeTabObj.icon className="w-10 h-10" />
                                     </div>
@@ -107,7 +107,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
                                         <p className="text-gray-600">Professional healthcare services</p>
 
                                         {/* Charges */}
-                                        <div className="flex flex-col md:flex-row gap-2 mt-2">
+                                        <div className="flex flex-col md:flex-row gap-1 md:gap-2 md:mt-2 mt-1">
                                             <p className="text-gray-600">
                                                 <strong>Consultation :</strong>{" "}
                                                 ₹{getService?.[activeTabObj.consultationKey] || "N/A"}
@@ -121,7 +121,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
                                 </div>
 
                                 <button
-                                    className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2 rounded-lg"
+                                    className="bg-[#033C8D] hover:bg-[#033C8D]/90 text-white px-8 py-2 rounded-lg mt-2 md:mt-0"
                                     onClick={() => {
                                         data?.accessToken
                                             ? router.push(
