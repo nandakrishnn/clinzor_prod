@@ -88,7 +88,7 @@ export default function ServicesWeProvide() {
 
   return (
     <section className="overflow-hidden">
-      <div className="@container mx-auto max-w-7xl px-6 ">
+      <div className="@container mx-auto max-w-7xl px-6">
         <Title
           title={"Our Top Services"}
           subtitle={`We provide a wide range of services to keep you and your family

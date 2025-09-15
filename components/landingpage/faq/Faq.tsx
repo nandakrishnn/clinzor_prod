@@ -44,7 +44,7 @@ export default function FAQsTwo() {
   }
 
   return (
-    <section className="pb-16">
+    <section className="">
       <div className="mx-auto max-w-5xl px-4 md:px-6 ">
         <Title
           title="Frequently Asked Questions"

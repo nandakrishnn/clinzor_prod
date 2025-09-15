@@ -27,43 +27,43 @@ export default function Home() {
 
       <main className="z-10">
         {/* Hero + Search */}
-        <section className="sm:min-h-[120vh] relative flex flex-col items-center ">
+        <section className="relative flex flex-col items-center ">
           <div className="min-h-[70vh] sm:min-h-[95vh] w-full flex flex-col justify-center items-center px-4 pt-20 pb-4 bg-gradient-to-t from-[#3A68AA] to-[#1C3455]">
             <HeroSection />
           </div>
         </section>
 
         {/* Services */}
-        <section className="bg-white py-10 sm:py-14 mb-20 sm:px-6">
-          <div className="max-w-screen-[1480px] mx-auto relative mt-16 md:mt-8">
+        <section className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
+          <div className="max-w-screen-[1480px] mx-auto relative  my-10">
             <ServicesWeOffer />
           </div>
         </section>
 
         {/* Offers */}
         <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+          <div className="max-w-screen-xl mx-auto relative overflow-hidden  my-10">
             <Offers />
           </div>
         </section>
 
         {/* Camp */}
         <section id='camp-registration' className="bg-white py-5 sm:py-14 pb-28 px-4 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+          <div className="max-w-screen-xl mx-auto relative  overflow-hidden  my-10">
             <Camp />
           </div>
         </section>
 
         {/* Dummy Booking */}
         <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative mt-16 md:mt-10 overflow-hidden">
+          <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
             <Booking />
           </div>
         </section>
 
         {/* Testimonials */}
         <section className="bg-white py-10 sm:py-14  sm:px-6">
-          <div className="max-w-screen-[1480px] mx-auto relative my-20">
+          <div className="max-w-screen-[1480px] mx-auto relative  my-10">
             <WallOfLoveSection />
           </div>
         </section>
@@ -77,7 +77,7 @@ export default function Home() {
 
         {/* FAQs */}
         <section className="bg-white py-10 sm:py-14 sm:px-6">
-          <div className="max-w-screen-xl mx-auto relative mt-20">
+          <div className="max-w-screen-xl mx-auto relative  my-10">
             <FAQsTwo />
           </div>
         </section>
