@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { Email } from "@mui/icons-material";
 import DataPlaceholder from "@/components/common/DataPlaceholder";
 import { useSession } from "next-auth/react";
+import { ClinicDetailedViewSkeleton } from "@/components/skeltons/service/ClinicDetailedViewSkeleton";
 
 interface ClinicDetailedViewProps {
   data: any,
@@ -23,14 +24,18 @@ interface ClinicDetailedViewProps {
   activeServiceTab: string,
   doctors: any,
   serviceId: any,
+  loading?: boolean;
 }
 
-const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data, services, activeServiceTab, doctors }) => {
+const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data, services, activeServiceTab, doctors, loading = false, }) => {
   const router = useRouter();
   const clinicInfo = data?.clinic
+  const stats = data?.stats
 
   // user data
   const { data: session } = useSession()
+
+  if (loading) return <ClinicDetailedViewSkeleton />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
       {/* Clinic Header */}
@@ -48,7 +53,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${i < Math.floor(clinicInfo?.avg_rating)
+                    className={`w-5 h-5 ${i < Math.floor(stats?.avg_rating)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-gray-300"
                       }`}
@@ -56,10 +61,10 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                 ))}
               </div>
               <span className="font-semibold text-gray-900">
-                {clinicInfo?.avg_rating || 0}
+                {stats?.avg_rating?.toFixed(1) || 0}
               </span>
               <span className="text-gray-600">
-                ({clinicInfo?.total_reviews || 0} reviews )
+                ({stats?.review_count || 0} reviews )
               </span>
             </div>
 
@@ -68,15 +73,15 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#033C8D]" />
                 <span className="text-gray-700">{clinicInfo?.address}</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-[#033C8D]" />
                 <span className="text-gray-700">{clinicInfo?.contact_number}</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <Email className="w-5 h-5 text-[#033C8D]" />
                 <span className="text-gray-700">{clinicInfo?.email}</span>
               </div>
@@ -195,11 +200,11 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
       {/* Doctors Section */}
       <div className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6"> Our Doctors Doctors</h2>
-        {doctors?.length == 0 ? <DataPlaceholder title="No Offers Available" /> : (
+        {doctors?.length == 0 ? <DataPlaceholder title="No Doctors Available For Now" /> : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {doctors?.map((doctor: any) => (
               <Card
-                key={doctor.id}
+                key={doctor?.uuid}
                 className="hover:shadow-lg transition-shadow duration-300 border border-gray-200"
               >
                 <CardContent className="p-6 text-center">
@@ -217,7 +222,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                     {doctor?.specializaton}
                   </p>
                   <p className="text-sm text-gray-600 mb-2">
-                    {doctor?.qualifications}
+                    {doctor?.education}
                   </p>
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />

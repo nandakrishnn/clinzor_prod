@@ -4,12 +4,12 @@ import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import Slider from "react-slick";
 
-const ClinicBanner = ({ images }: { images: string[] | null }) => {
+const ClinicBanner = ({ images, serviceImage }: { images: string[] | null, serviceImage: string | null }) => {
   const [loading, setLoading] = useState(true);
 
   // Ensure we always have at least one image
   const bannerImages =
-    images && images.length > 0 ? images : ["/clinic.png"];
+    images && images.length > 0 ? images : serviceImage ? [serviceImage] : ["/clinic.png"];
 
   useEffect(() => {
     // Fake small delay for skeleton (better UX)

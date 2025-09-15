@@ -87,15 +87,15 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     return (
         <>
             <section className="max-w-screen-xl mx-auto pb-10 px-3">
-                <ClinicBanner images={clinicData?.clinic?.images} />
+                <ClinicBanner images={clinicData?.clinic?.images} serviceImage={selectedService?.image} />
             </section>
 
             <section className="max-w-screen-xl mx-auto pb-5">
-                <ClinicCarousal id={id} clinicService={clinicService} serviceDetailed={selectedService} setActiveServiceTab={setActiveServiceTab} activeServiceTab={activeServiceTab} />
+                <ClinicCarousal loading={loading} id={id} clinicService={clinicService} serviceDetailed={selectedService} setActiveServiceTab={setActiveServiceTab} activeServiceTab={activeServiceTab} />
             </section>
 
             <section className="pb-5">
-                <ClinicDetailedView serviceId={service} data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
+                <ClinicDetailedView loading={loading} serviceId={service} data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
             </section>
 
             <section className="max-w-screen-xl mx-auto pb-5">
