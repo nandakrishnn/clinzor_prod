@@ -68,7 +68,7 @@ export const loadRazorpay = (): Promise<boolean> => {
 export const initializeRazorpayPayment = async (
   orderData: RazorpayResponse,
   bookingId: string,
-  patient: { name: string; email: string; phone_number: string },
+  patient: { name?: any; email?: any; phone_number?: any },
   onSuccess: (response: any) => void,
   onError: (error: any) => void
 ) => {

@@ -9,7 +9,7 @@ export function Confirmation({
   orderId: string
   service: { title: string }
   slot: { label: string } | null
-  patient: { name: string; phone_number: string }
+  patient: { name?: string; phone_number?: string }
   mode: "home" | "video" | "clinic"
   total: number
 }) {
