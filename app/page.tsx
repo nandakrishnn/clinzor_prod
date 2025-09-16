@@ -54,7 +54,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Dummy Booking */}
+        {/* Booking */}
         <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
             <Booking />

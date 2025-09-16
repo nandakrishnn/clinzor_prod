@@ -173,7 +173,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       const response = await createBookingService(bookingData);
       if (response?.status == 200 && response?.message === 'Booking Created') {
         console.log(response, 'response da')
-        const bookingId = response.uuid;
+        const bookingId = response?.data?.uuid;
         if (payMethod === "ONLINE") {
           // For online payment, create Razorpay order
           const razorpayOrder = await createRazorpayOrder(bookingId);
