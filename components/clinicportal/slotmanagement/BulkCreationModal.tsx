@@ -14,13 +14,10 @@ import {
   Edit3,
   Clock,
   Eye,
-  XCircle,
-  AlertCircle
 } from "lucide-react";
 import { createClinicBlukSlot, getClinicDataService } from "@/service/clinic/slotManagementService";
 import type { ClinicService } from "@/types/common";
 import { Settings, Calendar, CheckCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 interface BulkCreationModalProps {
   showBulkForm: boolean;
@@ -438,6 +435,71 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   >([]);
   const [copyForDays, setCopyForDays] = useState(0);
 
+  // Helper function to create dates in local timezone
+  const createLocalDate = (dateStr: string, timeStr: string = "00:00") => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const [hours, minutes] = timeStr.split(":").map(Number);
+
+    return new Date(year, month - 1, day, hours, minutes);
+  };
+
+  const formatLocalTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+  };
+
+  const resetStepData = (step: number) => {
+    if (step === 0) {
+      setSlotType("");
+      setShowBasicConfig(false);
+    } else if (step === 1) {
+      // Initialize days with fresh data
+      const today = new Date();
+      const nextDays = [];
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+        const dateStr = date.toISOString().split("T")[0];
+
+        const slots = generateTimeSlots(dateStr, startTime, endTime);
+
+        nextDays.push({
+          date: dateStr,
+          dayName,
+          slots
+        });
+      }
+
+      setDays(nextDays);
+      setSelectedDayIndex(0);
+      setEditingSlotIndex(null);
+      setSelectedSlots([]);
+    } else if (step === 2) {
+      // Reset copy days
+      const copyDaysData = days.map((day) => ({
+        date: day.date,
+        dayName: day.dayName,
+        selected: false
+      }));
+      setCopyDays(copyDaysData);
+      setCopyForDays(0);
+    } else if (step === 3) {
+      setReviewDayIndex(0);
+    }
+  };
+
+  const goToStep = (step: number) => {
+    resetStepData(step);
+    setActiveStep(step);
+  };
+
+
   // Convert time to 12-hour format
   const to12HourFormat = (time: string) => {
     const [hours, minutes] = time.split(":");
@@ -455,8 +517,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       }
     } catch (err) {
       console.error(err, 'error from the clinic get')
-    } finally {
-
     }
   }
 
@@ -464,42 +524,18 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     getUserClinic()
   }, [])
 
+
   // Initialize days for the next 7 days
   useEffect(() => {
     if (activeStep === 1 && slotType) {
-      const today = new Date();
-      const nextDays = [];
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() + i);
-        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-        const dateStr = date.toISOString().split("T")[0];
-
-        // Generate time slots based on start and end time
-        const slots = generateTimeSlots(dateStr, startTime, endTime);
-
-        nextDays.push({
-          date: dateStr,
-          dayName,
-          slots
-        });
-      }
-
-      setDays(nextDays);
-      setSelectedDayIndex(0);
+      resetStepData(1);
     }
   }, [activeStep, slotType, startTime, endTime, timeGap]);
 
   // Initialize copy days
   useEffect(() => {
     if (activeStep === 2) {
-      const copyDaysData = days.map((day) => ({
-        date: day.date,
-        dayName: day.dayName,
-        selected: false
-      }));
-      setCopyDays(copyDaysData);
+      resetStepData(2);
     }
   }, [activeStep, days]);
 
@@ -509,63 +545,50 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     setSelectedDays(selected);
   }, [copyDays, days]);
 
-  // Generate time slots based on start and end time with gaps BETWEEN slots
-  const generateTimeSlots = (
-    date: string,
-    start: string,
-    end: string
-  ): TimeSlot[] => {
+  // Fixed time slot generation
+  const generateTimeSlots = (date: string, start: string, end: string): TimeSlot[] => {
     const slots: TimeSlot[] = [];
-
-    // Parse start and end times
     const [startHour, startMinute] = start.split(":").map(Number);
     const [endHour, endMinute] = end.split(":").map(Number);
 
-    // Convert to total minutes
     const startTotalMinutes = startHour * 60 + startMinute;
     const endTotalMinutes = endHour * 60 + endMinute;
-
-    // Slot duration is fixed at 1 hour (60 minutes)
     const slotDuration = 60;
-    // Gap duration in minutes
     const gapDuration = timeGap * 60;
 
-    // Generate slots
     let currentTime = startTotalMinutes;
 
     while (currentTime + slotDuration <= endTotalMinutes) {
       const slotStartMinutes = currentTime;
       const slotEndMinutes = currentTime + slotDuration;
 
-      // Convert back to hours and minutes
       const startHour = Math.floor(slotStartMinutes / 60);
       const startMinute = slotStartMinutes % 60;
       const endHour = Math.floor(slotEndMinutes / 60);
       const endMinute = slotEndMinutes % 60;
 
-      // Format times
-      const startTimeFormatted = `${startHour
-        .toString()
-        .padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
-      const endTimeFormatted = `${endHour
-        .toString()
-        .padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+      const startTimeFormatted = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+      const endTimeFormatted = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+
+      // Use the createLocalDate function
+      const startDate = createLocalDate(date, startTimeFormatted);
+      const endDate = createLocalDate(date, endTimeFormatted);
 
       slots.push({
-        start_time: `${date}T${startTimeFormatted}`,
-        end_time: `${date}T${endTimeFormatted}`,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
         max_bookings: maxBookings,
         female_doctors: femaleDoctors,
         is_video_call: isVideo,
         is_physical_visit: isPhysical
       });
 
-      // Move to next slot position (current slot end + gap duration)
       currentTime = slotEndMinutes + gapDuration;
     }
 
     return slots;
   };
+
   // Handle day selection in step 2
   const handleDaySelect = (index: number) => {
     setSelectedDayIndex(index);
@@ -630,13 +653,13 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
     if (day.slots.length === 0) {
       // If no slots exist, use the configured start time
-      const startTimeDate = new Date(`${day.date}T${startTime}`);
+      const startTimeDate = createLocalDate(day.date, startTime);
       const endTimeDate = new Date(startTimeDate);
-      endTimeDate.setHours(endTimeDate.getHours() + 1); // Fixed 1-hour duration
+      endTimeDate.setHours(endTimeDate.getHours() + 1);
 
       const newSlot: TimeSlot = {
-        start_time: startTimeDate.toISOString().split(".")[0],
-        end_time: endTimeDate.toISOString().split(".")[0],
+        start_time: startTimeDate.toISOString(),
+        end_time: endTimeDate.toISOString(),
         max_bookings: maxBookings,
         female_doctors: femaleDoctors,
         is_video_call: isVideo,
@@ -650,14 +673,14 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       const lastEndTime = new Date(lastSlot.end_time);
 
       const newStartTime = new Date(lastEndTime);
-      newStartTime.setHours(newStartTime.getHours() + timeGap); // Add gap
+      newStartTime.setHours(newStartTime.getHours() + timeGap);
 
       const newEndTime = new Date(newStartTime);
-      newEndTime.setHours(newEndTime.getHours() + 1); // Fixed 1-hour duration
+      newEndTime.setHours(newEndTime.getHours() + 1);
 
       const newSlot: TimeSlot = {
-        start_time: newStartTime.toISOString().split(".")[0],
-        end_time: newEndTime.toISOString().split(".")[0],
+        start_time: newStartTime.toISOString(),
+        end_time: newEndTime.toISOString(),
         max_bookings: maxBookings,
         female_doctors: femaleDoctors,
         is_video_call: isVideo,
@@ -722,9 +745,9 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     setDays(updatedDays);
   };
 
-  // Submit only selected days data to backend
+
   // In submitBulkSlots function
-  const submitBulkSlots = async () => {
+ const submitBulkSlots = async () => {
     try {
       // Collect all slots from selected days only
       const allSlots: any[] = [];
@@ -819,11 +842,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
         errorMessage = error.message;
       }
 
-      // ✅ Always a string here
       showNotification("error", errorMessage);
     }
   };
-
+  
   const handleSlotSelection = (slotIndex: number) => {
     setSelectedSlots((prev) =>
       prev.includes(slotIndex)
