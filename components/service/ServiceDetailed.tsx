@@ -43,10 +43,10 @@ const ServiceDetailed = ({ id }: { id: string }) => {
   }
 
   return (
-    <div className="p-4 md:p-6 font-inter  w-full">
+    <div className="p-4 md:p-6 font-inter w-full md:w-[40%] bg-white shadow-xl rounded-xl">
       {/* Service Header Section */}
-      <section className="flex flex-col md:flex-row gap-5 md:gap-10 items-start justify-start ">
-        <div className="w-full md:w-[60%] max-h-[400px] md:min-h-[400px] overflow-hidden rounded-xl shadow-lg">
+      <section className="flex flex-col gap-5 md:gap-10 items-start justify-start ">
+        <div className="w-full max-h-[400px] md:min-h-[400px] overflow-hidden rounded-xl shadow-lg">
           <Image
             src={serviceData?.image ? serviceData?.image : "/bannerService.png"}
             alt="banner"
@@ -55,7 +55,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
             className="w-full max-h-[400px] md:min-h-[400px] object-cover rounded-xl"
           />
         </div>
-        <div className="w-full md:w-[40%] rounded-lg mb-8">
+        <div className="w-full rounded-lg mb-8">
           <h1 className="text-3xl font-bold text-[#424141] mb-2 capitalize">
             {serviceData?.name}
           </h1>

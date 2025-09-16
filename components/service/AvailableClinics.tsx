@@ -126,13 +126,6 @@ const AvailableClinics = ({ id }: { id: string }) => {
 
   return (
     <div className="p-4 md:p-6 font-inter max-w-7xl mx-auto">
-      <div className="flex justify-center items-center mb-6 w-full">
-        <Title
-          title="Select your Clinic"
-          description="Clinics near to you"
-          subtitle=""
-        />
-      </div>
 
       {locationError && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-md mb-4 flex items-center">
@@ -154,7 +147,7 @@ const AvailableClinics = ({ id }: { id: string }) => {
                 description="There are no clinics available for this service in your area"
               />
             ) : (
-              <div className="flex justify-start gap-4">
+              <div className="flex justify-start gap-4 w-full">
                 {visibleClinics.map((clinic) => (
                   <div
                     key={clinic?.clinic_uuid}

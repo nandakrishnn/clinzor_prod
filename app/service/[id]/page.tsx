@@ -1,11 +1,10 @@
 import React from "react";
-import ServiceDetailed from "@/components/service/ServiceDetailed";
 import FooterSection from "@/components/landingpage/footer/footer";
-import AvailableClinics from "@/components/service/AvailableClinics";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import Review from "@/components/service/Review";
+import ServiceDetailedViewComponents from "@/components/service/ServiceDetailedViewComponents";
 
 type ServiceDetailPageProps = {
   params: { id: string }
@@ -24,17 +23,11 @@ const ServiceDetailPage = ({ params }: ServiceDetailPageProps) => {
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
-      {/* Service Detailed */}
-      <section className="max-w-screen-xl mx-auto pb-5 md:pb-10">
-        <ServiceDetailed id={params?.id} />
+      {/* Service Detailed && Available Clinic Section  */}
+      <section className="max-w-screen-xl mx-auto pb-5 md:pb-10 flex flex-col md:flex-row">
+        <ServiceDetailedViewComponents id={params?.id} />
       </section>
 
-      {/* Available Clinic Section */}
-      <div className="w-full bg-gray-50">
-        <section className="max-w-screen-xl mx-auto py-10 ">
-          <AvailableClinics id={params?.id} />
-        </section>
-      </div>
 
       {/* Review Part */}
       {/* <main className="max-w-screen-xl mx-auto py-10 md:py-20">
