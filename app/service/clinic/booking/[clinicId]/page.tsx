@@ -251,7 +251,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       // Verify payment on your server if needed
       console.log('Payment successful:', razorpayResponse);
-      
+
       // You might want to call another API endpoint here to confirm the payment
       setBookingSuccess(true);
       next();
@@ -399,7 +399,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       <section className="pb-10 md:mb-20 max-w-7xl mx-auto ">
         <div className="grid gap-6 md:grid-cols-3">
           {/* Left sticky live preview */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 px-3 md:px-0">
             <PreviewCard
               service={{
                 title: service?.name,
@@ -422,7 +422,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
           </div>
 
           {/* Right: stepper + step content */}
-          <div className="space-y-6 md:col-span-2">
+          <div className="space-y-6 md:col-span-2 px-3 md:px-0 w-screen md:w-full overflow-hidden">
             <Stepper steps={STEPS} current={step} onStepClick={goto} />
 
             {step === 0 && (
@@ -463,7 +463,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
             )}
 
             {step === 1 && (
-              <div className="space-y-6">
+              <div className="space-y-6  md:w-full overflow-hidden ">
                 <DateSlots
                   tabs={tabs}
                   selectedTab={selectedTab}

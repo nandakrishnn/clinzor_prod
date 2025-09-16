@@ -172,9 +172,9 @@ export function DateSlots({
   )
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-white ">
       {/* Tabs */}
-      <div className="flex gap-2 border-b p-3">
+      <div className="flex gap-2 border-b p-3 overflow-x-scroll hide-scrollbar">
         {Object.entries(tabs).map(([key, meta]) => {
           const isActive = key === selectedTab
           return (
@@ -182,13 +182,13 @@ export function DateSlots({
               key={key}
               onClick={() => onTabChange(key)}
               className={[
-                "rounded-md px-3 py-2 text-sm",
+                "rounded-md px-3 py-2 text-sm min-w-[130px] max-w-[130px]",
                 isActive ? "bg-primaryColor text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
               ].join(" ")}
             >
               <div className="flex flex-col items-start">
                 <span className="font-medium">{meta.dateTitle}</span>
-                <span className="text-xs opacity-80">{meta.availableCount} Slots Available</span>
+                <span className="text-xs opacity-80">Total {meta.availableCount} Slots</span>
               </div>
             </button>
           )
