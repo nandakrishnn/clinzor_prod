@@ -443,15 +443,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     return new Date(year, month - 1, day, hours, minutes);
   };
 
-  const formatLocalTime = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    });
-  };
-
   const resetStepData = (step: number) => {
     if (step === 0) {
       setSlotType("");
@@ -493,12 +484,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       setReviewDayIndex(0);
     }
   };
-
-  const goToStep = (step: number) => {
-    resetStepData(step);
-    setActiveStep(step);
-  };
-
 
   // Convert time to 12-hour format
   const to12HourFormat = (time: string) => {
@@ -747,7 +732,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
 
   // In submitBulkSlots function
- const submitBulkSlots = async () => {
+  const submitBulkSlots = async () => {
     try {
       // Collect all slots from selected days only
       const allSlots: any[] = [];
@@ -845,7 +830,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       showNotification("error", errorMessage);
     }
   };
-  
+
   const handleSlotSelection = (slotIndex: number) => {
     setSelectedSlots((prev) =>
       prev.includes(slotIndex)
@@ -886,6 +871,12 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       ] = updatedSlot;
       setDays(updatedDays);
     }
+  };
+
+  // With this function that handles timezone conversion:
+  const formatTimeForDisplay = (isoString: string) => {
+    const date = new Date(isoString);
+    return to12HourFormat(date.toTimeString().substring(0, 5));
   };
 
   if (!showBulkForm) return null;
@@ -1218,13 +1209,13 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                   <div className="text-sm text-gray-600">
                     {selectedSlots.length} slots selected
                   </div>
-                  <button
+                  {/* <button
                     onClick={addNewSlot}
                     className="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm flex items-center gap-2 transition-all duration-200"
                   >
                     <Plus size={16} />
                     Add Slot
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1630,11 +1621,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                               <div className="flex items-center gap-2">
                                 <Clock size={16} className="text-gray-500" />
                                 <span className="font-semibold text-gray-800">
-                                  {to12HourFormat(
-                                    slot.start_time.split("T")[1]
-                                  )}{" "}
-                                  -{" "}
-                                  {to12HourFormat(slot.end_time.split("T")[1])}
+                                  {formatTimeForDisplay(slot.start_time)} - {formatTimeForDisplay(slot.end_time)}
                                 </span>
                               </div>
                               <div className="text-xs text-gray-600 mt-1">

@@ -251,8 +251,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       // Verify payment on your server if needed
       console.log('Payment successful:', razorpayResponse);
-
-      // Update booking status to confirmed
+      
       // You might want to call another API endpoint here to confirm the payment
       setBookingSuccess(true);
       next();
