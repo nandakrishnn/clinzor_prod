@@ -35,8 +35,16 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
   // user data
   const { data: session } = useSession()
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return ""
+    const date = new Date(dateStr)
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+  }
 
-  console.log(services,'from the clinic')
   if (loading) return <ClinicDetailedViewSkeleton />;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
@@ -181,23 +189,62 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
       </div>
 
       {/* Offers Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Offers Going On</h2>
-        {data?.offers.length == 0 ? <DataPlaceholder title="No Offers Available" /> : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{data?.offers.map((offer: any, index: any) => (
-            <div
-              key={index}
-              className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-800">{offer?.title}</span>
-                <Badge className="bg-green-500 text-white rounded-xl px-5">{offer?.discount_percentage || offer?.flat_discount_amt}</Badge>
+      <div className="mb-12">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Exclusive Offers</h2>
+
+        {data?.offers.length === 0 ? (
+          <DataPlaceholder title="No Offers Available" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data?.offers.map((offer: any, index: number) => (
+              <div
+                key={index}
+                className="relative bg-gradient-to-br from-white to-gray-50 border border-dashed border-[#033C8D]/40 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+              >
+                {/* Discount Badge */}
+                <div className="absolute top-0 right-0 bg-[#033C8D] text-white text-sm font-semibold px-3 py-1 rounded-bl-lg">
+                  {offer?.discount_percentage
+                    ? `${parseFloat(offer?.discount_percentage).toFixed(0)}% OFF`
+                    : `₹${offer?.flat_discount_amt} OFF`}
+                </div>
+
+                <div className="p-6">
+                  {/* Title */}
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {offer?.title}
+                  </h3>
+
+                  {/* Description */}
+                  {offer?.description && (
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {offer?.description}
+                    </p>
+                  )}
+
+                  {/* Validity */}
+                  {(offer?.valid_from || offer?.valid_to) && (
+                    <div className="flex items-center justify-between text-xs text-gray-500 border-t border-dashed pt-3">
+                      <span>
+                        From:{" "}
+                        <span className="font-medium text-gray-700">
+                          {formatDate(offer?.valid_from)}
+                        </span>
+                      </span>
+                      <span>
+                        Till:{" "}
+                        <span className="font-medium text-gray-700">
+                          {formatDate(offer?.valid_to)}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
         )}
       </div>
+
 
       {/* Doctors Section */}
       <div className="mb-12">
