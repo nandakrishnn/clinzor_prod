@@ -34,11 +34,8 @@ const ServiceDetailed = ({ id }: { id: string }) => {
     }
   }
 
-
-
   useEffect(() => {
     getServiceData()
-
   }, []);
 
 

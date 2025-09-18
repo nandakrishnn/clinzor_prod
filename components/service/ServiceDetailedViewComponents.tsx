@@ -47,7 +47,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
   return (
     <div className="flex flex-col w-full">
       {/* Search Bar */}
-      <div className="max-w-7xl mx-auto w-full my-4 px-5">
+      <div className="max-w-7xl mx-auto w-full md:my-4 px-5">
         <div className='relative '>
           <input
             type="text"
@@ -77,7 +77,9 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
           {
             serviceTag?.map((tag: any) => (
               <Link key={tag?.uuid} href={`/service/${tag?.uuid}`}>
-                <div className='bg-slate-100 rounded-md p-1.5 w-fit px-4 text-gray-500 border text-sm border-gray-300 hover:bg-gray-200 ease-in-out duration-300 hover:text-gray-600 cursor-pointer'>{tag?.name}</div>
+                <div className='bg-slate-100 text-nowrap rounded-md p-1.5 w-fit px-4 text-gray-500 border text-sm border-gray-300 hover:bg-gray-200 ease-in-out duration-300 hover:text-gray-600 cursor-pointer'>
+                  {tag?.name}
+                </div>
               </Link>
             ))
           }
