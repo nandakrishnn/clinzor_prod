@@ -55,11 +55,11 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Search clinics..."
-            className="w-full py-3 px-6 border border-gray-300 rounded-lg focus:outline-none "
+            className="w-full py-3 px-11 border border-gray-300 rounded-lg focus:outline-none "
           />
 
           {/* Right-side Icon / Loader */}
-          <div className="absolute inset-y-0 right-6 flex items-center">
+          <div className="absolute inset-y-0 left-4 flex items-center">
             {isSearching ? (
               <div className="animate-spin h-5 w-5 border-2 border-primaryColor border-t-transparent rounded-full"></div>
             ) : (
