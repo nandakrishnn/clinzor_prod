@@ -3,15 +3,15 @@ import React from 'react'
 const ServiceDetailedVIewSkelton = () => {
   return (
     <div>
-      <div className="p-4 md:p-6 w-full animate-pulse">
+      <div className="p-4 md:p-6 w-full md:min-w-[30%] animate-pulse">
         <section className="flex flex-col md:flex-row gap-5 md:gap-10 items-start justify-start">
           {/* Image skeleton */}
-          <div className="w-full md:w-[60%] md:min-h-[400px]">
+          <div className="min-w-full md:min-h-[400px]">
             <div className="w-full min-h-[400px] md:h-full bg-gray-200 rounded-xl"></div>
           </div>
 
           {/* Content skeleton */}
-          <div className="w-full md:w-[40%] space-y-4">
+          <div className="w-full  space-y-4">
             <div className="h-8 bg-gray-200 rounded-md w-3/4"></div>
             <div className="h-5 bg-gray-200 rounded-md w-1/2"></div>
             <div className="space-y-2">

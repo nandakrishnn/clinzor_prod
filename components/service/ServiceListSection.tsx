@@ -126,7 +126,7 @@ function ServiceListContent() {
             value={searchQuery}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primaryColor"
+            className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none "
           />
           <button
             onClick={handleSearch}

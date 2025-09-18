@@ -60,15 +60,22 @@ export const getAllClinicDoctorsService = async (id?: string) => {
 };
 
 
-export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null) => {
+export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null, search?: string) => {
   let url = `${USER_SERVICE.GET_CLINIC_SERVICE_RELATED}${id}/`;
 
+  const params: Record<string, string> = {};
+
   // Add location query parameters if available
-  if (location && location.lat && location.lng) {
-    url += `?lat=${location.lat}&lng=${location.lng}`;
+  if (location?.lat && location?.lng) {
+    params.lat = location.lat.toString();
+    params.lng = location.lng.toString();
   }
 
-  const res = await axiosPublic.get(url);
+  if (search) {
+    params.search = search;
+  }
+
+  const res = await axiosPublic.get(url, { params });
   return res?.data;
 }
 

@@ -3,14 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiChevronLeft, FiChevronRight, FiMapPin } from "react-icons/fi";
-import { Clinic, clinicData } from "@/types/common";
+import { Clinic } from "@/types/common";
 
 import ClinicCard from "./ClinicCard";
-import Title from "../ui/title";
 import { getClinicListService } from "@/service/user/sevicePage";
 import DataPlaceholder from "../common/DataPlaceholder";
 
-const AvailableClinics = ({ id }: { id: string }) => {
+const AvailableClinics = ({ id, search }: { id: string; search?: string }) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,7 +71,7 @@ const AvailableClinics = ({ id }: { id: string }) => {
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(id, locationParams);
+      const res = await getClinicListService(id, locationParams, search);
       console.log(res, "service related clinic");
 
       if (res.status === 200) {
@@ -90,11 +89,10 @@ const AvailableClinics = ({ id }: { id: string }) => {
     if (!isLocating) {
       getClinicList();
     }
-  }, [isLocating, userLocation]);
+  }, [isLocating, userLocation, search]);
 
   // Calculate total slides and current slide
   const totalSlides = Math.ceil(clinicList.length / visibleCards);
-  const currentSlide = Math.floor(currentIndex / visibleCards);
 
   const handleNext = () => {
     setCurrentIndex((prev) => {
@@ -110,10 +108,6 @@ const AvailableClinics = ({ id }: { id: string }) => {
     });
   };
 
-  const goToSlide = (slideIndex: number) => {
-    setCurrentIndex(slideIndex * visibleCards);
-  };
-
   const handleBookNow = (clinic: Clinic) => {
     router.push(`/service/clinic/${clinic?.clinic_uuid}?serviceId=${id}`);
   };
@@ -125,7 +119,7 @@ const AvailableClinics = ({ id }: { id: string }) => {
   );
 
   return (
-    <div className="p-4 md:p-6 font-inter max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 font-inter w-full md:min-w-[70%] ">
 
       {locationError && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-md mb-4 flex items-center">

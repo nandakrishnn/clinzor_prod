@@ -1,5 +1,5 @@
 'use client'
-import { getAService } from "@/service/user/sevicePage";
+import { getAllService, getAService } from "@/service/user/sevicePage";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import ServiceDetailedVIewSkelton from "../skeltons/service/ServiceDetailedVIewSkelton";
@@ -34,44 +34,40 @@ const ServiceDetailed = ({ id }: { id: string }) => {
     }
   }
 
+
+
   useEffect(() => {
     getServiceData()
+
   }, []);
 
-  if (isLoading) {
-    return <ServiceDetailedVIewSkelton />
-  }
 
   return (
-    <div className="p-4 md:p-6 font-inter w-full md:w-[40%] bg-white shadow-xl rounded-xl">
+    <div className="w-full md:min-w-[30%] mb-10">
+      {/* {isLoading && <ServiceDetailedVIewSkelton />} */}
       {/* Service Header Section */}
-      <section className="flex flex-col gap-5 md:gap-10 items-start justify-start ">
-        <div className="w-full max-h-[400px] md:min-h-[400px] overflow-hidden rounded-xl shadow-lg">
+      <section className="flex flex-col gap-5 items-start justify-start font-inter shadow-xl p-4 md:p-6 rounded-xl ">
+        <div className="w-full max-h-[200px] md:min-h-[200px] overflow-hidden rounded-xl shadow-lg">
           <Image
             src={serviceData?.image ? serviceData?.image : "/bannerService.png"}
             alt="banner"
             width={500}
             height={500}
-            className="w-full max-h-[400px] md:min-h-[400px] object-cover rounded-xl"
+            className="w-full max-h-[200px] md:min-h-[200px] object-cover rounded-xl"
           />
         </div>
         <div className="w-full rounded-lg mb-8">
-          <h1 className="text-3xl font-bold text-[#424141] mb-2 capitalize">
+          <h1 className="text-[18px] md:text-[22px] font-bold text-[#424141] mb-1 capitalize">
             {serviceData?.name}
           </h1>
 
-          <div className="flex items-center mb-3">
+          <div className="flex items-center mb-1">
             <div className="text-yellow-400 text-xl mr-2">★★★★☆</div>
             <span className="text-gray-600 text-sm">{serviceData?.rating ? serviceData?.rating : "428"} Reviews</span>
           </div>
 
-          {/* <p className="italic text-gray-700 mb-4">
-            Highly rated by patients for: expert care, diagnosis accuracy,
-            treatment results
-          </p> */}
-
           <div className="mb-4 space-y-3 text-gray-700 leading-relaxed">
-            <p>
+            <p className="text-[13px] text-justify text-gray-700">
               {serviceData?.description}
             </p>
           </div>
@@ -79,7 +75,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
           <div className="flex flex-wrap gap-3 mt-4 capitalize">
             {
               serviceData?.tags.split(',').map((tags, index) => (
-                <span key={index} className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-xs">
+                <span key={index} className="bg-primaryColor text-blue-100 px-3 py-1.5 rounded-full text-[10px]">
                   ✔️ {tags}
                 </span>
               ))
