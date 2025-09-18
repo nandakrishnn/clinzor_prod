@@ -17,6 +17,7 @@ export const USER_SERVICE = {
     GET_ALL_SERVICE: "clinic/service-lc/",
     GET_A_SERVICE: "clinic/service-rud/",
     GET_CLINIC_SERVICE_RELATED: "clinic/top-clinics-by-service/",
+    GET_CLINIC_SERVICES: "clinic/clinic-service-lc/",
     GET_SERVICE_RELATED_CLINIC: "clinic/search/",
     GET_SERVICE_CHARGES: "clinic/service-card-based/",
     GET_SERVICE_SLOT: "customer/slots/",

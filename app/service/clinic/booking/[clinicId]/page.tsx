@@ -13,7 +13,7 @@ import { PatientForm } from "@/components/service/clinic/PatientForm"
 import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import { createBookingService, getAClinicDetailed, getAService, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
+import { createBookingService, getAClinicDetailed, getAService, getClinicServiceData, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
 import { useSearchParams } from "next/navigation"
 
 import PreviewCard from "@/components/service/clinic/PreviewCard"
@@ -100,6 +100,9 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const [payMethod, setPayMethod] = React.useState<"ONLINE" | "OFFLINE">("OFFLINE")
   const [orderId, setOrderId] = React.useState<string | null>(null)
 
+  // for coupon purpose need to get service id for the clinic
+  const [clinicOwnServiceId, setClinicServiceId] = useState('')
+
   const getPriceFromServiceCharges = (sessionType: SessionType, mode: string) => {
     if (!priceData) return 0;
 
@@ -147,6 +150,179 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1))
   const back = () => setStep((s) => Math.max(s - 1, 0))
   const goto = (idx: number) => setStep(idx)
+
+
+  const getConsultationPrice = (mode: string) => {
+    return getPriceFromServiceCharges("CONSULTATION", mode);
+  };
+
+  const getSessionPrice = (mode: string) => {
+    return getPriceFromServiceCharges("SESSION", mode);
+  };
+
+  const getService = async (id: string) => {
+    try {
+      const res = await getAService(id)
+      if (res?.status === 200) {
+        setService(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getClinic = async () => {
+    try {
+      const res = await getAClinicDetailed(clinicId)
+      console.log(res, 'from the data clinic')
+      if (res?.status === 200) {
+        setClinic(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getServiceChanges = async (id: string) => {
+    try {
+      const res = await getServiceCharges(id)
+      console.log(res, 'service changes')
+      if (res?.status === 200) {
+        setPriceData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getSlotService = async (serviceId: string) => {
+    try {
+      const res = await getServiceSlots(clinicId, mode, serviceId)
+      console.log(res.data, 'from the slot in the booking')
+      if (res?.status === 200) {
+        setSlotsData(res?.data)
+        const transformedTabs = transformApiDataToTabs(res?.data)
+        setTabs(transformedTabs)
+
+        const firstTabKey = Object.keys(transformedTabs)[0]
+        if (firstTabKey) {
+          setSelectedTab(firstTabKey)
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Clinic own service id(this deferent from the customer listing service id )
+  const getClinicService = async () => {
+    try {
+      const res = await getClinicServiceData(clinicId)
+      console.log(res, 'clinic related service')
+
+      if (res.status === 200) {
+        const findService = res?.data?.data.find((item: any) => item?.service === serviceId)
+        setClinicServiceId(findService?.uuid)
+      }
+
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const getCoupon = async (serviceId: string) => {
+    try {
+      const res = await getCouponService(serviceId)
+      console.log(res, 'cupon data')
+      if (res?.status === 200) {
+        setAllCoupon(res?.data?.data || [])
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleConfirmBooking = () => {
+    setShowConfirmModal(true);
+  };
+
+  useEffect(() => {
+    getClinic()
+    getClinicService()
+    if (serviceId) {
+      getService(serviceId)
+      getServiceChanges(serviceId)
+      getSlotService(serviceId)
+      getCoupon(clinicOwnServiceId)
+    }
+  }, [mode, serviceId])
+
+  useEffect(() => {
+    if (session?.user) {
+      setPatient(
+        {
+          name: session.user.name || "",
+          phone_number: session?.user?.phone_number || "",
+          email: session?.user?.email || "",
+        }
+      )
+    }
+  }, [session])
+
+
+  // Add this function to create Razorpay payment
+  const createRazorpayOrder = async (bookingId: string) => {
+    try {
+      const response = await fetch(`${baseUrl}customer/create-payment/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          booking: bookingId,
+          payment_purpose: "NORMAL_BOOKING"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create Razorpay order');
+      }
+
+      const data: RazorpayResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      throw error;
+    }
+  };
+
+
+  // Add this function to handle payment success
+  const handlePaymentSuccess = async (razorpayResponse: any) => {
+    try {
+      // Verify payment on your server if needed
+      console.log('Payment successful:', razorpayResponse);
+
+      // You might want to call another API endpoint here to confirm the payment
+      setBookingSuccess(true);
+      next();
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      setBookingError('Payment verification failed. Please contact support.');
+    }
+  };
+
 
   async function handleConfirm() {
     setIsConfirming(true);
@@ -219,156 +395,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
 
-  // Add this function to create Razorpay payment
-  const createRazorpayOrder = async (bookingId: string) => {
-    try {
-      const response = await fetch(`${baseUrl}customer/create-payment/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          booking: bookingId,
-          payment_purpose: "NORMAL_BOOKING"
-        }),
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to create Razorpay order');
-      }
-
-      const data: RazorpayResponse = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error creating Razorpay order:', error);
-      throw error;
-    }
-  };
-
-  // Add this function to handle payment success
-  const handlePaymentSuccess = async (razorpayResponse: any) => {
-    try {
-      // Verify payment on your server if needed
-      console.log('Payment successful:', razorpayResponse);
-
-      // You might want to call another API endpoint here to confirm the payment
-      setBookingSuccess(true);
-      next();
-    } catch (error) {
-      console.error('Error handling payment success:', error);
-      setBookingError('Payment verification failed. Please contact support.');
-    }
-  };
-
-  const getConsultationPrice = (mode: string) => {
-    return getPriceFromServiceCharges("CONSULTATION", mode);
-  };
-
-  const getSessionPrice = (mode: string) => {
-    return getPriceFromServiceCharges("SESSION", mode);
-  };
-
-  const getService = async (id: string) => {
-    try {
-      const res = await getAService(id)
-      if (res?.status === 200) {
-        setService(res?.data)
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getClinic = async () => {
-    try {
-      const res = await getAClinicDetailed(clinicId)
-      console.log(res, 'from the data clinic')
-      if (res?.status === 200) {
-        setClinic(res?.data)
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getServiceChanges = async (id: string) => {
-    try {
-      const res = await getServiceCharges(id)
-      console.log(res, 'service changes')
-      if (res?.status === 200) {
-        setPriceData(res?.data)
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getSlotService = async (serviceId: string) => {
-    try {
-      const res = await getServiceSlots(clinicId, mode, serviceId)
-      console.log(res.data, 'from the slot in the booking')
-      if (res?.status === 200) {
-        setSlotsData(res?.data)
-        const transformedTabs = transformApiDataToTabs(res?.data)
-        setTabs(transformedTabs)
-
-        const firstTabKey = Object.keys(transformedTabs)[0]
-        if (firstTabKey) {
-          setSelectedTab(firstTabKey)
-        }
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getCoupon = async (serviceId: string) => {
-    try {
-      const res = await getCouponService(serviceId)
-      if (res?.status === 200) {
-        setAllCoupon(res?.data?.data || [])
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleConfirmBooking = () => {
-    setShowConfirmModal(true);
-  };
-
-  useEffect(() => {
-    getClinic()
-    if (serviceId) {
-      getService(serviceId)
-      getServiceChanges(serviceId)
-      getSlotService(serviceId)
-      getCoupon(serviceId)
-    }
-  }, [mode, serviceId])
-
-  useEffect(() => {
-    if (session?.user) {
-      setPatient(
-        {
-          name: session.user.name || "",
-          phone_number: session?.user?.phone_number || "",
-          email: session?.user?.email || "",
-        }
-      )
-    }
-  }, [session])
   return (
     <section aria-label="Clinic Booking" className="">
       <nav>
