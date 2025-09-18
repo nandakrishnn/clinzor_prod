@@ -74,7 +74,7 @@ export default function MyExpertBooking() {
             const res = await cancelExpertService(id, status)
             if (res.status === 200) {
                 setBookings((prev) => prev.filter((b) => b.uuid !== id)) // remove from list
-                toast("Successfully Cancelled The Booking")
+                toast(res?.message || "Successfully Cancelled The Booking")
             }
         } catch (error: any) {
             toast(error?.response?.data?.message || "Currently we unable to cancel please try again later.")

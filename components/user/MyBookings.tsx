@@ -51,8 +51,8 @@ export default function MyBookings() {
       const status = "CANCELED"
       const res = await cancelBookingService(id, status)
       if (res.status === 200) {
-        setBookings((prev) => prev.filter((b) => b.uuid !== id)) // remove from list
-        toast("Successfully Cancelled The Booking")
+        setBookings((prev) => prev.filter((b) => b.uuid !== id))
+        toast(res?.message || "Successfully Cancelled The Booking")
       }
     } catch (error: any) {
       toast(error?.response?.data?.message || "Currently we unable to cancel please try again later.")
