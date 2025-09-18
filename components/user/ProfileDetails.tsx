@@ -124,7 +124,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
           <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
             Email
           </label>
-          <div className="flex items-center gap-2 text-lg">
+          <div className="flex items-center gap-2 text-sm">
             <Mail size={16} className="text-muted-foreground" />
             {user?.email || "-"}
           </div>
@@ -135,7 +135,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
           <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
             Phone
           </label>
-          <div className="flex items-center gap-2 text-lg">
+          <div className="flex items-center gap-2 text-sm">
             <Phone size={16} className="text-muted-foreground" />
             {user?.phone_number || "-"}
           </div>
@@ -146,7 +146,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
           <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
             Gender
           </label>
-          <div className="flex items-center gap-2 text-lg">
+          <div className="flex items-center gap-2 text-sm">
             <IconGenderAgender size={16} className="text-muted-foreground" />
             {user?.gender || "-"}
           </div>
@@ -166,7 +166,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
             />
           ) : (
-            <div className="flex items-center gap-2 text-lg">
+            <div className="flex items-center gap-2 text-sm">
               <Calendar size={16} className="text-muted-foreground" />
               {user?.dob || "-"}
             </div>
@@ -187,7 +187,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
             />
           ) : (
-            <div className="flex items-start gap-2 text-lg">
+            <div className="flex items-start gap-2 text-sm">
               <MapPin size={16} className="text-muted-foreground mt-1" />
               {user?.address || "-"}
             </div>
