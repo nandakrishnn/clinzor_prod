@@ -41,6 +41,7 @@ export const USER_BLOGS = {
 
 export const USER_PROFILE = {
     GET_BOOKINGS: 'customer/booking-lc/',
+    CANCEL_BOOKING: 'customer/booking-cancel/',
     GET_LOGOUT: 'user/logout/',
     GET_UPDATE_USER_DETAILS: 'customer/update-customer-detail/',
 }
@@ -49,4 +50,5 @@ export const USER_EXPERT = {
     GET_EXPERT_SLOT: 'customer/expert-slots/',
     GET_EXPERT_SLOT_BOOKING: 'customer/expert-booking-lc/',
     GET_EXPERT_SLOT_ALL_BOOKING: 'customer/expert-booking-lc/',
+    CANCEL_EXPERT_BOOKING: 'customer/expert-booking-cancel/',
 }

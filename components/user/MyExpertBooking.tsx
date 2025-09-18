@@ -5,7 +5,8 @@ import { useEffect, useState } from "react"
 import type { Booking } from "@/types/user"
 import BookingDetailsModal from "./BookingDetailsModal"
 import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
-import { getAllExpertBookingService } from "@/service/user/expert"
+import { cancelExpertService, getAllExpertBookingService } from "@/service/user/expert"
+import { toast } from "sonner"
 
 export default function MyExpertBooking() {
     const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
@@ -14,6 +15,7 @@ export default function MyExpertBooking() {
     const [bookings, setBookings] = useState<any[]>([])
     const [isLoading, setLoading] = useState(true)
     const [currentTime, setCurrentTime] = useState(new Date()) // Track current time for real-time updates
+    const [cancelingId, setCancelingId] = useState<string | null>(null)
 
     // Update current time every minute
     useEffect(() => {
@@ -56,6 +58,27 @@ export default function MyExpertBooking() {
             setLoading(false)
         }
     }
+
+    const cancelExpertBooking = async (id: string) => {
+        const confirmCancel = window.confirm("Are you sure you want to cancel this booking?")
+        if (!confirmCancel) return
+
+        try {
+            setCancelingId(id)
+            const status = "CANCELED"
+            const res = await cancelExpertService(id, status)
+            if (res.status === 200) {
+                setBookings((prev) => prev.filter((b) => b.uuid !== id)) // remove from list
+                toast("Successfully Cancelled The Booking")
+            }
+        } catch (error: any) {
+            toast(error?.response?.data?.message || "Currently we unable to cancel please try again later.")
+            console.log(error)
+        } finally {
+            setCancelingId(null) // reset loading state
+        }
+    }
+
 
     useEffect(() => {
         getExpertBookings()
@@ -168,9 +191,22 @@ export default function MyExpertBooking() {
                                             View Details
                                         </button>
                                         {activeTab === "SCHEDULED" && (
-                                            <button className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors">
-                                                <X size={14} />
-                                                Cancel
+                                            <button
+                                                onClick={() => cancelExpertBooking(booking?.uuid)}
+                                                disabled={cancelingId === booking?.uuid}
+                                                className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                                            >
+                                                {cancelingId === booking?.uuid ? (
+                                                    <>
+                                                        <span className="animate-spin border-2 border-destructive border-t-transparent rounded-full w-4 h-4" />
+                                                        Canceling...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <X size={14} />
+                                                        Cancel
+                                                    </>
+                                                )}
                                             </button>
                                         )}
                                     </div>

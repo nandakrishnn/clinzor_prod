@@ -77,7 +77,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
           {
             serviceTag?.map((tag: any) => (
               <Link key={tag?.uuid} href={`/service/${tag?.uuid}`}>
-                <div className='bg-slate-100 text-nowrap rounded-md p-1.5 w-fit px-4 text-gray-500 border text-sm border-gray-300 hover:bg-gray-200 ease-in-out duration-300 hover:text-gray-600 cursor-pointer'>
+                <div className='bg-primaryColor text-nowrap rounded-md p-1.5 w-fit px-4 text-white border text-sm border-gray-300 hover:bg-blue-900 ease-in-out duration-300 hover:text-white cursor-pointer'>
                   {tag?.name}
                 </div>
               </Link>

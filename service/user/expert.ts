@@ -27,3 +27,8 @@ export const getAllExpertBookingService = async (status: any) => {
     const res = await axiosPrivate.get(`${USER_EXPERT.GET_EXPERT_SLOT_BOOKING}?booking_status=${status}`)
     return res.data
 }
+
+export const cancelExpertService = async (id: string, status: any) => {
+    const res = await axiosPrivate.patch(`${USER_EXPERT.CANCEL_EXPERT_BOOKING}${id}/`, { booking_status: status });
+    return res.data;
+}

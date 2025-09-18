@@ -60,7 +60,7 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
   }
 
   return (
-    <div className="bg-card rounded-2xl shadow-md border border-border p-6 md:p-10">
+    <div className="bg-card rounded-2xl shadow-md border border-border p-5 md:p-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

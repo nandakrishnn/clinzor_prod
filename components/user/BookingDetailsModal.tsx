@@ -37,6 +37,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
     }
   }
 
+  console.log(booking)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 hide-scrollbar">
@@ -160,13 +161,13 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 {booking?.booking_status}
               </span>
             </div>
-            <div className="flex gap-3">
-              {booking?.booking_status !== "COMPLETED" && booking?.booking_status !== "CANCELLED" && (
+            {/* <div className="flex gap-3">
+              {booking?.booking_status !== "COMPLETED" && booking?.booking_status !== "CANCELLED" && booking?.payment_status !== "FAILED" && (
                 <button className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
                   Cancel Booking
                 </button>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

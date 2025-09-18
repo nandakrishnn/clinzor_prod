@@ -4,6 +4,7 @@ import Head from "next/head";
 import type { Metadata } from "next";
 import { Domine, Inter, Raleway } from "next/font/google";
 import { AuthProvider } from "./Providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({  subsets: ["latin"], variable: "--font-inter"});
 const domine = Domine({ subsets: ["latin"], variable: "--font-domine" });
@@ -38,6 +39,7 @@ export default function RootLayout({
       <AuthProvider>
         <body className={`${inter.variable} ${domine.variable} ${raleway.variable} antialiased`}>
           {children}
+          <Toaster />
         </body>
       </AuthProvider>
     </html>
