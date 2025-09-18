@@ -17,15 +17,15 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
     full_name: user?.full_name || "",
     dob: user?.dob || "",
     address: user?.address || "",
-    phone_number: user?.phone_number || "",
-    gender: user?.gender || ""
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }))
   }
 
@@ -33,14 +33,12 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
     setIsLoading(true)
     try {
       const data = {
-        full_name: formData?.full_name,
-        dob: formData?.dob,
-        address: formData?.address,
+        full_name: formData.full_name,
+        dob: formData.dob,
+        address: formData.address,
       }
 
-      console.log(data, 'update data')
       const res = await updateUserDetailsService(data)
-      console.log(res)
       if (res.status === 200) {
         onUpdate()
         setIsEditing(false)
@@ -57,23 +55,28 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
       full_name: user?.full_name || "",
       dob: user?.dob || "",
       address: user?.address || "",
-      phone_number: user?.phone_number || "",
-      gender: user?.gender || ""
     })
     setIsEditing(false)
   }
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-8">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-2xl font-bold text-foreground">Profile Details</h2>
+    <div className="bg-card rounded-2xl shadow-md border border-border p-6 md:p-10">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Profile Details</h2>
+          <p className="text-muted-foreground text-sm">
+            Manage your personal information
+          </p>
+        </div>
+
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-2 bg-primaryColor text-white px-4 py-2 rounded-lg hover:bg-primaryColor/90 transition-colors font-medium"
+            className="inline-flex items-center gap-2 bg-primaryColor text-white px-4 py-2 rounded-lg hover:bg-primaryColor/90 transition-colors font-medium shadow-sm"
           >
             <Edit3 size={16} />
-            Edit Profile
+            Edit
           </button>
         ) : (
           <div className="flex gap-2">
@@ -90,15 +93,19 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="inline-flex items-center gap-2 bg-primaryColor text-white px-4 py-2 rounded-lg hover:bg-primaryColor/90 disabled:opacity-50 transition-colors font-medium"
             >
               <Save size={16} />
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Saving..." : "Save"}
             </button>
           </div>
         )}
       </div>
 
+      {/* Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Full Name</label>
+        {/* Full Name (Editable) */}
+        <div className="bg-muted/40 py-1 rounded-xl">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Full Name
+          </label>
           {isEditing ? (
             <input
               type="text"
@@ -108,60 +115,48 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
             />
           ) : (
-            <p className="text-foreground font-medium text-lg">{user?.full_name}</p>
+            <p className="text-lg font-semibold">{user?.full_name || "-"}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
-          <div className="flex items-center gap-2">
+        {/* Email (View Only) */}
+        <div className="bg-muted/40 py-1 rounded-xl">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Email
+          </label>
+          <div className="flex items-center gap-2 text-lg">
             <Mail size={16} className="text-muted-foreground" />
-            <p className="text-foreground">{user?.email}</p>
+            {user?.email || "-"}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Phone</label>
-          {isEditing ? (
-            <input
-              type="tel"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <Phone size={16} className="text-muted-foreground" />
-              <p className="text-foreground">{user?.phone_number}</p>
-            </div>
-          )}
+        {/* Phone (View Only) */}
+        <div className="bg-muted/40 py-1 rounded-xl">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Phone
+          </label>
+          <div className="flex items-center gap-2 text-lg">
+            <Phone size={16} className="text-muted-foreground" />
+            {user?.phone_number || "-"}
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Gender</label>
-          {isEditing ? (
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
-            >
-              <option value="">Select Gender</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-          ) : (
-            <div className="flex items-center gap-2">
-              <IconGenderAgender size={16} className="text-muted-foreground" />
-              <p className="text-foreground">{user?.gender}</p>
-            </div>
-          )}
+        {/* Gender (View Only) */}
+        <div className="bg-muted/40  py-1 rounded-xl">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Gender
+          </label>
+          <div className="flex items-center gap-2 text-lg">
+            <IconGenderAgender size={16} className="text-muted-foreground" />
+            {user?.gender || "-"}
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">DOB</label>
+        {/* DOB (Editable) */}
+        <div className="bg-muted/40 py-1 rounded-xl">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Date of Birth
+          </label>
           {isEditing ? (
             <input
               type="date"
@@ -171,15 +166,18 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
             />
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-lg">
               <Calendar size={16} className="text-muted-foreground" />
-              <p className="text-foreground">{user?.dob}</p>
+              {user?.dob || "-"}
             </div>
           )}
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
+        {/* Address (Editable) */}
+        <div className="bg-muted/40 rounded-xl md:col-span-2">
+          <label className="block text-xs uppercase font-medium text-muted-foreground mb-1">
+            Address
+          </label>
           {isEditing ? (
             <textarea
               name="address"
@@ -189,9 +187,9 @@ export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) 
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor"
             />
           ) : (
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2 text-lg">
               <MapPin size={16} className="text-muted-foreground mt-1" />
-              <p className="text-foreground leading-relaxed">{user?.address}</p>
+              {user?.address || "-"}
             </div>
           )}
         </div>
