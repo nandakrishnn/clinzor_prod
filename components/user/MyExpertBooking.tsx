@@ -7,6 +7,7 @@ import BookingDetailsModal from "./BookingDetailsModal"
 import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
 import { cancelExpertService, getAllExpertBookingService } from "@/service/user/expert"
 import { toast } from "sonner"
+import { ConfirmationModal } from "../common/ConfirmationModal"
 
 export default function MyExpertBooking() {
     const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
@@ -16,6 +17,11 @@ export default function MyExpertBooking() {
     const [isLoading, setLoading] = useState(true)
     const [currentTime, setCurrentTime] = useState(new Date()) // Track current time for real-time updates
     const [cancelingId, setCancelingId] = useState<string | null>(null)
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [selectedBookingId, setSelectedBookingId] = useState('')
+
 
     // Update current time every minute
     useEffect(() => {
@@ -60,8 +66,7 @@ export default function MyExpertBooking() {
     }
 
     const cancelExpertBooking = async (id: string) => {
-        const confirmCancel = window.confirm("Are you sure you want to cancel this booking?")
-        if (!confirmCancel) return
+        setIsConfirming(true)
 
         try {
             setCancelingId(id)
@@ -76,9 +81,10 @@ export default function MyExpertBooking() {
             console.log(error)
         } finally {
             setCancelingId(null) // reset loading state
+            setIsConfirming(false);
+            setShowConfirmModal(false);
         }
     }
-
 
     useEffect(() => {
         getExpertBookings()
@@ -93,6 +99,11 @@ export default function MyExpertBooking() {
         setIsModalOpen(false)
         setSelectedBooking(null)
     }
+
+    const handleConfirmBooking = (id: any) => {
+        setShowConfirmModal(true);
+        setSelectedBookingId(id)
+    };
 
     if (isLoading) return <BookingsSkeleton />
     return (
@@ -192,7 +203,7 @@ export default function MyExpertBooking() {
                                         </button>
                                         {activeTab === "SCHEDULED" && (
                                             <button
-                                                onClick={() => cancelExpertBooking(booking?.uuid)}
+                                                onClick={() => handleConfirmBooking(booking?.uuid)}
                                                 disabled={cancelingId === booking?.uuid}
                                                 className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
                                             >
@@ -232,6 +243,16 @@ export default function MyExpertBooking() {
             </div>
 
             <BookingDetailsModal booking={selectedBooking} isOpen={isModalOpen} onClose={handleCloseModal} />
+
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onClose={() => setShowConfirmModal(false)}
+                onConfirm={() => cancelExpertBooking(selectedBookingId)}
+                title="Cancel Expert Booking"
+                message="Are you sure you want to cancel this expert booking? This action cannot be undone."
+                confirmText="Cancel Expert Booking"
+                isLoading={isConfirming}
+            />
         </>
     )
 }

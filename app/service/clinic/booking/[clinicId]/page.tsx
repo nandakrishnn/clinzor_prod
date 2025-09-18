@@ -22,6 +22,7 @@ import { useSession } from "next-auth/react"
 import { ConfirmationModal } from "@/components/common/ConfirmationModal"
 import { initializeRazorpayPayment, RazorpayResponse } from "@/utils/razorpay"
 import { baseUrl } from "@/utils/Endpoint"
+import { toast } from "sonner"
 
 type clinicBookingProps = {
   params: {
@@ -314,12 +315,15 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       // Verify payment on your server if needed
       console.log('Payment successful:', razorpayResponse);
 
+      const { razorpay_order_id } = razorpayResponse;
+      setOrderId(razorpay_order_id)
       // You might want to call another API endpoint here to confirm the payment
       setBookingSuccess(true);
+      toast("Booking Successfully Completed")
       next();
     } catch (error) {
       console.error('Error handling payment success:', error);
-      setBookingError('Payment verification failed. Please contact support.');
+      toast('Payment verification failed. Please contact support.');
     }
   };
 
@@ -369,6 +373,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
           // For offline payment, proceed directly to confirmation
           setOrderId(response.order_id || `ORD-${Math.floor(Math.random() * 9_999_999)}`);
           setBookingSuccess(true);
+          toast("Booking Successfully Completed")
           next();
         }
       }
@@ -388,7 +393,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
         errorMessage = error.message;
       }
 
-      setBookingError(errorMessage);
+      toast(errorMessage);
     } finally {
       setIsConfirming(false);
       setShowConfirmModal(false);

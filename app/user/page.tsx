@@ -14,12 +14,14 @@ import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
 import { logOutService } from "@/service/user/profileService"
 import { BookingsSkeleton, ProfileDetailsSkeleton, UserProfileSkeleton } from "@/components/skeltons/user/LoadingSkeleton"
 import MyExpertBooking from "@/components/user/MyExpertBooking"
+import { ConfirmationModal } from "@/components/common/ConfirmationModal"
 export default function UserDash() {
   const { data } = useSession()
   const [user, setUser] = useState(data?.user || {});
   const [isLoading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState<string>("profile")
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
 
   const getUser = async () => {
     try {
@@ -186,6 +188,8 @@ export default function UserDash() {
           </div>
         </div>
       )}
+
+      
     </div>
   )
 }

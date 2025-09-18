@@ -7,6 +7,7 @@ import type { Booking } from "@/types/user"
 import BookingDetailsModal from "./BookingDetailsModal"
 import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
 import { toast } from "sonner"
+import { ConfirmationModal } from "../common/ConfirmationModal"
 
 export default function MyBookings() {
   const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
@@ -15,6 +16,9 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState<any[]>([])
   const [isLoading, setLoading] = useState(true)
   const [cancelingId, setCancelingId] = useState<string | null>(null) // track cancel loading
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState('')
 
   const formatDate = (isoDate: string) => {
     if (!isoDate) return "-"
@@ -39,11 +43,11 @@ export default function MyBookings() {
   }
 
   const cancelBooking = async (id: string) => {
-    const confirmCancel = window.confirm("Are you sure you want to cancel this booking?")
-    if (!confirmCancel) return
+
+    setIsConfirming(true)
 
     try {
-      setCancelingId(id) 
+      setCancelingId(id)
       const status = "CANCELED"
       const res = await cancelBookingService(id, status)
       if (res.status === 200) {
@@ -55,6 +59,8 @@ export default function MyBookings() {
       console.log(error)
     } finally {
       setCancelingId(null) // reset loading state
+      setIsConfirming(false);
+      setShowConfirmModal(false);
     }
   }
 
@@ -72,9 +78,14 @@ export default function MyBookings() {
     setSelectedBooking(null)
   }
 
+  const handleConfirmBooking = (id: any) => {
+    setShowConfirmModal(true);
+    setSelectedBookingId(id)
+  };
+
   if (isLoading) return <BookingsSkeleton />
   return (
-    <>
+    <section>
       <div className="bg-card rounded-xl shadow-sm border border-border p-5 md:p-8">
         <h2 className="text-2xl font-bold text-foreground mb-5">My Bookings</h2>
 
@@ -184,7 +195,8 @@ export default function MyBookings() {
                   </button>
                   {activeTab === "SCHEDULED" && (
                     <button
-                      onClick={() => cancelBooking(booking?.uuid)}
+                      onClick={() => handleConfirmBooking(booking?.uuid)}
+                      // onClick={() => cancelBooking(booking?.uuid)}
                       disabled={cancelingId === booking?.uuid}
                       className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
                     >
@@ -213,6 +225,16 @@ export default function MyBookings() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
-    </>
+
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => cancelBooking(selectedBookingId)}
+        title="Cancel Booking"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmText="Cancel Booking"
+        isLoading={isConfirming}
+      />
+    </section>
   )
 }
