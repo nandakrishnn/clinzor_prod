@@ -85,7 +85,7 @@ const VideoCallCard: React.FC<VideoCallCardProps> = ({
   }
 
   // If it's a real video call URL (not mock), show iframe
-  if (videoCallUrl.startsWith('http') && !videoCallUrl.includes('mock-videocall')) {
+  if (videoCallUrl?.startsWith('http') && !videoCallUrl.includes('mock-videocall')) {
     return (
       <div className={`bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden ${className}`}>
         {/* Header */}

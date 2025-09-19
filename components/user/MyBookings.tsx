@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Clock, MapPin, Eye, X, CreditCard, User } from "lucide-react"
+import { Calendar, Clock, MapPin, Eye, X, CreditCard, User, Laptop } from "lucide-react"
 import { useEffect, useState } from "react"
 import { cancelBookingService, getBookingService } from "@/service/user/profileService"
 import type { Booking } from "@/types/user"
@@ -19,6 +19,8 @@ export default function MyBookings() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState('')
+
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   const formatDate = (isoDate: string) => {
     if (!isoDate) return "-"
@@ -83,7 +85,20 @@ export default function MyBookings() {
     setSelectedBookingId(id)
   };
 
+  // Function to check if join button should be shown
+  const shouldShowJoinButton = (booking: any) => {
+    const startTime = new Date(booking.start_time);
+    const endTime = new Date(booking.end_time);
+
+    // Show button 5 minutes before start time until end time
+    const fiveMinutesBeforeStart = new Date(startTime.getTime() - 5 * 60000);
+
+    return currentTime >= fiveMinutesBeforeStart && currentTime <= endTime;
+  }
+
   if (isLoading) return <BookingsSkeleton />
+
+  console.log(bookings, 'bookings')
   return (
     <section>
       <div className="bg-card rounded-xl shadow-sm border border-border p-5 md:p-8">
@@ -185,34 +200,49 @@ export default function MyBookings() {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => handleViewDetails(booking)}
-                    className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
-                  >
-                    <Eye size={14} />
-                    View Details
-                  </button>
-                  {activeTab === "SCHEDULED" && (
+                <div className="flex flex-col md:flex-row justify-between items-center">
+                  <div className="mt-4 flex flex-wrap gap-3">
                     <button
-                      onClick={() => handleConfirmBooking(booking?.uuid)}
-                      // onClick={() => cancelBooking(booking?.uuid)}
-                      disabled={cancelingId === booking?.uuid}
-                      className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                      onClick={() => handleViewDetails(booking)}
+                      className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
                     >
-                      {cancelingId === booking?.uuid ? (
-                        <>
-                          <span className="animate-spin border-2 border-destructive border-t-transparent rounded-full w-4 h-4" />
-                          Canceling...
-                        </>
-                      ) : (
-                        <>
-                          <X size={14} />
-                          Cancel
-                        </>
-                      )}
+                      <Eye size={14} />
+                      View Details
                     </button>
-                  )}
+                    {activeTab === "SCHEDULED" && (
+                      <button
+                        onClick={() => handleConfirmBooking(booking?.uuid)}
+                        // onClick={() => cancelBooking(booking?.uuid)}
+                        disabled={cancelingId === booking?.uuid}
+                        className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                      >
+                        {cancelingId === booking?.uuid ? (
+                          <>
+                            <span className="animate-spin border-2 border-destructive border-t-transparent rounded-full w-4 h-4" />
+                            Canceling...
+                          </>
+                        ) : (
+                          <>
+                            <X size={14} />
+                            Cancel
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  {/* Conditional Join Button */}
+                  {booking.booking_type === "VIDEO_CALL" &&
+                    booking.booking_status === "SCHEDULED" &&
+                    shouldShowJoinButton(booking) && (
+                      <a
+                        href={`${booking?.customer_meeting_link}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors mt-4"
+                      >
+                        <Laptop size={14} />
+                        Join Now
+                      </a>
+                    )}
                 </div>
               </div>
             ))
