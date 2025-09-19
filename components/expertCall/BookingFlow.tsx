@@ -11,11 +11,12 @@ import {
   Mail,
   Phone,
   Calendar,
-  Users
+  Users,
+  Video,
+  Star,
+  MapPin
 } from "lucide-react";
-import { format, addDays } from "date-fns";
-import { CustomCalendar } from "../ui/calender";
-import Image from "next/image";
+import { format, addDays, parseISO, isToday, isTomorrow } from "date-fns";
 import Title from "../ui/title";
 import { useSession } from "next-auth/react";
 import { getAllExpertService, getExpertSlotBookingService, getExpertSlotService } from "@/service/user/expert";
@@ -26,6 +27,10 @@ interface Expert {
   name: string;
   phone_number: string;
   profile_url: string | null;
+  specialization?: string | null;
+  rating?: string | null;
+  experience?: string | null;
+  gender?: string | null;
 }
 
 interface SlotDetail {
@@ -45,17 +50,23 @@ interface BookingResponse {
   customer_meeting_link: string;
   start_time: string;
   end_time: string;
+  booking_status: string;
+  room_id: string;
+  booking_charge: string;
+  booking_type: string;
 }
 
 const BookingFlow = () => {
   const [step, setStep] = useState<number>(1);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<SlotDetail | null>(null);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [slots, setSlots] = useState<SlotData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>();
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [bookingData, setBookingData] = useState<BookingResponse | null>(null);
 
   // get session user data
   const { data: session } = useSession()
@@ -101,22 +112,32 @@ const BookingFlow = () => {
     }
   }, [step]);
 
-  // Fetch available slots when expert is selected and date changes
+  // Fetch available slots when expert is selected
   useEffect(() => {
     const fetchSlots = async () => {
-      if (!selectedExpert || !date) return;
+      if (!selectedExpert) return;
 
       try {
         setLoading(true);
-        const fromDate = new Date(date);
-        const toDate = addDays(date, 7); // Get slots for next 7 days
+        const fromDate = new Date();
+        const toDate = addDays(fromDate, 30); // Get slots for next 30 days
 
         const data = await getExpertSlotService(selectedExpert.uuid, fromDate.toISOString(), toDate.toISOString());
 
-        console.log(data, 'available data')
-
         if (data.status === 200) {
           setSlots(data.data);
+
+          // Extract available dates from slots
+          const datesWithSlots = data.data
+            .filter((slot: any) => slot.slot_details.some((detail: any) => !detail.is_booked))
+            .map((slot: any) => slot.slot_date);
+
+          setAvailableDates(datesWithSlots);
+
+          // Auto-select the first available date if there is one
+          if (datesWithSlots.length > 0 && !date) {
+            setDate(parseISO(datesWithSlots[0]));
+          }
         } else {
           setError("Failed to load available slots");
         }
@@ -128,10 +149,10 @@ const BookingFlow = () => {
       }
     };
 
-    if (selectedExpert && date && step === 2) {
+    if (selectedExpert && step === 2) {
       fetchSlots();
     }
-  }, [selectedExpert, date, step]);
+  }, [selectedExpert, step]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -140,9 +161,18 @@ const BookingFlow = () => {
 
   const handleExpertSelect = (expert: Expert) => {
     setSelectedExpert(expert);
+    setDate(undefined); // Reset date when expert changes
+    setSelectedTime(null); // Reset time when expert changes
+  };
+
+  const handleDateSelect = (dateString: string) => {
+    console.log(dateString, 'selected date')
+    setDate(parseISO(dateString));
+    setSelectedTime(null); // Reset time when date changes
   };
 
   const handleTimeSelect = (slot: SlotDetail) => {
+    console.log(slot, 'selected date')
     setSelectedTime(slot);
   };
 
@@ -156,10 +186,14 @@ const BookingFlow = () => {
 
     try {
       setLoading(true);
-      const data = await getExpertSlotBookingService(selectedTime.uuid);
+      // Prepare the request body according to API requirements
+      const data = await getExpertSlotBookingService(selectedTime?.uuid);
 
+
+      console.log(data, 'booking success ')
       if (data.status === 200) {
         console.log("Booking successful:", data.data);
+        setBookingData(data.data);
         setStep(4);
       } else {
         setError(data.message || "Booking failed");
@@ -184,6 +218,16 @@ const BookingFlow = () => {
 
   const availableTimeSlots = getTimeSlotsForDate(date);
 
+  // Format date for display
+  const formatDateDisplay = (dateString: string) => {
+    const date = parseISO(dateString);
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    return format(date, "EEE, MMM d");
+  };
+
+
+  console.log(selectedTime,experts, 'selected slot')
   return (
     <div className="">
       <div className="mb-10 md:mb-16">
@@ -198,7 +242,7 @@ const BookingFlow = () => {
         <div className="hidden md:block w-64">
           <div className="sticky top-24 ">
             <div className="space-y-2">
-              {[1, 2, 3].map((stepNumber, index) => (
+              {[1, 2, 3, 4].map((stepNumber, index) => (
                 <div
                   key={index}
                   className={`flex items-center space-x-3 p-3 rounded-lg ${step === stepNumber
@@ -209,10 +253,12 @@ const BookingFlow = () => {
                   <div
                     className={`flex items-center justify-center w-6 h-6 rounded-full ${step === stepNumber
                       ? "bg-primaryColor text-white"
-                      : "bg-gray-200 text-gray-600"
+                      : step > stepNumber
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200 text-gray-600"
                       }`}
                   >
-                    {stepNumber}
+                    {step > stepNumber ? <Check className="h-4 w-4" /> : stepNumber}
                   </div>
                   <span
                     className={
@@ -222,6 +268,7 @@ const BookingFlow = () => {
                     {stepNumber === 1 && "Personal Info"}
                     {stepNumber === 2 && "Select Expert"}
                     {stepNumber === 3 && "Confirmation"}
+                    {stepNumber === 4 && "Success"}
                   </span>
                 </div>
               ))}
@@ -360,15 +407,14 @@ const BookingFlow = () => {
                         <div className="flex items-center">
                           <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center mr-3">
                             {expert?.profile_url ? (
-
-                              <img src={"/clinic.png"} alt={expert?.name} className="w-full h-full object-cover rounded-full" />
+                              <img src={expert.profile_url || '/clinic.png'} alt={expert?.name} className="w-full h-full object-cover rounded-full" />
                             ) : (
                               <User className="h-6 w-6 text-gray-400" />
                             )}
                           </div>
                           <div>
                             <h4 className="font-medium">{expert?.name}</h4>
-                            <p className="text-sm text-gray-500">{expert?.phone_number}</p>
+                            <p className="text-sm text-gray-500">{expert?.gender}</p>
                           </div>
                         </div>
                       </div>
@@ -387,18 +433,43 @@ const BookingFlow = () => {
                   </h3>
 
                   <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Available Dates List */}
                     <div className="lg:w-1/2">
-                      <CustomCalendar
-                        selectedDate={date}
-                        onSelect={(selectedDate) => {
-                          setDate(selectedDate);
-                          setSelectedTime(null);
-                        }}
-                      />
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Available Dates
+                      </h4>
+
+                      {loading ? (
+                        <div className="flex justify-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primaryColor"></div>
+                        </div>
+                      ) : availableDates.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {availableDates.map((dateString) => {
+                            const isSelected = date && format(date, 'yyyy-MM-dd') === dateString;
+                            return (
+                              <button
+                                key={dateString}
+                                onClick={() => handleDateSelect(dateString)}
+                                className={`p-3 text-xs sm:text-sm rounded border transition-all ${isSelected
+                                  ? "bg-primaryColor text-white border-primaryColor"
+                                  : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                                  }`}
+                              >
+                                {formatDateDisplay(dateString)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm py-4">
+                          No available dates found for this expert.
+                        </p>
+                      )}
                     </div>
 
+                    {/* Time Slots for Selected Date */}
                     <div className="lg:w-1/2">
-                      {/* Selected Time Slots Display */}
                       {date && (
                         <div className="">
                           <h4 className="text-sm font-medium text-gray-700 mb-3">
@@ -411,7 +482,7 @@ const BookingFlow = () => {
                             </div>
                           ) : availableTimeSlots.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                              {availableTimeSlots.map((slot,index) => (
+                              {availableTimeSlots.map((slot) => (
                                 <button
                                   key={slot?.uuid}
                                   onClick={() => handleTimeSelect(slot)}
@@ -553,12 +624,9 @@ const BookingFlow = () => {
           )}
 
           {/* Step 4: Success */}
-          {step === 4 && (
-            <div className="p-6 text-center flex gap-5">
-              <div className="w-full hidden md:block">
-                <div className="h-full min-w-[200px] bg-[#98CBD6] rounded-xl"></div>
-              </div>
-              <div className="max-w-md mx-auto">
+          {step === 4 && bookingData && (
+            <div className="p-6 text-center">
+              <div className="max-w-2xl mx-auto">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
                   <Check className="h-6 w-6 text-green-600" />
                 </div>
@@ -567,22 +635,51 @@ const BookingFlow = () => {
                 </h3>
                 <p className="text-gray-600 mb-6">
                   Your appointment with {selectedExpert?.name} is scheduled for{" "}
-                  {date && format(date, "MMMM do")} at{" "}
-                  {selectedTime && format(new Date(selectedTime.start_time), "hh:mm a")}.
-                  Confirmation sent to {userData.email}.
+                  {bookingData && format(new Date(bookingData.start_time), "MMMM do")} at{" "}
+                  {bookingData && format(new Date(bookingData.start_time), "hh:mm a")}.
+                  Confirmation has been sent to {userData.email}.
                 </p>
-                <Button
-                  onClick={() => {
-                    setStep(1);
-                    setSelectedExpert(null);
-                    setDate(new Date());
-                    setSelectedTime(null);
-                    setError(null);
-                  }}
-                  className="bg-primaryColor text-white px-6 py-2"
-                >
-                  Book Another
-                </Button>
+
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-medium text-gray-900 mb-4 flex items-center">
+                    <Video className="mr-2 h-5 w-5" /> Meeting Details
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Date And Time:</span>
+                      <span className="text-gray-900">{bookingData?.start_time}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Booking Status:</span>
+                      <span className="text-gray-900 capitalize">{bookingData?.booking_status?.toLowerCase()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Booking Type:</span>
+                      <span className="text-gray-900">{bookingData?.booking_type?.replace('_', ' ')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Charge:</span>
+                      <span className="text-gray-900">₹{bookingData?.booking_charge}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={() => {
+                      setStep(1);
+                      setSelectedExpert(null);
+                      setDate(undefined);
+                      setSelectedTime(null);
+                      setBookingData(null);
+                      setError(null);
+                    }}
+                    variant="outline"
+                    className="px-6 py-2"
+                  >
+                    Book Another
+                  </Button>
+                </div>
               </div>
             </div>
           )}
