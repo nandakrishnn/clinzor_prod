@@ -21,6 +21,11 @@ export const getCouponService = async (serviceId: string) => {
   const res = await axiosPublic.get(`${USER_SERVICE.GET_COUPON}?clinic_service=${serviceId}`);
   return res.data;
 };
+export const getPrivateCouponService = async (serviceId: string) => {
+  
+  const res = await axiosPrivate.get(`${USER_SERVICE.GET_COUPON}?clinic_service=${serviceId}`);
+  return res.data;
+};
 export const getClinicServiceData = async (clinicId: string) => {
   const res = await axiosPublic.get(`${USER_SERVICE.GET_CLINIC_SERVICES}?clinic=${clinicId}`);
   return res.data;

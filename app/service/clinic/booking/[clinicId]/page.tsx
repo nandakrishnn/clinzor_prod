@@ -13,7 +13,7 @@ import { PatientForm } from "@/components/service/clinic/PatientForm"
 import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import { createBookingService, getAClinicDetailed, getAService, getClinicServiceData, getCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
+import { createBookingService, getAClinicDetailed, getAService, getClinicServiceData, getPrivateCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
 import { useSearchParams } from "next/navigation"
 
 import PreviewCard from "@/components/service/clinic/PreviewCard"
@@ -177,7 +177,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const getClinic = async () => {
     try {
       const res = await getAClinicDetailed(clinicId)
-      console.log(res, 'from the data clinic')
       if (res?.status === 200) {
         setClinic(res?.data)
       }
@@ -191,7 +190,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const getServiceChanges = async (id: string) => {
     try {
       const res = await getServiceCharges(id)
-      console.log(res, 'service changes')
       if (res?.status === 200) {
         setPriceData(res?.data)
       }
@@ -205,7 +203,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const getSlotService = async (serviceId: string) => {
     try {
       const res = await getServiceSlots(clinicId, mode, serviceId)
-      console.log(res.data, 'from the slot in the booking')
       if (res?.status === 200) {
         setSlotsData(res?.data)
         const transformedTabs = transformApiDataToTabs(res?.data)
@@ -227,7 +224,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const getClinicService = async () => {
     try {
       const res = await getClinicServiceData(clinicId)
-      console.log(res, 'clinic related service')
 
       if (res.status === 200) {
         const findService = res?.data?.data.find((item: any) => item?.service === serviceId)
@@ -240,8 +236,9 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   }
 
   const getCoupon = async (serviceId: string) => {
+    console.log(serviceId, 'from the private clinic')
     try {
-      const res = await getCouponService(serviceId)
+      const res = await getPrivateCouponService(serviceId)
       console.log(res, 'cupon data')
       if (res?.status === 200) {
         setAllCoupon(res?.data?.data || [])
@@ -266,7 +263,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       getSlotService(serviceId)
       getCoupon(clinicOwnServiceId)
     }
-  }, [mode, serviceId])
+  }, [mode, serviceId, clinicOwnServiceId])
 
   useEffect(() => {
     if (session?.user) {
@@ -400,6 +397,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
 
+
+  console.log(clinicOwnServiceId, 'service own id')
 
   return (
     <section aria-label="Clinic Booking" className="">
