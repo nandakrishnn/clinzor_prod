@@ -404,6 +404,7 @@ export default function AllUsersPage() {
       clearTimeout(handler);
     };
   }, [searchQuery]);
+
   // Load users with pagination
   // Load users with pagination, search and filters
   const loadUsers = async (page = 1, search = '', status = 'ALL') => {
@@ -418,7 +419,6 @@ export default function AllUsersPage() {
       const paramsbooking: any = {
         page_size: itemsPerPage,
         page: page,
-
       };
 
       // Add search parameter if provided
@@ -466,11 +466,13 @@ export default function AllUsersPage() {
       setLoading(false);
     }
   };
+
   console.log(users, "user data here")
   // Load users when page, filters, or search changes
   useEffect(() => {
     loadUsers(currentPage, debouncedSearchQuery, statusFilter);
   }, [currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
+
   // Filter users based on search and status
   useEffect(() => {
     let filtered = [...users];
@@ -692,7 +694,7 @@ export default function AllUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading users...</p>
@@ -702,7 +704,7 @@ export default function AllUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+    <div className="min-h-screen p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -734,7 +736,7 @@ export default function AllUsersPage() {
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-               whileHover={{ y: -2 }}
+            whileHover={{ y: -2 }}
             onClick={() => {
               const newFilter = activeStatFilter === 'ALL' ? null : 'ALL';
               setActiveStatFilter(newFilter);
@@ -752,12 +754,6 @@ export default function AllUsersPage() {
                 <Users size={24} className="text-blue-600" />
               </div>
             </div>
-              {/* {activeStatFilter === 'ALL' && (
-      <div className="mt-2 flex items-center">
-        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
-        <span className="text-xs text-blue-600 font-medium">Showing all users</span>
-      </div>
-    )} */}
           </motion.div>
 
           <motion.div
@@ -765,14 +761,14 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-             whileHover={{ y: -2 }}
-              onClick={() => {
-      const newFilter = activeStatFilter === 'ACTIVE' ? null : 'ACTIVE';
-      setActiveStatFilter(newFilter);
-      setStatusFilter('ACTIVE');
-      setCurrentPage(1);
-      loadUsers(1, debouncedSearchQuery, 'ACTIVE');
-    }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'ACTIVE' ? null : 'ACTIVE';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('ACTIVE');
+              setCurrentPage(1);
+              loadUsers(1, debouncedSearchQuery, 'ACTIVE');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -792,14 +788,14 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-             whileHover={{ y: -2 }}
-             onClick={() => {
-      const newFilter = activeStatFilter === 'BLOCKED' ? null : 'BLOCKED';
-      setActiveStatFilter(newFilter);
-      setStatusFilter('BLOCKED');
-      setCurrentPage(1);
-      loadUsers(1, debouncedSearchQuery, 'BLOCKED');
-    }}
+            whileHover={{ y: -2 }}
+            onClick={() => {
+              const newFilter = activeStatFilter === 'BLOCKED' ? null : 'BLOCKED';
+              setActiveStatFilter(newFilter);
+              setStatusFilter('BLOCKED');
+              setCurrentPage(1);
+              loadUsers(1, debouncedSearchQuery, 'BLOCKED');
+            }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -819,7 +815,7 @@ export default function AllUsersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-             whileHover={{ y: -2 }}
+            whileHover={{ y: -2 }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -993,8 +989,8 @@ export default function AllUsersPage() {
                 }}
                 disabled={currentPage === 1}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
               >
                 Previous
@@ -1010,8 +1006,8 @@ export default function AllUsersPage() {
                 }}
                 disabled={currentPage === paginationData.total_pages}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors w-1/2 sm:w-auto ${currentPage === paginationData.total_pages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
               >
                 Next

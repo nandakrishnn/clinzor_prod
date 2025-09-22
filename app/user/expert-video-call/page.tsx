@@ -2,8 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
+import { Suspense } from "react"
 
-const ExpertVideoCall = () => {
+// Inner component that uses useSearchParams
+const ExpertVideoCallContent = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const meetingUrl = searchParams.get("meetingUrl") || ""
@@ -30,6 +32,19 @@ const ExpertVideoCall = () => {
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
       />
     </div>
+  )
+}
+
+// Main component with Suspense
+const ExpertVideoCall = () => {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-[100vh] flex items-center justify-center bg-background">
+        <div className="text-lg">Loading video call...</div>
+      </div>
+    }>
+      <ExpertVideoCallContent />
+    </Suspense>
   )
 }
 
