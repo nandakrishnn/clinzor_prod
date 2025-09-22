@@ -147,7 +147,7 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
 
     const handleViewService = (suggestion: any) => {
         // Navigate to service detail page
-        router.push(`/service/${suggestion.uuid}`);
+        router.push(`/service/${suggestion?.uuid}`);
     };
 
     if (isLoading) return <BookingsSkeleton />
