@@ -6,7 +6,7 @@ import ProfileDetails from "@/components/user/ProfileDetails"
 import UserProfile from "@/components/user/UserProfile"
 import CommonHeroSection from "@/components/common/CommonHeroSection"
 import type { NavigationItem as NavItemType } from "@/types/user"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { UserIcon, Calendar, Lock, LogOut } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserService } from "@/service/user/sevicePage"
@@ -16,7 +16,8 @@ import { BookingsSkeleton, ProfileDetailsSkeleton, UserProfileSkeleton } from "@
 import { useSearchParams } from "next/navigation"
 import MyExpertBooking from "@/components/user/MyExpertBooking"
 
-export default function UserDash() {
+// Inner component that uses useSearchParams
+function UserDashContent() {
   const { data } = useSession()
   const [user, setUser] = useState(data?.user || {});
   const [isLoading, setLoading] = useState(true)
@@ -166,7 +167,6 @@ export default function UserDash() {
                 </nav>
               </div>
             </div>
-
             <div className="lg:col-span-3">{renderActiveSection()}</div>
           </div>
         </div>
@@ -198,5 +198,18 @@ export default function UserDash() {
         </div>
       )}
     </div>
+  )
+}
+
+// Main component with Suspense boundary
+export default function UserDash() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg">Loading user dashboard...</div>
+      </div>
+    }>
+      <UserDashContent />
+    </Suspense>
   )
 }
