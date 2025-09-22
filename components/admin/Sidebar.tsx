@@ -641,9 +641,9 @@ export default function AdminSidebar() {
 
   // Main component return
   return (
-    <div className="flex h-screen bg-gray-50 z-50">
+    <div className="flex h-screen bg-gray-50 ">
       {/* Mobile toggle button - always visible on mobile */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
+      <div className="md:hidden fixed top-4 left-4 ">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="mobile-toggle p-3 bg-white rounded-xl text-purple-600 shadow-lg border border-gray-100 hover:scale-105 transition-transform touch-manipulation active:scale-95"

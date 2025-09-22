@@ -117,7 +117,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:min-w-[70vw]">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">{title}</h3>
@@ -335,12 +335,6 @@ const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
         >
           <Eye size={16} />
         </button>
-        {/* <button
-          onClick={() => onEdit(user)}
-          className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-all"
-        >
-          <Edit size={16} />
-        </button> */}
         <button
           onClick={() => onBlock(user)}
           className={`p-1 rounded transition-all ${user.is_blocked
@@ -349,12 +343,6 @@ const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
             }`}
         >
           {user.is_blocked ? <UserCheck size={16} /> : <UserX size={16} />}
-        </button>
-        <button
-          onClick={() => onDelete(user)}
-          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-all"
-        >
-          <Trash2 size={16} />
         </button>
       </div>
     </td>
@@ -846,7 +834,7 @@ export default function AllUsersPage() {
                 placeholder="Search users by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg focus:outline-none text-sm sm:text-base"
               />
             </div>
 
@@ -860,7 +848,6 @@ export default function AllUsersPage() {
                 <option value="ALL">All Status</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
-                <option value="BLOCKED">Blocked</option>
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
@@ -1045,7 +1032,7 @@ export default function AllUsersPage() {
         title="User Details"
       >
         {selectedUser && (
-          <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+          <div className="space-y-6 max-h-[80vh] overflow-y-auto z-50">
             {/* Profile Section */}
             <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
               <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-3xl shadow">
@@ -1117,9 +1104,7 @@ export default function AllUsersPage() {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Clinic</th>
-                          <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Service</th>
                           <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Date</th>
-                          <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Time</th>
                           <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Slot</th>
                           <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Type</th>
                           <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Status</th>
@@ -1134,9 +1119,7 @@ export default function AllUsersPage() {
                           return (
                             <tr key={b.uuid}>
                               <td className="px-2 sm:px-4 py-2 font-medium text-blue-700 whitespace-nowrap">{b.clinic_name}</td>
-                              <td className="px-2 sm:px-4 py-2 whitespace-nowrap">{b.service_type}</td>
                               <td className="px-2 sm:px-4 py-2 whitespace-nowrap">{date.toLocaleDateString()}</td>
-                              <td className="px-2 sm:px-4 py-2 whitespace-nowrap">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                               <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
                                 <span className="inline-block bg-gray-100 rounded px-2 py-1 text-xs">
                                   {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1146,7 +1129,6 @@ export default function AllUsersPage() {
                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${b.booking_type === 'VIDEO_CALL' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                                   {b.booking_type === 'VIDEO_CALL' ? 'Video Call' : 'Clinic Visit'}
                                 </span>
-                                <span className="ml-2 inline-block bg-gray-50 rounded px-2 py-1 text-xs text-gray-500">{b.session_type}</span>
                               </td>
                               <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
@@ -1281,40 +1263,6 @@ export default function AllUsersPage() {
         )}
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedUser(null);
-        }}
-        title="Delete User"
-      >
-        {selectedUser && (
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Are you sure you want to delete {selectedUser.full_name}? This action cannot be undone.
-            </p>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setSelectedUser(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* Block Modal */}
       <Modal
