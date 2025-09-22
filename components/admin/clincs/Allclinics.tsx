@@ -4,27 +4,20 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Building2,
   Search,
-  Filter,
-  MoreVertical,
   Eye,
   Edit,
   Mail,
   Phone,
   Calendar,
-  Download,
   Plus,
   MapPin,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
-  DollarSign,
   RefreshCw,
-  Settings,
   X,
   ChevronDown,
-  ExternalLink,
-  Globe,
   Building,
   Lock,
   Check,
@@ -71,20 +64,6 @@ interface Clinic {
   closingTime?: string;
   submissionDate: string;
   documents: string[];
-}
-
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}
-interface PaginationData {
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  next: string | null;
-  previous: string | null;
 }
 
 interface NotificationProps {
@@ -551,7 +530,7 @@ export default function ClinicManagement() {
     clinicsToShow = filteredClinics.filter((c) => c.is_active);
   else if (selectedHeader === "Deactivated")
     clinicsToShow = filteredClinics.filter((c) => !c.is_active);
-console.log(selectedHeader ,"selectedHeader");
+  console.log(selectedHeader, "selectedHeader");
   // Use server-side pagination data
   // clinicsToShow already contains only the clinics for the current page from the API
   const totalPages = paginationData.total_pages;
@@ -593,190 +572,190 @@ console.log(selectedHeader ,"selectedHeader");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-// Add file input handlers with validation
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
-const ALLOWED_CERTIFICATE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+  // Add file input handlers with validation
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+  const ALLOWED_CERTIFICATE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
-const validateFile = (file: File, allowedTypes: string[]): string | null => {
-  if (!allowedTypes.includes(file.type)) {
-    return `Invalid file type: ${file.type}. Allowed types: ${allowedTypes.join(', ')}`;
-  }
-  
-  // Optional: Add file size validation
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
-    return `File too large: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size: 5MB`;
-  }
-  
-  return null;
-};
+  const validateFile = (file: File, allowedTypes: string[]): string | null => {
+    if (!allowedTypes.includes(file.type)) {
+      return `Invalid file type: ${file.type}. Allowed types: ${allowedTypes.join(', ')}`;
+    }
 
-const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files) {
-    const filesArray = Array.from(e.target.files);
-    
-    // Validate each file
-    const invalidFiles: string[] = [];
-    const validFiles: File[] = [];
-    
-    filesArray.forEach(file => {
-      const error = validateFile(file, ALLOWED_IMAGE_TYPES);
-      if (error) {
-        invalidFiles.push(`${file.name}: ${error}`);
-      } else {
-        validFiles.push(file);
+    // Optional: Add file size validation
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      return `File too large: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size: 5MB`;
+    }
+
+    return null;
+  };
+
+  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+
+      // Validate each file
+      const invalidFiles: string[] = [];
+      const validFiles: File[] = [];
+
+      filesArray.forEach(file => {
+        const error = validateFile(file, ALLOWED_IMAGE_TYPES);
+        if (error) {
+          invalidFiles.push(`${file.name}: ${error}`);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (invalidFiles.length > 0) {
+        setNotification({
+          type: "error",
+          message: `Invalid image files:\n${invalidFiles.join('\n')}`
+        });
       }
-    });
-    
-    if (invalidFiles.length > 0) {
-      setNotification({
-        type: "error",
-        message: `Invalid image files:\n${invalidFiles.join('\n')}`
-      });
-    }
-    
-    if (validFiles.length > 0) {
-      setSelectedImages(prev => [...prev, ...validFiles]);
-    }
-  }
-};
 
-const handleCertificateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
-    const error = validateFile(file, ALLOWED_CERTIFICATE_TYPES);
-    
-    if (error) {
-      setNotification({
-        type: "error",
-        message: `Invalid certificate file: ${error}`
-      });
-      e.target.value = ''; // Clear the input
-      return;
+      if (validFiles.length > 0) {
+        setSelectedImages(prev => [...prev, ...validFiles]);
+      }
     }
-    
-    setSelectedRegistrationCertificate(file);
-  }
-};
+  };
+
+  const handleCertificateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const error = validateFile(file, ALLOWED_CERTIFICATE_TYPES);
+
+      if (error) {
+        setNotification({
+          type: "error",
+          message: `Invalid certificate file: ${error}`
+        });
+        e.target.value = ''; // Clear the input
+        return;
+      }
+
+      setSelectedRegistrationCertificate(file);
+    }
+  };
 
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   }
 
-const handleAddClinicStep1 = async () => {
-  if (
-    !newClinic.name ||
-    !newClinic.city ||
-    !newClinic.email ||
-    !newClinic.phone
-  ) {
-    setNotification({
-      type: "error",
-      message: "Please fill in all required fields"
-    });
-    return;
-  }
-
-  if (newClinic.workingDays.length === 0) {
-    setNotification({
-      type: "error",
-      message: "Please select at least one working day"
-    });
-    return;
-  }
-
-  setIsSubmitting(true);
-  setUploadingFiles(true);
-  
-  try {
-    // Validate all files before uploading
-    const invalidImageFiles: string[] = [];
-    selectedImages.forEach(file => {
-      const error = validateFile(file, ALLOWED_IMAGE_TYPES);
-      if (error) {
-        invalidImageFiles.push(`${file.name}: ${error}`);
-      }
-    });
-
-    if (selectedRegistrationCertificate) {
-      const error = validateFile(selectedRegistrationCertificate, ALLOWED_CERTIFICATE_TYPES);
-      if (error) {
-        invalidImageFiles.push(`${selectedRegistrationCertificate.name}: ${error}`);
-      }
-    }
-
-    if (invalidImageFiles.length > 0) {
+  const handleAddClinicStep1 = async () => {
+    if (
+      !newClinic.name ||
+      !newClinic.city ||
+      !newClinic.email ||
+      !newClinic.phone
+    ) {
       setNotification({
         type: "error",
-        message: `Invalid files found:\n${invalidImageFiles.join('\n')}`
+        message: "Please fill in all required fields"
       });
       return;
     }
 
-    // Upload files if any are selected
-    let imageUrls: string[] = [];
-    let certificateUrl = "";
-
-    if (selectedImages.length > 0) {
-      imageUrls = await uploadFiles(selectedImages);
+    if (newClinic.workingDays.length === 0) {
+      setNotification({
+        type: "error",
+        message: "Please select at least one working day"
+      });
+      return;
     }
 
-    if (selectedRegistrationCertificate) {
-      const certificateUrls = await uploadFiles([selectedRegistrationCertificate]);
-      certificateUrl = certificateUrls[0];
+    setIsSubmitting(true);
+    setUploadingFiles(true);
+
+    try {
+      // Validate all files before uploading
+      const invalidImageFiles: string[] = [];
+      selectedImages.forEach(file => {
+        const error = validateFile(file, ALLOWED_IMAGE_TYPES);
+        if (error) {
+          invalidImageFiles.push(`${file.name}: ${error}`);
+        }
+      });
+
+      if (selectedRegistrationCertificate) {
+        const error = validateFile(selectedRegistrationCertificate, ALLOWED_CERTIFICATE_TYPES);
+        if (error) {
+          invalidImageFiles.push(`${selectedRegistrationCertificate.name}: ${error}`);
+        }
+      }
+
+      if (invalidImageFiles.length > 0) {
+        setNotification({
+          type: "error",
+          message: `Invalid files found:\n${invalidImageFiles.join('\n')}`
+        });
+        return;
+      }
+
+      // Upload files if any are selected
+      let imageUrls: string[] = [];
+      let certificateUrl = "";
+
+      if (selectedImages.length > 0) {
+        imageUrls = await uploadFiles(selectedImages);
+      }
+
+      if (selectedRegistrationCertificate) {
+        const certificateUrls = await uploadFiles([selectedRegistrationCertificate]);
+        certificateUrl = certificateUrls[0];
+      }
+
+      const clinicData = {
+        name: newClinic.name,
+        email: newClinic.email,
+        phone: newClinic.phone,
+        city: newClinic.city,
+        address: newClinic.address,
+        pincode: newClinic.pincode,
+        landmark: newClinic.landmark,
+        map_link: newClinic.mapLink,
+        gps_coordinates: newClinic.gpsCoordinates,
+        opening_time: newClinic.openingTime,
+        closing_time: newClinic.closingTime,
+        working_days: newClinic.workingDays,
+        about_clinic: newClinic.about_clinic,
+        gst_no: newClinic.gst_no,
+        images: imageUrls,
+        registration_certificate: certificateUrl
+      };
+
+      const createdClinic = await createClinic(clinicData);
+
+      // Clear uploaded files after successful submission
+      setSelectedImages([]);
+      setSelectedRegistrationCertificate(null);
+      setUploadedImageUrls([]);
+      setUploadedCertificateUrl("");
+
+      // Store the created clinic UUID for the next step
+      setNewUser(prev => ({
+        ...prev,
+        clinic: createdClinic.data.uuid,
+        email: newClinic.email
+      }));
+
+      // Move to next step
+      setCurrentStep(1);
+
+      setNotification({
+        type: "success",
+        message: "Clinic created successfully! Now create an admin user."
+      });
+    } catch (error: any) {
+      setNotification({
+        type: "error",
+        message: `Failed to add clinic: ${error.message}`
+      });
+    } finally {
+      setIsSubmitting(false);
+      setUploadingFiles(false);
     }
-
-    const clinicData = {
-      name: newClinic.name,
-      email: newClinic.email,
-      phone: newClinic.phone,
-      city: newClinic.city,
-      address: newClinic.address,
-      pincode: newClinic.pincode,
-      landmark: newClinic.landmark,
-      map_link: newClinic.mapLink,
-      gps_coordinates: newClinic.gpsCoordinates,
-      opening_time: newClinic.openingTime,
-      closing_time: newClinic.closingTime,
-      working_days: newClinic.workingDays,
-      about_clinic: newClinic.about_clinic,
-      gst_no: newClinic.gst_no,
-      images: imageUrls,
-      registration_certificate: certificateUrl
-    };
-
-    const createdClinic = await createClinic(clinicData);
-
-    // Clear uploaded files after successful submission
-    setSelectedImages([]);
-    setSelectedRegistrationCertificate(null);
-    setUploadedImageUrls([]);
-    setUploadedCertificateUrl("");
-
-    // Store the created clinic UUID for the next step
-    setNewUser(prev => ({
-      ...prev,
-      clinic: createdClinic.data.uuid,
-      email: newClinic.email
-    }));
-
-    // Move to next step
-    setCurrentStep(1);
-
-    setNotification({
-      type: "success",
-      message: "Clinic created successfully! Now create an admin user."
-    });
-  } catch (error: any) {
-    setNotification({
-      type: "error",
-      message: `Failed to add clinic: ${error.message}`
-    });
-  } finally {
-    setIsSubmitting(false);
-    setUploadingFiles(false);
-  }
-};
+  };
 
   const handleAddUserStep2 = async () => {
     if (
@@ -834,11 +813,11 @@ const handleAddClinicStep1 = async () => {
 
       setIsAddModalOpen(false);
       setCurrentStep(0);
-  // Clear uploaded files
-  setSelectedImages([]);
-  setSelectedRegistrationCertificate(null);
-  setUploadedImageUrls([]);
-  setUploadedCertificateUrl("");
+      // Clear uploaded files
+      setSelectedImages([]);
+      setSelectedRegistrationCertificate(null);
+      setUploadedImageUrls([]);
+      setUploadedCertificateUrl("");
       // Refresh clinics list
       fetchClinics();
 
@@ -854,16 +833,6 @@ const handleAddClinicStep1 = async () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Helper function to format time
-  const formatTime = (time24: string) => {
-    if (!time24) return "";
-    const [hours, minutes] = time24.split(":");
-    const hourNum = parseInt(hours, 10);
-    const ampm = hourNum >= 12 ? "PM" : "AM";
-    const hour12 = hourNum % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
   };
 
   const stats = {
@@ -1014,11 +983,11 @@ const handleAddClinicStep1 = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+    <div className="min-h-screen  p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-center justify-between mb-8 bg-white rounded-xl shadow-lg p-6"
+          className="flex flex-col md:flex-row md:items-center justify-between mb-8 bg-white rounded-xl"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -1042,7 +1011,7 @@ const handleAddClinicStep1 = async () => {
             </button>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primaryColor text-white rounded-lg hover:bg-primaryColor transition-colors"
             >
               <Plus size={16} />
               Add New Clinic
@@ -1050,15 +1019,10 @@ const handleAddClinicStep1 = async () => {
           </div>
         </motion.div>
 
-        {/* Deactivated Clinics Header/Toggle */}
-        <div className="flex items-center gap-4 mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">All Clinics</h2>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
           <motion.div
-            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "ALL" ? "ring-2 ring-blue-500" : ""
+            className={`bg-white p-6 rounded-xl shadow-lg border border-gray-100 cursor-pointer transition ${selectedHeader === "ALL" ? "ring-2 ring-primaryColor" : ""
               }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1205,7 +1169,7 @@ const handleAddClinicStep1 = async () => {
                 placeholder="Search by name, city, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none "
               />
             </div>
 
@@ -1216,7 +1180,7 @@ const handleAddClinicStep1 = async () => {
                 onChange={(e) =>
                   setSelectedStatus(e.target.value as Clinic["status"] | "ALL")
                 }
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
               >
                 <option value="ALL">All Status</option>
                 <option value="Approved">Approved</option>
@@ -1239,7 +1203,7 @@ const handleAddClinicStep1 = async () => {
                     e.target.value as Clinic["paymentStatus"] | "ALL"
                   )
                 }
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
               >
                 <option value="ALL">All Payments</option>
                 <option value="Paid">Paid</option>
