@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  MapPin, 
-  TrendingUp, 
-  Users, 
-  Stethoscope, 
-  Building2, 
-  CreditCard, 
+import {
+  Calendar,
+  MapPin,
+  TrendingUp,
+  Users,
+  Stethoscope,
+  Building2,
+  CreditCard,
   UserCheck,
   Activity,
   DollarSign,
@@ -21,20 +21,20 @@ import {
   CalendarDays,
   Search
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   RadialBarChart,
   RadialBar,
@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { 
+import {
   GetAllUsertabAnalytics,
   GetAllExperttabAnalytics,
   GetAllBookingtabAnalytics,
@@ -148,9 +148,8 @@ const colors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#6366F1'
 
 // Custom components
 const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, subtitle }) => (
-  <motion.div 
-    className={`bg-transparent border-none shadow-2xl rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 ${color}`}
-    whileHover={{ y: -4, scale: 1.03 }}
+  <motion.div
+    className={`bg-transparent border border-gray-100 shadow rounded-lg p-6 hover:shadow-xl transition-all duration-300 ${color}`}
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
   >
@@ -160,7 +159,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
         <p className="text-3xl font-extrabold text-black mt-1 drop-shadow-sm">{value}</p>
         {subtitle && <p className="text-xs text-black mt-1 font-medium">{subtitle}</p>}
         {change !== undefined && (
-          <div className={`flex items-center mt-2 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+          <div className={`flex items-center mt-2 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {change >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
             <span className="ml-1">{Math.abs(change)}%</span>
           </div>
@@ -172,8 +171,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
 );
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, children, action }) => (
-  <motion.div 
-    className="bg-transparent border-none shadow-2xl rounded-2xl p-6 hover:shadow-2xl transition-all duration-300"
+  <motion.div
+    className="bg-transparent border border-gray-100 shadow rounded-2xl p-6 hover:shadow-xl transition-all duration-300"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
   >
@@ -210,13 +209,13 @@ export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Fetch all dashboard data
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch all data in parallel
       const [
         userAnalytics,
@@ -241,19 +240,19 @@ export default function AdminDashboard() {
         GetBookingWeeklyTrend(),
         GetExpertSlotUtilization()
       ]);
-        // ✅ Log all raw API responses
-    console.log("📊 Raw API Data:", {
-      userAnalytics,
-      expertAnalytics,
-      bookingAnalytics,
-      dueReceivedAnalytics,
-      dueAnalytics,
-      topBookedServices,
-      mostBookedAreas,
-      userGrowthTrend,
-      bookingWeeklyTrend,
-      expertSlotUtilization
-    });
+      // ✅ Log all raw API responses
+      console.log("📊 Raw API Data:", {
+        userAnalytics,
+        expertAnalytics,
+        bookingAnalytics,
+        dueReceivedAnalytics,
+        dueAnalytics,
+        topBookedServices,
+        mostBookedAreas,
+        userGrowthTrend,
+        bookingWeeklyTrend,
+        expertSlotUtilization
+      });
 
 
       // Transform API data to match our DashboardData interface
@@ -309,7 +308,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -328,10 +327,10 @@ export default function AdminDashboard() {
   const topBookedServices = [...data.topServices].sort((a, b) => b.bookings - a.bookings).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row md:items-center justify-between mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -340,7 +339,7 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Monitor and manage your healthcare platform</p>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             {/* Date Range Filter */}
             <div className="flex items-center gap-2">
@@ -374,9 +373,9 @@ export default function AdminDashboard() {
                 dateFormat="MMM d, yyyy"
               />
             </div>
-            
-            <button 
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+
+            <button
+              className="flex items-center gap-2 bg-primaryColor text-white px-4 py-2 rounded-lg hover:primaryColor transition-colors"
               onClick={fetchDashboardData}
             >
               <Download size={16} />
@@ -384,19 +383,19 @@ export default function AdminDashboard() {
             </button>
           </div>
         </motion.div>
-        
+
         {/* Animated Gradient Bar */}
-        <div className="w-full h-2 mb-8 rounded-xl animate-gradient-x bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-[1px] opacity-80" />
-        
+        {/* <div className="w-full h-1 mb-8 rounded-xl animate-gradient-x bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-[1px] opacity-80" /> */}
+        <hr />
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 my-8">
           <StatCard
             title="Total Users"
             value={data.totalUsers.toLocaleString()}
-            change={data.userGrowthData.length > 0 ? 
-              ((data.userGrowthData[data.userGrowthData.length - 1].users - 
-               (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 0)) / 
-               (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 1)) * 100 : 0
+            change={data.userGrowthData.length > 0 ?
+              ((data.userGrowthData[data.userGrowthData.length - 1].users -
+                (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 0)) /
+                (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 1)) * 100 : 0
             }
             icon={<Users size={24} className="text-white" />}
             color="bg-blue-500"
@@ -434,7 +433,7 @@ export default function AdminDashboard() {
             subtitle="Bookings today"
           />
         </div>
-        
+
         {/* Top Booked Services Section */}
         {data.topServices.length > 0 && (
           <div className="mb-8">
@@ -458,12 +457,12 @@ export default function AdminDashboard() {
             </ChartCard>
           </div>
         )}
-        
+
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* User Growth Chart */}
           {data.userGrowthData.length > 0 && (
-            <ChartCard 
+            <ChartCard
               title="User Growth Trends"
               action={
                 <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -475,8 +474,8 @@ export default function AdminDashboard() {
                 <AreaChart data={data.userGrowthData}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -488,10 +487,10 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </ChartCard>
           )}
-          
+
           {/* Booking Trends - Empty since not provided in API */}
           {data.bookingTrends.length > 0 ? (
-            <ChartCard 
+            <ChartCard
               title="Daily Booking Trends"
               action={
                 <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -517,12 +516,12 @@ export default function AdminDashboard() {
             </ChartCard>
           )}
         </div>
-        
+
         {/* Most Booked Areas */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {data.mostBookedAreas.length > 0 && (
             <div className="lg:col-span-2">
-              <ChartCard 
+              <ChartCard
                 title="Most Booked Areas"
                 action={
                   <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -532,7 +531,7 @@ export default function AdminDashboard() {
               >
                 <div className="space-y-4">
                   {data.mostBookedAreas.map((area, index) => (
-                    <motion.div 
+                    <motion.div
                       key={area.area}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                       initial={{ opacity: 0, x: -20 }}
@@ -558,10 +557,10 @@ export default function AdminDashboard() {
               </ChartCard>
             </div>
           )}
-          
+
           {/* Top Services Pie Chart */}
           {data.topServices.length > 0 && (
-            <ChartCard 
+            <ChartCard
               title="Top Services"
               action={
                 <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -602,12 +601,12 @@ export default function AdminDashboard() {
             </ChartCard>
           )}
         </div>
-        
+
         {/* Expert Slots & Clinic Dues */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Expert Slots */}
           {data.expertSlots.length > 0 && (
-            <ChartCard 
+            <ChartCard
               title="Expert Slot Utilization"
               action={
                 <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -617,7 +616,7 @@ export default function AdminDashboard() {
             >
               <div className="space-y-4">
                 {data.expertSlots.map((expert, index) => (
-                  <motion.div 
+                  <motion.div
                     key={expert.expert}
                     className="p-4 bg-gray-50 rounded-lg"
                     initial={{ opacity: 0, y: 20 }}
@@ -645,7 +644,7 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(expert.bookedSlots / expert.totalSlots) * 100}%` }}
                       ></div>
@@ -655,10 +654,10 @@ export default function AdminDashboard() {
               </div>
             </ChartCard>
           )}
-          
+
           {/* Clinic Dues - Empty since not provided in API */}
           {data.clinicDues.length > 0 ? (
-            <ChartCard 
+            <ChartCard
               title="Clinic Dues Overview"
               action={
                 <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -668,7 +667,7 @@ export default function AdminDashboard() {
             >
               <div className="space-y-4">
                 {data.clinicDues.map((clinic, index) => (
-                  <motion.div 
+                  <motion.div
                     key={clinic.clinic}
                     className="p-4 bg-gray-50 rounded-lg"
                     initial={{ opacity: 0, y: 20 }}
@@ -677,11 +676,10 @@ export default function AdminDashboard() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-gray-900">{clinic.clinic}</h4>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        clinic.status === 'good' ? 'bg-green-100 text-green-700' :
-                        clinic.status === 'overdue' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${clinic.status === 'good' ? 'bg-green-100 text-green-700' :
+                          clinic.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                        }`}>
                         {clinic.status}
                       </span>
                     </div>
@@ -706,10 +704,10 @@ export default function AdminDashboard() {
             </ChartCard>
           )}
         </div>
-        
+
         {/* Recent Transactions - Empty since not provided in API */}
         {data.recentTransactions.length > 0 ? (
-          <ChartCard 
+          <ChartCard
             title="Recent Transactions"
             action={
               <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -719,7 +717,7 @@ export default function AdminDashboard() {
           >
             <div className="space-y-3">
               {data.recentTransactions.map((transaction, index) => (
-                <motion.div 
+                <motion.div
                   key={transaction.id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                   initial={{ opacity: 0, x: -20 }}
@@ -737,9 +735,8 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">₹{transaction.amount}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      transaction.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full ${transaction.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      }`}>
                       {transaction.status}
                     </span>
                   </div>

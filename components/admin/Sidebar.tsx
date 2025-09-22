@@ -76,8 +76,8 @@ const SidebarItem = ({ icon, label, href, collapsed, active = false, badge, badg
     href={href}
     onClick={onClick}
     className={`flex items-center ${collapsed ? 'justify-center' : ''} w-full px-3 py-3 my-1 rounded-lg transition-all duration-200 group relative touch-manipulation ${active
-        ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200'
-        : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
+      ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200'
+      : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
       }`}
   >
     {/* Active indicator bar */}
@@ -87,8 +87,8 @@ const SidebarItem = ({ icon, label, href, collapsed, active = false, badge, badg
 
     <div
       className={`flex items-center justify-center ${collapsed ? 'w-8 h-8' : 'w-8 h-8 mr-3'} ${active
-          ? 'text-blue-700'
-          : 'text-gray-500 group-hover:text-blue-500'
+        ? 'text-blue-700'
+        : 'text-gray-500 group-hover:text-blue-500'
         }`}
     >
       {icon}
@@ -96,8 +96,8 @@ const SidebarItem = ({ icon, label, href, collapsed, active = false, badge, badg
     {!collapsed && (
       <div className="flex items-center justify-between flex-1 min-w-0">
         <span className={`text-sm font-medium transition-colors duration-200 truncate mr-2 ${active
-            ? 'text-blue-700 font-semibold'
-            : 'text-gray-700 group-hover:text-blue-600'
+          ? 'text-blue-700 font-semibold'
+          : 'text-gray-700 group-hover:text-blue-600'
           }`}>
           {label}
         </span>
@@ -143,8 +143,8 @@ const NestedSidebarItem = ({
       <button
         onClick={() => !collapsed && setIsOpen(!isOpen)}
         className={`flex items-center ${collapsed ? 'justify-center' : ''} w-full px-3 py-3 my-1 rounded-lg transition-all duration-200 group relative touch-manipulation ${isParentActive
-            ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
+          ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
           }`}
       >
         {/* Active indicator bar for parent */}
@@ -154,8 +154,8 @@ const NestedSidebarItem = ({
 
         <div
           className={`flex items-center justify-center ${collapsed ? 'w-8 h-8' : 'w-8 h-8 mr-3'} ${isParentActive
-              ? 'text-blue-700'
-              : 'text-gray-500 group-hover:text-blue-500'
+            ? 'text-blue-700'
+            : 'text-gray-500 group-hover:text-blue-500'
             }`}
         >
           {icon}
@@ -164,8 +164,8 @@ const NestedSidebarItem = ({
           <>
             <div className="flex items-center justify-between flex-1 min-w-0">
               <span className={`text-sm font-medium transition-colors duration-200 truncate mr-2 ${isParentActive
-                  ? 'text-blue-700 font-semibold'
-                  : 'text-gray-700 group-hover:text-blue-600'
+                ? 'text-blue-700 font-semibold'
+                : 'text-gray-700 group-hover:text-blue-600'
                 }`}>
                 {label}
               </span>
@@ -204,8 +204,8 @@ const NestedSidebarItem = ({
                   href={child.href}
                   onClick={() => onItemClick(child.href)}
                   className={`flex items-center justify-between w-full px-3 py-2.5 text-sm rounded-lg transition-all duration-200 relative touch-manipulation ${isChildActive
-                      ? 'bg-blue-100 text-blue-700 font-medium shadow-sm border border-blue-200'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
+                    ? 'bg-blue-100 text-blue-700 font-medium shadow-sm border border-blue-200'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 active:scale-95'
                     }`}
                 >
                   {/* Active indicator for child items */}
@@ -497,21 +497,19 @@ export default function AdminSidebar() {
   // Render sidebar content - used in both mobile and desktop views
   const renderSidebarContent = () => (
     <>
-      <div
-        className={`flex items-center ${collapsed ? 'justify-center py-6' : ''} px-4 sm:px-5 py-6 sm:py-8 border-b border-gray-100`}
-      >
+      <div className={`flex items-center ${collapsed ? 'justify-center py-6' : ''} px-4 sm:px-5 pt-6 pb-4 md:pt-8  border-b border-gray-100 `} >
         {collapsed ? (
-          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-            <Settings size={20} strokeWidth={1.5} />
+          <div className="w-10 h-10 flex items-center justify-center rounded-full border border-primaryColor overflow-hidden">
+            <img src="/assets/logo/fav.png" alt="logo" className='w-full' />
           </div>
         ) : (
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm">
-              <Settings size={20} strokeWidth={1.5} />
+          <div className="flex flex-col items-start ">
+            <div className="w-40 h-10 flex items-center justify-center ">
+              <img src="/assets/logo/logo.png" alt="logo" className='w-full' />
             </div>
-            <div className="ml-3 min-w-0">
-              <h1 className="font-semibold text-gray-800 truncate">Admin Portal</h1>
-              <p className="text-xs text-purple-600 truncate">System Management</p>
+            <div className="pt-1.5 ml-1.5">
+              <h1 className="font-semibold text-gray-500 truncate tracking-[4px] text-xs uppercase">Admin Portal</h1>
+              {/* <p className="text-xs text-purple-600 truncate">System Management</p> */}
             </div>
           </div>
         )}
@@ -596,25 +594,6 @@ export default function AdminSidebar() {
         </nav>
       </div>
 
-      {/* System Status Card */}
-      {/* {!collapsed && (
-        <div className="px-4 sm:px-5 py-4">
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-purple-100">
-            <div className="flex items-center mb-2">
-              <Bell size={16} className="text-purple-600 mr-2 flex-shrink-0" />
-              <p className="text-xs text-gray-600 font-medium">System Health: Good</p>
-            </div>
-            <p className="text-xs text-gray-600 mb-3">All services running normally</p>
-            <a 
-              href="/admin/system-status"
-              className="block w-full py-2 text-center text-xs font-medium text-purple-600 bg-white rounded-lg border border-purple-100 hover:border-purple-200 hover:shadow-sm transition-all duration-200 touch-manipulation active:scale-95"
-            >
-              View Details
-            </a>
-          </div>
-        </div>
-      )} */}
-
       {/* User Profile Section */}
       <div className={`px-3 sm:px-3 py-3 border-t border-gray-100 ${collapsed ? 'flex justify-center' : ''}`}>
         {collapsed ? (
@@ -662,7 +641,7 @@ export default function AdminSidebar() {
 
   // Main component return
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 z-50">
       {/* Mobile toggle button - always visible on mobile */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button
@@ -698,7 +677,7 @@ export default function AdminSidebar() {
         {/* Collapse toggle button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-16 p-1.5 bg-white rounded-full border border-gray-100 text-gray-400 shadow-md hover:text-purple-500 hover:border-purple-100 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-200"
+          className="absolute -right-3 top-12 p-1.5 bg-white rounded-full border border-gray-100 text-gray-400 shadow-md hover:text-purple-500 hover:border-purple-100 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-200"
         >
           <ChevronLeft
             size={14}
@@ -706,8 +685,6 @@ export default function AdminSidebar() {
           />
         </button>
       </div>
-
-
     </div>
   );
 }
