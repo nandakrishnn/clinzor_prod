@@ -13,8 +13,9 @@ import { getUserService } from "@/service/user/sevicePage"
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar"
 import { logOutService } from "@/service/user/profileService"
 import { BookingsSkeleton, ProfileDetailsSkeleton, UserProfileSkeleton } from "@/components/skeltons/user/LoadingSkeleton"
+import { useSearchParams } from "next/navigation"
 import MyExpertBooking from "@/components/user/MyExpertBooking"
-import { ConfirmationModal } from "@/components/common/ConfirmationModal"
+
 export default function UserDash() {
   const { data } = useSession()
   const [user, setUser] = useState(data?.user || {});
@@ -22,6 +23,8 @@ export default function UserDash() {
   const [activeSection, setActiveSection] = useState<string>("profile")
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
+  const searchParams = useSearchParams()
+  const tabData = searchParams.get('tab')
 
   const getUser = async () => {
     try {
@@ -105,11 +108,17 @@ export default function UserDash() {
       case "bookings":
         return <MyBookings />
       case "expert_bookings":
-        return <MyExpertBooking />
+        return <MyExpertBooking defaultTab={tabData === "SUGGESTIONS" ? "SUGGESTIONS" : "SCHEDULED"} />
       default:
         return <ProfileDetails user={user} onUpdate={getUser} />
     }
   }
+
+  useEffect(() => {
+    if (tabData === "SUGGESTIONS") {
+      setActiveSection('expert_bookings')
+    }
+  }, [tabData])
 
   return (
     <div className="min-h-screen bg-background">
@@ -188,8 +197,6 @@ export default function UserDash() {
           </div>
         </div>
       )}
-
-      
     </div>
   )
 }

@@ -51,4 +51,5 @@ export const USER_EXPERT = {
     GET_EXPERT_SLOT_BOOKING: 'customer/expert-booking-lc/',
     GET_EXPERT_SLOT_ALL_BOOKING: 'customer/expert-booking-lc/',
     CANCEL_EXPERT_BOOKING: 'customer/expert-booking-cancel/',
+    EXPERT_BOOKING_SUGGESTION: 'customer/list-suggestion/',
 }
