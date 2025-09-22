@@ -23,9 +23,7 @@ import {
   Home
 } from 'lucide-react';
 import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
-import { approveSlot, getAllBookings, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
-import { getAllClinic } from '@/service/admin/clinicManagentService';
-import { GetAllClinicService } from '@/service/admin/clinicServiceManagentService';
+
 
 // Types
 type Expert = {
@@ -398,6 +396,7 @@ export default function ExpertManagement() {
     fetchExperts(currentPage, debouncedSearchQuery, selectedStatus, selectedGender);
 
   }, [currentPage, debouncedSearchQuery, selectedStatus, selectedGender]);
+
   // Function to fetch slots for a specific expert
   const fetchExpertSlots = async (expertUuid: string) => {
     setLoadingSlots(prev => ({ ...prev, [expertUuid]: true }));
@@ -725,6 +724,7 @@ export default function ExpertManagement() {
       return true;
     });
   };
+
   const handleApproveSlot = async (slot: Slot) => {
     setSelectedSlot(slot);
     setSlotActionType('approve');
@@ -786,7 +786,7 @@ export default function ExpertManagement() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+    <div className="min-h-screen  p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -796,7 +796,7 @@ export default function ExpertManagement() {
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Users className="mr-3 text-blue-600" size={32} />
+              <Users className="mr-3 text-primaryColor" size={32} />
               Expert Management
             </h1>
             <p className="text-gray-600 mt-1">Manage and monitor medical experts</p>
@@ -813,7 +813,7 @@ export default function ExpertManagement() {
             </button>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primaryColor text-white rounded-lg hover:bg-primaryColor transition-colors"
             >
               <Plus size={16} />
               Add New Expert
@@ -964,7 +964,7 @@ export default function ExpertManagement() {
                 placeholder="Search by name, email, phone, or specialization..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none  shadow-sm"
               />
             </div>
 
@@ -973,7 +973,7 @@ export default function ExpertManagement() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value as 'ALL' | 'ENABLED' | 'DISABLED')}
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
               >
                 <option value="ALL">All Status</option>
                 <option value="ENABLED">Enabled</option>
@@ -987,7 +987,7 @@ export default function ExpertManagement() {
               <select
                 value={selectedGender}
                 onChange={(e) => setSelectedGender(e.target.value as 'ALL' | 'MALE' | 'FEMALE')}
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
               >
                 <option value="ALL">All Genders</option>
                 <option value="MALE">Male</option>

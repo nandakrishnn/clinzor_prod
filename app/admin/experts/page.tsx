@@ -8,8 +8,6 @@ import ExpertSlotsTable from "@/components/admin/expertslotsmangement/SlotsManag
 export default function ExpertsSlots() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Breadcrumb Navigation */}
-
       {/* Table Section */}
       <ExpertSlotsTable />
     </Box>
