@@ -827,14 +827,6 @@ export default function ClinicManagement() {
     }
   };
 
-  const stats = {
-    total: paginationData.total_items,
-    approved: clinics.filter((c) => c.status === "APPROVED").length,
-    pending: clinics.filter((c) => c.status === "Pending").length,
-    active: clinics.filter((c) => c.is_active).length,
-    deactivated: clinics.filter((c) => !c.is_active).length
-  };
-
   function handleApprove(clinic: Clinic) {
     // Optimistically update the UI
     setClinics((prev) =>
@@ -966,7 +958,6 @@ export default function ClinicManagement() {
   const getDashboardStatics = async () => {
     try {
       const res = await getAdminClinicStaticData();
-      console.log(res,"data fromt he clinic")
       if (res?.status === 200) {
         setDashData(res?.data)
       }
@@ -1202,28 +1193,6 @@ export default function ClinicManagement() {
               />
             </div>
 
-            {/* Payment Status Filter */}
-            <div className="relative">
-              <select
-                value={selectedPaymentStatus}
-                onChange={(e) =>
-                  setSelectedPaymentStatus(
-                    e.target.value as Clinic["paymentStatus"] | "ALL"
-                  )
-                }
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
-              >
-                <option value="ALL">All Payments</option>
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-                <option value="No Dues">No Dues</option>
-                <option value="Overdue">Overdue</option>
-              </select>
-              <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-              />
-            </div>
           </div>
         </motion.div>
 

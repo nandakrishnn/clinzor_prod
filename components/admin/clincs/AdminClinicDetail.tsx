@@ -98,15 +98,6 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
         // Fetch doctors for this clinic with query parameters
         const doctorsResponse = await getClinicDoctors(clinicId);
-        // const clinicDoctors = doctorsResponse.map((doctor: any) => ({
-        //   id: doctor.uuid,
-        //   name: doctor.name,
-        //   specialty: doctor.specialty,
-        //   imageUrl: doctor.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-        //   education: doctor.education || "Medical Degree",
-        //   experience: doctor.experience || "5+ years",
-        //   availability: doctor.availability || "Mon - Fri"
-        // }));
         setDoctors(doctorsResponse?.data?.data);
 
         // Fetch services for this clinic with query parameters
@@ -192,7 +183,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
       <div className="relative overflow-hidden">
         <div className="h-[50vh] lg:h-[60vh] relative ">
           <img
-            src={clinic?.images[0] || '/clinic.png'}
+            src={clinic?.images?.[0] || '/clinic.png'}
             alt={clinic.name}
             className="w-full h-full object-cover "
           />
@@ -397,17 +388,16 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
             <div className="mb-8">
-              <img
-                src={clinic?.images[selectedGalleryIndex]}
-                alt={clinic?.images[selectedGalleryIndex]}
-                className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-lg"
-              />
-              <p className="text-center text-gray-700 mt-4 font-semibold text-lg">
-                {staticData.gallery[selectedGalleryIndex].caption}
-              </p>
+              {clinic?.images?.length !== 0 &&
+                <img
+                  src={clinic?.images?.[selectedGalleryIndex]}
+                  alt={clinic?.images?.[selectedGalleryIndex]}
+                  className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-lg"
+                />
+              }
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {clinic.images.map((image, index) => (
+              {clinic?.images?.length !== 0 && clinic?.images?.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedGalleryIndex(index)}
