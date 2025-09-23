@@ -1,6 +1,17 @@
 import { axiosPrivate } from "@/axios/axios";
 // Dashboard Service
 
+export const GetAdminDashboardAnalytics= async () => {
+  try {
+    const response = await axiosPrivate.get(
+      `clinic/admin-dashboard-analytics/`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};
 export const GetAllUsertabAnalytics= async () => {
   try {
     const response = await axiosPrivate.get(

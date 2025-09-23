@@ -54,7 +54,8 @@ import {
   GetAllMostBookedAreas,
   GetUserGrowthTrend,
   GetBookingWeeklyTrend,
-  GetExpertSlotUtilization
+  GetExpertSlotUtilization,
+  GetAdminDashboardAnalytics
 } from '@/service/admin/dashboardService';
 
 // Type definitions
@@ -155,7 +156,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
   >
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <p className="text-sm font-semibold text-black tracking-wide">{title}</p>
+        <p className="text-sm font-semibold text-black tracking-wide truncate">{title}</p>
         <p className="text-3xl font-extrabold text-black mt-1 drop-shadow-sm">{value}</p>
         {subtitle && <p className="text-xs text-black mt-1 font-medium">{subtitle}</p>}
         {change !== undefined && (
@@ -207,6 +208,7 @@ export default function AdminDashboard() {
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [data, setData] = useState<DashboardData | null>(null);
+  const [dashData, setDashData] = useState<any>()
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -227,7 +229,7 @@ export default function AdminDashboard() {
         mostBookedAreas,
         userGrowthTrend,
         bookingWeeklyTrend,
-        expertSlotUtilization
+        expertSlotUtilization, dashboardData
       ] = await Promise.all([
         GetAllUsertabAnalytics(),
         GetAllExperttabAnalytics(),
@@ -238,7 +240,8 @@ export default function AdminDashboard() {
         GetAllMostBookedAreas(),
         GetUserGrowthTrend(),
         GetBookingWeeklyTrend(),
-        GetExpertSlotUtilization()
+        GetExpertSlotUtilization(),
+        GetAdminDashboardAnalytics()
       ]);
       // ✅ Log all raw API responses
       console.log("📊 Raw API Data:", {
@@ -251,7 +254,8 @@ export default function AdminDashboard() {
         mostBookedAreas,
         userGrowthTrend,
         bookingWeeklyTrend,
-        expertSlotUtilization
+        expertSlotUtilization,
+        dashboardData
       });
 
 
@@ -292,7 +296,7 @@ export default function AdminDashboard() {
         })) || [],
         bookingTrends: [] // Not provided in API
       };
-
+      setDashData(dashboardData)
       setData(transformedData);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -384,52 +388,47 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* Animated Gradient Bar */}
-        {/* <div className="w-full h-1 mb-8 rounded-xl animate-gradient-x bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-[1px] opacity-80" /> */}
         <hr />
+
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 my-8">
           <StatCard
             title="Total Users"
-            value={data.totalUsers.toLocaleString()}
-            change={data.userGrowthData.length > 0 ?
-              ((data.userGrowthData[data.userGrowthData.length - 1].users -
-                (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 0)) /
-                (data.userGrowthData.length > 1 ? data.userGrowthData[data.userGrowthData.length - 2].users : 1)) * 100 : 0
-            }
-            icon={<Users size={24} className="text-white" />}
+            value={dashData?.total_user_count}
+            change={0}
+            icon={<Users size={20} className="text-primaryColor" />}
             color="bg-blue-500"
             subtitle="Active users"
           />
           <StatCard
             title="Total Experts"
-            value={data.totalExperts.toLocaleString()}
+            value={dashData?.expert_user_count}
             change={0} // Not provided in API
-            icon={<UserCheck size={24} className="text-white" />}
+            icon={<UserCheck size={20} className="text-primaryColor" />}
             color="bg-purple-500"
             subtitle="Verified doctors"
           />
           <StatCard
             title="Total Revenue"
-            value={`₹${data.totalRevenue.toLocaleString()}`}
+            value={`₹${dashData?.total_revenue}`}
             change={0} // Not provided in API
-            icon={<DollarSign size={24} className="text-white" />}
+            icon={<DollarSign size={20} className="text-primaryColor" />}
             color="bg-green-500"
             subtitle="This month"
           />
           <StatCard
             title="Pending Dues"
-            value={`₹${data.pendingDues.toLocaleString()}`}
+            value={`₹ ${dashData?.pending_due}`}
             change={0} // Not provided in API
-            icon={<CreditCard size={24} className="text-white" />}
+            icon={<CreditCard size={20} className="text-primaryColor" />}
             color="bg-red-500"
             subtitle="To be collected"
           />
           <StatCard
             title="Today's Bookings"
-            value={todaysBookings}
-            icon={<CalendarDays size={24} className="text-white" />}
-            color="bg-yellow-500"
+            value={dashData?.todays_booking_count}
+            icon={<CalendarDays size={20} className="text-primaryColor" />}
+            color="bg-primaryColor"
             subtitle="Bookings today"
           />
         </div>
@@ -677,8 +676,8 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-gray-900">{clinic.clinic}</h4>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${clinic.status === 'good' ? 'bg-green-100 text-green-700' :
-                          clinic.status === 'overdue' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
+                        clinic.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
                         }`}>
                         {clinic.status}
                       </span>
