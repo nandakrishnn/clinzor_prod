@@ -21,7 +21,7 @@ export const updateUserStatus = async (
 };
 export const editUser = async (
   id: string,
- body: Partial<User>
+  body: Partial<User>
 ) => {
   try {
     const response = await axiosPrivate.patch(
@@ -39,6 +39,10 @@ export const deleteUser = async (Id: string) => {
 };
 export const GetAUser = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
+};
+export const getUserAdminDashboard = async () => {
+  const res = await axiosPrivate.get(`clinic/user-tab-analytics/`);
+  return res?.data
 };
 
 export const GetAllUsers = async (params: any = {}) => {

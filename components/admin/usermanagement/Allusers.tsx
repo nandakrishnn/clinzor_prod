@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useMedia from '../../../src/hooks/useMedia';
-import { deleteUser, editUser, GetAllUsers, updateUserStatus } from '@/service/admin/userManagementService';
+import { deleteUser, editUser, GetAllUsers, getUserAdminDashboard, updateUserStatus } from '@/service/admin/userManagementService';
 import { getAllBookings } from '@/service/admin/bookingManagementService';
 
 
@@ -382,6 +382,7 @@ export default function AllUsersPage() {
     next: null,
     previous: null
   });
+  const [dashData, setDashData] = useState<any>({})
   const isMobile = useMedia('(max-width: 640px)');
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -393,7 +394,6 @@ export default function AllUsersPage() {
     };
   }, [searchQuery]);
 
-  // Load users with pagination
   // Load users with pagination, search and filters
   const loadUsers = async (page = 1, search = '', status = 'ALL') => {
     setLoading(true);
@@ -459,6 +459,7 @@ export default function AllUsersPage() {
   // Load users when page, filters, or search changes
   useEffect(() => {
     loadUsers(currentPage, debouncedSearchQuery, statusFilter);
+    getDashboardData()
   }, [currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
 
   // Filter users based on search and status
@@ -613,28 +614,6 @@ export default function AllUsersPage() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedUser) return;
-
-    try {
-      await deleteUser(selectedUser.uuid);
-      setUsers(prev => prev.filter(u => u.uuid !== selectedUser.uuid));
-      setIsDeleteModalOpen(false);
-      setSelectedUser(null);
-      setNotification({
-        type: 'success',
-        message: 'User deleted successfully'
-      });
-      loadUsers(currentPage);
-    } catch (error) {
-      console.error('Failed to delete user:', error);
-      setNotification({
-        type: 'error',
-        message: 'Failed to delete user. Please try again.'
-      });
-    }
-  };
-
   const handleBlockConfirm = async () => {
     if (!selectedUser) return;
 
@@ -670,8 +649,15 @@ export default function AllUsersPage() {
     }
   };
 
-  const handleExport = () => {
-    console.log('Export users');
+  const getDashboardData = async () => {
+    try {
+      const res = await getUserAdminDashboard()
+      if (res.status == 200) {
+        setDashData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const handleRefresh = () => {
@@ -736,10 +722,10 @@ export default function AllUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{paginationData.total_items}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.total_user}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Users size={24} className="text-blue-600" />
+                <Users size={24} className="text-primaryColor" />
               </div>
             </div>
           </motion.div>
@@ -762,7 +748,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Users</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users?.filter(u => u.is_active && !u.is_blocked).length}
+                  {dashData?.active_user}
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -789,7 +775,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Blocked Users</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.is_blocked).length}
+                  {dashData?.blocked_user}
                 </p>
               </div>
               <div className="p-3 bg-red-100 rounded-lg">
@@ -809,7 +795,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">New This Month</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => new Date(u.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
+                  {dashData?.new_this_month}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
