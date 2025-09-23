@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Search, 
-  RefreshCw, 
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Search,
+  RefreshCw,
   Building2,
   Mail,
   Phone,
@@ -63,14 +63,14 @@ const StatusBadge = ({ status }: { status: Clinic['status'] }) => {
 };
 
 // Notification Component
-const Notification = ({ 
-  type, 
-  message, 
-  onClose 
-}: { 
-  type: 'success' | 'error' | 'warning'; 
-  message: string; 
-  onClose: () => void; 
+const Notification = ({
+  type,
+  message,
+  onClose
+}: {
+  type: 'success' | 'error' | 'warning';
+  message: string;
+  onClose: () => void;
 }) => {
   const getNotificationColor = () => {
     switch (type) {
@@ -107,18 +107,18 @@ const Notification = ({
 };
 
 // Modern Modal Component
-const ModernModal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  size = 'md' 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  title: string; 
-  children: React.ReactNode; 
-  size?: 'sm' | 'md' | 'lg' | 'xl'; 
+const ModernModal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md'
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }) => {
   if (!isOpen) return null;
 
@@ -153,18 +153,18 @@ const ModernModal = ({
 };
 
 // Clinic Detail Modal Component
-const ClinicDetailModal = ({ 
-  clinic, 
-  isOpen, 
-  onClose, 
-  onApprove, 
-  onReject 
-}: { 
-  clinic: Clinic | null; 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onApprove: (clinic: Clinic) => void; 
-  onReject: (clinic: Clinic) => void; 
+const ClinicDetailModal = ({
+  clinic,
+  isOpen,
+  onClose,
+  onApprove,
+  onReject
+}: {
+  clinic: Clinic | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onApprove: (clinic: Clinic) => void;
+  onReject: (clinic: Clinic) => void;
 }) => {
   if (!clinic) return null;
 
@@ -331,13 +331,13 @@ const getChangedFields = (clinic: Clinic) => {
   // In real app, compare with previous approved data
   // For demo, use the clinic's UUID to generate a deterministic but pseudo-random result
   const uuidLastChar = clinic.uuid.charAt(clinic.uuid.length - 1);
-  
+
   // Convert the last character to a number (0-9 or a-f) for decision making
   const lastCharCode = uuidLastChar.charCodeAt(0);
-  const numericValue = isNaN(parseInt(uuidLastChar)) 
+  const numericValue = isNaN(parseInt(uuidLastChar))
     ? lastCharCode % 10  // For a-f characters, use char code modulo 10
     : parseInt(uuidLastChar);
-  
+
   if (numericValue % 2 === 0) return ['services'];
   if (numericValue % 3 === 0) return ['doctors'];
   return [];
@@ -345,105 +345,11 @@ const getChangedFields = (clinic: Clinic) => {
 
 // Main Component
 export default function PendingApprovalPage() {
-  // Sample data - in real app, this would come from API
-  // const [allClinics] = useState<Clinic[]>([
-  //   {
-  //     id: 1,
-  //     name: 'City Health Clinic',
-  //     address: 'MG Road, Near Central Mall',
-  //     city: 'Kozhikode',
-  //     pincode: '673001',
-  //     status: 'Pending',
-  //     paymentStatus: 'No Dues',
-  //     dueAmount: '₹0',
-  //     hours: '9:00 AM - 6:00 PM',
-  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  //     phone: '+91 90000 12345',
-  //     email: 'info@cityhealthclinic.com',
-  //     isActive: false,
-  //     openingTime: '09:00',
-  //     closingTime: '18:00',
-  //     submissionDate: '2025-06-28',
-  //     mapLink: 'https://maps.google.com/cityhealth',
-  //     gpsCoordinates: 'POINT(75.7804 11.2588)'
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Wellness Care Center',
-  //     address: 'Palayam, Near Railway Station',
-  //     city: 'Kozhikode',
-  //     pincode: '673002',
-  //     status: 'Pending',
-  //     paymentStatus: 'No Dues',
-  //     dueAmount: '₹0',
-  //     hours: '8:00 AM - 8:00 PM',
-  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  //     phone: '+91 90000 23456',
-  //     email: 'contact@wellnesscare.com',
-  //     isActive: false,
-  //     openingTime: '08:00',
-  //     closingTime: '20:00',
-  //     submissionDate: '2025-06-27'
-  //   },
-  //   {
-  //     id: 3,
-  //     name: 'Family Health Clinic',
-  //     address: 'Mavoor Road, Opposite Police Station',
-  //     city: 'Kozhikode',
-  //     pincode: '673004',
-  //     status: 'Pending',
-  //     paymentStatus: 'No Dues',
-  //     dueAmount: '₹0',
-  //     hours: '10:00 AM - 7:00 PM',
-  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-  //     phone: '+91 90000 34567',
-  //     email: 'admin@familyhealth.com',
-  //     isActive: false,
-  //     openingTime: '10:00',
-  //     closingTime: '19:00',
-  //     submissionDate: '2025-06-26'
-  //   },
-  //   {
-  //     id: 4,
-  //     name: 'Metro Medical Center',
-  //     address: 'Thondayad, Near Metro Mall',
-  //     city: 'Kozhikode',
-  //     pincode: '673017',
-  //     status: 'Pending',
-  //     paymentStatus: 'No Dues',
-  //     dueAmount: '₹0',
-  //     hours: '6:00 AM - 2:00 PM',
-  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  //     phone: '+91 90000 45678',
-  //     email: 'info@metromedical.com',
-  //     isActive: false,
-  //     openingTime: '06:00',
-  //     closingTime: '14:00',
-  //     submissionDate: '2025-06-25'
-  //   },
-  //   {
-  //     id: 5,
-  //     name: 'Prime Healthcare',
-  //     address: 'Beach Road, Near Lighthouse',
-  //     city: 'Kozhikode',
-  //     pincode: '673032',
-  //     status: 'Pending',
-  //     paymentStatus: 'No Dues',
-  //     dueAmount: '₹0',
-  //     hours: '9:00 AM - 5:00 PM',
-  //     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  //     phone: '+91 90000 56789',
-  //     email: 'contact@primehealthcare.com',
-  //     isActive: false,
-  //     openingTime: '09:00',
-  //     closingTime: '17:00',
-  //     submissionDate: '2025-06-24'
-  //   }
-  // ]);
-const [allClinics, setAllClinics] = useState<Clinic[]>([]);
+
+  const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [pendingClinics, setPendingClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -453,45 +359,45 @@ const [allClinics, setAllClinics] = useState<Clinic[]>([]);
     message: string;
   } | null>(null);
 
-// Filter only pending clinics
-useEffect(() => {
-  const fetchClinics = async (page = 1) => {
-    try {
-      setLoading(true);
-      
-      // Pass status=PENDING as a query parameter
-      const params = {
-        page: page,
-        status: 'draft' // Add status filter
-      };
-      
-      const data = await getAllClinic(params); // Pass the params object
-      
-      setAllClinics(data.data);
-      setPendingClinics(data.data); // All data returned should be pending clinics
-      
-      console.log(data.data, 'Pending clinics data');
-      
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: 'Failed to load clinics'
-      });
-      console.error("Error fetching clinics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Filter only pending clinics
+  useEffect(() => {
+    const fetchClinics = async (page = 1) => {
+      try {
+        setLoading(true);
 
-  fetchClinics(currentPage);
-}, [currentPage]);
+        // Pass status=PENDING as a query parameter
+        const params = {
+          page: page,
+          status: 'draft' // Add status filter
+        };
+
+        const data = await getAllClinic(params); // Pass the params object
+
+        setAllClinics(data.data);
+        setPendingClinics(data.data); // All data returned should be pending clinics
+
+        console.log(data.data, 'Pending clinics data');
+
+      } catch (error) {
+        setNotification({
+          type: 'error',
+          message: 'Failed to load clinics'
+        });
+        console.error("Error fetching clinics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClinics(currentPage);
+  }, [currentPage]);
 
   // Search functionality
   useEffect(() => {
     let filtered = [...pendingClinics];
-    
+
     if (searchQuery) {
-      filtered = filtered.filter(clinic => 
+      filtered = filtered.filter(clinic =>
         clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         clinic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         clinic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -499,61 +405,61 @@ useEffect(() => {
         clinic.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     setFilteredClinics(filtered);
   }, [pendingClinics, searchQuery]);
 
-const handleApprove = async (clinic: Clinic) => {
-  try {
-    // Optimistically update the UI first for better UX
-    setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-    
-    // Make API call to approve the clinic
-    await approveOrRejectClinic(clinic.uuid, { status: 'APPROVED' });
-    
-    setNotification({
-      type: 'success',
-      message: `${clinic.name} has been approved successfully!`
-    });
-    
-  } catch (error) {
-    // Revert the UI change if the API call fails
-    setPendingClinics(prev => [...prev, clinic]);
-    
-    setNotification({
-      type: 'error',
-      message: `Failed to approve ${clinic.name}. Please try again.`
-    });
-    
-    console.error("Error approving clinic:", error);
-  }
-};
+  const handleApprove = async (clinic: Clinic) => {
+    try {
+      // Optimistically update the UI first for better UX
+      setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
 
-const handleReject = async (clinic: Clinic) => {
-  try {
-    // Optimistically update the UI first for better UX
-    setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-    
-    // Make API call to reject the clinic
-    await approveOrRejectClinic(clinic.uuid, { status: 'REJECTED' });
-    
-    setNotification({
-      type: 'error',
-      message: `${clinic.name} has been rejected.`
-    });
-    
-  } catch (error) {
-    // Revert the UI change if the API call fails
-    setPendingClinics(prev => [...prev, clinic]);
-    
-    setNotification({
-      type: 'error',
-      message: `Failed to reject ${clinic.name}. Please try again.`
-    });
-    
-    console.error("Error rejecting clinic:", error);
-  }
-};
+      // Make API call to approve the clinic
+      await approveOrRejectClinic(clinic.uuid, { status: 'APPROVED' });
+
+      setNotification({
+        type: 'success',
+        message: `${clinic.name} has been approved successfully!`
+      });
+
+    } catch (error) {
+      // Revert the UI change if the API call fails
+      setPendingClinics(prev => [...prev, clinic]);
+
+      setNotification({
+        type: 'error',
+        message: `Failed to approve ${clinic.name}. Please try again.`
+      });
+
+      console.error("Error approving clinic:", error);
+    }
+  };
+
+  const handleReject = async (clinic: Clinic) => {
+    try {
+      // Optimistically update the UI first for better UX
+      setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
+
+      // Make API call to reject the clinic
+      await approveOrRejectClinic(clinic.uuid, { status: 'REJECTED' });
+
+      setNotification({
+        type: 'error',
+        message: `${clinic.name} has been rejected.`
+      });
+
+    } catch (error) {
+      // Revert the UI change if the API call fails
+      setPendingClinics(prev => [...prev, clinic]);
+
+      setNotification({
+        type: 'error',
+        message: `Failed to reject ${clinic.name}. Please try again.`
+      });
+
+      console.error("Error rejecting clinic:", error);
+    }
+  };
 
   const handleViewDetails = (clinic: Clinic) => {
     setSelectedClinic(clinic);
@@ -569,9 +475,9 @@ const handleReject = async (clinic: Clinic) => {
     });
   };
 
-   if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -582,11 +488,11 @@ const handleReject = async (clinic: Clinic) => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+    <div className="min-h-screen p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
-          className="flex flex-col md:flex-row md:items-center justify-between mb-8"
+        <motion.div
+          className="flex flex-col md:flex-row md:items-center justify-between mb-5"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -597,9 +503,9 @@ const handleReject = async (clinic: Clinic) => {
             </h1>
             <p className="text-gray-600 mt-1">Review and approve clinic registration requests</p>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -607,7 +513,7 @@ const handleReject = async (clinic: Clinic) => {
               Refresh
             </button>
             {filteredClinics.length > 0 && (
-              <button 
+              <button
                 onClick={handleBulkApprove}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -619,8 +525,8 @@ const handleReject = async (clinic: Clinic) => {
         </motion.div>
 
         {/* Stats */}
-        <motion.div 
-          className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8"
+        <motion.div
+          className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -646,7 +552,7 @@ const handleReject = async (clinic: Clinic) => {
         </motion.div>
 
         {/* Search Bar */}
-        <motion.div 
+        <motion.div
           className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -665,7 +571,7 @@ const handleReject = async (clinic: Clinic) => {
 
         {/* Pending Clinics */}
         {filteredClinics.length === 0 ? (
-          <motion.div 
+          <motion.div
             className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -707,7 +613,7 @@ const handleReject = async (clinic: Clinic) => {
                       </div>
                       <StatusBadge status={clinic.status} />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Mail size={14} />
@@ -768,13 +674,13 @@ const handleReject = async (clinic: Clinic) => {
                       <div className="flex gap-2 mt-2">
                         {changed.includes('services') && (
                           <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
-                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v4M17 10v4M3 10v4M21 10v4M5 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M15 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
+                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v4M17 10v4M3 10v4M21 10v4M5 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M15 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" /></svg>
                             Services updated
                           </span>
                         )}
                         {changed.includes('doctors') && (
                           <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
-                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="4" /><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
                             Doctors updated
                           </span>
                         )}

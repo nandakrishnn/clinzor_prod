@@ -795,7 +795,7 @@ export default function ExpertManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-center justify-between mb-8"
+          className="flex flex-col md:flex-row md:items-center justify-between mb-5"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -827,7 +827,7 @@ export default function ExpertManagement() {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-4">
           <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
