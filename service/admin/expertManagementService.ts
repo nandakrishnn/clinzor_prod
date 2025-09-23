@@ -186,3 +186,14 @@ export const getStatsAdminExpertService = async (page?: any) => {
     throw error;
   }
 };
+export const GetStatsAdminExpertService = async (page?: any) => {
+  try {
+    const response = await axiosPrivate.get(
+      `clinic/expert-user-analytics/`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};

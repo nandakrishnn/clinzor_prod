@@ -22,7 +22,7 @@ import {
   ChevronRight,
   Home
 } from 'lucide-react';
-import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
+import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, GetStatsAdminExpertService, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
 
 
 // Types
@@ -305,6 +305,7 @@ export default function ExpertManagement() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [slotActionType, setSlotActionType] = useState<'approve' | 'reject' | null>(null);
   const [loadingSlotAction, setLoadingSlotAction] = useState(false);
+  const [dashData, setDashData] = useState<any>({})
   type ClinicService = { uuid: string; clinic_name: string };
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [notification, setNotification] = useState<{
@@ -542,7 +543,11 @@ export default function ExpertManagement() {
 
   const getStatsAdminExpert = async () => {
     try {
-      const res = await getStatsAdminExpertService()
+      const res = await GetStatsAdminExpertService()
+      console.log(res, 'data from the expert stat')
+      if (res.status === 200) {
+        setDashData(res?.data)
+      }
     } catch (err) {
       console.log(err)
     }
@@ -840,10 +845,10 @@ export default function ExpertManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Experts</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.total_expert_user}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Users size={24} className="text-blue-600" />
+                <Users size={24} className="text-primaryColor" />
               </div>
             </div>
           </motion.div>
@@ -865,7 +870,7 @@ export default function ExpertManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Enabled</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.enabled}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.enabled_experts_count}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <UserCheck size={24} className="text-green-600" />
@@ -890,7 +895,7 @@ export default function ExpertManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Disabled</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.disabled}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.disabled_experts_count}</p>
               </div>
               <div className="p-3 bg-red-100 rounded-lg">
                 <UserX size={24} className="text-red-600" />
@@ -915,7 +920,7 @@ export default function ExpertManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Male</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.male}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.male_experts_count}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <User size={24} className="text-blue-600" />
@@ -940,7 +945,7 @@ export default function ExpertManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Female</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.female}</p>
+                <p className="text-2xl font-bold text-gray-900">{dashData?.female_experts_count}</p>
               </div>
               <div className="p-3 bg-pink-100 rounded-lg">
                 <User size={24} className="text-pink-600" />
