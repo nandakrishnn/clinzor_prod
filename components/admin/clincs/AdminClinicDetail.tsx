@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Star, MapPin, Phone, Clock, ChevronRight, Calendar, Users, Shield, Camera, Heart, Award, CheckCircle } from "lucide-react";
-import { getAClinic, GetAllDoctor, GetAllSpecialties } from "@/service/admin/clinicManagentService";
+import { getAClinic, getAClinicService, GetAllDoctor, GetAllSpecialties, getClinicDoctors, getClinicServiceData, getClinicTimingServiceData } from "@/service/admin/clinicManagentService";
 
 
 interface Doctor {
@@ -32,6 +32,7 @@ interface Clinic {
   status: string;
   city: string;
   about_clinic?: string;
+  contact_number?: string;
   images: string[];
 }
 
@@ -51,12 +52,16 @@ interface ApiService {
   name: string;
   description: string;
   category: string;
+  clinic_provided_name: string;
+  service_name: string;
   // Add other fields as per your API response
 }
 
 export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
   const [clinic, setClinic] = useState<Clinic | null>(null);
+  const [clinicRating, setClinicRating] = useState<any | null>(null);
+  const [clinicTime, setClinicTime] = useState<any | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,31 +92,41 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         setError(null);
 
         // Fetch clinic data
-        const clinicData = await getAClinic(clinicId);
-        setClinic(clinicData.data.data);
-        console.log(clinicData.data.data, "clinicData");
+        const clinicData = await getAClinicService(clinicId);
+        setClinic(clinicData?.data?.data?.clinic);
+        setClinicRating(clinicData?.data?.data?.stats)
+
         // Fetch doctors for this clinic with query parameters
-        const doctorsResponse = await GetAllDoctor(1, clinicId, "approved");
-        const clinicDoctors = doctorsResponse.map((doctor: ApiDoctor) => ({
-          id: doctor.uuid,
-          name: doctor.name,
-          specialty: doctor.specialty,
-          imageUrl: doctor.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-          education: doctor.education || "Medical Degree",
-          experience: doctor.experience || "5+ years",
-          availability: doctor.availability || "Mon - Fri"
-        }));
-        setDoctors(clinicDoctors);
+        const doctorsResponse = await getClinicDoctors(clinicId);
+        // const clinicDoctors = doctorsResponse.map((doctor: any) => ({
+        //   id: doctor.uuid,
+        //   name: doctor.name,
+        //   specialty: doctor.specialty,
+        //   imageUrl: doctor.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
+        //   education: doctor.education || "Medical Degree",
+        //   experience: doctor.experience || "5+ years",
+        //   availability: doctor.availability || "Mon - Fri"
+        // }));
+        setDoctors(doctorsResponse?.data?.data);
 
         // Fetch services for this clinic with query parameters
-        const servicesResponse = await GetAllSpecialties(1, clinicId, "approved");
-        const clinicServices = servicesResponse.map((service: ApiService) => ({
-          id: service.uuid,
-          name: service.name,
-          description: service.description,
-          category: service.category
+        const servicesResponse = await getClinicServiceData(clinicId);
+        const clinicServices = servicesResponse?.data?.map((service: ApiService) => ({
+          id: service?.uuid,
+          name: service?.clinic_provided_name,
+          description: service?.description,
+          category: service?.service_name
         }));
         setServices(clinicServices);
+
+        // const clinicStatics = await getClinicIndStaticData()
+        const clinicTimingData = await getClinicTimingServiceData(clinicId)
+        setClinicTime(clinicTimingData?.data)
+
+        console.log(clinicData.data.data, "clinicData");
+        console.log(clinicTimingData, "Clinic timing");
+        console.log(doctorsResponse?.data, "Doctor data");
+        console.log(servicesResponse, "Service daa");
 
       } catch (err) {
         console.error("Failed to fetch clinic data", err);
@@ -126,7 +141,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -137,7 +152,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="bg-red-100 text-red-700 p-4 rounded-lg max-w-md">
             <p>{error}</p>
@@ -155,7 +170,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
   if (!clinic) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Clinic not found.</p>
         </div>
@@ -163,13 +178,10 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
     );
   }
 
-  // Extract specialties from doctors
-  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)));
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Admin Banner */}
-      <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center py-4 shadow-lg">
+      <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center py-4 shadow-lg rounded-t-xl overflow-hidden">
         <div className="flex items-center justify-center gap-2">
           <Shield className="w-5 h-5" />
           <span className="font-semibold text-lg">Admin View • Read-Only Mode</span>
@@ -178,11 +190,11 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="h-[50vh] lg:h-[60vh] relative">
+        <div className="h-[50vh] lg:h-[60vh] relative ">
           <img
-            src={staticData.gallery[0].imageUrl}
+            src={clinic?.images[0] || '/clinic.png'}
             alt={clinic.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover "
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
         </div>
@@ -195,12 +207,12 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full">
                     <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                    <span className="text-xl font-bold text-gray-900">{staticData.rating}</span>
+                    <span className="text-xl font-bold text-gray-900">{clinicRating?.avg_rating || 0}</span>
                     <span className="text-gray-600">Excellence Rating</span>
                   </div>
                   <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
                     <Users className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium text-gray-900">{doctors.length} Doctors</span>
+                    <span className="font-medium text-gray-900">{doctors?.length} Doctors</span>
                   </div>
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
@@ -213,7 +225,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-green-600" />
-                    <span className="font-medium">{staticData.openHours || 'Not Available'}</span>
+                    <span className="font-medium">{clinicTime[0]?.opening_time || 'Not Available'}</span>
                   </div>
                 </div>
               </div>
@@ -242,7 +254,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Operating Hours</h3>
-                <p className="text-gray-600">{staticData.openHours ||0 }</p>
+                <p className="text-gray-600">{clinicTime[0]?.opening_time || 0}</p>
               </div>
             </div>
           </div>
@@ -254,7 +266,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Expert Doctors</h3>
-                <p className="text-gray-600">{doctors.length} Specialists</p>
+                <p className="text-gray-600">{doctors?.length} Specialists</p>
               </div>
             </div>
           </div>
@@ -296,26 +308,6 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         </section>
 
         {/* Specialties */}
-        {/* {specialties.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Medical Specialties</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {specialties.map((specialty) => (
-                <div
-                  key={specialty}
-                  className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
-                    <CheckCircle className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 mb-2">{specialty}</h3>
-                  <p className="text-gray-600 text-sm">Expert care available</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )} */}
-        {/* Specialties */}
         {services.length > 0 && (
           <section className="mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Our Services</h2>
@@ -342,44 +334,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             </div>
           </section>
         )}
-        {/* Services Section */}
-        {/* <section className="mb-16">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-              <Heart className="w-6 h-6 text-purple-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Medical Specialties</h2>
-          </div>
 
-          {services.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <div key={service.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                    <CheckCircle className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-lg mb-2">{service.name}</h3>
-                  <p className="text-gray-600 text-sm truncate">{service.description}</p>
-                  {service.category && (
-                    <div className="mt-3">
-                      <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
-                        {service.category}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-gray-100 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Services Available</h3>
-              <p className="text-gray-500">There are currently no services offered by this clinic.</p>
-            </div>
-          )}
-        </section> */}
         {/* Doctors Section */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-8">
@@ -389,15 +344,15 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Meet Our Doctors</h2>
           </div>
 
-          {doctors.length > 0 ? (
+          {doctors?.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {doctors.map((doctor) => (
-                <div key={doctor.id} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              {doctors.map((doctor: any) => (
+                <div key={doctor?.uuid} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
                   <div className="flex items-start gap-6">
                     <div className="relative">
                       <img
-                        src={doctor.imageUrl}
-                        alt={doctor.name}
+                        src={doctor?.profile_pic || '/clinic.png'}
+                        alt={doctor?.name}
                         className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200"
                       />
                       <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
@@ -405,15 +360,16 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-xl mb-1">{doctor.name}</h3>
-                      <p className="text-blue-600 font-semibold mb-2">{doctor.specialty}</p>
-                      <p className="text-gray-600 mb-1">{doctor.education}</p>
-                      <p className="text-gray-500 mb-3">{doctor.experience} experience</p>
-                      <div className="bg-green-50 px-3 py-2 rounded-xl inline-block">
+                      <h3 className="font-bold text-gray-900 text-xl mb-1">{doctor?.name}</h3>
+                      <p className="text-gray-600 mb-1 text-xs">{doctor?.email}, {doctor?.gender}</p>
+                      <p className="text-blue-600 font-semibold mb-2">{doctor?.specializaton} , {doctor?.education}</p>
+                      <p className="text-gray-500 mb-2">{doctor?.experience}+ years of experience</p>
+                      <p className="text-gray-600 mb-1 capitalize line-clamp-2 text-sm text-justify">{doctor?.extra_info}</p>
+                      {/* <div className="bg-green-50 px-3 py-2 rounded-xl inline-block">
                         <span className="text-green-700 font-medium text-sm">
-                          Available: {doctor.availability}
+                          Available: {doctor?.availability}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -442,8 +398,8 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
             <div className="mb-8">
               <img
-                src={staticData.gallery[selectedGalleryIndex].imageUrl}
-                alt={staticData.gallery[selectedGalleryIndex].caption}
+                src={clinic?.images[selectedGalleryIndex]}
+                alt={clinic?.images[selectedGalleryIndex]}
                 className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-lg"
               />
               <p className="text-center text-gray-700 mt-4 font-semibold text-lg">
@@ -482,10 +438,10 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-xl">Visit Us</h3>
-                  <p className="text-gray-600">{clinic.address}</p>
-                  <p className="text-gray-600">{clinic.city}, {clinic.pincode}</p>
+                  <p className="text-gray-600">{clinic?.address}</p>
+                  <p className="text-gray-600">{clinic?.city}, {clinic?.pincode}</p>
                   <a
-                    href={clinic.map_link}
+                    href={clinic?.map_link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline mt-2 inline-block"
@@ -503,8 +459,8 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-xl">Contact Us</h3>
-                  <p className="text-gray-600">{staticData.phone}</p>
-                  <p className="text-gray-600 mt-2">Email: {clinic.created_by}</p>
+                  <p className="text-gray-600">{clinic?.contact_number}</p>
+                  <p className="text-gray-600 mt-2">Email: {clinic?.created_by}</p>
                   <p className="text-gray-600 mt-1">Status: <span className="font-medium capitalize">{clinic?.status?.toLowerCase()}</span></p>
                 </div>
               </div>

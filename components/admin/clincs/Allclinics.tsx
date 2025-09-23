@@ -36,6 +36,7 @@ import {
   createClinic,
   createUserForClinic,
   deleteClinic,
+  getAdminClinicStaticData,
   getAllClinic,
   toggleActiveClinic
 } from "@/service/admin/clinicManagentService";
@@ -365,8 +366,6 @@ export default function ClinicManagement() {
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [paginationData, setPaginationData] = useState({
     current_page: 1,
     total_pages: 1,
@@ -378,6 +377,7 @@ export default function ClinicManagement() {
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
+  const [dashData, setDashData] = useState<any>()
 
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
@@ -531,14 +531,6 @@ export default function ClinicManagement() {
   else if (selectedHeader === "Deactivated")
     clinicsToShow = filteredClinics.filter((c) => !c.is_active);
   console.log(selectedHeader, "selectedHeader");
-  // Use server-side pagination data
-  // clinicsToShow already contains only the clinics for the current page from the API
-  const totalPages = paginationData.total_pages;
-
-  const handleView = (clinic: Clinic) => {
-    setSelectedClinic(clinic);
-    setIsViewModalOpen(true);
-  };
 
   const handleWorkingDayToggle = (day: string) => {
     setNewClinic((prev) => ({
@@ -971,9 +963,25 @@ export default function ClinicManagement() {
       .length;
   };
 
+  const getDashboardStatics = async () => {
+    try {
+      const res = await getAdminClinicStaticData();
+      console.log(res,"data fromt he clinic")
+      if (res?.status === 200) {
+        setDashData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    getDashboardStatics()
+  }, [])
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -1038,7 +1046,7 @@ export default function ClinicManagement() {
                   Total Clinics
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {paginationData.total_items}
+                  {dashData?.total_clinic}
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -1063,7 +1071,7 @@ export default function ClinicManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Approved</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.approved}
+                  {dashData?.approved}
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -1088,7 +1096,7 @@ export default function ClinicManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.pending}
+                  {dashData?.pending}
                 </p>
               </div>
               <div className="p-3 bg-yellow-100 rounded-lg">
@@ -1113,7 +1121,7 @@ export default function ClinicManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Active</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.active}
+                  {dashData?.active}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -1141,7 +1149,7 @@ export default function ClinicManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Deactivated</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.deactivated}
+                  {dashData?.deactive}
                 </p>
               </div>
               <div className="p-3 bg-gray-100 rounded-lg">

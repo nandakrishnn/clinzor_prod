@@ -240,7 +240,6 @@ export default function AdminSidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const { data: session, status } = useSession();
   const userData = session?.user
-  console.log(session?.user, "user data ")
   // Example user data - in a real app, this would come from your authentication system
   // Initialize user state with proper types and session data
   const [counts, setCounts] = useState({
@@ -291,7 +290,6 @@ export default function AdminSidebar() {
         camps: campsCount || 0,
         blogs: blogsCount || 0
       });
-      console.log(counts, "count data here")
     } catch (error) {
       console.error('Failed to fetch counts:', error);
     } finally {
@@ -309,12 +307,12 @@ export default function AdminSidebar() {
       });
     }
   }, [session]);
+
   useEffect(() => {
     fetchAllCounts();
 
     // Set up interval to refresh counts periodically (every 5 minutes)
     const intervalId = setInterval(fetchAllCounts, 5 * 60 * 1000);
-
     return () => clearInterval(intervalId);
   }, []);
 

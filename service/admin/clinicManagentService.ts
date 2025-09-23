@@ -1,5 +1,5 @@
 
-import { axiosPrivate } from "../../axios/axios";
+import { axiosPrivate, axiosPublic } from "../../axios/axios";
 
 
 // Clinic
@@ -95,8 +95,16 @@ export const deleteClinic = async (Id: string) => {
   return await axiosPrivate.delete(`/clinic/clinic-service-rud/${Id}/`);
 };
 export const getAClinic = async (Id: string) => {
-  return await axiosPrivate.get(`/clinic/clinic-rud/${Id}`);
+  return await axiosPrivate.get(`clinic/clinic-rud/${Id}`);
 };
+export const getClinicDoctors = async (Id: string) => {
+  const res = await axiosPrivate.get(`clinic/doctor-lc/?clinic=${Id}`);
+  return res?.data
+};
+export const getAClinicService = async (Id: string) => {
+  return await axiosPublic.get(`clinic/clinic-detail/${Id}`);
+};
+
 export const getAllClinic = async (params: any = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString();
@@ -108,7 +116,25 @@ export const getAllClinic = async (params: any = {}) => {
   }
 };
 
+export const getAdminClinicStaticData = async () => {
+  const res = await axiosPrivate.get('clinic/clinic-tab-analytics/')
+  return res?.data
+}
+export const getClinicIndStaticData = async () => {
+  const res = await axiosPrivate.get('clinic/clinic-tab-analytics/')
+  return res?.data
+}
+export const getClinicServiceData = async (id: string) => {
+  console.log(id)
+  const res = await axiosPrivate.get(`clinic/clinic-service-lc/?clinic=${id}`)
+  return res?.data?.data
+}
 
+export const getClinicTimingServiceData = async (id: string) => {
+  console.log(id)
+  const res = await axiosPrivate.get(`clinic/clinic-timing-list/${id}`)
+  return res?.data?.data
+}
 
 // In your clinicManagentService.ts file
 
