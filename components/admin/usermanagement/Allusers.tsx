@@ -117,7 +117,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:min-w-[70vw]">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:min-w-fit">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">{title}</h3>
@@ -338,11 +338,11 @@ const UserRow = ({ user, onEdit, onDelete, onBlock, onView }: UserRowProps) => (
         <button
           onClick={() => onBlock(user)}
           className={`p-1 rounded transition-all ${user.is_blocked
-            ? 'text-green-600 hover:text-green-900 hover:bg-green-50'
-            : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+            ? ' text-red-600 hover:text-red-900 hover:bg-red-50'
+            : 'text-green-600 hover:text-green-900 hover:bg-green-50'
             }`}
         >
-          {user.is_blocked ? <UserCheck size={16} /> : <UserX size={16} />}
+          {user.is_blocked ? <UserX size={16} /> : <UserCheck size={16} />}
         </button>
       </div>
     </td>
@@ -355,6 +355,7 @@ export default function AllUsersPage() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [tempSearchQuery, setTempSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [currentPage, setCurrentPage] = useState(1);
@@ -384,6 +385,7 @@ export default function AllUsersPage() {
   });
   const [dashData, setDashData] = useState<any>({})
   const isMobile = useMedia('(max-width: 640px)');
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -455,12 +457,10 @@ export default function AllUsersPage() {
     }
   };
 
-  console.log(users, "user data here")
-  // Load users when page, filters, or search changes
   useEffect(() => {
-    loadUsers(currentPage, debouncedSearchQuery, statusFilter);
-    getDashboardData()
-  }, [currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
+    loadUsers(currentPage, searchQuery, statusFilter);
+    getDashboardData();
+  }, [currentPage, itemsPerPage, searchQuery, statusFilter, sortBy, sortOrder]);
 
   // Filter users based on search and status
   useEffect(() => {
@@ -664,6 +664,23 @@ export default function AllUsersPage() {
     loadUsers(currentPage);
   };
 
+  const handleSearch = () => {
+    setSearchQuery(tempSearchQuery);
+    setCurrentPage(1);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setTempSearchQuery('');
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
   if (loading) {
@@ -682,7 +699,7 @@ export default function AllUsersPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
+          className="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -705,7 +722,7 @@ export default function AllUsersPage() {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-4">
           <motion.div
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
@@ -807,21 +824,33 @@ export default function AllUsersPage() {
 
         {/* Filters and Search */}
         <motion.div
-          className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-8"
+          className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
             {/* Search */}
             <div className="flex-1 relative w-full">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
+                onClick={handleSearch}
+              />
               <input
                 type="text"
                 placeholder="Search users by name, email, or phone..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg focus:outline-none text-sm sm:text-base"
+                value={tempSearchQuery}
+                onChange={(e) => setTempSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-10 py-2 sm:py-3 border border-gray-200 rounded-lg focus:outline-none text-sm sm:text-base"
               />
+              {tempSearchQuery && (
+                <X
+                  size={16}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
+                  onClick={clearSearch}
+                />
+              )}
             </div>
 
             {/* Status Filter */}
@@ -885,21 +914,43 @@ export default function AllUsersPage() {
           </div>
         </div>
 
-        {/* Users Display */}
+        {/* For Grid View: */}
         {effectiveViewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-            {filteredUsers.slice(0, itemsPerPage).map((user) => (
-              <UserCard
-                key={user.uuid}
-                user={user}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onBlock={handleBlock}
-              />
-            ))}
+            {filteredUsers.length > 0 ? (
+              filteredUsers.slice(0, itemsPerPage).map((user) => (
+                <UserCard
+                  key={user.uuid}
+                  user={user}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onBlock={handleBlock}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Users size={64} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                <p className="text-gray-500 max-w-md mx-auto">
+                  {searchQuery
+                    ? `No users match your search for "${searchQuery}". Try adjusting your search terms.`
+                    : 'No users match the current filters. Try adjusting your filter settings.'
+                  }
+                </p>
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="mt-4 px-4 py-2 bg-PrimaryColor text-white rounded-lg  transition-colors"
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ) : (
+          // For Table View:
           <motion.div
             className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto mb-8"
             initial={{ opacity: 0, y: 20 }}
@@ -930,16 +981,39 @@ export default function AllUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredUsers.slice(0, itemsPerPage).map((user) => (
-                    <UserRow
-                      key={user.uuid}
-                      user={user}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onBlock={handleBlock}
-                    />
-                  ))}
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.slice(0, itemsPerPage).map((user) => (
+                      <UserRow
+                        key={user.uuid}
+                        user={user}
+                        onView={handleView}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onBlock={handleBlock}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center">
+                        <Users size={48} className="mx-auto text-gray-300 mb-3" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No users found</h3>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                          {searchQuery
+                            ? `No users match your search for "${searchQuery}". Try adjusting your search terms.`
+                            : 'No users match the current filters. Try adjusting your filter settings.'
+                          }
+                        </p>
+                        {searchQuery && (
+                          <button
+                            onClick={clearSearch}
+                            className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            Clear search
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

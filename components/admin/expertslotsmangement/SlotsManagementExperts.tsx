@@ -20,7 +20,9 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Home
+  Home,
+  EyeIcon,
+  EyeOffIcon
 } from 'lucide-react';
 import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, GetStatsAdminExpertService, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
 
@@ -344,6 +346,7 @@ export default function ExpertManagement() {
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
+  const [passView, setPassView] = useState(false)
 
   // Debounce search query
   useEffect(() => {
@@ -533,14 +536,6 @@ export default function ExpertManagement() {
     return pages;
   };
 
-  const stats = {
-    total: experts?.length,
-    enabled: experts?.filter(e => e.status === 'APPROVED').length,
-    disabled: experts?.filter(e => e.status !== 'APPROVED').length,
-    male: experts?.filter(e => e.gender === 'MALE').length,
-    female: experts?.filter(e => e.gender === 'FEMALE').length
-  };
-
   const getStatsAdminExpert = async () => {
     try {
       const res = await GetStatsAdminExpertService()
@@ -643,16 +638,28 @@ export default function ExpertManagement() {
       });
       setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", });
       setIsAddModalOpen(false);
+      getStatsAdminExpert()
 
       setNotification({
         type: 'success',
         message: 'Expert added successfully'
       });
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: 'Failed to add expert. Please try again.'
-      });
+    } catch (error: any) {
+      const errorData = error?.response?.data;
+
+      if (errorData && typeof errorData === "object") {
+        // Get first error message (or combine them)
+        const messages = Object.values(errorData).flat();
+        setNotification({
+          type: "error",
+          message: messages.join(" | ") || "Failed to add expert. Please try again."
+        });
+      } else {
+        setNotification({
+          type: "error",
+          message: "Failed to add expert. Please try again."
+        });
+      }
       console.error('Error adding expert:', error);
     } finally {
       setLoading(false);
@@ -1211,15 +1218,25 @@ export default function ExpertManagement() {
             error={formErrors.email}
             icon={Mail}
           />
-          <InputField
-            label="Password"
-            type="password"
-            value={newExpert.password}
-            onChange={(e) => setNewExpert({ ...newExpert, password: e.target.value })}
-            placeholder="Enter password"
-            required
-            error={formErrors.password}
-          />
+          <div className='relative'>
+            <InputField
+              label="Password"
+              type={passView ? "text" : "password"}
+              value={newExpert.password}
+              onChange={(e) => setNewExpert({ ...newExpert, password: e.target.value })}
+              placeholder="Enter password"
+              required
+              error={formErrors.password}
+            />
+            <div className='absolute right-3 top-10 flex items-center justify-center '>
+              {
+                passView ?
+                  <EyeIcon size={20} onClick={() => setPassView(false)} className='cursor-pointer' /> :
+                  <EyeOffIcon size={20} onClick={() => setPassView(true)} className='cursor-pointer' />
+              }
+            </div>
+          </div>
+
           <InputField
             label="Phone Number"
             value={newExpert.phone_number}
@@ -1542,6 +1559,7 @@ export default function ExpertManagement() {
           </div>
         </ModernModal>
       )}
+
       {/* Slot Action Modal */}
       <ModernModal
         isOpen={isSlotActionModalOpen}
@@ -1623,6 +1641,7 @@ export default function ExpertManagement() {
           </div>
         )}
       </ModernModal>
+
       {/* Notification */}
       <AnimatePresence>
         {notification && (
