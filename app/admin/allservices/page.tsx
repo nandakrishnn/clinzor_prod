@@ -14,8 +14,6 @@ import ServiceManagement from "@/components/admin/servicesmanagement/service";
 export default function docters() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Breadcrumb Navigation */}
-
       {/* Table Section */}
       <ServiceManagement />
     </Box>

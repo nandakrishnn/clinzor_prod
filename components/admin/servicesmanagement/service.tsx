@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Brain, User, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
-import { createService, deleteService, editService, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
+import { createService, deleteService, editService, getAdminServiceStaticData, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
 import { uploadFiles } from '@/service/uploadService/uploadService';
 import { motion, AnimatePresence } from "framer-motion";
 type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -27,6 +27,7 @@ interface NotificationProps {
   message: string;
   onClose: () => void;
 }
+
 type ModernModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +35,7 @@ type ModernModalProps = {
   size?: "sm" | "lg" | "xl";
   children: React.ReactNode;
 };
+
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
     switch (type) {
@@ -129,7 +131,7 @@ const MedicalServicesApp: React.FC = () => {
     name: string;
     description: string;
     tags: string;
-   image: File | string | null;
+    image: File | string | null;
   }>({
     name: '',
     description: '',
@@ -138,17 +140,31 @@ const MedicalServicesApp: React.FC = () => {
   });
   const [viewMode, setViewMode] = useState<'all' | 'approved'>('all');
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-    const [notification, setNotification] = useState<{
-      type: "success" | "error" | "warning";
-      message: string;
-    } | null>(null);
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+  } | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+
+  const [dashData, setDashData] = useState<any>()
+  const [statusCounts, setStatusCounts] = useState<{
+    ALL: number;
+    APPROVED: number;
+    REJECTED: number;
+    PENDING: number;
+  }>({
+    ALL: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    PENDING: 0,
+  });
 
   const fetchService = async (page = 1, search = '', status = 'ALL') => {
     setLoading(true);
     try {
       const data = await GetAllService(page, search, status);
+      console.log(data,'service data')
       setServices(data.data);
       setPaginationData({
         current_page: data.current_page,
@@ -165,14 +181,35 @@ const MedicalServicesApp: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const getDashboardStatics = async () => {
+    try {
+      const res = await getAdminServiceStaticData();
+      console.log(res, "data fromt he clinic")
+      if (res?.status === 200) {
+        setDashData(res?.data);
+        setStatusCounts({
+          ALL: res?.data?.total_services,
+          APPROVED: res?.data?.newly_added_service, 
+          REJECTED: res?.data?.rejected_service,
+          PENDING: res?.data?.requested_service,
+        });
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
     fetchService(currentPage, searchTerm, statusFilter);
+    getDashboardStatics()
   }, [currentPage, searchTerm, statusFilter]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
+
   console.log("service", services);
 
   const getServiceIcon = (name: string) => {
@@ -203,7 +240,7 @@ const MedicalServicesApp: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.description.trim() || !formData.tags.trim()) {
-         setNotification({
+      setNotification({
         type: "error",
         message: "Please fill in all fields"
       });
@@ -213,7 +250,7 @@ const MedicalServicesApp: React.FC = () => {
     setIsSubmitting(true);
     try {
       let imageUrl = '';
-      
+
       // Upload image if a new file is selected
       if (selectedImageFile) {
         const imageUrls = await uploadFiles([selectedImageFile]);
@@ -252,9 +289,9 @@ const MedicalServicesApp: React.FC = () => {
         });
       }
       resetForm();
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error saving service:", error);
-        setNotification({
+      setNotification({
         type: 'error',
         message: `Failed to update user: ${error.response?.data?.message || error.message}`
       });
@@ -329,11 +366,11 @@ const MedicalServicesApp: React.FC = () => {
       const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-    
+
     if (viewMode === 'approved') {
       filtered = filtered.filter(service => service.status === 'APPROVED');
     }
-    
+
     return filtered;
   };
 
@@ -350,17 +387,6 @@ const MedicalServicesApp: React.FC = () => {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
-
-  const getStatusCounts = () => {
-    return {
-      ALL: paginationData.total_items,
-      PENDING: services.filter((s) => s.status === 'PENDING').length,
-      APPROVED: services.filter((s) => s.status === 'APPROVED').length,
-      REJECTED: services.filter((s) => s.status === 'REJECTED').length,
-    };
-  };
-
-  const statusCounts = getStatusCounts();
 
   const statusLabels: Record<string, string> = {
     ALL: 'Total Services',
@@ -387,7 +413,7 @@ const MedicalServicesApp: React.FC = () => {
     setStatusFilter('ALL');
     setSearchTerm('');
   };
-  
+
   const handleBackToAll = () => {
     setViewMode('all');
     setStatusFilter('ALL');
@@ -398,89 +424,89 @@ const MedicalServicesApp: React.FC = () => {
     const pages = [];
     const totalPages = paginationData.total_pages;
     const current = paginationData.current_page;
-    
+
     // Always show first page
     if (totalPages > 0) {
       pages.push(1);
     }
-    
+
     // Add ellipsis if needed
     if (current > 3) {
       pages.push('...');
     }
-    
+
     // Add pages around current page
     for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
       if (!pages.includes(i)) {
         pages.push(i);
       }
     }
-    
+
     // Add ellipsis if needed
     if (current < totalPages - 2) {
       pages.push('...');
     }
-    
+
     // Always show last page
     if (totalPages > 1) {
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-  <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-    <div className="flex items-center justify-between h-auto sm:h-20 py-4">
-      {/* Left Section: Back button + Icon + Title */}
-      <div className="flex items-center gap-4">
-        {viewMode === "approved" && (
-          <button
-            onClick={handleBackToAll}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
-          </button>
-        )}
+      <div className="bg-white  ">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex flex-col md:flex-row gap-5 md:items-center justify-between h-auto sm:h-20 py-4">
+            {/* Left Section: Back button + Icon + Title */}
+            <div className="flex items-center gap-4">
+              {viewMode === "approved" && (
+                <button
+                  onClick={handleBackToAll}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              )}
 
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-            <Stethoscope className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {viewMode === "approved"
-                ? "All Approved Services"
-                : "Service Management"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {viewMode === "approved"
-                ? "View all approved services in the database"
-                : "Manage and monitor medical services"}
-            </p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primaryColor rounded-xl flex items-center justify-center shadow-lg">
+                  <Stethoscope className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {viewMode === "approved"
+                      ? "All Approved Services"
+                      : "Service Management"}
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    {viewMode === "approved"
+                      ? "View all approved services in the database"
+                      : "Manage and monitor medical services"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Section: Add Service button */}
+            {viewMode === "all" && (
+              <button
+                onClick={() => setIsFormOpen(true)}
+                className="w-full sm:w-auto bg-primaryColor text-white px-6 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">Add Service</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right Section: Add Service button */}
-      {viewMode === "all" && (
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="font-medium">Add Service</span>
-        </button>
-      )}
-    </div>
-  </div>
-</div>
 
-
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-5">
         {/* Stats Cards - Only show in 'all' view */}
         {viewMode === 'all' && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
@@ -494,11 +520,10 @@ const MedicalServicesApp: React.FC = () => {
                     setStatusFilter(status as 'ALL' | ServiceStatus);
                   }
                 }}
-                className={`p-4 sm:p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                  statusFilter === status
-                    ? 'border-blue-500 bg-blue-50 shadow-md'
-                    : 'border-gray-100 bg-white hover:border-gray-200'
-                }`}
+                className={`p-4 sm:p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${statusFilter === status
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-100 bg-white hover:border-gray-200'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -507,11 +532,10 @@ const MedicalServicesApp: React.FC = () => {
                     </p>
                     <p className="text-xl sm:text-3xl font-bold text-gray-900">{count}</p>
                   </div>
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-                    status === 'APPROVED' ? 'bg-green-100' :
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${status === 'APPROVED' ? 'bg-green-100' :
                     status === 'REJECTED' ? 'bg-red-100' :
-                    status === 'PENDING' ? 'bg-yellow-100' : 'bg-blue-100'
-                  }`}>
+                      status === 'PENDING' ? 'bg-yellow-100' : 'bg-blue-100'
+                    }`}>
                     {getStatusIcon(status)}
                   </div>
                 </div>
@@ -550,9 +574,9 @@ const MedicalServicesApp: React.FC = () => {
                 <div className="p-4 sm:p-6">
                   {service.image && (
                     <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden">
-                      <img 
-                        src={service.image} 
-                        alt={service.name} 
+                      <img
+                        src={service.image}
+                        alt={service.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -563,9 +587,9 @@ const MedicalServicesApp: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.name}</h3>
                         <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(service.status)}`}>
-                          {service.status === 'PENDING' ? 'Requested' : 
-                           service.status === 'APPROVED' ? 'Newly Added' : 
-                           service.status}
+                          {service.status === 'PENDING' ? 'Requested' :
+                            service.status === 'APPROVED' ? 'Newly Added' :
+                              service.status}
                         </span>
                       </div>
                     </div>
@@ -622,7 +646,7 @@ const MedicalServicesApp: React.FC = () => {
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
-                               onClick={() => openDeleteModal(service)}
+                              onClick={() => openDeleteModal(service)}
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -690,11 +714,10 @@ const MedicalServicesApp: React.FC = () => {
                       key={page}
                       onClick={() => handlePageChange(page as number)}
                       disabled={loading}
-                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                        paginationData.current_page === page
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                        }`}
                     >
                       {page}
                     </button>
@@ -741,7 +764,7 @@ const MedicalServicesApp: React.FC = () => {
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter service name"
                   />
@@ -753,7 +776,7 @@ const MedicalServicesApp: React.FC = () => {
                   <textarea
                     rows={3}
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                     placeholder="Enter service description"
                   />
@@ -765,12 +788,12 @@ const MedicalServicesApp: React.FC = () => {
                   <input
                     type="text"
                     value={formData.tags}
-                    onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="heart, cardiology, blood pressure"
                   />
                 </div>
-                   <div>
+                <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Service Image
                   </label>
@@ -795,9 +818,9 @@ const MedicalServicesApp: React.FC = () => {
                     </div>
                     {formData.image && (
                       <div className="relative">
-                        <img 
-                          src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} 
-                          alt="Service Preview" 
+                        <img
+                          src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)}
+                          alt="Service Preview"
                           className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                         />
                         <button
@@ -862,9 +885,9 @@ const MedicalServicesApp: React.FC = () => {
             <div className="p-4 sm:p-6">
               {viewingService.image && (
                 <div className="mb-6 relative w-full h-64 rounded-xl overflow-hidden">
-                  <img 
-                    src={viewingService.image} 
-                    alt={viewingService.name} 
+                  <img
+                    src={viewingService.image}
+                    alt={viewingService.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -877,9 +900,9 @@ const MedicalServicesApp: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">Status</h3>
                   <span className={`text-sm px-3 py-1 rounded-full border font-medium ${getStatusColor(viewingService.status)}`}>
-                    {viewingService.status === 'PENDING' ? 'Requested' : 
-                     viewingService.status === 'APPROVED' ? 'Newly Added' : 
-                     viewingService.status}
+                    {viewingService.status === 'PENDING' ? 'Requested' :
+                      viewingService.status === 'APPROVED' ? 'Newly Added' :
+                        viewingService.status}
                   </span>
                 </div>
                 <div>
@@ -947,7 +970,7 @@ const MedicalServicesApp: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* Delete Confirmation Modal */}
       <ModernModal
         isOpen={deleteModalOpen}
@@ -991,16 +1014,16 @@ const MedicalServicesApp: React.FC = () => {
         </div>
       </ModernModal>
 
-       {/* Notification */}
-              <AnimatePresence>
-                {notification && (
-                  <Notification
-                    type={notification.type}
-                    message={notification.message}
-                    onClose={() => setNotification(null)}
-                  />
-                )}
-              </AnimatePresence>
+      {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

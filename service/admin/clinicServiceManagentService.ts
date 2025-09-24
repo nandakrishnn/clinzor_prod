@@ -9,7 +9,7 @@ interface Service {
 }
 
 // ClinicService Management Api 
-export const createService = async (body:Service) => {
+export const createService = async (body: Service) => {
   try {
     const response = await axiosPrivate.post(
       `clinic/service-lc/`, // Changed from PUT to POST for creation
@@ -23,7 +23,7 @@ export const createService = async (body:Service) => {
 };
 export const editService = async (
   id: string,
- body: Service) => {
+  body: Service) => {
   try {
     const response = await axiosPrivate.put(
       `clinic/service-rud/${id}/`,
@@ -53,6 +53,7 @@ export const deleteService = async (Id: string) => {
 export const GetAClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
+
 
 export const GetAllClinicService = async (page: number, search: string = '', status: string = 'ALL', priority: string = 'ALL') => {
   try {
@@ -85,6 +86,7 @@ export const GetAllClinicService = async (page: number, search: string = '', sta
     throw error;
   }
 };
+
 export const GetAllService = async (page: number, search: string = '', status: string = 'ALL') => {
   try {
     // Build query parameters
@@ -110,4 +112,9 @@ export const GetAllService = async (page: number, search: string = '', status: s
     console.error("Failed to fetch services", error);
     throw error;
   }
+};
+
+export const getAdminServiceStaticData = async () => {
+  const res = await axiosPrivate.get(`clinic/service-tab-analytics/`);
+  return res?.data
 };
