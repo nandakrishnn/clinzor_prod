@@ -414,14 +414,14 @@ export default function AdminSidebar() {
         { label: 'Payment Records', href: '/admin/paymentsrecord' },
       ]
     },
-    {
-      icon: <Stethoscope size={20} strokeWidth={1.5} />,
-      label: 'Service Management',
-      children: [
-        { label: 'All Services', href: '/admin/allservices' },
-        { label: 'Request Service', href: '/admin/requestservice' },
-      ]
-    },
+    // {
+    //   icon: <Stethoscope size={20} strokeWidth={1.5} />,
+    //   label: 'Service Management',
+    //   children: [
+    //     { label: 'All Services', href: '/admin/allservices' },
+    //     { label: 'Request Service', href: '/admin/requestservice' },
+    //   ]
+    // },
     // {
     //   icon: <DollarSign size={20} strokeWidth={1.5} />,
     //   label: 'Dues Management',
@@ -452,6 +452,12 @@ export default function AdminSidebar() {
   ];
 
   const bottomMenuItems = [
+    {
+      icon: <Stethoscope size={20} strokeWidth={1.5} />,
+      label: 'Service Management',
+      badge: 'New',
+      badgeColor: 'green' as const, href: '/admin/allservices'
+    },
     {
       icon: <DollarSign size={20} strokeWidth={1.5} />,
       label: 'Dues Management',
