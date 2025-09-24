@@ -40,7 +40,7 @@ const SlotManager = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [actionFeedback, setActionFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [viewSlot, setViewSlot] = useState<Slot | null>(null);
   const [clinicNameSearch, setClinicNameSearch] = useState('');
   const [fromDateObj, setFromDateObj] = useState<Date | null>(null);
@@ -53,7 +53,8 @@ const SlotManager = () => {
     previous: null
   });
   const [isLoading, setIsLoading] = useState(false);
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -64,6 +65,7 @@ const SlotManager = () => {
       clearTimeout(handler);
     };
   }, [clinicNameSearch]);
+
   const fetchSlots = async (page = 1, search = '', status = 'ALL', fromDate = '', toDate = '') => {
     setIsLoading(true);
     try {
@@ -71,28 +73,28 @@ const SlotManager = () => {
       const params: any = {
         page: page
       };
-      
+
       // Add search parameter if provided
       if (search) {
         params.search = search;
       }
-      
+
       // Add status filter if provided and not 'ALL'
       if (status !== 'ALL') {
         params.status = status;
       }
-      
+
       // Add date filters if provided
       if (fromDate) {
         params.from_date = fromDate;
       }
-      
+
       if (toDate) {
         params.to_date = toDate;
       }
 
       const response = await getAllSlots(params);
-      
+
       setSlots(response.data);
       setPaginationData({
         current_page: response.current_page,
@@ -209,31 +211,32 @@ const SlotManager = () => {
     }
   };
 
-const handleBulkApprove = async () => {
-  const count = selectedSlots.length;
-  if (count === 0) {
-    showFeedback('error', 'No slots selected for approval');
-    return;
-  }
+  const handleBulkApprove = async () => {
+    const count = selectedSlots.length;
+    if (count === 0) {
+      showFeedback('error', 'No slots selected for approval');
+      return;
+    }
 
-  try {
-    // Assuming you want to approve as "NORMAL" type
-    // You could make this configurable if needed
-    await bulkApproveSlots("NORMAL", selectedSlots);
-    
-    // Update local state
-    setSlots(slots.map(slot =>
-      selectedSlots.includes(slot.uuid)
-        ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
-        : slot
-    ));
-    setSelectedSlots([]);
-    
-    showFeedback('success', `${count} slot${count > 1 ? 's' : ''} approved successfully!`);
-  } catch (error) {
-    showFeedback('error', 'Failed to approve slots. Please try again.');
-  }
-};
+    try {
+      // Assuming you want to approve as "NORMAL" type
+      // You could make this configurable if needed
+      await bulkApproveSlots("NORMAL", selectedSlots);
+
+      // Update local state
+      setSlots(slots.map(slot =>
+        selectedSlots.includes(slot.uuid)
+          ? { ...slot, status: 'APPROVED', reason_for_rejection: null }
+          : slot
+      ));
+      setSelectedSlots([]);
+
+      showFeedback('success', `${count} slot${count > 1 ? 's' : ''} approved successfully!`);
+    } catch (error) {
+      showFeedback('error', 'Failed to approve slots. Please try again.');
+    }
+  };
+
   const handleBulkReject = async () => {
     const reason = prompt('Please provide a reason for rejecting these slots:');
     if (reason) {
@@ -339,15 +342,14 @@ const handleBulkApprove = async () => {
   const closeViewSlot = () => setViewSlot(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-2 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto w-full">
         {/* Action Feedback */}
         {actionFeedback && (
-          <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl border-l-4 ${
-            actionFeedback.type === 'success' 
-              ? 'bg-emerald-50 border-emerald-500 text-emerald-800' 
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl border-l-4 ${actionFeedback.type === 'success'
+              ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
               : 'bg-red-50 border-red-500 text-red-800'
-          } transition-all duration-500 transform translate-x-0`}>
+            } transition-all duration-500 transform translate-x-0`}>
             <div className="flex items-center gap-3">
               {actionFeedback.type === 'success' ? (
                 <CheckCircle2 className="h-6 w-6 text-emerald-600" />
@@ -365,8 +367,8 @@ const handleBulkApprove = async () => {
         )}
 
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+        <div className="mb-5">
+          <div className="bg-white rounded-2xl">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
@@ -382,7 +384,7 @@ const handleBulkApprove = async () => {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Key Metrics Dashboard */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
                   <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
@@ -393,7 +395,7 @@ const handleBulkApprove = async () => {
                     <div className="text-amber-800 font-bold text-2xl">{statusCounts.PENDING || 0}</div>
                     <div className="text-amber-600 text-xs mt-1">Requires your review</div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -402,7 +404,7 @@ const handleBulkApprove = async () => {
                     <div className="text-emerald-800 font-bold text-2xl">{statusCounts.APPROVED || 0}</div>
                     <div className="text-emerald-600 text-xs mt-1">Available for booking</div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-5 w-5 text-blue-600" />
@@ -411,7 +413,7 @@ const handleBulkApprove = async () => {
                     <div className="text-blue-800 font-bold text-2xl">{totalBookableSlots}</div>
                     <div className="text-blue-600 text-xs mt-1">Open appointments</div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Activity className="h-5 w-5 text-purple-600" />
@@ -427,9 +429,9 @@ const handleBulkApprove = async () => {
         </div>
 
         {/* Filters Section */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="p-4 sm:p-6 border-b border-gray-100">
+            <div className="p-4 sm:px-6 border-b border-gray-100">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -455,10 +457,10 @@ const handleBulkApprove = async () => {
                 )}
               </div>
             </div>
-            
+
             <div className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="relative">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative w-full">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Building2 className="h-5 w-5 text-gray-400" />
                   </div>
@@ -467,21 +469,21 @@ const handleBulkApprove = async () => {
                     placeholder="Search by clinic name..."
                     value={clinicNameSearch}
                     onChange={(e) => setClinicNameSearch(e.target.value)}
-                    className="pl-10 w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="pl-10 w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none"
                   />
                 </div>
-                
+
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="rounded-xl border border-gray-300 px-4 py-3 focus:outline-none "
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="APPROVED">Approved</option>
                   <option value="PENDING">Pending</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
-                
+
                 <div className="flex gap-2">
                   {/* From Date Picker */}
                   <div className="flex-1">
@@ -493,7 +495,7 @@ const handleBulkApprove = async () => {
                       }}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="From Date"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none bg-white cursor-pointer"
                       isClearable
                     />
                   </div>
@@ -507,13 +509,13 @@ const handleBulkApprove = async () => {
                       }}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="To Date"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none bg-white cursor-pointer"
                       isClearable
                     />
                   </div>
                 </div>
               </div>
-              
+
               {showFilters && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-xl">
@@ -525,7 +527,7 @@ const handleBulkApprove = async () => {
                       <p className="text-xs text-gray-500">Filter slots within date range</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 bg-amber-50 p-4 rounded-xl">
                     <div className="p-2 bg-amber-100 rounded-lg">
                       <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -535,7 +537,7 @@ const handleBulkApprove = async () => {
                       <p className="text-xs text-gray-500">{statusCounts.PENDING || 0} slots awaiting approval</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 bg-emerald-50 p-4 rounded-xl">
                     <div className="p-2 bg-emerald-100 rounded-lg">
                       <Check className="h-5 w-5 text-emerald-600" />
@@ -592,7 +594,7 @@ const handleBulkApprove = async () => {
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -651,7 +653,7 @@ const handleBulkApprove = async () => {
                   slots.map((slot) => {
                     const { date, time } = formatDateTime(slot.start_time);
                     const statusConfig = getStatusConfig(slot.status);
-                    
+
                     return (
                       <tr key={slot.uuid} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -674,7 +676,7 @@ const handleBulkApprove = async () => {
                                 {slot.clinic_name}
                               </div>
                               <div className="text-xs text-gray-400 mt-1">
-                                Type: {getSlotTypeDisplay(slot)} | 
+                                Type: {getSlotTypeDisplay(slot)} |
                                 Female doctors: {slot.female_doctor_count}
                               </div>
                               {getVisitTypeBadges(slot)}
@@ -745,7 +747,7 @@ const handleBulkApprove = async () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* Pagination */}
           {slots.length > 0 && (
             <div className="border-t border-gray-200 px-4 py-3 sm:px-6">
@@ -759,11 +761,10 @@ const handleBulkApprove = async () => {
                   <button
                     onClick={() => setCurrentPage(paginationData.current_page - 1)}
                     disabled={!paginationData.previous}
-                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                      !paginationData.previous 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${!paginationData.previous
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <ChevronLeft className="h-5 w-5" />
                     Previous
@@ -780,16 +781,15 @@ const handleBulkApprove = async () => {
                       } else {
                         pageNum = paginationData.current_page - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            paginationData.current_page === pageNum
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${paginationData.current_page === pageNum
                               ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                               : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {pageNum}
                         </button>
@@ -799,11 +799,10 @@ const handleBulkApprove = async () => {
                   <button
                     onClick={() => setCurrentPage(paginationData.current_page + 1)}
                     disabled={!paginationData.next}
-                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                      !paginationData.next
+                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${!paginationData.next
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Next
                     <ChevronRight className="h-5 w-5" />
@@ -844,7 +843,7 @@ const handleBulkApprove = async () => {
                     {viewSlot.clinic_name}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    <span className="font-medium">Slot Type:</span> {getSlotTypeDisplay(viewSlot)} | 
+                    <span className="font-medium">Slot Type:</span> {getSlotTypeDisplay(viewSlot)} |
                     <span className="font-medium ml-2">Female Doctors:</span> {viewSlot.female_doctor_count}
                   </div>
                 </div>
@@ -883,7 +882,7 @@ const handleBulkApprove = async () => {
                       {formatDateTime(viewSlot.start_time).time}
                     </p>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm text-gray-500">End Time</p>
                     <p className="font-medium">
@@ -894,7 +893,7 @@ const handleBulkApprove = async () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Availability</p>
@@ -912,7 +911,7 @@ const handleBulkApprove = async () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm text-gray-500">Status</p>
                     <div className="mt-1">
@@ -927,7 +926,7 @@ const handleBulkApprove = async () => {
                       })()}
                     </div>
                   </div>
-                  
+
                   {viewSlot.status === 'REJECTED' && viewSlot.reason_for_rejection && (
                     <div>
                       <p className="text-sm text-gray-500">Reason for Rejection</p>

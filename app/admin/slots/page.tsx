@@ -13,7 +13,6 @@ import SlotManager from "@/components/admin/slots/slotsmanagment";
 export default function Usermanagement() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-
       <SlotManager />
     </Box>
   );
