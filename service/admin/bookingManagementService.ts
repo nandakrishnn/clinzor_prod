@@ -1,5 +1,5 @@
 
-import  { axiosPrivate } from "../../axios/axios";
+import { axiosPrivate } from "../../axios/axios";
 
 
 // Booking  
@@ -16,10 +16,10 @@ export const updateBookings = async (id: string, body: {
   }
 };
 
-export const deleteBooking= async (Id:string) => {
+export const deleteBooking = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-delete/${Id}/`);
 };
-export const getABooking= async (Id:string) => {
+export const getABooking = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
 
@@ -32,6 +32,27 @@ export const getAllBookings = async (params: any) => {
     throw error;
   }
 };
+
+export const getExpertBookings = async (params?: any) => {
+  try {
+    const response = await axiosPrivate.get(`/customer/expert-booking-lc/`, { params });
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch expert bookings", error);
+    throw error;
+  }
+};
+
+export const getClinicBookings = async (params: any) => {
+  try {
+    const response = await axiosPrivate.get(`/clinic/admin-list-bookings/`, { params });
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch clinic bookings", error);
+    throw error;
+  }
+};
+
 
 
 
@@ -94,7 +115,7 @@ export const getAllPayment = async (params: Record<string, string | number | und
   try {
     // Create a clean params object without undefined values
     const cleanParams: Record<string, string> = {};
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         cleanParams[key] = String(value);
@@ -103,7 +124,7 @@ export const getAllPayment = async (params: Record<string, string | number | und
 
     const queryString = new URLSearchParams(cleanParams).toString();
     const response = await axiosPrivate.get(`/clinic/payment-transaction-list/?${queryString}`);
-    
+
     // Return the full response data (not just response.data.data)
     return response.data.data;
   } catch (error) {
