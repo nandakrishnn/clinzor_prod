@@ -26,7 +26,7 @@ interface Organization {
   about_organization: string;
   free_expert_booking: number;
   expert_booking_charge: string;
-  auto_approve_normal_slot: boolean; 
+  auto_approve_normal_slot: boolean;
   auto_approve_expert_slot: boolean;
 }
 
@@ -37,7 +37,7 @@ interface OrganizationFormData {
   about_organization: string;
   free_expert_booking: number | string;
   expert_booking_charge: string;
-  auto_approve_normal_slot: boolean; 
+  auto_approve_normal_slot: boolean;
   auto_approve_expert_slot: boolean;
 }
 
@@ -60,7 +60,7 @@ const OrganizationManagement = () => {
     auto_approve_normal_slot: false,
     auto_approve_expert_slot: false
   });
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
@@ -74,7 +74,7 @@ const OrganizationManagement = () => {
       console.log(data, "org data");
     } catch (error) {
       console.log(error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -181,12 +181,6 @@ const OrganizationManagement = () => {
     }
   };
 
-  const handleDelete = (uuid: string) => {
-    if (window.confirm("Are you sure you want to delete this organization?")) {
-      setOrganizations((prev) => prev.filter((org) => org.uuid !== uuid));
-    }
-  };
-
   const handleInputChange = (
     field: keyof OrganizationFormData,
     value: string | number
@@ -210,9 +204,9 @@ const OrganizationManagement = () => {
     }
   };
 
-    if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -221,13 +215,13 @@ const OrganizationManagement = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="bg-white ">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 mb-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primaryColor rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -251,84 +245,7 @@ const OrganizationManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-600">
-                  Total Organizations
-                </h3>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {organizations.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-600">
-                  Total Free Bookings
-                </h3>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {organizations?.reduce(
-                    (sum, org) => sum + org.free_expert_booking,
-                    0
-                  )}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-600">
-                  Avg. Booking Charge
-                </h3>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  $
-                  {organizations.length > 0
-                    ? (
-                        organizations.reduce(
-                          (sum, org) =>
-                            sum + parseFloat(org.expert_booking_charge),
-                          0
-                        ) / organizations.length
-                      ).toFixed(2)
-                    : "0.00"}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-600">
-                  Active Status
-                </h3>
-                <p className="text-2xl font-semibold text-green-600 mt-1">
-                  Active
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Shield className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-        </div> */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 ">
 
         {/* Organizations Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
