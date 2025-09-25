@@ -80,8 +80,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
               key={page}
               onClick={() => onPageChange(page)}
               className={`min-w-[40px] h-10 rounded-xl font-medium transition-all duration-200 ${currentPage === page
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
               {page}
@@ -107,25 +107,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
       </div>
     </div>
   );
-};
-
-// Booking type
-type Booking = {
-  uuid: string;
-  created_by: string;
-  booking_type: 'VIDEO_CALL' | 'PHYSICAL_VISIT';
-  booking_status: 'PENDING' | 'SCHEDULED' | 'COMPLETED';
-  start_time: string;
-  end_time: string;
-  payment_status: 'PENDING' | 'COMPLETED';
-  session_type: string;
-  patient_name: string;
-  patient_mobile: string;
-  patient_email: string;
-  booking_charge: string;
-  clinic_name: string;
-  clinic_id: string;
-  service_type: string;
 };
 
 // PaymentRecord type
@@ -286,7 +267,7 @@ const DueManagement = () => {
         message: 'Failed to fetch payment data'
       });
     } finally {
-       setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -371,57 +352,57 @@ const DueManagement = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-const handleExport = () => {
-  try {
-    // Create a new workbook
-    const wb = XLSX.utils.book_new();
+  const handleExport = () => {
+    try {
+      // Create a new workbook
+      const wb = XLSX.utils.book_new();
 
-    if (activeTab === 'DUES') {
-      // 1. Export Dues Management data
-      const exportDuesData: any[] = duesData.map((clinic: Clinic) => ({
-        'Clinic Name': clinic.clinic_detail.name,
-        'City': clinic.clinic_detail.city,
-        'Contact': `+${clinic.clinic_detail.country_code} ${clinic.clinic_detail.contact_number}`,
-        'Total Dues': clinic.due_detail.total_dues,
-        'Total Paid': clinic.due_detail.total_paid,
-        'Remaining Dues': clinic.due_detail.remaining_dues,
-        'Status': clinic.due_detail.remaining_dues > 0 ? 'Outstanding' :
-          clinic.due_detail.remaining_dues < 0 ? 'Credit' : 'Settled'
-      }));
-      const duesWS = XLSX.utils.json_to_sheet(exportDuesData);
-      XLSX.utils.book_append_sheet(wb, duesWS, "Dues Management");
-    } else if (activeTab === 'PAYMENT_HISTORY') {
-      // 2. Export Payment History data
-      const exportPaymentData: any[] = paymentData.map((record: PaymentRecord) => ({
-        'Transaction ID': record.transaction_id,
-        'Payment Date': record.created_at ? formatDate(record.created_at) : 'N/A',
-        'Amount': record.amount,
-        'Status': record.status,
-        'Patient': record.patient_name || 'N/A',
-        'Clinic': record.clinic_name || 'N/A',
-        'Service': record.service_name || 'N/A',
-        'Payment Type': record.payment_type
-      }));
-      const paymentWS = XLSX.utils.json_to_sheet(exportPaymentData);
-      XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
+      if (activeTab === 'DUES') {
+        // 1. Export Dues Management data
+        const exportDuesData: any[] = duesData.map((clinic: Clinic) => ({
+          'Clinic Name': clinic.clinic_detail.name,
+          'City': clinic.clinic_detail.city,
+          'Contact': `+${clinic.clinic_detail.country_code} ${clinic.clinic_detail.contact_number}`,
+          'Total Dues': clinic.due_detail.total_dues,
+          'Total Paid': clinic.due_detail.total_paid,
+          'Remaining Dues': clinic.due_detail.remaining_dues,
+          'Status': clinic.due_detail.remaining_dues > 0 ? 'Outstanding' :
+            clinic.due_detail.remaining_dues < 0 ? 'Credit' : 'Settled'
+        }));
+        const duesWS = XLSX.utils.json_to_sheet(exportDuesData);
+        XLSX.utils.book_append_sheet(wb, duesWS, "Dues Management");
+      } else if (activeTab === 'PAYMENT_HISTORY') {
+        // 2. Export Payment History data
+        const exportPaymentData: any[] = paymentData.map((record: PaymentRecord) => ({
+          'Transaction ID': record.transaction_id,
+          'Payment Date': record.created_at ? formatDate(record.created_at) : 'N/A',
+          'Amount': record.amount,
+          'Status': record.status,
+          'Patient': record.patient_name || 'N/A',
+          'Clinic': record.clinic_name || 'N/A',
+          'Service': record.service_name || 'N/A',
+          'Payment Type': record.payment_type
+        }));
+        const paymentWS = XLSX.utils.json_to_sheet(exportPaymentData);
+        XLSX.utils.book_append_sheet(wb, paymentWS, "Payment History");
+      }
+
+      // Generate Excel file and trigger download
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `${activeTab === 'DUES' ? 'Due' : 'Payment'}_Management_Report_${date}.xlsx`);
+
+      setNotification({
+        type: 'success',
+        message: 'Report exported successfully'
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to export report'
+      });
     }
-
-    // Generate Excel file and trigger download
-    const date = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `${activeTab === 'DUES' ? 'Due' : 'Payment'}_Management_Report_${date}.xlsx`);
-
-    setNotification({
-      type: 'success',
-      message: 'Report exported successfully'
-    });
-  } catch (error) {
-    console.error('Export error:', error);
-    setNotification({
-      type: 'error',
-      message: 'Failed to export report'
-    });
-  }
-};
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -438,9 +419,9 @@ const handleExport = () => {
     }
   };
 
-   if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -450,10 +431,10 @@ const handleExport = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-2xl border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="bg-white/80 backdrop-blur-2xl">
+        <div className="max-w-7xl mx-auto px-6 pt-5">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -466,8 +447,8 @@ const handleExport = () => {
             <div className="flex items-center bg-gray-100 rounded-2xl p-1">
               <button
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'DUES'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white text-primaryColor shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
                   }`}
                 onClick={() => {
                   setActiveTab('DUES');
@@ -478,8 +459,8 @@ const handleExport = () => {
               </button>
               <button
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'PAYMENT_HISTORY'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white text-primaryColor shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
                   }`}
                 onClick={() => {
                   setActiveTab('PAYMENT_HISTORY');
@@ -493,11 +474,11 @@ const handleExport = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 pt-5">
         {activeTab === 'DUES' && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
               <div className={`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm transform transition-all duration-700 ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-blue-50 rounded-xl">
@@ -545,14 +526,14 @@ const handleExport = () => {
                     placeholder="Search clinics..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none "
                   />
                 </div>
                 <div className="flex items-center gap-4">
                   <select
                     value={selectedFilter}
                     onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium"
+                    className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none  font-medium"
                   >
                     <option value="all">All Clinics</option>
                     <option value="outstanding">Outstanding</option>
@@ -563,7 +544,7 @@ const handleExport = () => {
                   <select
                     value={sortBy}
                     onChange={e => setSortBy(e.target.value as any)}
-                    className="px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium"
+                    className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none transition-all duration-200 font-medium"
                   >
                     <option value="default">Sort: Default</option>
                     <option value="highest">Sort: Highest Due</option>
@@ -571,7 +552,7 @@ const handleExport = () => {
                   </select>
                   <button
                     onClick={handleExport}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Export Report
                   </button>
                 </div>
@@ -634,7 +615,7 @@ const handleExport = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-gray-900 font-semibold">Balance</span>
                           <span className={`font-bold text-lg ${clinic.due_detail.remaining_dues > 0 ? 'text-red-600' :
-                              clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
+                            clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
                             }`}>
                             {clinic.due_detail.remaining_dues < 0 ? '−' : ''}{formatCurrency(clinic.due_detail.remaining_dues)}
                           </span>
@@ -694,7 +675,7 @@ const handleExport = () => {
         {activeTab === 'PAYMENT_HISTORY' && (
           <>
             {/* Search and Filter for Payment History */}
-            <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 mb-5 border border-gray-200 shadow-sm">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="relative flex-1 max-w-lg">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -703,14 +684,14 @@ const handleExport = () => {
                     placeholder="Search payments..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none  transition-all duration-200"
                   />
                 </div>
                 <div className="flex items-center gap-4">
                   <select
                     value={selectedFilter}
                     onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium"
+                    className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none transition-all duration-200 font-medium"
                   >
                     <option value="all">All Payments</option>
                     <option value="COMPLETED">Completed</option>
@@ -720,7 +701,7 @@ const handleExport = () => {
                   </select>
                   <button
                     onClick={handleExport}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Export Report
                   </button>
                 </div>
@@ -734,13 +715,11 @@ const handleExport = () => {
                   <thead>
                     <tr className="bg-gray-50 text-gray-700">
                       <th className="p-4 text-left font-semibold">Transaction ID</th>
-                      <th className="p-4 text-left font-semibold">Payment Date</th>
                       <th className="p-4 text-left font-semibold">Amount</th>
                       <th className="p-4 text-left font-semibold">Status</th>
                       <th className="p-4 text-left font-semibold">Patient</th>
                       <th className="p-4 text-left font-semibold">Clinic</th>
                       <th className="p-4 text-left font-semibold">Service</th>
-                      <th className="p-4 text-left font-semibold">Payment Type</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -760,13 +739,12 @@ const handleExport = () => {
                       paymentData.map((payment) => (
                         <tr key={payment.uuid} className="border-t hover:bg-blue-50/40 transition">
                           <td className="p-4 font-medium text-gray-900">{payment.transaction_id}</td>
-                          <td className="p-4">{payment.created_at ? formatDate(payment.created_at) : 'N/A'}</td>
+                          {/* <td className="p-4">{payment.created_at ? formatDate(payment.created_at) : 'N/A'}</td> */}
                           <td className="p-4">{formatCurrency(payment.amount)}</td>
                           <td className="p-4">{getStatusBadge(payment.status)}</td>
                           <td className="p-4">{payment.patient_name || 'N/A'}</td>
                           <td className="p-4">{payment.clinic_name || 'N/A'}</td>
                           <td className="p-4">{payment.service_name || 'N/A'}</td>
-                          <td className="p-4">{payment.payment_type}</td>
                         </tr>
                       ))
                     )}
