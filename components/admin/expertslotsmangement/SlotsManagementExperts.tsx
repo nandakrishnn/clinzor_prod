@@ -24,7 +24,7 @@ import {
   EyeIcon,
   EyeOffIcon
 } from 'lucide-react';
-import { approveExpertSlot, approveOrRejectExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, GetStatsAdminExpertService, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
+import { approveExpertSlot, approveOrRejectExpert, blockExpert, createExpert, deleteExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, GetStatsAdminExpertService, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
 
 
 // Types
@@ -45,6 +45,7 @@ type Expert = {
   education?: string;
   address?: string;
   dob?: string;
+  user?: string;
 };
 
 type Booking = {
@@ -326,7 +327,6 @@ export default function ExpertManagement() {
     addresss: "",
   });
 
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState({
     name: '',
     email: '',
@@ -338,7 +338,7 @@ export default function ExpertManagement() {
 
   // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState<{
-    type: 'enable' | 'disable' | 'delete';
+    type: 'enable' | 'disable';
     expert: Expert | null
   } | null>(null);
 
@@ -666,12 +666,14 @@ export default function ExpertManagement() {
     }
   };
 
+  console.log(experts,'expert data')
   const handleToggleExpert = async (expert: Expert) => {
+    console.log(expert)
     try {
       const newStatus = expert.status === "APPROVED" ? "REJECTED" : "APPROVED";
 
       // Update backend
-      await approveOrRejectExpert(expert.uuid, { status: newStatus });
+      await blockExpert(expert?.user, { is_blocked: true });
 
       // Refresh current page data
       fetchExperts(currentPage);
@@ -681,35 +683,11 @@ export default function ExpertManagement() {
         message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
       });
     } catch (error: any) {
+      console.log(error)
       setNotification({
         type: 'error',
-        message: `${error.response.data.message} please try again later ` || `Failed to update expert status`
+        message: `${error?.response?.data?.detail || error?.response?.data?.message} please try again later ` || `Failed to update expert status`
       });
-    }
-  };
-
-  const handleDeleteExpert = async (expert: Expert) => {
-    if (!window.confirm(`Are you sure you want to delete expert "${expert.name}"?`)) {
-      return;
-    }
-
-    setIsDeleting(expert.uuid);
-    try {
-      await deleteExpert(expert.uuid);
-      // Only remove from state if API call succeeds
-      setExperts(prev => prev.filter(e => e.uuid !== expert.uuid));
-      setNotification({
-        type: 'success',
-        message: `Expert "${expert.name}" deleted successfully`
-      });
-    } catch (error) {
-      console.error("Error deleting expert:", error);
-      setNotification({
-        type: 'error',
-        message: `Failed to delete expert "${expert.name}". Please try again.`
-      });
-    } finally {
-      setIsDeleting(null);
     }
   };
 
@@ -1105,12 +1083,12 @@ export default function ExpertManagement() {
                         Enable
                       </button>
                     )}
-                    <button
+                    {/* <button
                       onClick={() => setConfirmModal({ type: 'delete', expert })}
                       className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
                     >
                       Delete
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </motion.div>
@@ -1525,7 +1503,9 @@ export default function ExpertManagement() {
         >
           <div className="space-y-4">
             <p className="text-gray-600">
-              Are you sure you want to {confirmModal.type}{' '}
+              {confirmModal.type === 'enable'
+                ? 'Are you sure you want to block the expert'
+                : 'Are you sure you want to unBlock the expert'} {" "}
               <span className="font-semibold">{confirmModal.expert?.name}</span>?
             </p>
             <div className="flex justify-end gap-4">
@@ -1538,19 +1518,17 @@ export default function ExpertManagement() {
               <button
                 onClick={() => {
                   if (confirmModal.expert) {
-                    if (confirmModal.type === 'delete') {
-                      handleDeleteExpert(confirmModal.expert);
-                    } else {
-                      handleToggleExpert(confirmModal.expert);
-                    }
+                    // if (confirmModal.type === 'delete') {
+                    //   handleDeleteExpert(confirmModal.expert);
+                    // } else {
+                    handleToggleExpert(confirmModal.expert);
+                    // }
                   }
                   setConfirmModal(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-white transition-colors ${confirmModal.type === 'delete'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : confirmModal.type === 'enable'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${confirmModal.type === 'enable'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
                   }`}
               >
                 Confirm

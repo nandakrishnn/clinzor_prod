@@ -15,7 +15,7 @@ export const GetAllExpertCount= async () => {
     const response = await axiosPrivate.get(
       `clinic/list-experts/`
     );
-    return response.data.data.length;
+    return response.data.data.total_items;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;
@@ -80,3 +80,4 @@ export const GetAllBlogCount= async () => {
     throw error;
   }
 };
+

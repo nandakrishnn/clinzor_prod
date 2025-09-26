@@ -58,6 +58,17 @@ export const approveOrRejectExpert = async (id: string, body: {
     throw error;
   }
 };
+export const blockExpert = async (id: any, body: {
+  is_blocked: boolean;
+}) => {
+  try {
+    const response = await axiosPrivate.patch(`user/user-block/${id}/`, body);
+    return response.data;
+  } catch (error) {
+    console.error("User status update error:", error);
+    throw error;
+  }
+};
 
 export const approveExpertSlot = async (slotId: string) => {
   try {
