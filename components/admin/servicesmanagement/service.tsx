@@ -3,7 +3,7 @@ import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Br
 import { createService, deleteService, editService, getAdminServiceStaticData, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
 import { uploadFiles } from '@/service/uploadService/uploadService';
 import { motion, AnimatePresence } from "framer-motion";
-type ServiceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+type ServiceStatus = 'DRAFT' | 'APPROVED' | 'REJECTED' | 'DRAFT';
 
 interface Service {
   uuid: string;
@@ -116,7 +116,7 @@ const MedicalServicesApp: React.FC = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [viewingService, setViewingService] = useState<Service | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | ServiceStatus>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'APPROVED' | ServiceStatus>('APPROVED');
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
@@ -152,19 +152,19 @@ const MedicalServicesApp: React.FC = () => {
     ALL: number;
     APPROVED: number;
     REJECTED: number;
-    PENDING: number;
+    DRAFT: number;
   }>({
     ALL: 0,
     APPROVED: 0,
     REJECTED: 0,
-    PENDING: 0,
+    DRAFT: 0,
   });
 
-  const fetchService = async (page = 1, search = '', status = 'ALL') => {
+  const fetchService = async (page = 1, search = '', status = 'APPROVED') => {
     setLoading(true);
     try {
       const data = await GetAllService(page, search, status);
-      console.log(data,'service data')
+      console.log(data, 'service data')
       setServices(data.data);
       setPaginationData({
         current_page: data.current_page,
@@ -190,9 +190,9 @@ const MedicalServicesApp: React.FC = () => {
         setDashData(res?.data);
         setStatusCounts({
           ALL: res?.data?.total_services,
-          APPROVED: res?.data?.newly_added_service, 
+          APPROVED: res?.data?.newly_added_service,
           REJECTED: res?.data?.rejected_service,
-          PENDING: res?.data?.requested_service,
+          DRAFT: res?.data?.requested_service,
         });
       }
     } catch (error) {
@@ -210,7 +210,7 @@ const MedicalServicesApp: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  console.log("service", services);
+  console.log("service", statusFilter);
 
   const getServiceIcon = (name: string) => {
     const serviceLower = name?.toLowerCase();
@@ -231,7 +231,7 @@ const MedicalServicesApp: React.FC = () => {
         return 'text-green-600 bg-green-50 border-green-200';
       case 'REJECTED':
         return 'text-red-600 bg-red-50 border-red-200';
-      case 'PENDING':
+      case 'DRAFT':
         return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
@@ -363,7 +363,7 @@ const MedicalServicesApp: React.FC = () => {
       const matchesSearch = service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.tags?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
+      const matchesStatus = statusFilter === 'APPROVED' || service.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
@@ -390,7 +390,7 @@ const MedicalServicesApp: React.FC = () => {
 
   const statusLabels: Record<string, string> = {
     ALL: 'Total Services',
-    PENDING: 'Requested Services',
+    DRAFT: 'Requested Services',
     APPROVED: 'Newly Added Services',
     REJECTED: 'Rejected'
   };
@@ -401,7 +401,7 @@ const MedicalServicesApp: React.FC = () => {
         return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'REJECTED':
         return <XCircle className="w-5 h-5 text-red-600" />;
-      case 'PENDING':
+      case 'DRAFT':
         return <AlertCircle className="w-5 h-5 text-yellow-600" />;
       default:
         return <Stethoscope className="w-5 h-5 text-blue-600" />;
@@ -409,14 +409,14 @@ const MedicalServicesApp: React.FC = () => {
   };
 
   const handleTotalServicesClick = () => {
-    setViewMode('approved');
-    setStatusFilter('ALL');
+    setViewMode('all');
+    setStatusFilter('APPROVED');
     setSearchTerm('');
   };
 
   const handleBackToAll = () => {
     setViewMode('all');
-    setStatusFilter('ALL');
+    setStatusFilter('APPROVED');
   };
 
   // Generate page numbers for pagination display
@@ -516,13 +516,16 @@ const MedicalServicesApp: React.FC = () => {
                 onClick={() => {
                   if (status === 'ALL') {
                     handleTotalServicesClick();
-                  } else {
-                    setStatusFilter(status as 'ALL' | ServiceStatus);
+                  } else if (status === 'REJECTED') {
+                    setStatusFilter(status as 'REJECTED' | ServiceStatus);
+                  } else if (status === 'DRAFT') {
+                    setStatusFilter('DRAFT');
                   }
                 }}
-                className={`p-4 sm:p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${statusFilter === status
-                  ? 'border-blue-500 bg-blue-50 shadow-md'
-                  : 'border-gray-100 bg-white hover:border-gray-200'
+                className={`p-4 sm:p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md 
+                  ${statusFilter === status && statusFilter !== "APPROVED" || statusFilter === "APPROVED" && status == "ALL"
+                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                    : 'border-gray-100 bg-white hover:border-gray-200'
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -534,7 +537,7 @@ const MedicalServicesApp: React.FC = () => {
                   </div>
                   <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${status === 'APPROVED' ? 'bg-green-100' :
                     status === 'REJECTED' ? 'bg-red-100' :
-                      status === 'PENDING' ? 'bg-yellow-100' : 'bg-blue-100'
+                      status === 'DRAFT' ? 'bg-yellow-100' : 'bg-blue-100'
                     }`}>
                     {getStatusIcon(status)}
                   </div>
@@ -587,7 +590,7 @@ const MedicalServicesApp: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-gray-900 capitalize text-base sm:text-lg">{service.name}</h3>
                         <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(service.status)}`}>
-                          {service.status === 'PENDING' ? 'Requested' :
+                          {service.status === 'DRAFT' ? 'Requested' :
                             service.status === 'APPROVED' ? 'Newly Added' :
                               service.status}
                         </span>
@@ -609,7 +612,7 @@ const MedicalServicesApp: React.FC = () => {
                   {/* Action Buttons */}
                   <div className="space-y-2 sm:space-y-3">
                     {/* Accept/Reject Buttons for Requested Services - Only show in 'all' view */}
-                    {viewMode === 'all' && service.status === 'PENDING' && (
+                    {viewMode === 'all' && service.status === 'DRAFT' && (
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button
                           onClick={() => handleStatusChange(service.uuid, 'APPROVED')}
@@ -628,7 +631,7 @@ const MedicalServicesApp: React.FC = () => {
                       </div>
                     )}
                     {/* View/Edit/Delete buttons - Show for approved services in both views */}
-                    {(service.status === 'APPROVED' || (viewMode === 'all' && service.status !== 'PENDING')) && (
+                    {(service.status === 'APPROVED' || (viewMode === 'all' && service.status !== 'DRAFT')) && (
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <button
                           onClick={() => setViewingService(service)}
@@ -678,7 +681,7 @@ const MedicalServicesApp: React.FC = () => {
               onClick={() => {
                 setSearchTerm('');
                 if (viewMode === 'all') {
-                  setStatusFilter('ALL');
+                  setStatusFilter('APPROVED');
                 }
               }}
               className="text-blue-600 hover:text-blue-700 font-medium"
@@ -900,7 +903,7 @@ const MedicalServicesApp: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">Status</h3>
                   <span className={`text-sm px-3 py-1 rounded-full border font-medium ${getStatusColor(viewingService.status)}`}>
-                    {viewingService.status === 'PENDING' ? 'Requested' :
+                    {viewingService.status === 'DRAFT' ? 'Requested' :
                       viewingService.status === 'APPROVED' ? 'Newly Added' :
                         viewingService.status}
                   </span>
