@@ -311,7 +311,6 @@ export default function ExpertSidebar() {
   // Main component return
   return (
     <>
-
       {/* Logout Confirmation Dialog */}
       <LogoutDialog
         isOpen={logoutDialogOpen}
@@ -322,7 +321,6 @@ export default function ExpertSidebar() {
 
       {/* Mobile toggle button - always visible on mobile */}
       <ExpertProvider>
-
         <div className="md:hidden fixed top-4 left-4 z-50">
           <motion.button
             onClick={() => setMobileOpen(!mobileOpen)}
