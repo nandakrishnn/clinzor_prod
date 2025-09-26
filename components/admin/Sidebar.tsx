@@ -259,6 +259,24 @@ export default function AdminSidebar() {
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
   });
 
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Replace the current handleLogout function with these two functions:
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
+    signOut({ callbackUrl: "/auth/adminauthentication" });
+    console.log('Logging out...');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
+  };
+
   // Function to fetch all counts
   const fetchAllCounts = async () => {
     try {
@@ -370,17 +388,6 @@ export default function AdminSidebar() {
   ];
 
   const nestedMenuItems = [
-    // {
-    //   icon: <Users size={20} strokeWidth={1.5} />,
-    //   label: 'User Management',
-    //   badge: '245',
-    //   badgeColor: 'blue' as const,
-    //   children: [
-    //     { label: 'All Users', href: '/admin/allusers' },
-    //     // { label: 'Blocked Users', href: '/admin/blocked', badge: '12', badgeColor: 'red' as const },
-    //     // { label: 'User Analytics', href: '/admin/analytics' }
-    //   ]
-    // },
     {
       icon: <Building2 size={20} strokeWidth={1.5} />,
       label: 'Clinic Management',
@@ -392,17 +399,6 @@ export default function AdminSidebar() {
         // { label: 'Clinic Analytics', href: '/admin/clinics/analytics' }
       ]
     },
-    // {
-    //   icon: <UserCheck size={20} strokeWidth={1.5} />,
-    //   label: 'Expert Management',
-    //   badge: '89',
-    //   badgeColor: 'blue' as const,
-    //   children: [
-    //     { label: 'All Experts', href: '/admin/experts' },
-    //     // { label: 'Pending Verification', href: '/admin/experts/pending', badge: '5', badgeColor: 'yellow' as const },
-    //     // { label: 'Expert Performance', href: '/admin/experts/performance' }
-    //   ]
-    // },
     {
       icon: <Calendar size={20} strokeWidth={1.5} />,
       label: 'Bookings Management',
@@ -414,41 +410,6 @@ export default function AdminSidebar() {
         { label: 'Payment Records', href: '/admin/paymentsrecord' },
       ]
     },
-    // {
-    //   icon: <Stethoscope size={20} strokeWidth={1.5} />,
-    //   label: 'Service Management',
-    //   children: [
-    //     { label: 'All Services', href: '/admin/allservices' },
-    //     { label: 'Request Service', href: '/admin/requestservice' },
-    //   ]
-    // },
-    // {
-    //   icon: <DollarSign size={20} strokeWidth={1.5} />,
-    //   label: 'Dues Management',
-    //   badge: 'New',
-    //   badgeColor: 'green' as const,
-    //   children: [
-    //     { label: 'Dues List', href: '/admin/dues' },
-    //   ]
-    // },
-    // {
-    //   icon: <Gift size={20} strokeWidth={1.5} />,
-    //   label: 'Offers & Promotions',
-    //   badge: loading ? '...' : counts.offers,
-    //   badgeColor: 'yellow' as const,
-    //   children: [
-    //     { label: 'Offers List', href: '/admin/offers' },
-    //   ]
-    // },
-    // {
-    //   icon: <Home size={20} strokeWidth={1.5} />,
-    //   label: 'Camp Management',
-    //    badge: loading ? '...' : counts.camps,
-    //   badgeColor: 'blue' as const,
-    //   children: [
-    //     { label: 'All Camps', href: '/admin/allcamps' },
-    //   ]
-    // }
   ];
 
   const bottomMenuItems = [
@@ -486,11 +447,6 @@ export default function AdminSidebar() {
     if (isMobile) {
       setMobileOpen(false);
     }
-  };
-
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/auth/adminauthentication" });
-    console.log('Logging out...');
   };
 
   // Helper function to check if a nested item has an active child
@@ -632,11 +588,41 @@ export default function AdminSidebar() {
               </div>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-purple-600 hover:scale-105 transition-all touch-manipulation flex-shrink-0"
             >
               <LogOut size={18} strokeWidth={1.5} />
             </button>
+          </div>
+        )}
+
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4 border border-gray-200">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                <LogOut size={24} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">
+                Confirm Logout
+              </h3>
+              <p className="text-gray-600 text-center mb-6">
+                Are you sure you want to logout from the admin panel?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleLogoutCancel}
+                  className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="flex-1 px-4 py-2.5 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
