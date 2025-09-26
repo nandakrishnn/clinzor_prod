@@ -126,19 +126,15 @@ const OfferManagementTable = () => {
     next: null,
     previous: null
   });
+  const [tempSearchTerm, setTempSearchTerm] = useState('');
 
   useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      fetchOffers(currentPage, {
-        search: searchTerm,
-        status: statusFilter,
-        type: offerViewType,
-      });
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(debounceTimer);
+    fetchOffers(currentPage, {
+      search: searchTerm,
+      status: statusFilter,
+      type: offerViewType,
+    });
   }, [searchTerm, statusFilter, typeFilter, currentPage, offerViewType]);
-
 
   const fetchOffers = async (page = 1, filters: any = {}) => {
     try {
@@ -164,20 +160,6 @@ const OfferManagementTable = () => {
   useEffect(() => {
     fetchOffers(currentPage);
   }, [currentPage]);
-
-  // Filter and search logic
-  // const filteredOffers = useMemo(() => {
-  //   return offers.filter(offer => {
-  //     const matchesViewType = offerViewType === 'ADMIN'
-  //       ? offer.offer_type === 'ADMIN' || offer.offer_type === 'SYSTEM'
-  //       : offer.offer_type === 'CLINIC';
-  //     const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       offer.description.toLowerCase().includes(searchTerm.toLowerCase());
-  //     const matchesStatus = statusFilter === 'ALL' || offer.status === statusFilter;
-  //     const matchesType = typeFilter === 'ALL' || offer.offer_type === typeFilter;
-  //     return matchesViewType && matchesSearch && matchesStatus && matchesType;
-  //   });
-  // }, [offers, searchTerm, statusFilter, typeFilter, offerViewType]);
 
   const displayedOffers = offers;
 
@@ -423,7 +405,7 @@ const OfferManagementTable = () => {
   };
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -432,10 +414,10 @@ const OfferManagementTable = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 mb-6 p-6 sm:p-8">
+        <div className="bg-white mb-6 ">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Offer Management</h1>
@@ -444,7 +426,7 @@ const OfferManagementTable = () => {
             {(offerViewType === 'ADMIN' || offerViewType === 'ALL') && (
               <button
                 onClick={() => openModal()}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                className="bg-primaryColor hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
                 <Plus size={20} />
                 Add Offer
@@ -452,21 +434,21 @@ const OfferManagementTable = () => {
             )}
           </div>
           {/* Toggle for Admin/Clinic offers */}
-          <div className="mt-6 flex gap-2">
+          <div className="mt-6 flex gap-2 ">
             <button
-              className={`px-6 py-2 rounded-2xl font-semibold transition-all duration-200 ${offerViewType === 'ALL' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${offerViewType === 'ALL' ? 'bg-primaryColor text-white' : 'bg-gray-100 text-gray-700'}`}
               onClick={() => setOfferViewType('ALL')}
             >
               ALL Offers
             </button>
             <button
-              className={`px-6 py-2 rounded-2xl font-semibold transition-all duration-200 ${offerViewType === 'ADMIN' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${offerViewType === 'ADMIN' ? 'bg-primaryColor text-white' : 'bg-gray-100 text-gray-700'}`}
               onClick={() => setOfferViewType('ADMIN')}
             >
               Admin Offers
             </button>
             <button
-              className={`px-6 py-2 rounded-2xl font-semibold transition-all duration-200 ${offerViewType === 'CLINIC' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${offerViewType === 'CLINIC' ? 'bg-primaryColor text-white' : 'bg-gray-100 text-gray-700'}`}
               onClick={() => setOfferViewType('CLINIC')}
             >
               Clinic Offers
@@ -475,46 +457,49 @@ const OfferManagementTable = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 mb-6 p-6">
+        <div className="bg-white rounded-3xl border shadow-sm mb-6 p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
+                onClick={() => {
+                  setSearchTerm(tempSearchTerm);
+                  setCurrentPage(1);
+                }}
+              />
               <input
                 type="text"
                 placeholder="Search offers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                value={tempSearchTerm}
+                onChange={(e) => setTempSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchTerm(tempSearchTerm);
+                    setCurrentPage(1);
+                  }
+                }}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:outline-none"
               />
             </div>
             <div className="flex gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                className="px-4 py-3 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white"
               >
                 <option value="ALL">All Status</option>
                 <option value="DRAFT">Draft</option>
-                {/* <option value="PENDING">Pending</option> */}
                 <option value="APPROVED">Approved</option>
                 <option value="REJECTED">Rejected</option>
               </select>
-              {/* <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-              >
-                <option value="ALL">All Types</option>
-                <option value="ADMIN">Admin</option>
-                <option value="CLINIC">Clinic</option>
-              </select> */}
             </div>
           </div>
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hide-scrollbar ">
             <table className="w-full">
               <thead className="bg-gray-50/50 backdrop-blur-sm border-b border-gray-100">
                 <tr>
@@ -527,21 +512,20 @@ const OfferManagementTable = () => {
                   <th className="text-right py-5 px-6 font-semibold text-gray-800 text-sm tracking-wide">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 ">
                 {displayedOffers.length > 0 ? displayedOffers.map((offer: Offer) => (
                   <tr key={offer.uuid} className="hover:bg-gray-50/50 transition-all duration-200 group">
                     <td className="py-5 px-6">
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{offer.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">{offer.description}</p>
-                        <p className="text-xs text-gray-400 mt-2">Created by {offer.created_by}</p>
+                        <h3 className="font-semibold text-gray-900 text-lg capitalize truncate">{offer.title}</h3>
+                        <p className="text-xs text-gray-400 mt-1">{offer.created_by}</p>
                         <p className="text-xs text-gray-400">Max uses: {offer.max_use_limit}</p>
-                        {offer.reason_for_rejection && (
+                        {/* {offer.reason_for_rejection && (
                           <div className="mt-2 p-2 bg-red-50 rounded-lg">
                             <p className="text-xs text-red-600 font-medium">Rejection Reason:</p>
                             <p className="text-xs text-red-500">{offer.reason_for_rejection}</p>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </td>
                     <td className="py-5 px-6">
@@ -557,17 +541,14 @@ const OfferManagementTable = () => {
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
-                          <Percent size={18} className="text-white" />
-                        </div>
-                        <span className="text-xl font-bold text-gray-900">
+                        <span className="font-medium  text-gray-900">
                           {getDiscountDisplay(offer)}
                         </span>
                       </div>
                     </td>
                     <td className="py-5 px-6">
                       <div className="text-sm space-y-1">
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-2 text-gray-700 truncate">
                           <Calendar size={14} className="text-gray-400" />
                           <span className="font-medium">From:</span> {formatDate(offer.valid_from)}
                         </div>
@@ -681,8 +662,8 @@ const OfferManagementTable = () => {
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isCurrentPage
-                              ? 'bg-blue-600 text-white shadow-lg'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                             }`}
                         >
                           {page}

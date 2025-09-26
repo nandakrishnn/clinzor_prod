@@ -1,23 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   CreditCard,
-  Calendar,
-  Filter,
   Search,
   Download,
   Eye,
   RefreshCw,
-  DollarSign,
   TrendingUp,
-  Users,
   Clock,
   CheckCircle,
   AlertCircle,
   XCircle,
-  Video,
-  MapPin,
   Receipt,
-  ArrowUpDown,
   ChevronDown,
   ChevronLeft,
   ChevronRight
@@ -54,14 +47,6 @@ interface PaginationData {
   previous: string | null;
 }
 
-interface PaymentResponse {
-  data: PaymentRecord[];
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  next: string | null;
-  previous: string | null;
-}
 
 const PaymentRecordsDashboard = () => {
   // State management
