@@ -16,6 +16,7 @@ import Stack from '@mui/joy/Stack';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { LockOpenIcon } from '@heroicons/react/24/solid';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
 
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -33,6 +34,7 @@ export default function () {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
+  const [passView, setPassView] = useState(false)
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -174,7 +176,16 @@ export default function () {
                   </FormControl>
                   <FormControl required>
                     <FormLabel>Password</FormLabel>
-                    <Input type="password" name="password" />
+                    <div className='relative '>
+                      <Input type={passView ? "text" : "password"} name="password" />
+                      <div className='absolute right-2 top-2'>
+                        {
+                          passView ?
+                            <EyeIcon onClick={() => setPassView(false)} size={18} className='cursor-pointer' /> :
+                            <EyeOffIcon onClick={() => setPassView(true)} size={18} className='cursor-pointer' />
+                        }
+                      </div>
+                    </div>
                   </FormControl>
                   <Stack sx={{ gap: 4, mt: 2 }}>
                     <Box
