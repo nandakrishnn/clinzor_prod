@@ -1,8 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Calendar, Percent, Tag, FileText, X, Check, XCircle, CheckCircle, Clock, ChevronLeft, ChevronRight, Search, Filter, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Calendar, Percent, Tag, FileText, X, XCircle, CheckCircle, Clock, ChevronLeft, ChevronRight, Search, AlertTriangle } from 'lucide-react';
 import { approveOrRejectOffers, createOffers, deleteOffers, editOffers, GetAllOffers } from '@/service/admin/offerManagementService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationProps } from '@/types/user';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // Updated type definitions to match API response
 type Offer = {
@@ -90,6 +92,21 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
   );
 };
 
+const CustomDateInput = ({ value, onClick, onChange, placeholder }: any) => (
+  <div className="relative">
+    <input
+      type="text"
+      className="w-full px-4 py-4 pl-12 border text-black border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg cursor-pointer"
+      value={value}
+      onClick={onClick}
+      onChange={onChange}
+      placeholder={placeholder}
+      readOnly
+    />
+    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+  </div>
+);
+
 const OfferManagementTable = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,6 +132,8 @@ const OfferManagementTable = () => {
     clinic: null,
   });
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
@@ -166,25 +185,39 @@ const OfferManagementTable = () => {
   const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+  // Add this helper function
+  const formatDateForDisplay = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
+      month: 'long',
+      day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC' 
     });
+  };
+
+  // Update your formatDate function to use this:
+  const formatDate = (dateString: string) => {
+    return formatDateForDisplay(dateString);
   };
 
   const openModal = (offer: Offer | null = null) => {
     if (offer) {
       setEditingOffer(offer);
+      const validFrom = new Date(offer.valid_from);
+      const validTo = new Date(offer.valid_to);
+
+      setStartDate(validFrom);
+      setEndDate(validTo);
+
       setFormData({
         title: offer.title,
         offer_type: offer.offer_type,
         description: offer.description,
-        valid_from: new Date(offer.valid_from).toISOString().slice(0, 16),
-        valid_to: new Date(offer.valid_to).toISOString().slice(0, 16),
+        valid_from: validFrom.toISOString().slice(0, 16),
+        valid_to: validTo.toISOString().slice(0, 16),
         discount_percentage: offer.discount_percentage,
         flat_discount_amt: offer.flat_discount_amt,
         max_use_limit: offer.max_use_limit,
@@ -230,6 +263,35 @@ const OfferManagementTable = () => {
     }));
   };
 
+  const handleDateChange = (date: Date | null, field: 'start' | 'end') => {
+    if (date) {
+      const adjustedDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      if (field === 'start') {
+        setStartDate(date);
+        setFormData(prev => ({
+          ...prev,
+          valid_from: adjustedDate.toISOString().slice(0, 16)
+        }));
+        // If end date is before new start date, adjust end date
+        if (endDate && date > endDate) {
+          const newEndDate = new Date(date.getTime() + 60 * 60000); // 1 hour later
+          setEndDate(newEndDate);
+          const adjustedEndDate = new Date(newEndDate.getTime() - (newEndDate.getTimezoneOffset() * 60000))
+          setFormData(prev => ({
+            ...prev,
+            valid_to: adjustedEndDate.toISOString().slice(0, 16)
+          }));
+        }
+      } else {
+        setEndDate(date);
+        setFormData(prev => ({
+          ...prev,
+          valid_to: adjustedDate.toISOString().slice(0, 16)
+        }));
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     // Basic validation
     if (!formData.title || !formData.description || !formData.valid_from || !formData.valid_to) {
@@ -243,14 +305,25 @@ const OfferManagementTable = () => {
       return;
     }
 
+    // Validate date range
+    const validFrom = new Date(formData.valid_from);
+    const validTo = new Date(formData.valid_to);
+    if (validTo <= validFrom) {
+      setNotification({
+        type: 'error',
+        message: 'End date must be after start date'
+      });
+      return;
+    }
+
     try {
       // Prepare the minimal payload for the API
       const apiPayload = {
         title: formData.title,
         offer_type: formData.offer_type,
         description: formData.description,
-        valid_from: new Date(formData.valid_from).toISOString(),
-        valid_to: new Date(formData.valid_to).toISOString(),
+        valid_from: formData.valid_from,
+        valid_to: formData.valid_to,
         discount_percentage: formData.discount_percentage,
         max_use_limit: formData.max_use_limit,
         // Only include flat_discount_amt if discount_percentage is not provided
@@ -715,7 +788,7 @@ const OfferManagementTable = () => {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                  className="w-full px-4 py-4 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
                   placeholder="Enter offer title"
                   required
                 />
@@ -729,13 +802,13 @@ const OfferManagementTable = () => {
                   name="offer_type"
                   value={formData.offer_type}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                  className="w-full px-4 py-4 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
                   disabled={!!editingOffer}
                 >
                   <option value="ADMIN">Admin</option>
                   <option value="CLINIC">Clinic</option>
-                  <option value="PROMOTIONAL">Promotional</option>
-                  <option value="SYSTEM">System</option>
+                  {/* <option value="PROMOTIONAL">Promotional</option>
+                  <option value="SYSTEM">System</option> */}
                 </select>
               </div>
 
@@ -747,7 +820,7 @@ const OfferManagementTable = () => {
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg resize-none"
+                  className="w-full px-4 py-4 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg resize-none"
                   placeholder="Enter offer description"
                   rows={4}
                   required
@@ -759,13 +832,17 @@ const OfferManagementTable = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Valid From
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="valid_from"
-                    value={formData.valid_from}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
-                    required
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date) => handleDateChange(date, 'start')}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    minDate={new Date()}
+                    customInput={<CustomDateInput placeholder="Select start date and time" />}
+                    className="w-full"
                   />
                 </div>
 
@@ -773,13 +850,17 @@ const OfferManagementTable = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Valid To
                   </label>
-                  <input
-                    type="datetime-local"
-                    name="valid_to"
-                    value={formData.valid_to}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
-                    required
+                  <DatePicker
+                    selected={endDate}
+                    onChange={(date) => handleDateChange(date, 'end')}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    minDate={startDate || new Date()}
+                    customInput={<CustomDateInput placeholder="Select end date and time" />}
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -795,7 +876,7 @@ const OfferManagementTable = () => {
                       name="discount_percentage"
                       value={formData.discount_percentage || ''}
                       onChange={handleNumberInputChange}
-                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
                       placeholder="Enter percentage"
                       min="0"
                       max="100"
@@ -816,7 +897,7 @@ const OfferManagementTable = () => {
                       name="flat_discount_amt"
                       value={formData.flat_discount_amt || ''}
                       onChange={handleNumberInputChange}
-                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                      className="w-full px-4 py-4 pr-12 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
                       placeholder="Enter amount"
                       min="0"
                     />
@@ -836,7 +917,7 @@ const OfferManagementTable = () => {
                   name="max_use_limit"
                   value={formData.max_use_limit}
                   onChange={handleNumberInputChange}
-                  className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+                  className="w-full px-4 py-4 border border-gray-200 rounded-lg transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
                   placeholder="Enter max uses"
                   min="1"
                   required
@@ -847,7 +928,7 @@ const OfferManagementTable = () => {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 text-lg"
+                  className="flex-1 bg-primaryColor text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 text-lg"
                 >
                   {editingOffer ? 'Update Offer' : 'Create Offer'}
                 </button>
