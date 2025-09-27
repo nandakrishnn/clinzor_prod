@@ -46,8 +46,12 @@ interface PaginationData {
   next: string | null;
   previous: string | null;
 }
-const Notification = ({ type, message, onClose }: {
-  type: 'success' | 'error' | 'warning';
+const Notification = ({
+  type,
+  message,
+  onClose
+}: {
+  type: "success" | "error" | "warning";
   message: string;
   onClose: () => void;
 }) => (
@@ -55,10 +59,13 @@ const Notification = ({ type, message, onClose }: {
     initial={{ opacity: 0, y: -50, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -50, scale: 0.9 }}
-    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-        'bg-yellow-50 border-yellow-200 text-yellow-800'
-      }`}
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${
+      type === "success"
+        ? "bg-green-50 border-green-200 text-green-800"
+        : type === "error"
+        ? "bg-red-50 border-red-200 text-red-800"
+        : "bg-yellow-50 border-yellow-200 text-yellow-800"
+    }`}
   >
     <div className="flex items-center justify-between">
       <p className="font-medium">{message}</p>
@@ -75,18 +82,18 @@ const Notification = ({ type, message, onClose }: {
 const CampManagement = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCompletion, setFilterCompletion] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCompletion, setFilterCompletion] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const [loading, setLoading] = useState(false);
-   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
- const [paginationData, setPaginationData] = useState<PaginationData>({
+  const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
     total_pages: 1,
     total_items: 0,
@@ -120,14 +127,14 @@ const CampManagement = () => {
     } catch (error) {
       console.error("Failed to fetch camps:", error);
       setNotification({
-        type: 'error',
-        message: 'Failed to load camps. Please try again later.'
+        type: "error",
+        message: "Failed to load camps. Please try again later."
       });
     } finally {
       setLoading(false);
     }
   };
-  console.log(camps, "data")
+  console.log(camps, "data");
 
   // Approve/Reject handlers
   const handleApprove = () => {
@@ -153,27 +160,29 @@ const CampManagement = () => {
     setLoadingCampId(campId);
 
     // Optimistically update the UI
-    setCamps(prev => prev.map(c =>
-      c.uuid === campId ? { ...c, status: 'COMPLETED' } : c
-    ));
+    setCamps((prev) =>
+      prev.map((c) => (c.uuid === campId ? { ...c, status: "COMPLETED" } : c))
+    );
 
     try {
       // Call the API to mark as complete with only COMPLETED status
-      await toggleCompletion(campId, { status: 'COMPLETED' });
+      await toggleCompletion(campId, { status: "COMPLETED" });
 
       setNotification({
-        type: 'success',
-        message: 'Camp marked as completed successfully'
+        type: "success",
+        message: "Camp marked as completed successfully"
       });
     } catch (error: any) {
       // Revert the UI change if the API call fails
-      setCamps(prev => prev.map(c =>
-        c.uuid === campId ? { ...c, status: 'PENDING' } : c
-      ));
+      setCamps((prev) =>
+        prev.map((c) => (c.uuid === campId ? { ...c, status: "PENDING" } : c))
+      );
 
       setNotification({
-        type: 'error',
-        message: `Failed to mark camp as complete: ${error.response?.data?.message || error.message}`
+        type: "error",
+        message: `Failed to mark camp as complete: ${
+          error.response?.data?.message || error.message
+        }`
       });
     } finally {
       setLoadingCampId(null);
@@ -181,21 +190,21 @@ const CampManagement = () => {
   };
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'APPROVED':
+      case "APPROVED":
         return {
-          color: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white',
+          color: "bg-gradient-to-r from-emerald-500 to-green-600 text-white",
           icon: CheckCircle,
           glow: "shadow-emerald-500/25"
         };
-      case 'REJECTED':
+      case "REJECTED":
         return {
-          color: 'bg-gradient-to-r from-red-500 to-rose-600 text-white',
+          color: "bg-gradient-to-r from-red-500 to-rose-600 text-white",
           icon: AlertCircle,
           glow: "shadow-red-500/25"
         };
       default:
         return {
-          color: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white',
+          color: "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
           icon: Clock,
           glow: "shadow-amber-500/25"
         };
@@ -219,11 +228,15 @@ const CampManagement = () => {
     if (source?.includes("instagram")) return <Instagram className="w-4 h-4" />;
     return <MapPin className="w-4 h-4" />;
   };
-  const filteredCamps = camps.filter(camp => {
-    const matchesSearch = camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredCamps = camps.filter((camp) => {
+    const matchesSearch =
+      camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       camp.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || camp.status === filterStatus;
-    const matchesCompletion = filterCompletion === 'all' || (filterCompletion === 'COMPLETED' ? camp.completed : !camp.completed);
+    const matchesFilter =
+      filterStatus === "all" || camp.status === filterStatus;
+    const matchesCompletion =
+      filterCompletion === "all" ||
+      (filterCompletion === "COMPLETED" ? camp.completed : !camp.completed);
     return matchesSearch && matchesFilter && matchesCompletion;
   });
 
@@ -237,9 +250,9 @@ const CampManagement = () => {
     )
   };
 
-   if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -248,15 +261,12 @@ const CampManagement = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen ">
       {/* Header */}
-      <div className="relative backdrop-blur-sm bg-white/80 border-b border-white/20 shadow-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between py-6">
+      <div className="relative backdrop-blur-sm  border-b border-white/20 ">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between ">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                   Camp Management
@@ -357,7 +367,11 @@ const CampManagement = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Priority Indicator */}
-                <div className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(camp.priority)}`}></div>
+                <div
+                  className={`absolute top-0 left-0 w-full h-1 ${getPriorityColor(
+                    camp.priority
+                  )}`}
+                ></div>
 
                 {/* Hover Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
@@ -395,7 +409,12 @@ const CampManagement = () => {
                       <div className="flex items-center text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
                         <Calendar className="w-4 h-4 mr-2 text-purple-500" />
                         <div>
-                          <p className="font-medium">{new Date(camp.preferred_date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</p>
+                          <p className="font-medium">
+                            {new Date(camp.preferred_date).toLocaleDateString(
+                              "en",
+                              { month: "short", day: "numeric" }
+                            )}
+                          </p>
                           <p className="text-xs text-gray-500">preferred</p>
                         </div>
                       </div>
@@ -438,7 +457,7 @@ const CampManagement = () => {
                   </div>
 
                   {/* Mark as Complete Button */}
-                  {camp.status !==  "COMPLETED" && (
+                  {camp.status !== "COMPLETED" && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -449,7 +468,7 @@ const CampManagement = () => {
                       Mark as Complete
                     </button>
                   )}
-                  {camp.status ==  "COMPLETED"  && (
+                  {camp.status == "COMPLETED" && (
                     <div className="mt-4 w-full px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center">
                       Completed
                     </div>
@@ -688,7 +707,6 @@ const CampManagement = () => {
           </div>
         </div>
       )}
-
 
       {/* Notification */}
       <AnimatePresence>
