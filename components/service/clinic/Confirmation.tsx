@@ -10,7 +10,7 @@ export function Confirmation({
   service: { title: string }
   slot: { label: string } | null
   patient: { name?: string; phone_number?: string }
-  mode: "home" | "video" | "clinic"
+  mode: "HOME_VISIT" | "video" | "PHYSICAL_VISIT"
   total: number
 }) {
   return (
@@ -30,7 +30,7 @@ export function Confirmation({
           <div className="mt-3">
             <p className="text-sm font-medium text-gray-900">{service.title}</p>
             <p className="text-xs text-gray-500">
-              Mode: {mode === "clinic" ? "In-Clinic" : mode === "home" ? "Home Visit" : "Video Call"}
+              Mode: {mode === "PHYSICAL_VISIT" ? "In-Clinic" : mode === "HOME_VISIT" ? "Home Visit" : "Video Call"}
             </p>
           </div>
         </div>
