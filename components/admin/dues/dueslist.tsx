@@ -290,11 +290,6 @@ const DueManagement = () => {
     setSearchTerm(tempSearchTerm)
   }
 
-  // Calculate totals for dues
-  const totalDues = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_dues, 0);
-  const totalPaid = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_paid, 0);
-  const totalRemaining = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.remaining_dues, 0);
-
   const getStatusInfo = (remaining: number) => {
     if (remaining > 0) return {
       text: 'Outstanding',

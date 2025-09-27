@@ -616,17 +616,17 @@ const MedicalServicesApp: React.FC = () => {
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button
                           onClick={() => handleStatusChange(service.uuid, 'APPROVED')}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                         >
                           <CheckCircle className="w-4 h-4" />
-                          <span>Accept Service</span>
+                          <span className='text-xs'>Accept Service</span>
                         </button>
                         <button
                           onClick={() => handleStatusChange(service.uuid, 'REJECTED')}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                         >
                           <XCircle className="w-4 h-4" />
-                          <span>Reject Service</span>
+                          <span className='text-xs'>Reject Service</span>
                         </button>
                       </div>
                     )}
