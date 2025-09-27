@@ -107,6 +107,62 @@ const CustomDateInput = ({ value, onClick, onChange, placeholder }: any) => (
   </div>
 );
 
+const DeleteConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  offerTitle 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  offerTitle: string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-full">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Offer</h3>
+              <p className="text-sm text-gray-500 mt-1">This action cannot be undone</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700">
+            Are you sure you want to delete the offer <span className="font-semibold">"{offerTitle}"</span>?
+          </p>
+          <p className="text-sm text-red-600 mt-2">
+            This will permanently remove the offer and all its data.
+          </p>
+        </div>
+
+        <div className="flex gap-3 p-6 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Delete Offer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const OfferManagementTable = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -146,6 +202,15 @@ const OfferManagementTable = () => {
     previous: null
   });
   const [tempSearchTerm, setTempSearchTerm] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    offerId: string | null;
+    offerTitle: string;
+  }>({
+    isOpen: false,
+    offerId: null,
+    offerTitle: ''
+  });
 
   useEffect(() => {
     fetchOffers(currentPage, {
@@ -363,13 +428,38 @@ const OfferManagementTable = () => {
     }
   };
 
-  const deleteOffer = async (uuid: string) => {
+  // Open delete confirmation modal
+  const openDeleteConfirmation = (offer: Offer) => {
+    setDeleteModal({
+      isOpen: true,
+      offerId: offer.uuid,
+      offerTitle: offer.title
+    });
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteConfirmation = () => {
+    setDeleteModal({
+      isOpen: false,
+      offerId: null,
+      offerTitle: ''
+    });
+  };
+
+  // Handle actual deletion
+  const confirmDelete = async () => {
+    if (!deleteModal.offerId) return;
+
     try {
       // Call the delete API
-      await deleteOffers(uuid);
+      await deleteOffers(deleteModal.offerId);
+      fetchOffers()
 
       // Update local state if API call succeeds
-      setOffers(prev => prev.filter(offer => offer.uuid !== uuid));
+      setOffers(prev => prev.filter(offer => offer.uuid !== deleteModal.offerId));
+
+      // Close the confirmation modal
+      closeDeleteConfirmation();
 
       // Show success feedback
       setNotification({
@@ -379,11 +469,14 @@ const OfferManagementTable = () => {
 
     } catch (error) {
       console.error('Error deleting offer:', error);
+      
+      // Close the confirmation modal
+      closeDeleteConfirmation();
+      
       setNotification({
         type: 'error',
         message: 'Failed to delete offer. Please try again.'
       });
-
     }
   };
 
@@ -593,12 +686,6 @@ const OfferManagementTable = () => {
                         <h3 className="font-semibold text-gray-900 text-lg capitalize truncate">{offer.title}</h3>
                         <p className="text-xs text-gray-400 mt-1">{offer.created_by}</p>
                         <p className="text-xs text-gray-400">Max uses: {offer.max_use_limit}</p>
-                        {/* {offer.reason_for_rejection && (
-                          <div className="mt-2 p-2 bg-red-50 rounded-lg">
-                            <p className="text-xs text-red-600 font-medium">Rejection Reason:</p>
-                            <p className="text-xs text-red-500">{offer.reason_for_rejection}</p>
-                          </div>
-                        )} */}
                       </div>
                     </td>
                     <td className="py-5 px-6">
@@ -657,24 +744,8 @@ const OfferManagementTable = () => {
                             </button>
                           </>
                         )}
-                        {/* {offer.status === 'DRAFT' && (
-                          <button
-                            onClick={() => updateOfferStatus(offer.uuid, 'DRAFT')}
-                            className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                            title="Submit for Approval"
-                          >
-                            <Check size={18} />
-                          </button>
-                        )} */}
-                        {/* <button
-                          onClick={() => openModal(offer)}
-                          className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 group-hover:scale-105"
-                          title="Edit"
-                        >
-                          <Edit3 size={18} />
-                        </button> */}
                         <button
-                          onClick={() => deleteOffer(offer.uuid)}
+                          onClick={() => openDeleteConfirmation(offer)}
                           className="p-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group-hover:scale-105"
                           title="Delete"
                         >
@@ -760,7 +831,7 @@ const OfferManagementTable = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Create/Edit Offer Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -807,8 +878,6 @@ const OfferManagementTable = () => {
                 >
                   <option value="ADMIN">Admin</option>
                   <option value="CLINIC">Clinic</option>
-                  {/* <option value="PROMOTIONAL">Promotional</option>
-                  <option value="SYSTEM">System</option> */}
                 </select>
               </div>
 
@@ -944,6 +1013,15 @@ const OfferManagementTable = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={closeDeleteConfirmation}
+        onConfirm={confirmDelete}
+        offerTitle={deleteModal.offerTitle}
+      />
+
       {/* Rejection Modal */}
       {showRejectionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -976,6 +1054,7 @@ const OfferManagementTable = () => {
           </div>
         </div>
       )}
+
       {/* Notifications */}
       <AnimatePresence>
         {notification && (
