@@ -17,6 +17,7 @@ import {
   editOrganization,
   GetAllOrganization
 } from "@/service/admin/organizationManagementService";
+import { toast } from "sonner";
 
 // Define the organization type
 interface Organization {
@@ -92,7 +93,7 @@ const OrganizationManagement = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (organizations.length === 0) return;
-    
+
     setIsSubmitting(true);
     setApiError(null);
 
@@ -110,16 +111,17 @@ const OrganizationManagement = () => {
       const updatedOrg = await editOrganization({
         ...orgData
       });
-      
+
       setOrganizations([updatedOrg]);
       setIsEditMode(false);
-      
+      toast.success("Organization updated successfully!")
       setNotification({
         type: "success",
         message: "Organization updated successfully!"
       });
     } catch (error: any) {
       console.error("Error updating organization:", error);
+      toast.error(error.response?.data?.message || "Failed to update organization")
       setApiError(
         error.response?.data?.message || "Failed to update organization"
       );
@@ -178,15 +180,14 @@ const OrganizationManagement = () => {
                 </p>
               </div>
             </div>
-            
+
             {organizations.length > 0 && (
               <button
                 onClick={handleEditToggle}
-                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center ${
-                  isEditMode 
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
+                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center ${isEditMode
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     : "bg-primaryColor text-white "
-                }`}
+                  }`}
               >
                 {isEditMode ? (
                   <>
@@ -222,11 +223,10 @@ const OrganizationManagement = () => {
             <form onSubmit={handleSubmit} className="p-6 sm:p-8">
               {/* Notification */}
               {notification && (
-                <div className={`mb-6 p-4 rounded-lg ${
-                  notification.type === "success" ? "bg-green-50 text-green-700" :
-                  notification.type === "error" ? "bg-red-50 text-red-700" :
-                  "bg-yellow-50 text-yellow-700"
-                }`}>
+                <div className={`mb-6 p-4 rounded-lg ${notification.type === "success" ? "bg-green-50 text-green-700" :
+                    notification.type === "error" ? "bg-red-50 text-red-700" :
+                      "bg-yellow-50 text-yellow-700"
+                  }`}>
                   {notification.message}
                 </div>
               )}
@@ -241,21 +241,6 @@ const OrganizationManagement = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column */}
                 <div className="space-y-6">
-                  {/* Created By */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Created By
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.created_by}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange("created_by", e.target.value)
-                      }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
-                      disabled={!isEditMode}
-                    />
-                  </div>
 
                   {/* About Organization */}
                   <div>
@@ -288,10 +273,7 @@ const OrganizationManagement = () => {
                       disabled={!isEditMode}
                     />
                   </div>
-                </div>
 
-                {/* Right Column */}
-                <div className="space-y-6">
                   {/* Free Expert Bookings */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,6 +290,10 @@ const OrganizationManagement = () => {
                       disabled={!isEditMode}
                     />
                   </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
 
                   {/* Expert Booking Charge */}
                   <div>
@@ -330,7 +316,7 @@ const OrganizationManagement = () => {
                   {/* Toggle Settings */}
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium text-gray-700">Auto-Approval Settings</h3>
-                    
+
                     {/* Auto Approve Normal Slot */}
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>
@@ -345,14 +331,12 @@ const OrganizationManagement = () => {
                         type="button"
                         onClick={() => handleToggleChange("auto_approve_normal_slot")}
                         disabled={!isEditMode}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.auto_approve_normal_slot ? 'bg-blue-600' : 'bg-gray-200'
-                        } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.auto_approve_normal_slot ? 'bg-blue-600' : 'bg-gray-200'
+                          } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.auto_approve_normal_slot ? 'translate-x-6' : 'translate-x-1'
-                          }`}
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.auto_approve_normal_slot ? 'translate-x-6' : 'translate-x-1'
+                            }`}
                         />
                       </button>
                     </div>
@@ -371,14 +355,12 @@ const OrganizationManagement = () => {
                         type="button"
                         onClick={() => handleToggleChange("auto_approve_expert_slot")}
                         disabled={!isEditMode}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.auto_approve_expert_slot ? 'bg-blue-600' : 'bg-gray-200'
-                        } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.auto_approve_expert_slot ? 'bg-blue-600' : 'bg-gray-200'
+                          } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.auto_approve_expert_slot ? 'translate-x-6' : 'translate-x-1'
-                          }`}
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.auto_approve_expert_slot ? 'translate-x-6' : 'translate-x-1'
+                            }`}
                         />
                       </button>
                     </div>
@@ -392,7 +374,7 @@ const OrganizationManagement = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-6 py-3 bg-primaryColor text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {isSubmitting ? "Saving..." : "Save Changes"}
