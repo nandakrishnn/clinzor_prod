@@ -62,7 +62,7 @@ export const blockExpert = async (id: any, body: {
   is_blocked: boolean;
 }) => {
 
-  console.log(body )
+  console.log(body)
   try {
     const response = await axiosPrivate.patch(`user/user-block/${id}/`, body);
     return response.data;
@@ -170,8 +170,17 @@ export const getAllSlotsforExpret = async (params: any) => {
 };
 export const getAllBookingforExpret = async (params: { expert: string }) => {
   try {
-    const response = await axiosPrivate.get(`customer/expert_booking_info/${params.expert}`);
+    const response = await axiosPrivate.get(`customer/expert-booking-lc/${params.expert}`);
     return response.data; // Return the full response data
+  } catch (error) {
+    console.error("Failed to fetch expert bookings", error);
+    throw error;
+  }
+};
+export const getAllBookingForAExpert = async (params: any) => {
+  try {
+    const response = await axiosPrivate.get(`customer/expert-booking-lc/`, { params });
+    return response?.data?.data; // Return the full response data
   } catch (error) {
     console.error("Failed to fetch expert bookings", error);
     throw error;
