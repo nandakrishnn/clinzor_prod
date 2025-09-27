@@ -50,7 +50,7 @@ interface Clinic {
   address: string;
   city: string;
   pincode: string;
-  status: "APPROVED" | "Draft" | "Pending" | "REJECTED";
+  status: "APPROVED" | "DRAFT" | "Pending" | "REJECTED";
   paymentStatus: "Paid" | "Pending" | "No Dues" | "Overdue";
   dueAmount: string;
   hours: string;
@@ -275,7 +275,7 @@ const StatusBadge = ({ status }: { status: Clinic["status"] }) => {
       color: "bg-green-100 text-green-700",
       icon: CheckCircle
     },
-    Draft: {
+    DRAFT: {
       color: "bg-gray-100 text-gray-700",
       icon: Edit
     },
@@ -349,7 +349,6 @@ const Stepper = ({ steps, currentStep }: { steps: string[], currentStep: number 
 };
 
 export default function ClinicManagement() {
-  const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>([]);
 
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>(clinics);
@@ -480,7 +479,7 @@ export default function ClinicManagement() {
         if (selectedHeader === 'Approved') {
           params.status = 'APPROVED';
         } else if (selectedHeader === 'Pending') {
-          params.status = 'PENDING';
+          params.status = 'DRAFT';
         } else if (selectedHeader === 'Active') {
           params.is_active = true;
         } else if (selectedHeader === 'Deactivated') {
@@ -525,7 +524,7 @@ export default function ClinicManagement() {
   if (selectedHeader === "Approved")
     clinicsToShow = filteredClinics.filter((c) => c.status === "APPROVED");
   else if (selectedHeader === "Pending")
-    clinicsToShow = filteredClinics.filter((c) => c.status === "Pending");
+    clinicsToShow = filteredClinics.filter((c) => c.status === "DRAFT");
   else if (selectedHeader === "Active")
     clinicsToShow = filteredClinics.filter((c) => c.is_active);
   else if (selectedHeader === "Deactivated")
@@ -909,6 +908,7 @@ export default function ClinicManagement() {
             }.`
         });
         fetchClinics(currentPage, debouncedSearchQuery, selectedStatus, selectedPaymentStatus);
+        getDashboardStatics()
       })
       .catch((error) => {
         // Revert the UI change if the API call fails
@@ -936,6 +936,7 @@ export default function ClinicManagement() {
           type: "success",
           message: `Clinic "${clinic.name}" deleted Successfully.`
         });
+        getDashboardStatics()
       })
       .catch((error) => {
         setNotification({
@@ -1029,6 +1030,7 @@ export default function ClinicManagement() {
               setSelectedHeader("ALL");
               setSelectedStatus("ALL");
               setShowDeactivated(false);
+              setCurrentPage(1)
             }}
           >
             <div className="flex items-center justify-between">
@@ -1056,6 +1058,7 @@ export default function ClinicManagement() {
               setSelectedHeader("Approved");
               setSelectedStatus("APPROVED");
               setShowDeactivated(false);
+              setCurrentPage(1)
             }}
           >
             <div className="flex items-center justify-between">
@@ -1081,11 +1084,12 @@ export default function ClinicManagement() {
               setSelectedHeader("Pending");
               setSelectedStatus("ALL");
               setShowDeactivated(false);
+              setCurrentPage(1)
             }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-sm font-medium text-gray-600">Drafted</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {dashData?.pending}
                 </p>
@@ -1106,6 +1110,7 @@ export default function ClinicManagement() {
               setSelectedHeader("Active");
               setSelectedStatus("ALL");
               setShowDeactivated(false);
+              setCurrentPage(1)
             }}
           >
             <div className="flex items-center justify-between">
@@ -1131,9 +1136,7 @@ export default function ClinicManagement() {
               setSelectedHeader("Deactivated");
               setSelectedStatus("ALL");
               setShowDeactivated(true);
-              setTimeout(() => {
-                clinicsListRef.current?.scrollIntoView({ behavior: "smooth" });
-              }, 100);
+              setCurrentPage(1)
             }}
           >
             <div className="flex items-center justify-between">
@@ -1182,10 +1185,9 @@ export default function ClinicManagement() {
                 className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-3 pr-8 focus:outline-none "
               >
                 <option value="ALL">All Status</option>
-                <option value="Approved">Approved</option>
-                <option value="Draft">Draft</option>
-                <option value="Pending">Pending</option>
-                <option value="Rejected">Rejected</option>
+                <option value="APPROVED">Approved</option>
+                <option value="DRAFT">Draft</option>
+                <option value="REJECTED">Rejected</option>
               </select>
               <ChevronDown
                 size={16}
@@ -1210,7 +1212,7 @@ export default function ClinicManagement() {
 
         {/* Clinics List - Card Style for All Screens */}
         <div ref={clinicsListRef} className="mb-8 space-y-4">
-          {clinicsToShow.map((clinic, index) => (
+          {clinics.map((clinic, index) => (
             <motion.div
               key={clinic.uuid}
               className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow cursor-pointer"
@@ -1315,31 +1317,24 @@ export default function ClinicManagement() {
                   {clinic.is_active ? (
                     <button
                       onClick={() =>
-                        setConfirmModal({ type: "active", clinic })
+                        setConfirmModal({ type: "inactive", clinic })
                       }
                       className="flex items-center gap-2 px-4 py-2 text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
                     >
                       <CheckCircle size={16} />
-                      <span className="hidden sm:inline">Activate</span>
+                      <span className="hidden sm:inline">Deactivate</span>
                     </button>
                   ) : (
                     <button
                       onClick={() =>
-                        setConfirmModal({ type: "inactive", clinic })
+                        setConfirmModal({ type: "active", clinic })
                       }
-                      className="flex items-center gap-2 px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors font-medium"
+                      className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors font-medium"
                     >
                       <XCircle size={16} />
-                      <span className="hidden sm:inline">Deactivate</span>
+                      <span className="hidden sm:inline">Activate</span>
                     </button>
                   )}
-                  {/* <button
-                    onClick={() => setConfirmModal({ type: "delete", clinic })}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                  >
-                    <X size={16} />
-                    <span className="hidden sm:inline">Delete</span>
-                  </button> */}
                 </div>
               </div>
             </motion.div>
@@ -1935,7 +1930,7 @@ export default function ClinicManagement() {
                       handleToggleActive(confirmModal.clinic!);
                       setConfirmModal(null);
                     }}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
                   >
                     Deactivate
                   </button>
