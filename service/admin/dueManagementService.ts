@@ -21,6 +21,10 @@ export const deleteDue = async (Id: string) => {
 export const GetADue = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
 };
+export const getAdminDueStaticData = async () => {
+  const res = await axiosPrivate.get(`clinic/dues-management-analytics/`);
+  return res?.data
+};
 
 export const GetAllDues = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
   try {
@@ -40,7 +44,7 @@ export const GetAllDues = async (page: number, search: string = '', filter: stri
 
     // Add sort parameter if provided and not 'default'
     if (sort !== 'default') {
-      params.sort = sort;
+      params.order = sort;
     }
 
     const response = await axiosPrivate.get('clinic/list-clinic-dues/', {

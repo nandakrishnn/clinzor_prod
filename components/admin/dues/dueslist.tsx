@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, Building2, Calendar, MoreHorizontal, X, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, CreditCard, Eye } from 'lucide-react';
-import { GetAllDues, GetAllPayment } from '@/service/admin/dueManagementService';
+import { getAdminDueStaticData, GetAllDues, GetAllPayment } from '@/service/admin/dueManagementService';
 
 import * as XLSX from 'xlsx';
 
@@ -175,7 +175,9 @@ interface PaginationData {
 }
 
 const DueManagement = () => {
+  const [dashData, setDashData] = useState<any>()
   const [searchTerm, setSearchTerm] = useState('');
+  const [tempSearchTerm, setTempSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [animateCards, setAnimateCards] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -185,8 +187,7 @@ const DueManagement = () => {
   const itemsPerPage = 9;
   const [dueTypeFilter, setDueTypeFilter] = useState('ALL');
   const [activeTab, setActiveTab] = useState('DUES');
-  const [sortBy, setSortBy] = useState<'default' | 'highest' | 'lowest'>('default');
-  const [modalBookingFilter, setModalBookingFilter] = useState<'ALL' | 'SERVICE' | 'SESSION'>('ALL');
+  const [sortBy, setSortBy] = useState<'default' | 'AMOUNT_DESC' | 'AMOUNT_ASC'>('default');
   const [duesData, setDuesData] = useState<Clinic[]>([]);
   const [paymentData, setPaymentData] = useState<PaymentRecord[]>([]);
   const [notification, setNotification] = useState<{
@@ -210,18 +211,6 @@ const DueManagement = () => {
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
-  // Debounce search term
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchTerm]);
 
   // Fetch dues data
   const fetchDuesData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
@@ -229,6 +218,7 @@ const DueManagement = () => {
     try {
       const response = await GetAllDues(page, search, filter, sort);
       setDuesData(response.data);
+      console.log(response.data)
       setPaginationData({
         current_page: response.current_page,
         total_pages: response.total_pages,
@@ -246,6 +236,18 @@ const DueManagement = () => {
       setLoading(false);
     }
   };
+
+  const getDashboardStatics = async () => {
+    try {
+      const res = await getAdminDueStaticData();
+      console.log(res, "data fromt he clinic")
+      if (res?.status === 200) {
+        setDashData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   // Fetch payment data
   const fetchPaymentData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
@@ -273,13 +275,20 @@ const DueManagement = () => {
 
   // Fetch data when filters change
   useEffect(() => {
+
+    getDashboardStatics()
+
     if (activeTab === 'DUES') {
-      fetchDuesData(currentPage, debouncedSearchTerm, selectedFilter, sortBy);
+      fetchDuesData(currentPage, searchTerm, selectedFilter, sortBy);
     } else if (activeTab === 'PAYMENT_HISTORY') {
-      fetchPaymentData(paymentCurrentPage, debouncedSearchTerm, selectedFilter, sortBy);
+      fetchPaymentData(paymentCurrentPage, searchTerm, selectedFilter, sortBy);
     }
     setTimeout(() => setAnimateCards(true), 100);
-  }, [currentPage, paymentCurrentPage, debouncedSearchTerm, selectedFilter, sortBy, activeTab]);
+  }, [currentPage, paymentCurrentPage, searchTerm, selectedFilter, sortBy, activeTab]);
+
+  const searchHandler = () => {
+    setSearchTerm(tempSearchTerm)
+  }
 
   // Calculate totals for dues
   const totalDues = duesData?.reduce((sum, clinic) => sum + clinic.due_detail.total_dues, 0);
@@ -430,6 +439,7 @@ const DueManagement = () => {
     );
   }
 
+  console.log(dashData)
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -485,7 +495,7 @@ const DueManagement = () => {
                     <DollarSign className="w-6 h-6 text-blue-600" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalDues)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashData?.total_dues}</p>
                     <p className="text-blue-600 font-medium text-sm">Total Dues</p>
                   </div>
                 </div>
@@ -497,7 +507,7 @@ const DueManagement = () => {
                     <TrendingUp className="w-6 h-6 text-green-600" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPaid)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashData?.total_paid}</p>
                     <p className="text-green-600 font-medium text-sm">Total Paid</p>
                   </div>
                 </div>
@@ -509,7 +519,7 @@ const DueManagement = () => {
                     <TrendingDown className="w-6 h-6 text-orange-600" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRemaining)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashData?.outstanding_amount}</p>
                     <p className="text-orange-600 font-medium text-sm">Outstanding</p>
                   </div>
                 </div>
@@ -519,27 +529,18 @@ const DueManagement = () => {
             {/* Search and Filter */}
             <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="relative flex-1 max-w-lg">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="relative flex-1 w-full">
+                  <Search onClick={searchHandler} className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search clinics..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={tempSearchTerm}
+                    onChange={(e) => setTempSearchTerm(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { searchHandler() } }}
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none "
                   />
                 </div>
                 <div className="flex items-center gap-4">
-                  <select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none  font-medium"
-                  >
-                    <option value="all">All Clinics</option>
-                    <option value="outstanding">Outstanding</option>
-                    <option value="paid">Settled</option>
-                    <option value="credit">Credit Balance</option>
-                  </select>
                   {/* Sorting dropdown */}
                   <select
                     value={sortBy}
@@ -547,8 +548,8 @@ const DueManagement = () => {
                     className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none transition-all duration-200 font-medium"
                   >
                     <option value="default">Sort: Default</option>
-                    <option value="highest">Sort: Highest Due</option>
-                    <option value="lowest">Sort: Lowest Due</option>
+                    <option value="AMOUNT_DESC">Sort: Highest Due</option>
+                    <option value="AMOUNT_ASC">Sort: Lowest Due</option>
                   </select>
                   <button
                     onClick={handleExport}
@@ -647,12 +648,12 @@ const DueManagement = () => {
                         type="button"
                       >
                         <Eye className="w-4 h-4" />
-                        <span>View Details</span>
+                        <span className='text-sm truncate'>View Details</span>
                       </button>
                       {clinic.due_detail.remaining_dues > 0 && (
                         <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer" tabIndex={-1} type="button">
                           <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span>Mark as Paid</span>
+                          <span className='text-sm truncate'>Mark as Paid</span>
                         </button>
                       )}
                     </div>
@@ -677,13 +678,14 @@ const DueManagement = () => {
             {/* Search and Filter for Payment History */}
             <div className="bg-white rounded-2xl p-6 mb-5 border border-gray-200 shadow-sm">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="relative flex-1 max-w-lg">
+                <div className="relative flex-1 w-full">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search payments..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={tempSearchTerm}
+                    onChange={(e) => setTempSearchTerm(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { searchHandler() } }}
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none  transition-all duration-200"
                   />
                 </div>
@@ -695,7 +697,7 @@ const DueManagement = () => {
                   >
                     <option value="all">All Payments</option>
                     <option value="COMPLETED">Completed</option>
-                    <option value="PENDING">Pending</option>
+                    <option value="CREATED">Pending</option>
                     <option value="FAILED">Failed</option>
                     <option value="REFUNDED">Refunded</option>
                   </select>

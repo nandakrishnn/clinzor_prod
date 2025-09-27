@@ -656,7 +656,6 @@ export default function ExpertManagement() {
   };
 
   const handleToggleExpert = async (expert: Expert) => {
-    console.log(expert)
     try {
       const newStatus = expert.status === "APPROVED" ? "REJECTED" : "APPROVED";
 
@@ -665,7 +664,7 @@ export default function ExpertManagement() {
 
       // Refresh current page data
       fetchExperts(currentPage);
-
+      getStatsAdminExpert()
       setNotification({
         type: 'success',
         message: `Expert "${expert.name}" ${newStatus === "APPROVED" ? 'approved' : 'rejected'} successfully`
