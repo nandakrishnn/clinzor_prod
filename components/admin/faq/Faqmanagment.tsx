@@ -206,7 +206,7 @@ const handleCreate = async () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -215,7 +215,7 @@ const handleCreate = async () => {
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 animate-fadein">
+    <div className="min-h-screen">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse"></div>
@@ -223,26 +223,23 @@ const handleCreate = async () => {
       </div>
 
       {/* Header */}
-      <div className="relative backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 md:py-12">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-10 gap-4 md:gap-0">
+      <div className="relative backdrop-blur-xl bg-white/80 border-b border-white/20 ">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 ">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-5 gap-4 md:gap-0">
             <div className="space-y-2 w-full md:w-auto">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent tracking-tight">
                   FAQ Management
                 </h1>
               </div>
-              <p className="text-base md:text-lg text-gray-500 ml-12 md:ml-14">Create and manage your frequently asked questions</p>
+              <p className="text-base md:text-lg text-gray-500 ">Create and manage your frequently asked questions</p>
             </div>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="group relative overflow-hidden px-5 md:px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold w-full md:w-auto"
+              className="group relative overflow-hidden px-5 md:px-6 py-3 bg-primaryColor text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold w-full md:w-auto"
               disabled={isLoading}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-primaryColor opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative flex items-center justify-center">
                 <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                 Add FAQ
@@ -253,7 +250,7 @@ const handleCreate = async () => {
           {/* Enhanced Search */}
           <div className="relative max-w-full md:max-w-2xl">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl blur-xl"></div>
-            <div className="relative backdrop-blur-xl bg-white/90 rounded-2xl border border-white/20 shadow-xl">
+            <div className="relative backdrop-blur-xl bg-white/90 rounded-lg border border-white/20 shadow-xl">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -330,7 +327,7 @@ const handleCreate = async () => {
       )}
 
       {/* FAQ List */}
-      <div className="relative max-w-6xl mx-auto p-2 sm:p-4 md:p-8">
+      <div className="relative max-w-6xl mx-auto p-2 sm:p-4 ">
         <div className="grid gap-4 md:gap-6">
           {filteredFaqs.length === 0 ? (
             <div className="text-center py-16 md:py-20">
@@ -397,12 +394,6 @@ const handleCreate = async () => {
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-2 md:gap-0">
                         <h3 className="text-lg md:text-xl font-semibold text-gray-900 leading-tight pr-4">{faq.question}</h3>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => setActiveDropdown(faq.uuid)}
-                            className="flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50/80 rounded-xl transition-all duration-200 font-semibold"
-                          >
-                            <Search className="w-4 h-4 mr-1" /> Read
-                          </button>
                           <button
                             onClick={() => handleEdit(faq)}
                             className="flex items-center px-3 py-2 text-emerald-600 hover:bg-emerald-50/80 rounded-xl transition-all duration-200 font-semibold"
