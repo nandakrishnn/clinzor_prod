@@ -35,6 +35,7 @@ type Expert = {
   phone_number: string;
   gender: 'MALE' | 'FEMALE';
   enabled: boolean;
+  is_blocked: boolean;
   status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'DRAFT';
   specializaton?: string;
   experience?: string;
@@ -280,6 +281,7 @@ export default function ExpertManagement() {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [filteredExperts, setFilteredExperts] = useState<Expert[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [tempSearchQuery, setTempSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'ENABLED' | 'DISABLED'>('ALL');
   const [selectedGender, setSelectedGender] = useState<'ALL' | 'MALE' | 'FEMALE'>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
@@ -344,20 +346,8 @@ export default function ExpertManagement() {
 
   // Booking filter state
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
   const [passView, setPassView] = useState(false)
-
-  // Debounce search query
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchQuery]);
 
   // Fetch data with pagination
   const fetchExperts = async (page = 1, search = '', status = 'ALL', gender = 'ALL') => {
@@ -373,17 +363,16 @@ export default function ExpertManagement() {
         statusParam,
         genderParam
       );
+      console.log(expertsResponse, 'from the expert data')
 
       setExperts(expertsResponse?.data?.data);
       setPaginationData({
-        current_page: expertsResponse.current_page,
-        total_pages: expertsResponse.total_pages,
-        total_items: expertsResponse.total_items,
-        next: expertsResponse.next,
-        previous: expertsResponse.previous
+        current_page: expertsResponse?.data?.current_page,
+        total_pages: expertsResponse?.data?.total_pages,
+        total_items: expertsResponse?.data?.total_items,
+        next: expertsResponse?.data?.next,
+        previous: expertsResponse?.data?.previous
       });
-
-      console.log(expertsResponse, "doctors res");
     } catch (error) {
       console.error("Failed to fetch experts:", error);
       setNotification({
@@ -397,9 +386,9 @@ export default function ExpertManagement() {
 
   // Fetch data when filters change
   useEffect(() => {
-    fetchExperts(currentPage, debouncedSearchQuery, selectedStatus, selectedGender);
+    fetchExperts(currentPage, searchQuery, selectedStatus, selectedGender);
 
-  }, [currentPage, debouncedSearchQuery, selectedStatus, selectedGender]);
+  }, [currentPage, searchQuery, selectedStatus, selectedGender]);
 
   // Function to fetch slots for a specific expert
   const fetchExpertSlots = async (expertUuid: string) => {
@@ -666,14 +655,13 @@ export default function ExpertManagement() {
     }
   };
 
-  console.log(experts,'expert data')
   const handleToggleExpert = async (expert: Expert) => {
     console.log(expert)
     try {
       const newStatus = expert.status === "APPROVED" ? "REJECTED" : "APPROVED";
 
       // Update backend
-      await blockExpert(expert?.user, { is_blocked: true });
+      await blockExpert(expert?.user, { is_blocked: !expert?.is_blocked });
 
       // Refresh current page data
       fetchExperts(currentPage);
@@ -774,6 +762,9 @@ export default function ExpertManagement() {
     }
   };
 
+  const handleSearch = async () => {
+    setSearchQuery(tempSearchQuery)
+  }
 
   return (
     <div className="min-h-screen  p-2 sm:p-4 md:p-6">
@@ -824,7 +815,7 @@ export default function ExpertManagement() {
               setSelectedStatus('ALL');
               setSelectedGender('ALL');
               setCurrentPage(1);
-              fetchExperts(1, debouncedSearchQuery, 'ALL', 'ALL');
+              fetchExperts(1, 'ALL', 'ALL');
             }}
           >
             <div className="flex items-center justify-between">
@@ -849,7 +840,7 @@ export default function ExpertManagement() {
               setActiveStatFilter(newFilter);
               setSelectedStatus('ENABLED');
               setCurrentPage(1);
-              fetchExperts(1, debouncedSearchQuery, 'ENABLED', selectedGender);
+              fetchExperts(1, 'ENABLED', selectedGender);
             }}
           >
             <div className="flex items-center justify-between">
@@ -874,7 +865,7 @@ export default function ExpertManagement() {
               setActiveStatFilter(newFilter);
               setSelectedStatus('DISABLED');
               setCurrentPage(1);
-              fetchExperts(1, debouncedSearchQuery, 'DISABLED', selectedGender);
+              fetchExperts(1, 'DISABLED', selectedGender);
             }}
           >
             <div className="flex items-center justify-between">
@@ -899,7 +890,7 @@ export default function ExpertManagement() {
               setActiveStatFilter(newFilter);
               setSelectedGender('MALE');
               setCurrentPage(1);
-              fetchExperts(1, debouncedSearchQuery, selectedStatus, 'MALE');
+              fetchExperts(1, selectedStatus, 'MALE');
             }}
           >
             <div className="flex items-center justify-between">
@@ -924,7 +915,7 @@ export default function ExpertManagement() {
               setActiveStatFilter(newFilter);
               setSelectedGender('FEMALE');
               setCurrentPage(1);
-              fetchExperts(1, debouncedSearchQuery, selectedStatus, 'FEMALE');
+              fetchExperts(1, selectedStatus, 'FEMALE');
             }}
           >
             <div className="flex items-center justify-between">
@@ -948,12 +939,13 @@ export default function ExpertManagement() {
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search onClick={() => handleSearch()} size={20} className="cursor-pointer absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search by name, email, phone, or specialization..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={tempSearchQuery}
+                onChange={(e) => setTempSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleSearch() } }}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none  shadow-sm"
               />
             </div>
@@ -1068,19 +1060,19 @@ export default function ExpertManagement() {
                   </div>
 
                   <div className="flex gap-2">
-                    {expert.status === "APPROVED" ? (
+                    {expert?.is_blocked === true ? (
                       <button
                         onClick={() => setConfirmModal({ type: 'disable', expert })}
                         className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200 transition-colors"
                       >
-                        Disable
+                        Blocked
                       </button>
                     ) : (
                       <button
                         onClick={() => setConfirmModal({ type: 'enable', expert })}
                         className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
                       >
-                        Enable
+                        UnBlocked
                       </button>
                     )}
                     {/* <button
@@ -1148,7 +1140,7 @@ export default function ExpertManagement() {
                       onClick={() => handlePageChange(page as number)}
                       disabled={loading}
                       className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-primaryColor text-white'
                         : 'text-gray-600 hover:bg-gray-100'
                         }`}
                     >

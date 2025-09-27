@@ -61,6 +61,8 @@ export const approveOrRejectExpert = async (id: string, body: {
 export const blockExpert = async (id: any, body: {
   is_blocked: boolean;
 }) => {
+
+  console.log(body )
   try {
     const response = await axiosPrivate.patch(`user/user-block/${id}/`, body);
     return response.data;
