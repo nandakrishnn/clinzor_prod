@@ -61,6 +61,7 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
     </motion.div>
   );
 };
+
 const SlotManagementSystem = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [filteredSlots, setFilteredSlots] = useState<Slot[]>([]);
@@ -252,10 +253,10 @@ const SlotManagementSystem = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <Header setShowBulkForm={setShowBulkForm} />
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto  py-4 sm:py-6">
         <FilterSection
           filters={filters}
           searchTerm={searchTerm}

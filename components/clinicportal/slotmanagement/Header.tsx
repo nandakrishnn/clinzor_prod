@@ -7,13 +7,10 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ setShowBulkForm }) => {
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
+    <div className="bg-white  z-40">
+      <div className="max-w-7xl mx-auto pt-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Slots</h1>
               <p className="text-xs sm:text-sm text-gray-500">Manage your appointment slots</p>

@@ -79,8 +79,6 @@ export default function ClinicSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('/clinicportal/dashboard');
     const { data: session, status } = useSession();
-    const userData = session?.user
-    console.log(session?.user ,"user data ")
   // Example user data - in a real app, this would come from your authentication system
   const [user ,setUser] = useState<UserProfile>({
     name: 'Dr. Sarah Chen',
