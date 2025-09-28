@@ -72,17 +72,17 @@ const StatusBadge = ({ status }: { status: Clinic['status'] | ClinicService['sta
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Approved':
-      case 'APPROVED': 
+      case 'APPROVED':
         return 'bg-green-100 text-green-700 border-green-200';
-      case 'PENDING': 
+      case 'PENDING':
       case 'DRAFT':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'Draft': 
+      case 'Draft':
         return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'Rejected':
       case 'REJECTED':
         return 'bg-red-100 text-red-700 border-red-200';
-      default: 
+      default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -151,7 +151,7 @@ const ConfirmationDialog = ({
   isDestructive = false,
   showReasonInput = false,
   reason = "",
-  onReasonChange = () => {}
+  onReasonChange = () => { }
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -175,9 +175,8 @@ const ConfirmationDialog = ({
         <div className="align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
-              <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 ${
-                type === 'approve' ? 'bg-green-100' : 'bg-red-100'
-              }`}>
+              <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 ${type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
                 {type === 'approve' ? (
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 ) : (
@@ -214,11 +213,10 @@ const ConfirmationDialog = ({
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               type="button"
-              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm ${
-                isDestructive 
-                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm ${isDestructive
+                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                   : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                } focus:outline-none focus:ring-2 focus:ring-offset-2`}
               onClick={onConfirm}
             >
               {confirmText}
@@ -545,8 +543,8 @@ const ServiceDetailModal = ({
         {service.image && (
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-semibold text-gray-800 mb-3">Service Image</h4>
-            <img 
-              src={service.image} 
+            <img
+              src={service.image}
               alt={service.clinic_provided_name}
               className="max-w-full h-auto rounded-lg max-h-64 object-cover"
             />
@@ -610,18 +608,16 @@ const TabButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-      active
+    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${active
         ? 'bg-primaryColor text-white shadow-md'
         : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-    }`}
+      }`}
   >
     <Icon size={18} />
     <span>{children}</span>
     {count !== undefined && (
-      <span className={`px-2 py-1 text-xs rounded-full ${
-        active ? 'bg-white text-primaryColor' : 'bg-gray-200 text-gray-700'
-      }`}>
+      <span className={`px-2 py-1 text-xs rounded-full ${active ? 'bg-white text-primaryColor' : 'bg-gray-200 text-gray-700'
+        }`}>
         {count}
       </span>
     )}
@@ -822,7 +818,7 @@ export default function PendingApprovalPage() {
   const handleRejectClinic = async (clinic: Clinic, reason?: string) => {
     try {
       setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-      await approveOrRejectClinic(clinic.uuid, { 
+      await approveOrRejectClinic(clinic.uuid, {
         status: 'REJECTED',
         ...(reason && { reason_for_rejection: reason })
       });
@@ -860,7 +856,7 @@ export default function PendingApprovalPage() {
 
   const handleRejectService = async (service: ClinicService, reason?: string) => {
     try {
-      await approveOrRejectService(service.uuid, { 
+      await approveOrRejectService(service.uuid, {
         status: 'REJECTED',
         ...(reason && { reason_for_rejection: reason })
       });
@@ -1031,7 +1027,7 @@ export default function PendingApprovalPage() {
             <input
               type="text"
               placeholder={
-                activeTab === 'clinics' 
+                activeTab === 'clinics'
                   ? "Search pending clinics by name, city, email, or phone..."
                   : "Search pending services by name, clinic, or description..."
               }
@@ -1211,100 +1207,100 @@ export default function PendingApprovalPage() {
               {filteredServices.map((service, index) => (
                 <motion.div
                   key={service.uuid}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* Service Info */}
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{service.clinic_provided_name}</h3>
-                          <p className="text-sm text-gray-600 flex items-center gap-1">
-                            <Building2 size={14} />
-                            {service.clinic_name} • {service.service_name}
-                          </p>
+                  <div className="p-6">
+                    {/* Header Section */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900 truncate">
+                            {service.clinic_provided_name}
+                          </h3>
+                          <StatusBadge status={service.status} />
                         </div>
-                        <StatusBadge status={service.status} />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Rank:</span>
-                          <span>{service.rank}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Video Consultation:</span>
-                          <span>₹{service.consultation_charge_video_call}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Physical Visit:</span>
-                          <span>₹{service.consultation_charge_physical_visit}</span>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Building2 size={16} className="flex-shrink-0 mr-2" />
+                          <span className="truncate">{service.clinic_name}</span>
+                          <span className="mx-2">•</span>
+                          <span className="text-gray-700 font-medium">{service.service_name}</span>
                         </div>
                       </div>
-
-                      {service.description && (
-                        <div className="text-sm text-gray-600">
-                          <span className="font-medium">Description:</span>
-                          <p className="mt-1">{service.description}</p>
-                        </div>
-                      )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-3">
+                    {/* Pricing Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-sm text-gray-600 mb-1">Rank</div>
+                        <div className="text-lg font-semibold text-gray-900">#{service.rank}</div>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <div className="text-sm text-blue-600 mb-1">Video Consultation</div>
+                        <div className="text-lg font-semibold text-gray-900">₹{service.consultation_charge_video_call}</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3">
+                        <div className="text-sm text-green-600 mb-1">Physical Visit</div>
+                        <div className="text-lg font-semibold text-gray-900">₹{service.consultation_charge_physical_visit}</div>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {service.description && (
+                      <div className="mb-4">
+                        <div className="text-sm font-medium text-gray-700 mb-2">Description</div>
+                        <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                          {service.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <button
                         onClick={() => handleViewServiceDetails(service)}
-                        className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                        className="flex items-center gap-2 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium text-sm"
                       >
                         <Eye size={16} />
-                        <span className="hidden sm:inline">Review</span>
+                        View Details
                       </button>
-                      <button
-                        onClick={() => showConfirmation(
-                          'reject',
-                          'service',
-                          service,
-                          'Reject Service',
-                          `Are you sure you want to reject ${service.clinic_provided_name}? This action cannot be undone.`,
-                          'Reject Service',
-                          true,
-                          true
-                        )}
-                        className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                      >
-                        <X size={16} />
-                        <span className="hidden sm:inline">Reject</span>
-                      </button>
-                      <button
-                        onClick={() => showConfirmation(
-                          'approve',
-                          'service',
-                          service,
-                          'Approve Service',
-                          `Are you sure you want to approve ${service.clinic_provided_name}?`,
-                          'Approve Service'
-                        )}
-                        className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                      >
-                        <Check size={16} />
-                        <span className="hidden sm:inline">Approve</span>
-                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => showConfirmation(
+                            'reject',
+                            'service',
+                            service,
+                            'Reject Service',
+                            `Are you sure you want to reject ${service.clinic_provided_name}? This action cannot be undone.`,
+                            'Reject Service',
+                            true,
+                            true
+                          )}
+                          className="flex items-center gap-2 px-4 py-2.5 text-red-700 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors font-medium text-sm"
+                        >
+                          <X size={16} />
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => showConfirmation(
+                            'approve',
+                            'service',
+                            service,
+                            'Approve Service',
+                            `Are you sure you want to approve ${service.clinic_provided_name}?`,
+                            'Approve Service'
+                          )}
+                          className="flex items-center gap-2 px-4 py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
+                        >
+                          <Check size={16} />
+                          Approve
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Service Image Preview */}
-                  {service.image && (
-                    <div className="mt-3">
-                      <img 
-                        src={service.image} 
-                        alt={service.clinic_provided_name}
-                        className="h-20 w-20 object-cover rounded-lg border border-gray-200"
-                      />
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </div>

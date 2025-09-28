@@ -229,9 +229,9 @@ const ServiceManagement: React.FC = () => {
   useEffect(() => {
     fetchService(1, searchTerm, statusFilter);
   }, [statusFilter]); // Refetch when status filter changes
+
   console.log(clinicUser, "clinic user data")
   // Set clinic ID when clinicUser is available
-
 
   useEffect(() => {
     if (clinicUser?.uuid) {
@@ -262,6 +262,7 @@ const ServiceManagement: React.FC = () => {
     setCurrentPage(page);
     fetchService(page, searchTerm, statusFilter);
   };
+
   // Helper functions
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -488,9 +489,12 @@ const ServiceManagement: React.FC = () => {
 
     } catch (error: any) {
       console.error("Error creating clinic service:", error);
+      const data = error.response?.data;
 
-      if (error.response?.data?.non_field_errors?.includes("unique set")) {
+      if (data?.non_field_errors?.includes("unique set")) {
         showToast('This service already exists for your clinic. Please edit the existing one instead.', 'error');
+      } else if (data?.non_field_errors?.length > 0) {
+        showToast(data.non_field_errors[0], 'error');
       } else {
         showToast(
           error.response?.data?.message || "Failed to create clinic service. Please try again.",

@@ -259,7 +259,7 @@ const PaymentRecordsDashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
             className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'ALL' ? 'ring-2 ring-blue-500 border-blue-300' : 'border-white/20'
               }`}
@@ -316,7 +316,6 @@ const PaymentRecordsDashboard = () => {
             </div>
           </div>
 
-
           <div
             className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'PENDING' ? 'ring-2 ring-amber-500 border-amber-300' : 'border-white/20'
               }`}
@@ -338,7 +337,7 @@ const PaymentRecordsDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Filters */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
