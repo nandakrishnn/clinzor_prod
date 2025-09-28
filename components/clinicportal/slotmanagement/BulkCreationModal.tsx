@@ -573,9 +573,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     if (activeStep === 2) {
       const tmplDate = templateDate ?? days[selectedDayIndex]?.date;
       setCopyDays(
-        days
-          .filter((d) => d.date !== tmplDate) // exclude template day
-          .map((d) => ({ date: d.date, dayName: d.dayName, selected: false }))
+        days.map((d) => ({ date: d.date, dayName: d.dayName, selected: false }))
       );
       setReviewDayIndex(0);
     }
