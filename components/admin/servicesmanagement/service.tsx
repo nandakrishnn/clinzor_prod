@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Eye, X, Check, Search, Tag, Heart, Stethoscope, Brain, User, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
-import { createService, deleteService, editService, getAdminServiceStaticData, GetAllClinicService, GetAllService } from '@/service/admin/clinicServiceManagentService';
+import { approveOrRejectAClinicService, createService, deleteService, editService, getAdminServiceStaticData, GetAllService, } from '@/service/admin/clinicServiceManagentService';
 import { uploadFiles } from '@/service/uploadService/uploadService';
 import { motion, AnimatePresence } from "framer-motion";
 type ServiceStatus = 'DRAFT' | 'APPROVED' | 'REJECTED' | 'DRAFT';
@@ -109,6 +109,7 @@ const ModernModal = ({
     </div>
   );
 };
+
 const MedicalServicesApp: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,8 +147,13 @@ const MedicalServicesApp: React.FC = () => {
   } | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  // Add these new state variables
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<'accept' | 'reject' | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
-  const [dashData, setDashData] = useState<any>()
+
   const [statusCounts, setStatusCounts] = useState<{
     ALL: number;
     APPROVED: number;
@@ -164,7 +170,6 @@ const MedicalServicesApp: React.FC = () => {
     setLoading(true);
     try {
       const data = await GetAllService(page, search, status);
-      console.log(data, 'service data')
       setServices(data.data);
       setPaginationData({
         current_page: data.current_page,
@@ -173,7 +178,6 @@ const MedicalServicesApp: React.FC = () => {
         next: data.next,
         previous: data.previous
       });
-      console.log("service full", data);
     } catch (error) {
       console.error("Error fetching services:", error);
       throw error;
@@ -185,9 +189,7 @@ const MedicalServicesApp: React.FC = () => {
   const getDashboardStatics = async () => {
     try {
       const res = await getAdminServiceStaticData();
-      console.log(res, "data fromt he clinic")
       if (res?.status === 200) {
-        setDashData(res?.data);
         setStatusCounts({
           ALL: res?.data?.total_services,
           APPROVED: res?.data?.newly_added_service,
@@ -209,8 +211,6 @@ const MedicalServicesApp: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
-
-  console.log("service", statusFilter);
 
   const getServiceIcon = (name: string) => {
     const serviceLower = name?.toLowerCase();
@@ -339,7 +339,6 @@ const MedicalServicesApp: React.FC = () => {
     }
   };
 
-
   const openDeleteModal = (service: Service) => {
     setServiceToDelete(service);
     setDeleteModalOpen(true);
@@ -349,32 +348,6 @@ const MedicalServicesApp: React.FC = () => {
     setDeleteModalOpen(false);
     setServiceToDelete(null);
   };
-
-  const handleStatusChange = (uuid: string, newStatus: ServiceStatus) => {
-    setServices(services.map((service) =>
-      service.uuid === uuid
-        ? { ...service, status: newStatus }
-        : service
-    ));
-  };
-
-  const getFilteredServices = () => {
-    let filtered = services.filter((service) => {
-      const matchesSearch = service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.tags?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'APPROVED' || service.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-
-    if (viewMode === 'approved') {
-      filtered = filtered.filter(service => service.status === 'APPROVED');
-    }
-
-    return filtered;
-  };
-
-  const filteredServices = getFilteredServices();
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
@@ -453,6 +426,51 @@ const MedicalServicesApp: React.FC = () => {
     }
 
     return pages;
+  };
+
+  const handleStatusChangeWithConfirmation = (service: Service, action: 'accept' | 'reject') => {
+    setSelectedService(service);
+    setSelectedAction(action);
+    setRejectionReason('');
+    setActionModalOpen(true);
+  };
+
+  const executeStatusChange = async () => {
+    if (!selectedService || !selectedAction) return;
+
+    console.log(selectedService)
+
+    try {
+      const newStatus = selectedAction === 'accept' ? 'APPROVED' : 'REJECTED';
+      const res = await approveOrRejectAClinicService(selectedService.uuid, {
+        status: newStatus,
+        reason_for_rejection: selectedAction === 'reject' ? rejectionReason : ''
+      });
+
+      if (res?.status === 200) {
+        setServices(services.map((service) =>
+          service.uuid === selectedService.uuid
+            ? { ...service, status: newStatus }
+            : service
+        ));
+        setNotification({
+          type: 'success',
+          message: `Service ${selectedAction === 'accept' ? 'accepted' : 'rejected'} successfully!`
+        });
+        getDashboardStatics()
+      }
+    } catch (error) {
+      console.error('Error updating service status:', error);
+      setNotification({
+        type: 'error',
+        message: `Failed to ${selectedAction} service. Please try again.`
+      });
+    } finally {
+      setActionModalOpen(false);
+      setSelectedAction(null);
+      setSelectedService(null);
+      setRejectionReason('');
+    }
   };
 
   return (
@@ -572,7 +590,7 @@ const MedicalServicesApp: React.FC = () => {
         {/* Services Grid */}
         {!loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
-            {filteredServices.map((service) => (
+            {services.map((service) => (
               <div key={service.uuid} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <div className="p-4 sm:p-6">
                   {service.image && (
@@ -609,20 +627,21 @@ const MedicalServicesApp: React.FC = () => {
                       <span className="text-xs text-gray-400">+{service?.tags?.split(',').length - 3} more</span>
                     )}
                   </div>
+
                   {/* Action Buttons */}
                   <div className="space-y-2 sm:space-y-3">
                     {/* Accept/Reject Buttons for Requested Services - Only show in 'all' view */}
                     {viewMode === 'all' && service.status === 'DRAFT' && (
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button
-                          onClick={() => handleStatusChange(service.uuid, 'APPROVED')}
+                          onClick={() => handleStatusChangeWithConfirmation(service, 'accept')}
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                         >
                           <CheckCircle className="w-4 h-4" />
                           <span className='text-xs'>Accept Service</span>
                         </button>
                         <button
-                          onClick={() => handleStatusChange(service.uuid, 'REJECTED')}
+                          onClick={() => handleStatusChangeWithConfirmation(service, 'reject')}
                           className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                         >
                           <XCircle className="w-4 h-4" />
@@ -666,7 +685,7 @@ const MedicalServicesApp: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {!loading && filteredServices.length === 0 && (
+        {!loading && services.length === 0 && (
           <div className="text-center py-8 sm:py-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Search className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
@@ -1027,6 +1046,83 @@ const MedicalServicesApp: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Accept/Reject Confirmation Modal */}
+      <ModernModal
+        isOpen={actionModalOpen}
+        onClose={() => {
+          setActionModalOpen(false);
+          setSelectedAction(null);
+          setSelectedService(null);
+          setRejectionReason('');
+        }}
+        title={selectedAction === 'accept' ? 'Confirm Acceptance' : 'Confirm Rejection'}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className={`flex items-center justify-center w-12 h-12 rounded-full mx-auto ${selectedAction === 'accept' ? 'bg-green-100' : 'bg-red-100'
+            }`}>
+            {selectedAction === 'accept' ? (
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            ) : (
+              <XCircle className="w-6 h-6 text-red-600" />
+            )}
+          </div>
+
+          <p className="text-center text-gray-600">
+            Are you sure you want to {selectedAction} the service{' '}
+            <strong>"{selectedService?.name}"</strong>?
+          </p>
+
+          {selectedAction === 'reject' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for rejection (optional)
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                placeholder="Enter reason for rejection..."
+              />
+            </div>
+          )}
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={() => {
+                setActionModalOpen(false);
+                setSelectedAction(null);
+                setSelectedService(null);
+                setRejectionReason('');
+              }}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={executeStatusChange}
+              className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${selectedAction === 'accept'
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
+            >
+              {selectedAction === 'accept' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Accept</span>
+                </>
+              ) : (
+                <>
+                  <X className="w-4 h-4" />
+                  <span>Reject</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </ModernModal>
     </div>
   );
 };

@@ -1,6 +1,4 @@
-
 import { axiosPrivate } from "../../axios/axios";
-
 
 // Booking  
 export const updateBookings = async (id: string, body: {
@@ -19,6 +17,7 @@ export const updateBookings = async (id: string, body: {
 export const deleteBooking = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-delete/${Id}/`);
 };
+
 export const getABooking = async (Id: string) => {
   return await axiosPrivate.delete(`user/user-detail/${Id}`);
 };
@@ -53,11 +52,7 @@ export const getClinicBookings = async (params: any) => {
   }
 };
 
-
-
-
 // Slot management 
-
 export const getAllSlots = async (params: any) => {
   try {
     const response = await axiosPrivate.get(`/clinic/slot-lc/`, { params });
@@ -67,6 +62,7 @@ export const getAllSlots = async (params: any) => {
     throw error;
   }
 };
+
 export const approveSlot = async (slotId: string) => {
   try {
     const response = await axiosPrivate.patch(
@@ -92,6 +88,7 @@ export const rejectSlot = async (slotId: string, reason: string) => {
     throw error;
   }
 };
+
 export const bulkApproveSlots = async (slotType: string, slotList: string[]) => {
   try {
     const response = await axiosPrivate.patch(
@@ -108,9 +105,7 @@ export const bulkApproveSlots = async (slotType: string, slotList: string[]) => 
   }
 };
 
-
 // Payment Management 
-
 export const getAllPayment = async (params: Record<string, string | number | undefined>) => {
   try {
     // Create a clean params object without undefined values

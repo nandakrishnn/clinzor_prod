@@ -72,8 +72,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const clinicId = params.clinicId
   const { data: session } = useSession()
 
-  // console.log(serviceId, serviceType, clinicId, session, 'service id get from the params');
-
   const [isLoading, setIsLoading] = useState(true);
   const [step, setStep] = React.useState(0)
   const [service, setService] = React.useState<any>({})
@@ -236,10 +234,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   }
 
   const getCoupon = async (serviceId: string) => {
-    console.log(serviceId, 'from the private clinic')
     try {
       const res = await getPrivateCouponService(serviceId)
-      console.log(res, 'cupon data')
       if (res?.status === 200) {
         setAllCoupon(res?.data?.data || [])
       }
@@ -257,13 +253,17 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   useEffect(() => {
     getClinic()
     getClinicService()
+
     if (serviceId) {
       getService(serviceId)
       getServiceChanges(serviceId)
       getSlotService(serviceId)
-      getCoupon(clinicOwnServiceId)
     }
-  }, [mode, serviceId, clinicOwnServiceId])
+  }, [mode, serviceId])
+
+  useEffect(() => {
+    getCoupon(clinicOwnServiceId)
+  }, [clinicOwnServiceId])
 
   useEffect(() => {
     if (session?.user) {
@@ -276,7 +276,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       )
     }
   }, [session])
-
 
   // Add this function to create Razorpay payment
   const createRazorpayOrder = async (bookingId: string) => {
@@ -305,12 +304,9 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   };
 
-
   // Add this function to handle payment success
   const handlePaymentSuccess = async (razorpayResponse: any) => {
     try {
-      // Verify payment on your server if needed
-      console.log('Payment successful:', razorpayResponse);
 
       const { razorpay_order_id } = razorpayResponse;
       setOrderId(razorpay_order_id)
@@ -323,7 +319,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       toast('Payment verification failed. Please contact support.');
     }
   };
-
 
   async function handleConfirm() {
     setIsConfirming(true);
@@ -396,7 +391,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       setShowConfirmModal(false);
     }
   }
-
 
   console.log(clinicOwnServiceId, 'service own id')
 

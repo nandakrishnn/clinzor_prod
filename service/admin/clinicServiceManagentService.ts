@@ -47,6 +47,18 @@ export const approveOrRejectClinicService = async (id: string, body: {
     throw error;
   }
 };
+export const approveOrRejectAClinicService = async (id: string, body: {
+  status: string;
+  reason_for_rejection?: string;
+}) => {
+  try {
+    const response = await axiosPrivate.patch(`clinic/service-approval/${id}/`, body);
+    return response.data;
+  } catch (error) {
+    console.error("User status update error:", error);
+    throw error;
+  }
+};
 export const deleteService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/service-rud/${Id}/`);
 };

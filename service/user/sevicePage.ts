@@ -69,7 +69,6 @@ export const getAllClinicDoctorsService = async (id?: string) => {
   return res.data;
 };
 
-
 export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null, search?: string) => {
   let url = `${USER_SERVICE.GET_CLINIC_SERVICE_RELATED}${id}/`;
 
@@ -94,7 +93,6 @@ export const createBookingService = async (data?: any) => {
   return res.data;
 };
 
-
 export const createRazorpayOrder = async (bookingId: string) => {
   try {
     const response = await axiosPrivate.post(`${USER_SERVICE.CREATE_RAYZOR_PAY}`, {
@@ -108,7 +106,6 @@ export const createRazorpayOrder = async (bookingId: string) => {
     throw error;
   }
 };
-
 
 export const verifyPayment = async (id: any) => {
   try {
