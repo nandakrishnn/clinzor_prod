@@ -262,7 +262,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   }, [mode, serviceId])
 
   useEffect(() => {
-    getCoupon()
+    getCoupon("")
   }, [])
 
   useEffect(() => {

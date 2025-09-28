@@ -40,38 +40,43 @@ const PERIODS: {
   ]
 
 // Helper function to convert API response to component format
-// Helper function to convert API response to component format
 export function transformApiDataToTabs(apiData: any): Tabs {
   const tabs: Tabs = {}
 
+  // Your time conversion function
+  const convertTo12HourFormat = (utcDateString: string) => {
+    const date = new Date(utcDateString);
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    return `${hh}:${mm} ${ampm}`;
+  };
+
   apiData.data.forEach((dateSlot: any) => {
     const dateKey = dateSlot.slot_date
-    const dateObj = new Date(dateSlot.slot_date)
+    const dateObj = new Date(dateSlot.slot_date + 'T00:00:00Z')
 
-    // Create today & tomorrow in IST
+    // Create today & tomorrow
     const now = new Date()
-    const todayIST = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    )
-    const tomorrowIST = new Date(todayIST)
-    tomorrowIST.setDate(tomorrowIST.getDate() + 1)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Format date title in IST
+    // Format date title
     let dateTitle = dateObj.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-      timeZone: "Asia/Kolkata",
     })
 
-    // Compare in IST
-    const dateObjIST = new Date(
-      dateObj.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    )
-
-    if (dateObjIST.toDateString() === todayIST.toDateString()) {
+    // Compare dates
+    if (dateObj.toDateString() === today.toDateString()) {
       dateTitle = "Today"
-    } else if (dateObjIST.toDateString() === tomorrowIST.toDateString()) {
+    } else if (dateObj.toDateString() === tomorrow.toDateString()) {
       dateTitle = "Tomorrow"
     }
 
@@ -79,40 +84,21 @@ export function transformApiDataToTabs(apiData: any): Tabs {
     let availableCount = 0
 
     dateSlot.slot_details.forEach((slotDetail: any) => {
-      const startTime = new Date(slotDetail.start_time)
-      const endTime = new Date(slotDetail.end_time)
-
-      // Format time in IST
-      const startFormatted = startTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Kolkata",
-      })
-
-      const endFormatted = endTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Kolkata",
-      })
+      // Convert UTC to 12-hour format using your function
+      const startFormatted = convertTo12HourFormat(slotDetail.start_time)
+      const endFormatted = convertTo12HourFormat(slotDetail.end_time)
 
       const label = `${startFormatted} - ${endFormatted}`
 
-      // Determine period of day (convert to IST first)
-      const hourIST = Number(
-        startTime.toLocaleString("en-US", {
-          hour: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Kolkata",
-        })
-      )
+      // Determine period of day using UTC hours (since your slots are in UTC)
+      const startTime = new Date(slotDetail.start_time)
+      const hourUTC = startTime.getUTCHours()
 
       let period: Slot["period"] = "morning"
-      if (hourIST >= 5 && hourIST < 12) period = "morning"
-      else if (hourIST >= 12 && hourIST < 17) period = "afternoon"
-      else if (hourIST >= 17 && hourIST < 21) period = "evening"
-      else period = "night"
+      if (hourUTC >= 5 && hourUTC < 12) period = "morning"      // 5:30 AM - 12:00 PM IST
+      else if (hourUTC >= 12 && hourUTC < 17) period = "afternoon" // 12:00 PM - 5:30 PM IST  
+      else if (hourUTC >= 17 && hourUTC < 21) period = "evening"   // 5:30 PM - 9:30 PM IST
+      else period = "night"                                     // 9:30 PM - 5:30 AM IST
 
       slots.push({
         uuid: slotDetail.uuid,
@@ -133,7 +119,6 @@ export function transformApiDataToTabs(apiData: any): Tabs {
 
   return tabs
 }
-
 
 export function DateSlots({
   tabs,
@@ -158,6 +143,9 @@ export function DateSlots({
     return h * 60 + (m || 0)
   }
 
+  console.log(selectedSlot, selectedTab)
+
+
   const periods = PERIODS.map((p) => p.key)
   const current = tabs[selectedTab]
 
@@ -171,6 +159,7 @@ export function DateSlots({
     periods.map((p) => [p, visibleSlots.filter((s) => s.period === p)]),
   )
 
+  console.log(byPeriod)
   return (
     <div className="rounded-lg border border-gray-200 bg-white ">
       {/* Tabs */}
