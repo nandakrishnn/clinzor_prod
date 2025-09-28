@@ -928,7 +928,7 @@ export default function PendingApprovalPage() {
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Clock className="mr-3 text-yellow-600" size={32} />
+              {/* <Clock className="mr-3 text-yellow-600" size={32} /> */}
               Pending Approvals
             </h1>
             <p className="text-gray-600 mt-1">Review and approve clinic registration requests and services</p>
@@ -956,7 +956,7 @@ export default function PendingApprovalPage() {
 
         {/* Tabs */}
         <motion.div
-          className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-6"
+          className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -981,7 +981,7 @@ export default function PendingApprovalPage() {
         </motion.div>
 
         {/* Stats */}
-        <motion.div
+        {/* <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1018,7 +1018,7 @@ export default function PendingApprovalPage() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Search Bar */}
         <motion.div
