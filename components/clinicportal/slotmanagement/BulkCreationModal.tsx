@@ -942,13 +942,13 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
         const indices =
           daySel && daySel.size > 0
             ? day.slots
-                .map((_, i) => (daySel.has(i) ? i : -1))
-                .filter((i) => i >= 0)
+              .map((_, i) => (daySel.has(i) ? i : -1))
+              .filter((i) => i >= 0)
             : tmplSel
-            ? day.slots
+              ? day.slots
                 .map((_, i) => (tmplSel.has(i) ? i : -1))
                 .filter((i) => i >= 0)
-            : [];
+              : [];
 
         indices.forEach((i) => {
           const slot = day.slots[i];
@@ -1107,25 +1107,23 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                 className="flex flex-col items-center relative z-10"
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all ${
-                    activeStep === i
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all ${activeStep === i
                       ? "bg-gray-800 text-white shadow-lg scale-110"
                       : i < activeStep
-                      ? "bg-gray-600 text-white shadow-md"
-                      : "bg-white border-2 border-gray-300 text-gray-400"
-                  }`}
+                        ? "bg-gray-600 text-white shadow-md"
+                        : "bg-white border-2 border-gray-300 text-gray-400"
+                    }`}
                 >
                   {i < activeStep ? <Check size={20} /> : step.icon}
                 </div>
                 <div className="mt-2 text-center">
                   <div
-                    className={`font-semibold text-sm ${
-                      activeStep === i
+                    className={`font-semibold text-sm ${activeStep === i
                         ? "text-gray-800"
                         : i < activeStep
-                        ? "text-gray-600"
-                        : "text-gray-500"
-                    }`}
+                          ? "text-gray-600"
+                          : "text-gray-500"
+                      }`}
                   >
                     {step.title}
                   </div>
@@ -1340,7 +1338,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
             <div className="space-y-6">
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Configure Days & Slots
+                  Configure  Slots
                 </h3>
                 <p className="text-gray-600">
                   Set up your appointment slots for each day
@@ -1350,15 +1348,14 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
               <div className="bg-gray-50 p-6 rounded-2xl">
                 {/* Days */}
                 <div className="flex gap-4 overflow-x-auto pb-4 mb-6">
-                  {days.map((day, index) => (
+                  {days.slice(0, 1).map((day, index) => (
                     <div
                       key={day.date}
                       onClick={() => handleDaySelect(index)}
-                      className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${
-                        selectedDayIndex === index
+                      className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${selectedDayIndex === index
                           ? "border-gray-800 bg-gray-100 shadow-md"
                           : "border-gray-200 hover:border-gray-400"
-                      }`}
+                        }`}
                     >
                       <span className="font-bold text-gray-800">
                         {day.dayName.substring(0, 3)}
@@ -1377,7 +1374,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                   <div className="text-sm text-gray-600">
                     {countSelectedForDay(selectedDayIndex)} slots selected
                   </div>
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <button
                       onClick={addNewSlot}
                       className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-sm flex items-center gap-2"
@@ -1385,7 +1382,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                       <Plus size={16} />
                       Add Slot
                     </button>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1403,11 +1400,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                     return (
                       <div
                         key={`${currentDay.date}-${index}`}
-                        className={`p-4 border-2 rounded-xl relative cursor-pointer transition-all ${
-                          selected
+                        className={`p-4 border-2 rounded-xl relative cursor-pointer transition-all ${selected
                             ? "border-gray-800 bg-gray-100 shadow-md"
                             : "border-gray-200 hover:border-gray-400 bg-white"
-                        }`}
+                          }`}
                         onClick={() => toggleSelection(selectedDayIndex, index)}
                       >
                         {selected && (
@@ -1515,11 +1511,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                       <div
                         key={day.date}
                         onClick={() => handleCopyDaySelect(index)}
-                        className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${
-                          day.selected
+                        className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${day.selected
                             ? "border-gray-800 bg-gray-100 shadow-md"
                             : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                        }`}
+                          }`}
                       >
                         <span className="text-sm font-bold text-gray-800">
                           {day.dayName}
