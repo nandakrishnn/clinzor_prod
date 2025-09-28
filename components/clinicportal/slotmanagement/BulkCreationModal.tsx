@@ -571,7 +571,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
   useEffect(() => {
     if (activeStep === 2) {
-      const tmplDate = templateDate ?? days[selectedDayIndex]?.date;
+      // const tmplDate = templateDate ?? days[selectedDayIndex]?.date;
       setCopyDays(
         days.map((d) => ({ date: d.date, dayName: d.dayName, selected: false }))
       );
