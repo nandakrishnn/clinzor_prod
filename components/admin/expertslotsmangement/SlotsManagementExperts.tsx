@@ -939,7 +939,7 @@ export default function ExpertManagement() {
         >
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
             {/* Search */}
-            <div className="flex-1 relative">
+            <div className="flex relative w-full gap-3">
               <Search onClick={() => handleSearch()} size={20} className="cursor-pointer absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -949,6 +949,7 @@ export default function ExpertManagement() {
                 onKeyDown={(e) => { if (e.key === 'Enter') { handleSearch() } }}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none  shadow-sm"
               />
+              <button onClick={() => handleSearch()}  className='bg-primaryColor text-white rounded-lg px-5 cursor-pointer'>Search</button>
             </div>
 
             {/* Status Filter */}
