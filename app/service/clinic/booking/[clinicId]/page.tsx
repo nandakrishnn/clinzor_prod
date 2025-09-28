@@ -233,7 +233,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
 
-  const getCoupon = async (serviceId: string) => {
+  const getCoupon = async (serviceId?: string) => {
     try {
       const res = await getPrivateCouponService(serviceId)
       if (res?.status === 200) {
@@ -262,8 +262,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   }, [mode, serviceId])
 
   useEffect(() => {
-    getCoupon(clinicOwnServiceId)
-  }, [clinicOwnServiceId])
+    getCoupon()
+  }, [])
 
   useEffect(() => {
     if (session?.user) {
