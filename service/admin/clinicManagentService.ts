@@ -79,6 +79,16 @@ export const approveOrRejectClinic = async (id: string, body: {
     throw error;
   }
 };
+export const approveOrRejectService = async (id: string, body: any) => {
+  try {
+    const response = await axiosPrivate.patch(`clinic/clinic-service-approval/${id}/`, body);
+    return response.data;
+  } catch (error) {
+    console.error("User status update error:", error);
+    throw error;
+  }
+};
+
 export const toggleActiveClinic = async (id: string, body: {
   is_active: boolean;
 }) => {
@@ -110,6 +120,16 @@ export const getAllClinic = async (params: any = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(`clinic/?${queryString}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch users", error);
+    throw error;
+  }
+};
+export const getClinicService = async (params: any = {}) => {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosPrivate.get(`clinic/clinic-service-lc/?${queryString}`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);

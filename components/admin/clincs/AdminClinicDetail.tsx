@@ -110,14 +110,14 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         }));
         setServices(clinicServices);
 
-        // const clinicStatics = await getClinicIndStaticData()
-        const clinicTimingData = await getClinicTimingServiceData(clinicId)
+        const clinicTimingData = await getClinicTimingServiceData(clinicId);
         setClinicTime(clinicTimingData?.data)
 
-        console.log(clinicData.data.data, "clinicData");
-        console.log(clinicTimingData, "Clinic timing");
-        console.log(doctorsResponse?.data, "Doctor data");
-        console.log(servicesResponse, "Service daa");
+        // console.log(clinicTimingData,'timing data')
+        // console.log(clinicData.data.data, "clinicData");
+        // console.log(clinicTimingData, "Clinic timing");
+        // console.log(doctorsResponse?.data, "Doctor data");
+        // console.log(servicesResponse, "Service daa");
 
       } catch (err) {
         console.error("Failed to fetch clinic data", err);
@@ -168,6 +168,8 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
       </div>
     );
   }
+
+  console.log(clinic, clinicTime)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">

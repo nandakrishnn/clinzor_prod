@@ -15,9 +15,12 @@ import {
   AlertCircle,
   Filter,
   Check,
-  X
+  X,
+  Stethoscope,
+  List,
+  AlertTriangle
 } from 'lucide-react';
-import { approveOrRejectClinic, getAllClinic } from '@/service/admin/clinicManagentService';
+import { approveOrRejectClinic, approveOrRejectService, getAllClinic, getClinicService } from '@/service/admin/clinicManagentService';
 
 // Types
 interface Clinic {
@@ -43,15 +46,44 @@ interface Clinic {
   changedFields?: string[];
 }
 
+interface ClinicService {
+  uuid: string;
+  service: string;
+  clinic: string;
+  created_by: string;
+  clinic_provided_name: string;
+  rank: number;
+  consultation_charge_video_call: string;
+  consultation_charge_physical_visit: string;
+  consultation_charge_home_visit: string | null;
+  treatment_charge_video_call: string;
+  treatment_charge_physical_visit: string;
+  treatment_charge_home_visit: string | null;
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED';
+  image: string;
+  description: string;
+  reason_for_rejection: string | null;
+  clinic_name: string;
+  service_name: string;
+}
+
 // Status Badge Component
-const StatusBadge = ({ status }: { status: Clinic['status'] }) => {
-  const getStatusColor = (status: Clinic['status']) => {
+const StatusBadge = ({ status }: { status: Clinic['status'] | ClinicService['status'] }) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Approved': return 'bg-green-100 text-green-700 border-green-200';
-      case 'PENDING': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'Draft': return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'Rejected': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Approved':
+      case 'APPROVED': 
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'PENDING': 
+      case 'DRAFT':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'Draft': 
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Rejected':
+      case 'REJECTED':
+        return 'bg-red-100 text-red-700 border-red-200';
+      default: 
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -103,6 +135,105 @@ const Notification = ({
         </button>
       </div>
     </motion.div>
+  );
+};
+
+// Confirmation Dialog Component
+const ConfirmationDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  type,
+  title,
+  message,
+  confirmText,
+  cancelText = "Cancel",
+  isDestructive = false,
+  showReasonInput = false,
+  reason = "",
+  onReasonChange = () => {}
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  type: 'approve' | 'reject';
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText?: string;
+  isDestructive?: boolean;
+  showReasonInput?: boolean;
+  reason?: string;
+  onReasonChange?: (reason: string) => void;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen w-full items-center justify-center px-4 pt-4 text-center ">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity  " onClick={onClose} />
+        <div className="align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="sm:flex sm:items-start">
+              <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 ${
+                type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {type === 'approve' ? (
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                )}
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  {title}
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    {message}
+                  </p>
+                  {showReasonInput && (
+                    <div className="mt-4">
+                      <label htmlFor="reason" className="block text-sm font-medium text-gray-700 text-left">
+                        Reason for rejection
+                      </label>
+                      <textarea
+                        id="reason"
+                        rows={3}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                        placeholder="Please provide a reason for rejection..."
+                        value={reason}
+                        onChange={(e) => onReasonChange(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm ${
+                isDestructive 
+                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
+                  : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2`}
+              onClick={onConfirm}
+            >
+              {confirmText}
+            </button>
+            <button
+              type="button"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              onClick={onClose}
+            >
+              {cancelText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -164,7 +295,7 @@ const ClinicDetailModal = ({
   isOpen: boolean;
   onClose: () => void;
   onApprove: (clinic: Clinic) => void;
-  onReject: (clinic: Clinic) => void;
+  onReject: (clinic: Clinic, reason?: string) => void;
 }) => {
   if (!clinic) return null;
 
@@ -300,20 +431,145 @@ const ClinicDetailModal = ({
             Close
           </button>
           <button
-            onClick={() => {
-              onReject(clinic);
-              onClose();
-            }}
+            onClick={() => onReject(clinic)}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium flex items-center gap-2"
           >
             <X size={16} />
             Reject
           </button>
           <button
-            onClick={() => {
-              onApprove(clinic);
-              onClose();
-            }}
+            onClick={() => onApprove(clinic)}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium flex items-center gap-2"
+          >
+            <Check size={16} />
+            Approve
+          </button>
+        </div>
+      </div>
+    </ModernModal>
+  );
+};
+
+// Service Detail Modal Component
+const ServiceDetailModal = ({
+  service,
+  isOpen,
+  onClose,
+  onApprove,
+  onReject
+}: {
+  service: ClinicService | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onApprove: (service: ClinicService) => void;
+  onReject: (service: ClinicService, reason?: string) => void;
+}) => {
+  if (!service) return null;
+
+  return (
+    <ModernModal isOpen={isOpen} onClose={onClose} title={`Review Service: ${service.clinic_provided_name}`} size="lg">
+      <div className="space-y-6">
+        {/* Service Information */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Stethoscope size={18} />
+            Service Information
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-600">Service Name:</span>
+              <p className="text-gray-900">{service.clinic_provided_name}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Original Service:</span>
+              <p className="text-gray-900">{service.service_name}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Clinic:</span>
+              <p className="text-gray-900">{service.clinic_name}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Rank:</span>
+              <p className="text-gray-900">{service.rank}</p>
+            </div>
+            <div className="md:col-span-2">
+              <span className="font-medium text-gray-600">Description:</span>
+              <p className="text-gray-900 mt-1">{service.description}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Consultation Charges */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-blue-800 mb-3">Consultation Charges</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-blue-700">Video Call:</span>
+              <p className="text-blue-900">₹{service.consultation_charge_video_call}</p>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Physical Visit:</span>
+              <p className="text-blue-900">₹{service.consultation_charge_physical_visit}</p>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Home Visit:</span>
+              <p className="text-blue-900">
+                {service.consultation_charge_home_visit ? `₹${service.consultation_charge_home_visit}` : 'Not available'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Treatment Charges */}
+        <div className="bg-green-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-green-800 mb-3">Treatment Charges</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-green-700">Video Call:</span>
+              <p className="text-green-900">₹{service.treatment_charge_video_call}</p>
+            </div>
+            <div>
+              <span className="font-medium text-green-700">Physical Visit:</span>
+              <p className="text-green-900">₹{service.treatment_charge_physical_visit}</p>
+            </div>
+            <div>
+              <span className="font-medium text-green-700">Home Visit:</span>
+              <p className="text-green-900">
+                {service.treatment_charge_home_visit ? `₹${service.treatment_charge_home_visit}` : 'Not available'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Service Image */}
+        {service.image && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-gray-800 mb-3">Service Image</h4>
+            <img 
+              src={service.image} 
+              alt={service.clinic_provided_name}
+              className="max-w-full h-auto rounded-lg max-h-64 object-cover"
+            />
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
+          >
+            Close
+          </button>
+          <button
+            onClick={() => onReject(service)}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium flex items-center gap-2"
+          >
+            <X size={16} />
+            Reject
+          </button>
+          <button
+            onClick={() => onApprove(service)}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium flex items-center gap-2"
           >
             <Check size={16} />
@@ -326,16 +582,11 @@ const ClinicDetailModal = ({
 };
 
 // Simulate changed fields for demo
-// Simulate changed fields for demo
 const getChangedFields = (clinic: Clinic) => {
-  // In real app, compare with previous approved data
-  // For demo, use the clinic's UUID to generate a deterministic but pseudo-random result
   const uuidLastChar = clinic.uuid.charAt(clinic.uuid.length - 1);
-
-  // Convert the last character to a number (0-9 or a-f) for decision making
   const lastCharCode = uuidLastChar.charCodeAt(0);
   const numericValue = isNaN(parseInt(uuidLastChar))
-    ? lastCharCode % 10  // For a-f characters, use char code modulo 10
+    ? lastCharCode % 10
     : parseInt(uuidLastChar);
 
   if (numericValue % 2 === 0) return ['services'];
@@ -343,56 +594,126 @@ const getChangedFields = (clinic: Clinic) => {
   return [];
 };
 
+// Tab Component
+const TabButton = ({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+  count
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<any>;
+  children: React.ReactNode;
+  count?: number;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+      active
+        ? 'bg-primaryColor text-white shadow-md'
+        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+    }`}
+  >
+    <Icon size={18} />
+    <span>{children}</span>
+    {count !== undefined && (
+      <span className={`px-2 py-1 text-xs rounded-full ${
+        active ? 'bg-white text-primaryColor' : 'bg-gray-200 text-gray-700'
+      }`}>
+        {count}
+      </span>
+    )}
+  </button>
+);
+
+
 // Main Component
 export default function PendingApprovalPage() {
-
+  const [activeTab, setActiveTab] = useState<'clinics' | 'services'>('clinics');
   const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [pendingClinics, setPendingClinics] = useState<Clinic[]>([]);
+  const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
+  const [pendingServices, setPendingServices] = useState<ClinicService[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
+  const [filteredServices, setFilteredServices] = useState<ClinicService[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [selectedService, setSelectedService] = useState<ClinicService | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
   } | null>(null);
 
-  // Filter only pending clinics
+  // Confirmation dialog states
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    type: 'approve' | 'reject';
+    itemType: 'clinic' | 'service';
+    item: Clinic | ClinicService | null;
+    title: string;
+    message: string;
+    confirmText: string;
+    isDestructive: boolean;
+    showReasonInput: boolean;
+    reason: string;
+  }>({
+    isOpen: false,
+    type: 'approve',
+    itemType: 'clinic',
+    item: null,
+    title: '',
+    message: '',
+    confirmText: '',
+    isDestructive: false,
+    showReasonInput: false,
+    reason: ''
+  });
+
+  // Fetch clinics and services
   useEffect(() => {
-    const fetchClinics = async (page = 1) => {
+    const fetchData = async (page = 1) => {
       try {
         setLoading(true);
 
-        // Pass status=PENDING as a query parameter
         const params = {
           page: page,
-          status: 'draft' // Add status filter
+          status: 'DRAFT'
         };
 
-        const data = await getAllClinic(params); // Pass the params object
+        // Fetch clinics
+        const clinicData = await getAllClinic(params);
+        setAllClinics(clinicData.data);
+        setPendingClinics(clinicData.data);
 
-        setAllClinics(data.data);
-        setPendingClinics(data.data); // All data returned should be pending clinics
+        // Fetch services
+        const serviceData = await getClinicService(params);
+        setClinicServices(serviceData.dat || []);
+        setPendingServices(serviceData.data || []);
 
-        console.log(data.data, 'Pending clinics data');
+        console.log('Clinic data:', clinicData.data);
+        console.log('Service data:', serviceData.data);
 
       } catch (error) {
         setNotification({
           type: 'error',
-          message: 'Failed to load clinics'
+          message: 'Failed to load data'
         });
-        console.error("Error fetching clinics:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClinics(currentPage);
+    fetchData(currentPage);
   }, [currentPage]);
 
-  // Search functionality
+  // Search functionality for clinics
   useEffect(() => {
     let filtered = [...pendingClinics];
 
@@ -409,70 +730,180 @@ export default function PendingApprovalPage() {
     setFilteredClinics(filtered);
   }, [pendingClinics, searchQuery]);
 
-  const handleApprove = async (clinic: Clinic) => {
+  // Search functionality for services
+  useEffect(() => {
+    let filtered = [...pendingServices];
+
+    if (searchQuery) {
+      filtered = filtered.filter(service =>
+        service.clinic_provided_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.service_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.clinic_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredServices(filtered);
+  }, [pendingServices, searchQuery]);
+
+  // Show confirmation dialog
+  const showConfirmation = (
+    type: 'approve' | 'reject',
+    itemType: 'clinic' | 'service',
+    item: Clinic | ClinicService,
+    title: string,
+    message: string,
+    confirmText: string,
+    isDestructive: boolean = false,
+    showReasonInput: boolean = false
+  ) => {
+    setConfirmationDialog({
+      isOpen: true,
+      type,
+      itemType,
+      item,
+      title,
+      message,
+      confirmText,
+      isDestructive,
+      showReasonInput,
+      reason: ''
+    });
+  };
+
+  // Handle confirmation
+  const handleConfirmation = async () => {
+    const { type, itemType, item, reason } = confirmationDialog;
+
+    if (!item) return;
+
     try {
-      // Optimistically update the UI first for better UX
+      if (itemType === 'clinic') {
+        const clinic = item as Clinic;
+        if (type === 'approve') {
+          await handleApproveClinic(clinic);
+        } else {
+          await handleRejectClinic(clinic, reason);
+        }
+      } else {
+        const service = item as ClinicService;
+        if (type === 'approve') {
+          await handleApproveService(service);
+        } else {
+          await handleRejectService(service, reason);
+        }
+      }
+    } catch (error) {
+      // Error handling is done in the individual functions
+    } finally {
+      setConfirmationDialog(prev => ({ ...prev, isOpen: false, reason: '' }));
+    }
+  };
+
+  // Clinic approval handlers
+  const handleApproveClinic = async (clinic: Clinic) => {
+    try {
       setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-
-      // Make API call to approve the clinic
       await approveOrRejectClinic(clinic.uuid, { status: 'APPROVED' });
-
       setNotification({
         type: 'success',
         message: `${clinic.name} has been approved successfully!`
       });
-
     } catch (error) {
-      // Revert the UI change if the API call fails
       setPendingClinics(prev => [...prev, clinic]);
-
       setNotification({
         type: 'error',
         message: `Failed to approve ${clinic.name}. Please try again.`
       });
-
       console.error("Error approving clinic:", error);
     }
   };
 
-  const handleReject = async (clinic: Clinic) => {
+  const handleRejectClinic = async (clinic: Clinic, reason?: string) => {
     try {
-      // Optimistically update the UI first for better UX
       setPendingClinics(prev => prev.filter(c => c.uuid !== clinic.uuid));
-
-      // Make API call to reject the clinic
-      await approveOrRejectClinic(clinic.uuid, { status: 'REJECTED' });
-
+      await approveOrRejectClinic(clinic.uuid, { 
+        status: 'REJECTED',
+        ...(reason && { reason_for_rejection: reason })
+      });
       setNotification({
         type: 'error',
         message: `${clinic.name} has been rejected.`
       });
-
     } catch (error) {
-      // Revert the UI change if the API call fails
       setPendingClinics(prev => [...prev, clinic]);
-
       setNotification({
         type: 'error',
         message: `Failed to reject ${clinic.name}. Please try again.`
       });
-
       console.error("Error rejecting clinic:", error);
     }
   };
 
-  const handleViewDetails = (clinic: Clinic) => {
+  // Service approval handlers
+  const handleApproveService = async (service: ClinicService) => {
+    try {
+      await approveOrRejectService(service.uuid, { status: 'APPROVED' });
+      setPendingServices(prev => prev.filter(s => s.uuid !== service.uuid));
+      setNotification({
+        type: 'success',
+        message: `${service.clinic_provided_name} has been approved successfully!`
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: `Failed to approve ${service.clinic_provided_name}. Please try again.`
+      });
+      console.error("Error approving service:", error);
+    }
+  };
+
+  const handleRejectService = async (service: ClinicService, reason?: string) => {
+    try {
+      await approveOrRejectService(service.uuid, { 
+        status: 'REJECTED',
+        ...(reason && { reason_for_rejection: reason })
+      });
+      setPendingServices(prev => prev.filter(s => s.uuid !== service.uuid));
+      setNotification({
+        type: 'error',
+        message: `${service.clinic_provided_name} has been rejected.`
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: `Failed to reject ${service.clinic_provided_name}. Please try again.`
+      });
+      console.error("Error rejecting service:", error);
+    }
+  };
+
+  const handleViewClinicDetails = (clinic: Clinic) => {
     setSelectedClinic(clinic);
     setIsDetailModalOpen(true);
   };
 
+  const handleViewServiceDetails = (service: ClinicService) => {
+    setSelectedService(service);
+    setIsServiceModalOpen(true);
+  };
+
   const handleBulkApprove = () => {
-    const count = filteredClinics.length;
-    setPendingClinics([]);
-    setNotification({
-      type: 'success',
-      message: `${count} clinic(s) have been approved successfully!`
-    });
+    if (activeTab === 'clinics') {
+      const count = filteredClinics.length;
+      setPendingClinics([]);
+      setNotification({
+        type: 'success',
+        message: `${count} clinic(s) have been approved successfully!`
+      });
+    } else {
+      const count = filteredServices.length;
+      setPendingServices([]);
+      setNotification({
+        type: 'success',
+        message: `${count} service(s) have been approved successfully!`
+      });
+    }
   };
 
   if (loading) {
@@ -485,7 +916,6 @@ export default function PendingApprovalPage() {
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen p-2 sm:p-4 md:p-6">
@@ -501,7 +931,7 @@ export default function PendingApprovalPage() {
               <Clock className="mr-3 text-yellow-600" size={32} />
               Pending Approvals
             </h1>
-            <p className="text-gray-600 mt-1">Review and approve clinic registration requests</p>
+            <p className="text-gray-600 mt-1">Review and approve clinic registration requests and services</p>
           </div>
 
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -512,7 +942,7 @@ export default function PendingApprovalPage() {
               <RefreshCw size={16} />
               Refresh
             </button>
-            {filteredClinics.length > 0 && (
+            {(filteredClinics.length > 0 || filteredServices.length > 0) && (
               <button
                 onClick={handleBulkApprove}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -524,6 +954,32 @@ export default function PendingApprovalPage() {
           </div>
         </motion.div>
 
+        {/* Tabs */}
+        <motion.div
+          className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex gap-2">
+            <TabButton
+              active={activeTab === 'clinics'}
+              onClick={() => setActiveTab('clinics')}
+              icon={Building2}
+              count={filteredClinics.length}
+            >
+              Clinic Approvals
+            </TabButton>
+            <TabButton
+              active={activeTab === 'services'}
+              onClick={() => setActiveTab('services')}
+              icon={Stethoscope}
+              count={filteredServices.length}
+            >
+              Service Approvals
+            </TabButton>
+          </div>
+        </motion.div>
+
         {/* Stats */}
         <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4"
@@ -532,17 +988,30 @@ export default function PendingApprovalPage() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Clock size={24} className="text-yellow-600" />
+              <div className={`p-3 rounded-lg ${
+                activeTab === 'clinics' ? 'bg-yellow-100' : 'bg-blue-100'
+              }`}>
+                {activeTab === 'clinics' ? (
+                  <Building2 size={24} className="text-yellow-600" />
+                ) : (
+                  <Stethoscope size={24} className="text-blue-600" />
+                )}
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{filteredClinics.length}</p>
-                <p className="text-sm text-gray-600">Clinics awaiting approval</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {activeTab === 'clinics' ? filteredClinics.length : filteredServices.length}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {activeTab === 'clinics' ? 'Clinics' : 'Services'} awaiting approval
+                </p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">
-                {filteredClinics.length === 0 ? 'All caught up!' : 'Requires attention'}
+                {activeTab === 'clinics' 
+                  ? (filteredClinics.length === 0 ? 'All caught up!' : 'Requires attention')
+                  : (filteredServices.length === 0 ? 'All caught up!' : 'Requires attention')
+                }
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Last updated: {new Date().toLocaleTimeString()}
@@ -561,146 +1030,349 @@ export default function PendingApprovalPage() {
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search pending clinics by name, city, email, or phone..."
+              placeholder={
+                activeTab === 'clinics' 
+                  ? "Search pending clinics by name, city, email, or phone..."
+                  : "Search pending services by name, clinic, or description..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none "
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </motion.div>
 
-        {/* Pending Clinics */}
-        {filteredClinics.length === 0 ? (
-          <motion.div
-            className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">All Caught Up!</h3>
-            <p className="text-gray-600">
-              {searchQuery ? 'No pending clinics match your search.' : 'No clinics are currently pending approval.'}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="mt-4 text-blue-600 hover:text-blue-700 underline"
-              >
-                Clear search
-              </button>
-            )}
-          </motion.div>
+        {/* Content based on active tab */}
+        {activeTab === 'clinics' ? (
+          /* Clinic Approval Content */
+          filteredClinics.length === 0 ? (
+            <motion.div
+              className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">All Caught Up!</h3>
+              <p className="text-gray-600">
+                {searchQuery ? 'No pending clinics match your search.' : 'No clinics are currently pending approval.'}
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 text-blue-600 hover:text-blue-700 underline"
+                >
+                  Clear search
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              {filteredClinics.map((clinic, index) => (
+                <motion.div
+                  key={clinic.uuid}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Clinic Info */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">{clinic.name}</h3>
+                          <p className="text-sm text-gray-600 flex items-center gap-1">
+                            <MapPin size={14} />
+                            {clinic.address}, {clinic.city} - {clinic.pincode}
+                          </p>
+                        </div>
+                        <StatusBadge status={clinic.status} />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail size={14} />
+                          <span>{clinic.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone size={14} />
+                          <span>{clinic.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Clock size={14} />
+                          <span>{clinic.hours}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Calendar size={14} />
+                          <span>{clinic.workingDays?.join(', ')}</span>
+                        </div>
+                      </div>
+
+                      {clinic.submissionDate && (
+                        <div className="text-xs text-gray-500">
+                          Submitted on: {new Date(clinic.submissionDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleViewClinicDetails(clinic)}
+                        className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                      >
+                        <Eye size={16} />
+                        <span className="hidden sm:inline">Review</span>
+                      </button>
+                      <button
+                        onClick={() => showConfirmation(
+                          'reject',
+                          'clinic',
+                          clinic,
+                          'Reject Clinic',
+                          `Are you sure you want to reject ${clinic.name}? This action cannot be undone.`,
+                          'Reject Clinic',
+                          true,
+                          true
+                        )}
+                        className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                      >
+                        <X size={16} />
+                        <span className="hidden sm:inline">Reject</span>
+                      </button>
+                      <button
+                        onClick={() => showConfirmation(
+                          'approve',
+                          'clinic',
+                          clinic,
+                          'Approve Clinic',
+                          `Are you sure you want to approve ${clinic.name}?`,
+                          'Approve Clinic'
+                        )}
+                        className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                      >
+                        <Check size={16} />
+                        <span className="hidden sm:inline">Approve</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Highlight Changed Fields: Services/Doctors */}
+                  {(() => {
+                    const changed = getChangedFields(clinic);
+                    if (changed.includes('services') || changed.includes('doctors')) {
+                      return (
+                        <div className="flex gap-2 mt-2">
+                          {changed.includes('services') && (
+                            <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
+                              <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v4M17 10v4M3 10v4M21 10v4M5 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M15 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" /></svg>
+                              Services updated
+                            </span>
+                          )}
+                          {changed.includes('doctors') && (
+                            <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
+                              <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="4" /><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
+                              Doctors updated
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </motion.div>
+              ))}
+            </div>
+          )
         ) : (
-          <div className="space-y-4">
-            {filteredClinics.map((clinic, index) => (
-              <motion.div
-                key={clinic.uuid}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Clinic Info */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{clinic.name}</h3>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <MapPin size={14} />
-                          {clinic.address}, {clinic.city} - {clinic.pincode}
-                        </p>
+          /* Service Approval Content */
+          filteredServices.length === 0 ? (
+            <motion.div
+              className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">All Caught Up!</h3>
+              <p className="text-gray-600">
+                {searchQuery ? 'No pending services match your search.' : 'No services are currently pending approval.'}
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 text-blue-600 hover:text-blue-700 underline"
+                >
+                  Clear search
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              {filteredServices.map((service, index) => (
+                <motion.div
+                  key={service.uuid}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Service Info */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">{service.clinic_provided_name}</h3>
+                          <p className="text-sm text-gray-600 flex items-center gap-1">
+                            <Building2 size={14} />
+                            {service.clinic_name} • {service.service_name}
+                          </p>
+                        </div>
+                        <StatusBadge status={service.status} />
                       </div>
-                      <StatusBadge status={clinic.status} />
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="font-medium">Rank:</span>
+                          <span>{service.rank}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="font-medium">Video Consultation:</span>
+                          <span>₹{service.consultation_charge_video_call}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="font-medium">Physical Visit:</span>
+                          <span>₹{service.consultation_charge_physical_visit}</span>
+                        </div>
+                      </div>
+
+                      {service.description && (
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">Description:</span>
+                          <p className="mt-1">{service.description}</p>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Mail size={14} />
-                        <span>{clinic.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Phone size={14} />
-                        <span>{clinic.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Clock size={14} />
-                        <span>{clinic.hours}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar size={14} />
-                        <span>{clinic.workingDays?.join(', ')}</span>
-                      </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleViewServiceDetails(service)}
+                        className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                      >
+                        <Eye size={16} />
+                        <span className="hidden sm:inline">Review</span>
+                      </button>
+                      <button
+                        onClick={() => showConfirmation(
+                          'reject',
+                          'service',
+                          service,
+                          'Reject Service',
+                          `Are you sure you want to reject ${service.clinic_provided_name}? This action cannot be undone.`,
+                          'Reject Service',
+                          true,
+                          true
+                        )}
+                        className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                      >
+                        <X size={16} />
+                        <span className="hidden sm:inline">Reject</span>
+                      </button>
+                      <button
+                        onClick={() => showConfirmation(
+                          'approve',
+                          'service',
+                          service,
+                          'Approve Service',
+                          `Are you sure you want to approve ${service.clinic_provided_name}?`,
+                          'Approve Service'
+                        )}
+                        className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                      >
+                        <Check size={16} />
+                        <span className="hidden sm:inline">Approve</span>
+                      </button>
                     </div>
-
-                    {clinic.submissionDate && (
-                      <div className="text-xs text-gray-500">
-                        Submitted on: {new Date(clinic.submissionDate).toLocaleDateString()}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleViewDetails(clinic)}
-                      className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-                    >
-                      <Eye size={16} />
-                      <span className="hidden sm:inline">Review</span>
-                    </button>
-                    <button
-                      onClick={() => handleReject(clinic)}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                    >
-                      <X size={16} />
-                      <span className="hidden sm:inline">Reject</span>
-                    </button>
-                    <button
-                      onClick={() => handleApprove(clinic)}
-                      className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      <Check size={16} />
-                      <span className="hidden sm:inline">Approve</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Highlight Changed Fields: Services/Doctors */}
-                {(() => {
-                  const changed = getChangedFields(clinic);
-                  if (changed.includes('services') || changed.includes('doctors')) {
-                    return (
-                      <div className="flex gap-2 mt-2">
-                        {changed.includes('services') && (
-                          <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
-                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v4M17 10v4M3 10v4M21 10v4M5 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M15 10V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" /></svg>
-                            Services updated
-                          </span>
-                        )}
-                        {changed.includes('doctors') && (
-                          <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">
-                            <svg className="mr-1" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="4" /><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
-                            Doctors updated
-                          </span>
-                        )}
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </motion.div>
-            ))}
-          </div>
+                  {/* Service Image Preview */}
+                  {service.image && (
+                    <div className="mt-3">
+                      <img 
+                        src={service.image} 
+                        alt={service.clinic_provided_name}
+                        className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )
         )}
 
-        {/* Clinic Detail Modal */}
+        {/* Modals */}
         <ClinicDetailModal
           clinic={selectedClinic}
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
-          onApprove={handleApprove}
-          onReject={handleReject}
+          onApprove={(clinic) => showConfirmation(
+            'approve',
+            'clinic',
+            clinic,
+            'Approve Clinic',
+            `Are you sure you want to approve ${clinic.name}?`,
+            'Approve Clinic'
+          )}
+          onReject={(clinic) => showConfirmation(
+            'reject',
+            'clinic',
+            clinic,
+            'Reject Clinic',
+            `Are you sure you want to reject ${clinic.name}? This action cannot be undone.`,
+            'Reject Clinic',
+            true,
+            true
+          )}
+        />
+
+        <ServiceDetailModal
+          service={selectedService}
+          isOpen={isServiceModalOpen}
+          onClose={() => setIsServiceModalOpen(false)}
+          onApprove={(service) => showConfirmation(
+            'approve',
+            'service',
+            service,
+            'Approve Service',
+            `Are you sure you want to approve ${service.clinic_provided_name}?`,
+            'Approve Service'
+          )}
+          onReject={(service) => showConfirmation(
+            'reject',
+            'service',
+            service,
+            'Reject Service',
+            `Are you sure you want to reject ${service.clinic_provided_name}? This action cannot be undone.`,
+            'Reject Service',
+            true,
+            true
+          )}
+        />
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmationDialog.isOpen}
+          onClose={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false, reason: '' }))}
+          onConfirm={handleConfirmation}
+          type={confirmationDialog.type}
+          title={confirmationDialog.title}
+          message={confirmationDialog.message}
+          confirmText={confirmationDialog.confirmText}
+          isDestructive={confirmationDialog.isDestructive}
+          showReasonInput={confirmationDialog.showReasonInput}
+          reason={confirmationDialog.reason}
+          onReasonChange={(reason) => setConfirmationDialog(prev => ({ ...prev, reason }))}
         />
 
         {/* Notification */}
