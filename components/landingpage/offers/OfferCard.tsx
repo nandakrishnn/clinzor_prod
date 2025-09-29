@@ -7,7 +7,8 @@ interface OfferCardProps {
   title: string;
   description: string;
   image?: string;
-  discount_percentage?: string ;
+  discount_percentage?: string;
+  flat_discount_amt?: string;
   valid_from: string;
   valid_to: string;
   offer_type: string;
@@ -18,6 +19,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
   description,
   image,
   discount_percentage,
+  flat_discount_amt,
   valid_from,
   valid_to,
   offer_type
@@ -55,7 +57,9 @@ const OfferCard: React.FC<OfferCardProps> = ({
           <div className="text-xs text-center tracking-wide ">
             {discount_percentage && !isNaN(Number(discount_percentage))
               ? `${Math.round(Number(discount_percentage))} % offer`
-              : "No offer"}
+              : flat_discount_amt && !isNaN(Number(discount_percentage))
+                ? `₹ ${Math.round(Number(flat_discount_amt))} offer`
+                : "No offer"}
           </div>
         </div>
       </div>

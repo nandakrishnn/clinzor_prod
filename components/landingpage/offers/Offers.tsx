@@ -14,6 +14,7 @@ type Offer = {
   valid_from?: string;
   valid_to?: string;
   offer_type?: string;
+  flat_discount_amt?: string;
 };
 
 const Offers = () => {
@@ -38,18 +39,20 @@ const Offers = () => {
     setIsLoading(true);
     try {
       const res = await getAllOffers();
+      console.log(res,'all offers')
       if (res.status === 200) {
         const today = new Date();
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-        // filter offers: show only valid ones
-        const validOffers = res?.data?.data.filter((offer: Offer) => {
-          const validFrom = offer.valid_from ? new Date(offer.valid_from) : null;
-          const validTo = offer.valid_to ? new Date(offer.valid_to) : null;
+        const validOffers = res.data.data.filter((offer: Offer) => {
+          const start = offer.valid_from ? new Date(offer.valid_from) : null;
+          const end = offer.valid_to ? new Date(offer.valid_to) : null;
 
-          return (
-            (!validFrom || today >= validFrom) && // starts already
-            (!validTo || today <= validTo)        // not expired
-          );
+          const startDate = start ? new Date(start.getFullYear(), start.getMonth(), start.getDate()) : null;
+          const endDate = end ? new Date(end.getFullYear(), end.getMonth(), end.getDate()) : null;
+
+          return (!startDate || todayDate >= startDate) &&
+            (!endDate || todayDate <= endDate);
         });
 
         setOfferData(validOffers);
@@ -86,7 +89,7 @@ const Offers = () => {
 
   return (
     <section className="overflow-hidden">
-      <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-10">
+      <div className="@container mx-auto max-w-7xl px-3 md:px-6 md:pb-5">
         <Title
           title={"Special Offers & Packages"}
           subtitle={`Exclusive healthcare packages designed for your wellness needs. Save on comprehensive care.`}
@@ -104,6 +107,7 @@ const Offers = () => {
                 description={offer?.description}
                 image={offer?.image}
                 discount_percentage={offer?.discount_percentage}
+                flat_discount_amt={offer?.flat_discount_amt}
                 valid_from={offer?.valid_from ?? ""}
                 valid_to={offer?.valid_to ?? ""}
                 offer_type={offer?.offer_type ?? ""}
