@@ -577,7 +577,7 @@ export default function AdminSidebar() {
             <div className="flex items-center min-w-0 flex-1">
               <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                 <img
-                  src={user.avatar}
+                  src={"/clinic.png"}
                   alt={user.name}
                   className="w-full h-full object-cover"
                 />
