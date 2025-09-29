@@ -145,9 +145,9 @@ export const getClinicIndStaticData = async () => {
   const res = await axiosPrivate.get('clinic/clinic-tab-analytics/')
   return res?.data
 }
-export const getClinicServiceData = async (id: string) => {
+export const getClinicServiceData = async (id: string, status?: string) => {
   console.log(id)
-  const res = await axiosPrivate.get(`clinic/clinic-service-lc/?clinic=${id}`)
+  const res = await axiosPrivate.get(`clinic/clinic-service-lc/?clinic=${id}&status=${status}`)
   return res?.data?.data
 }
 

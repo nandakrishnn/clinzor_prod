@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Star, MapPin, Phone, Clock, ChevronRight, Calendar, Users, Shield, Camera, Heart, Award, CheckCircle } from "lucide-react";
-import { getAClinic, getAClinicService, GetAllDoctor, GetAllSpecialties, getClinicDoctors, getClinicServiceData, getClinicTimingServiceData } from "@/service/admin/clinicManagentService";
+import { Star, MapPin, Phone, Clock, Users, Shield, Camera, Heart, Award, CheckCircle } from "lucide-react";
+import { getAClinicService, getClinicDoctors, getClinicServiceData, getClinicTimingServiceData } from "@/service/admin/clinicManagentService";
 
 
 interface Doctor {
@@ -101,7 +101,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         setDoctors(doctorsResponse?.data?.data);
 
         // Fetch services for this clinic with query parameters
-        const servicesResponse = await getClinicServiceData(clinicId);
+        const servicesResponse = await getClinicServiceData(clinicId, "APPROVED");
         const clinicServices = servicesResponse?.data?.map((service: ApiService) => ({
           id: service?.uuid,
           name: service?.clinic_provided_name,
