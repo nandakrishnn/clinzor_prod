@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { getAllPayment } from '@/service/admin/bookingManagementService';
+import { getAllTransactions } from '@/service/admin/bookingManagementService';
+import DataPlaceholder from '@/components/common/DataPlaceholder';
 
 // Updated Payment Record Type based on your API response
 type PaymentRecord = {
@@ -30,13 +31,15 @@ type PaymentRecord = {
   transaction_id: string;
   notes: string | null;
   status: 'CREATED' | 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED';
-  payment_type: string;
+  payment_type: 'ALL' | 'DUE' | 'PAID' | string;
+  transaction_type?: 'ALL' | 'DUE' | 'PAID' | string;
   payment_id: string | null;
   patient_name: string;
   service_name: string;
   clinic_service_name: string | null;
   clinic_name: string;
   paymentDate?: string; // Adding optional field for date handling
+  created_at?: string; // Adding optional field for date handling
 };
 
 interface PaginationData {
@@ -52,8 +55,7 @@ const PaymentRecordsDashboard = () => {
   // State management
   const [payment, setPayment] = useState<PaymentRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | PaymentRecord['status']>('ALL');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<'ALL' | string>('ALL');
+  const [transactionType, setTransactionType] = useState<'ALL' | 'DUE' | 'PAID' | string>('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,7 +64,6 @@ const PaymentRecordsDashboard = () => {
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalRecords, setTotalRecords] = useState(0);
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
     total_pages: 1,
@@ -70,7 +71,7 @@ const PaymentRecordsDashboard = () => {
     next: null,
     previous: null
   });
-  const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
+
   const fetchPayments = async (page = 1, search = '') => {
     try {
       setIsLoading(true);
@@ -79,25 +80,19 @@ const PaymentRecordsDashboard = () => {
       const params = {
         page: page,
         search: search,
-        status: statusFilter !== 'ALL' ? statusFilter : undefined,
-        payment_type: paymentMethodFilter !== 'ALL' ? paymentMethodFilter : undefined,
+        transaction_type: transactionType !== 'ALL' ? transactionType : undefined,
         from_date: fromDate || undefined,
         to_date: toDate || undefined,
-        ordering: sortOrder === 'asc' ? sortBy : `-${sortBy}`
       };
 
       // Make API call
-      const response = await getAllPayment(params);
+      const response = await getAllTransactions(params);
 
       // Process response data
-      const recordsWithDates = response.data.map((record: PaymentRecord) => ({
-        ...record,
-        paymentDate: record.paymentDate || new Date().toISOString()
-      }));
+      const recordsWithDates = response.data;
 
       // Update state
       setPayment(recordsWithDates);
-      setTotalRecords(response.total_items);
       setPaginationData({
         current_page: response.current_page,
         total_pages: response.total_pages,
@@ -127,27 +122,7 @@ const PaymentRecordsDashboard = () => {
   // Fetch data when filters or sort changes
   useEffect(() => {
     fetchPayments(currentPage, searchTerm);
-  }, [statusFilter, paymentMethodFilter, fromDate, toDate, sortBy, sortOrder, currentPage]);
-
-  // Statistics
-  const stats = useMemo(() => {
-    const total = payment.length;
-    const completed = payment.filter(r => r.status === 'COMPLETED').length;
-    const pending = payment.filter(r => r.status === 'PENDING').length;
-    const failed = payment.filter(r => r.status === 'FAILED').length;
-    const refunded = payment.filter(r => r.status === 'REFUNDED').length;
-    const created = payment.filter(r => r.status === 'CREATED').length;
-
-    const totalRevenue = payment
-      .filter(r => r.status === 'COMPLETED')
-      .reduce((sum, r) => sum + parseFloat(r.amount), 0);
-
-    const pendingAmount = payment
-      .filter(r => r.status === 'PENDING' || r.status === 'CREATED')
-      .reduce((sum, r) => sum + parseFloat(r.amount), 0);
-
-    return { total, completed, pending, failed, refunded, created, totalRevenue, pendingAmount };
-  }, [payment]);
+  }, [transactionType, fromDate, toDate, sortBy, sortOrder, currentPage]);
 
   // Utility functions
   const formatCurrency = (amount: string) => {
@@ -171,21 +146,24 @@ const PaymentRecordsDashboard = () => {
     });
   };
 
-  const getStatusColor = (status: PaymentRecord['status']) => {
+  const getStatusColor = (status: PaymentRecord['transaction_type']) => {
     switch (status) {
       case 'COMPLETED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'PENDING':
       case 'CREATED': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'FAILED': return 'bg-red-50 text-red-700 border-red-200';
       case 'REFUNDED': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'PAID': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'DUE': return 'bg-purple-50 text-purple-700 border-purple-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
-  const getStatusIcon = (status: PaymentRecord['status']) => {
+  const getStatusIcon = (status: PaymentRecord['transaction_type']) => {
     switch (status) {
       case 'COMPLETED': return <CheckCircle className="w-4 h-4" />;
-      case 'PENDING':
+      case 'PAID': return <CheckCircle className="w-4 h-4" />;
+      case 'DUE':
       case 'CREATED': return <Clock className="w-4 h-4" />;
       case 'FAILED': return <XCircle className="w-4 h-4" />;
       case 'REFUNDED': return <RefreshCw className="w-4 h-4" />;
@@ -216,14 +194,6 @@ const PaymentRecordsDashboard = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen  p-4">
@@ -258,131 +228,31 @@ const PaymentRecordsDashboard = () => {
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div
-            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'ALL' ? 'ring-2 ring-blue-500 border-blue-300' : 'border-white/20'
-              }`}
-            onClick={() => {
-              const newFilter = activeStatFilter === 'ALL' ? null : 'ALL';
-              setActiveStatFilter(newFilter);
-              setStatusFilter('ALL');
-              setCurrentPage(1);
-              fetchPayments(1, searchTerm);
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Records</p>
-                <p className="text-2xl font-bold text-gray-900">{paginationData.total_items}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Receipt size={24} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalRevenue.toString())}</p>
-              </div>
-              <div className="p-3 bg-emerald-100 rounded-xl">
-                <TrendingUp size={24} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-white/20'
-              }`}
-            onClick={() => {
-              const newFilter = activeStatFilter === 'COMPLETED' ? null : 'COMPLETED';
-              setActiveStatFilter(newFilter);
-              setStatusFilter('COMPLETED');
-              setCurrentPage(1);
-              fetchPayments(1, searchTerm);
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle size={24} className="text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border cursor-pointer transition-all p-6 ${activeStatFilter === 'PENDING' ? 'ring-2 ring-amber-500 border-amber-300' : 'border-white/20'
-              }`}
-            onClick={() => {
-              const newFilter = activeStatFilter === 'PENDING' ? null : 'PENDING';
-              setActiveStatFilter(newFilter);
-              setStatusFilter('PENDING');
-              setCurrentPage(1);
-              fetchPayments(1, searchTerm);
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending/Created</p>
-                <p className="text-2xl font-bold text-amber-600">{stats.pending + stats.created}</p>
-              </div>
-              <div className="p-3 bg-amber-100 rounded-xl">
-                <Clock size={24} className="text-amber-600" />
-              </div>
-            </div>
-          </div>
-        </div> */}
-
         {/* Filters */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="lg:col-span-2">
-              <div className="relative">
-                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none "
-                />
-              </div>
+            <div className="relative ">
+              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search transactions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none "
+              />
             </div>
 
             {/* Status Filter */}
             <div className="relative">
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value as any)}
                 className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 pr-8 focus:outline-none"
               >
-                <option value="ALL">All Status</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CREATED">Created</option>
-                <option value="PENDING">Pending</option>
-                <option value="FAILED">Failed</option>
-                <option value="REFUNDED">Refunded</option>
-              </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-
-            {/* Payment Method Filter */}
-            <div className="relative">
-              <select
-                value={paymentMethodFilter}
-                onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 pr-8 focus:outline-none "
-              >
-                <option value="ALL">All Methods</option>
-                <option value="NORMAL_BOOKING">Normal Booking</option>
-                {/* Add other payment types if available */}
+                <option value="ALL">All Type</option>
+                <option value="PAID">Paid</option>
+                <option value="DUE">Due</option>
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
@@ -410,97 +280,82 @@ const PaymentRecordsDashboard = () => {
           <p className="text-gray-600">
             Showing {((paginationData.current_page - 1) * 10) + 1}-{Math.min(paginationData.current_page * 10, paginationData.total_items)} of {paginationData.total_items} records
           </p>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Sort by:</span>
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                setSortBy(field as any);
-                setSortOrder(order as any);
-                setCurrentPage(1);
-              }}
-              className="px-3 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="transaction_id-desc">Transaction ID (Desc)</option>
-              <option value="transaction_id-asc">Transaction ID (Asc)</option>
-              <option value="amount-desc">Amount (High to Low)</option>
-              <option value="amount-asc">Amount (Low to High)</option>
-              <option value="patient_name-asc">Patient Name (A-Z)</option>
-              <option value="patient_name-desc">Patient Name (Z-A)</option>
-            </select>
-          </div>
         </div>
 
         {/* Payment Records Table */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50/80">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {payment.map((record) => (
-                  <tr key={record.uuid} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <div className="text-sm font-medium text-gray-900">{record.transaction_id}</div>
-                        <div className="text-xs text-gray-500">{record.payment_type}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <div className="text-sm font-medium text-gray-900">{record.patient_name || "No Name"}</div>
-                        <div className="text-xs text-gray-500">{record.user}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col">
-                          <div className="text-sm font-medium text-gray-900">{record.service_name}</div>
-                          <div className="text-xs text-gray-500">{record.clinic_name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <div className="text-sm font-bold text-gray-900">{formatCurrency(record.amount)}</div>
-                        <div className="text-xs text-gray-500">Currency: {record.currency}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
-                        {getStatusIcon(record.status)}
-                        {record.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(record.paymentDate || '')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          setSelectedRecord(record);
-                          setShowDetailsModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
-                      >
-                        <Eye size={16} />
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {isLoading ?
+              (
+                <div className="min-h-[40vh] flex items-center justify-center w-full ">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              )
+              : (payment?.length === 0 ? (
+                <div className='w-full  item-center justify-center'>
+                  <DataPlaceholder />
+                </div>
+              ) : (
+                <table className="w-full min-h-[50vh] relative">
+                  <thead className="bg-gray-50/80">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {payment.map((record) => (
+                      <tr key={record?.uuid} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <div className="text-sm font-medium text-gray-900">{record?.patient_name || "No Name"}</div>
+                            {/* <div className="text-xs text-gray-500">{record.user}</div> */}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col">
+                              <div className="text-sm font-medium text-gray-900">{record?.service_name}</div>
+                              <div className="text-xs text-gray-500">{record?.clinic_name}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <div className="text-sm font-bold text-gray-900">{formatCurrency(record.amount)}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(record?.transaction_type)}`}>
+                            {getStatusIcon(record?.transaction_type)}
+                            {record?.transaction_type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(record?.created_at || '')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              setSelectedRecord(record);
+                              setShowDetailsModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                          >
+                            <Eye size={16} />
+                            View Details
+                          </button>
+                        </td>
+                      </tr>))
+                    }
+                  </tbody>
+                </table>
+              ))
+            }
           </div>
         </div>
 
@@ -576,8 +431,8 @@ const PaymentRecordsDashboard = () => {
 
         {/* Details Modal */}
         {showDetailsModal && selectedRecord && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 -top-10 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold text-gray-900">Transaction Details</h3>
@@ -593,60 +448,60 @@ const PaymentRecordsDashboard = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Transaction ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.transaction_id}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.uuid}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Booking ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.booking}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.booking}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Patient Name</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.patient_name}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.patient_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">User ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.user}</p>
+                    <p className="text-sm font-medium text-gray-500">Clinic ID</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.clinic}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Service</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.service_name}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.service_name}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Clinic</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.clinic_name || 'N/A'}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.clinic_name || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Amount</p>
-                    <p className="text-base font-semibold text-gray-900">{formatCurrency(selectedRecord.amount)}</p>
+                    <p className="text-base font-semibold text-gray-900">{formatCurrency(selectedRecord?.amount)}</p>
                   </div>
-                  <div>
+                  {/* <div>
                     <p className="text-sm font-medium text-gray-500">Currency</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.currency}</p>
-                  </div>
-                  <div>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.currency}</p>
+                  </div> */}
+                  {/* <div>
                     <p className="text-sm font-medium text-gray-500">Payment Type</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.payment_type}</p>
-                  </div>
-                  <div>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.payment_type}</p>
+                  </div> */}
+                  {/* <div>
                     <p className="text-sm font-medium text-gray-500">Payment ID</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRecord.payment_id || 'N/A'}</p>
-                  </div>
+                    <p className="text-base font-semibold text-gray-900">{selectedRecord?.payment_id || 'N/A'}</p>
+                  </div> */}
                   <div>
                     <p className="text-sm font-medium text-gray-500">Status</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedRecord.status)}`}>
-                      {getStatusIcon(selectedRecord.status)}
-                      {selectedRecord.status}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedRecord?.transaction_type)}`}>
+                      {getStatusIcon(selectedRecord?.transaction_type)}
+                      {selectedRecord?.transaction_type}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Payment Date</p>
-                    <p className="text-base font-semibold text-gray-900">{formatDate(selectedRecord.paymentDate || '')}</p>
+                    <p className="text-sm font-medium text-gray-500">Date</p>
+                    <p className="text-base font-semibold text-gray-900">{formatDate(selectedRecord?.created_at || '')}</p>
                   </div>
                 </div>
-                {selectedRecord.notes && (
+                {selectedRecord?.notes && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Notes</p>
-                    <p className="text-base text-gray-900 mt-1">{selectedRecord.notes}</p>
+                    <p className="text-base text-gray-900 mt-1">{selectedRecord?.notes}</p>
                   </div>
                 )}
               </div>

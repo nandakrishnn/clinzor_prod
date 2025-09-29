@@ -127,3 +127,24 @@ export const getAllPayment = async (params: Record<string, string | number | und
     throw error;
   }
 };
+export const getAllTransactions = async (params: Record<string, string | number | undefined>) => {
+  try {
+    // Create a clean params object without undefined values
+    const cleanParams: Record<string, string> = {};
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        cleanParams[key] = String(value);
+      }
+    });
+
+    const queryString = new URLSearchParams(cleanParams).toString();
+    const response = await axiosPrivate.get(`clinic/list-transactions/?${queryString}`);
+
+    // Return the full response data (not just response.data.data)
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch payment records", error);
+    throw error;
+  }
+};
