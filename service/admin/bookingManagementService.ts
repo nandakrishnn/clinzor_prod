@@ -88,6 +88,10 @@ export const rejectSlot = async (slotId: string, reason: string) => {
     throw error;
   }
 };
+export const getAdminSlotStaticData = async () => {
+  const response = await axiosPrivate.get(`clinic/slot-tab-analytics/`);
+  return response.data;
+};
 
 export const bulkApproveSlots = async (slotType: string, slotList: string[]) => {
   try {
@@ -127,6 +131,7 @@ export const getAllPayment = async (params: Record<string, string | number | und
     throw error;
   }
 };
+
 export const getAllTransactions = async (params: Record<string, string | number | undefined>) => {
   try {
     // Create a clean params object without undefined values

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Users, Calendar, Check, X, Filter, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, XCircle, Eye, EyeOff, Plus, Building2, MapPin, User, Activity, Settings, RefreshCw, Download, Upload } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { approveSlot, bulkApproveSlots, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
+import { approveSlot, bulkApproveSlots, getAdminSlotStaticData, getAllSlots, rejectSlot } from '@/service/admin/bookingManagementService';
 
 interface Slot {
   uuid: string;
@@ -54,12 +54,13 @@ const SlotManager = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [dashData, setDashData] = useState<any>()
 
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(clinicNameSearch);
-    }, 500); // 500ms debounce
+    }, 1000); // 500ms debounce
 
     return () => {
       clearTimeout(handler);
@@ -114,6 +115,7 @@ const SlotManager = () => {
   // Fetch slots when any filter changes
   useEffect(() => {
     // Reset to first page when filters change
+    getDashboardStatics()
     setCurrentPage(1);
     fetchSlots(1, debouncedSearchQuery, statusFilter, fromDate, toDate);
   }, [debouncedSearchQuery, statusFilter, fromDate, toDate]);
@@ -323,16 +325,23 @@ const SlotManager = () => {
     );
   };
 
+  const getDashboardStatics = async () => {
+    try {
+      const res = await getAdminSlotStaticData();
+      console.log(res, "data from the slot")
+      if (res?.status === 200) {
+        setDashData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   // Get counts for quick stats
   const statusCounts = slots.reduce((acc, slot) => {
     acc[slot.status] = (acc[slot.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-
-  // Calculate additional metrics
-  const totalBookableSlots = slots.filter(s => s.status === 'APPROVED').reduce((sum, slot) => sum + slot.available_slots, 0);
-  const totalMaxCapacity = slots.filter(s => s.status === 'APPROVED').reduce((sum, slot) => sum + slot.max_bookings, 0);
-  const utilizationRate = totalMaxCapacity > 0 ? Math.round(((totalMaxCapacity - totalBookableSlots) / totalMaxCapacity) * 100) : 0;
 
   const handleViewSlot = (uuid: string) => {
     const slot = slots.find((s) => s.uuid === uuid);
@@ -347,8 +356,8 @@ const SlotManager = () => {
         {/* Action Feedback */}
         {actionFeedback && (
           <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl border-l-4 ${actionFeedback.type === 'success'
-              ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
-              : 'bg-red-50 border-red-500 text-red-800'
+            ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
+            : 'bg-red-50 border-red-500 text-red-800'
             } transition-all duration-500 transform translate-x-0`}>
             <div className="flex items-center gap-3">
               {actionFeedback.type === 'success' ? (
@@ -387,13 +396,13 @@ const SlotManager = () => {
 
                 {/* Key Metrics Dashboard */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="h-5 w-5 text-amber-600" />
-                      <span className="text-amber-700 font-semibold text-sm">Pending Approval</span>
+                      <Activity className="h-5 w-5 text-purple-600" />
+                      <span className="text-purple-700 font-semibold text-sm">Total Slots</span>
                     </div>
-                    <div className="text-amber-800 font-bold text-2xl">{statusCounts.PENDING || 0}</div>
-                    <div className="text-amber-600 text-xs mt-1">Requires your review</div>
+                    <div className="text-purple-800 font-bold text-2xl">{dashData?.total_slots}</div>
+                    <div className="text-purple-600 text-xs mt-1">Booking efficiency</div>
                   </div>
 
                   <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
@@ -401,26 +410,26 @@ const SlotManager = () => {
                       <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                       <span className="text-emerald-700 font-semibold text-sm">Active Slots</span>
                     </div>
-                    <div className="text-emerald-800 font-bold text-2xl">{statusCounts.APPROVED || 0}</div>
+                    <div className="text-emerald-800 font-bold text-2xl">{dashData?.approved_slots_count || 0}</div>
                     <div className="text-emerald-600 text-xs mt-1">Available for booking</div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <span className="text-amber-700 font-semibold text-sm">Pending Approval</span>
+                    </div>
+                    <div className="text-amber-800 font-bold text-2xl">{dashData?.pending_slots_count || 0}</div>
+                    <div className="text-amber-600 text-xs mt-1">Requires your review</div>
                   </div>
 
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-5 w-5 text-blue-600" />
-                      <span className="text-blue-700 font-semibold text-sm">Available Spots</span>
+                      <span className="text-blue-700 font-semibold text-sm">Rejected Spots</span>
                     </div>
-                    <div className="text-blue-800 font-bold text-2xl">{totalBookableSlots}</div>
+                    <div className="text-blue-800 font-bold text-2xl">{dashData?.rejected_slots_count}</div>
                     <div className="text-blue-600 text-xs mt-1">Open appointments</div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="h-5 w-5 text-purple-600" />
-                      <span className="text-purple-700 font-semibold text-sm">Utilization</span>
-                    </div>
-                    <div className="text-purple-800 font-bold text-2xl">{utilizationRate}%</div>
-                    <div className="text-purple-600 text-xs mt-1">Booking efficiency</div>
                   </div>
                 </div>
               </div>
@@ -762,8 +771,8 @@ const SlotManager = () => {
                     onClick={() => setCurrentPage(paginationData.current_page - 1)}
                     disabled={!paginationData.previous}
                     className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${!paginationData.previous
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -787,8 +796,8 @@ const SlotManager = () => {
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${paginationData.current_page === pageNum
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                             }`}
                         >
                           {pageNum}
@@ -800,8 +809,8 @@ const SlotManager = () => {
                     onClick={() => setCurrentPage(paginationData.current_page + 1)}
                     disabled={!paginationData.next}
                     className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${!paginationData.next
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     Next
