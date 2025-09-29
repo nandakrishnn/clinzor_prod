@@ -544,6 +544,7 @@ export default function ExpertManagement() {
   }, [])
 
   const handleView = (expert: Expert) => {
+    console.log(expert, 'selected expert')
     setSelectedExpert(expert);
     setIsViewModalOpen(true);
   };

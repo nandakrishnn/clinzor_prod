@@ -139,9 +139,16 @@ export const deleteExpert = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
 export const GetAExpert = async (Id: string) => {
-  return await axiosPrivate.delete(`clinic/doctor-rud/${Id}`);
+  return await axiosPrivate.get(`clinic/doctor-rud/${Id}`);
 };
-
+export const GetAExpertAdmin = async (Id: any) => {
+  const res = await axiosPrivate.get(`clinic/get-expert-detail/${Id}/`);
+  return res?.data
+};
+export const GetAUserAdmin = async (Id: any) => {
+  const res = await axiosPrivate.get(`user/user-detail/${Id}/`);
+  return res?.data
+};
 export const GetAllExpert = async (page: number = 1, search?: string, status?: string, gender?: string) => {
   try {
     const params: any = { page };
@@ -157,8 +164,6 @@ export const GetAllExpert = async (page: number = 1, search?: string, status?: s
     throw error;
   }
 };
-
-
 export const getAllSlotsforExpret = async (params: any) => {
   try {
     const response = await axiosPrivate.get(`clinic/expert-slot-lc/`, { params });

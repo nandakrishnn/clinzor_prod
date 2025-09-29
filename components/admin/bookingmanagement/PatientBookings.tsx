@@ -3,17 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Calendar, Clock, Search, Filter, ChevronDown, User,
-  Phone, Mail, Video, MapPin, Eye, Check, X,
+  Calendar, Clock, Search, ChevronDown, User,
+  Phone, Mail, Video, MapPin, Eye, X,
   RefreshCw, CreditCard, CheckCircle, XCircle,
-  AlertCircle, Users, Monitor, Building,
-  CalendarDaysIcon,
+  AlertCircle, Monitor, Building,
   FileText,
   Link2,
   Wallet
 } from 'lucide-react';
 import Link from 'next/link';
 import { getClinicBookings, getExpertBookings } from '@/service/admin/bookingManagementService';
+import { GetAExpertAdmin } from '@/service/admin/expertManagementService';
 
 type Booking = {
   uuid: string;
@@ -31,6 +31,7 @@ type Booking = {
   clinic_name: string;
   clinic_id: string;
   service_type: string;
+  expert?: string
 };
 interface PaginationData {
   current_page: number;
@@ -66,7 +67,7 @@ const Notification = ({ type, message, onClose }: {
   </motion.div>
 );
 
-const StatusBadge = ({ status }: { status: Booking['booking_status'] }) => {
+export const StatusBadge = ({ status }: { status: Booking['booking_status'] }) => {
   const getStatusColor = (status: Booking['booking_status']) => {
     switch (status) {
       case 'COMPLETED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -83,19 +84,18 @@ const StatusBadge = ({ status }: { status: Booking['booking_status'] }) => {
   );
 };
 
-const RescheduledBadge = () => (
+export const RescheduledBadge = () => (
   <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
     Rescheduled
   </span>
 );
 
-const PaymentStatusBadge = ({ status }: { status: Booking['payment_status'] }) => (
+export const PaymentStatusBadge = ({ status }: { status: Booking['payment_status'] }) => (
   <span className={`px-2 py-1 rounded-full text-xs font-medium ${status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
     }`}>
     {status === 'COMPLETED' ? 'Paid' : 'Pending'}
   </span>
 );
-
 
 export default function BookingManagement() {
   const [bookings, setBookings] = useState<any>();
@@ -110,6 +110,7 @@ export default function BookingManagement() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isExpertViewModal, setIsExpertViewModal] = useState(false);
+  const [expertData, setExpertData] = useState<any>()
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
     total_pages: 1,
@@ -177,6 +178,22 @@ export default function BookingManagement() {
       currentPage
     );
   }, [currentPage, selectedStatus, activeTab]);
+
+  const getAExpertDetailed = async () => {
+    try {
+      if (selectedBooking) {
+        const res = await GetAExpertAdmin(selectedBooking?.expert)
+        console.log(res, 'this from the expert detailed view call');
+        setExpertData(res?.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    getAExpertDetailed()
+  }, [selectedBooking])
 
   // Pagination handlers
   const handlePageChange = (newPage: number) => {
@@ -282,8 +299,9 @@ export default function BookingManagement() {
     </motion.div>
   );
 
-  const ExpertBookingDetails = ({ booking, onClose }: { booking: any; onClose: () => void }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  const ExpertBookingDetails = ({ expert, booking, onClose }: { expert: any; booking: any; onClose: () => void }) => (
+
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" >
       <motion.div
         className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         initial={{ opacity: 0, scale: 0.9 }}
@@ -309,24 +327,21 @@ export default function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-500">Full Name</label>
-                <p className="text-gray-900">{booking.patient_name}</p>
+                <p className="text-gray-900">{booking?.customer_name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Email</label>
-                <p className="text-gray-900">{booking.patient_email}</p>
+                <p className="text-gray-900">{booking.customer_email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Mobile</label>
-                <p className="text-gray-900">{booking.patient_mobile}</p>
+                <p className="text-gray-900">{booking?.customer_email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Address</label>
-                <p className="text-gray-900">{booking.patient_address}</p>
+                <p className="text-gray-900">{booking?.customer_addresss}</p>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Gender Preference</label>
-                <p className="text-gray-900">{booking.doctor_gender_preference}</p>
-              </div>
+              {/* <div/> */}
             </div>
           </div>
 
@@ -339,21 +354,21 @@ export default function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-500">Start Time</label>
-                <p className="text-gray-900">{formatDate(booking.start_time)}</p>
+                <p className="text-gray-900">{formatDate(booking?.start_time)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">End Time</label>
-                <p className="text-gray-900">{formatDate(booking.end_time)}</p>
+                <p className="text-gray-900">{formatDate(booking?.end_time)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Duration</label>
                 <p className="text-gray-900">
-                  {Math.round((new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60))} minutes
+                  {Math.round((new Date(booking?.end_time).getTime() - new Date(booking?.start_time).getTime()) / (1000 * 60))} minutes
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Session Type</label>
-                <p className="text-gray-900">{booking.session_type}</p>
+                <p className="text-gray-900">{booking?.booking_type}</p>
               </div>
             </div>
           </div>
@@ -362,24 +377,28 @@ export default function BookingManagement() {
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Building size={20} />
-              Clinic & Service Details
+              Expert Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Clinic Name</label>
-                <p className="text-gray-900">{booking.clinic_name}</p>
+                <label className="text-sm font-medium text-gray-500">Expert Name</label>
+                <p className="text-gray-900">{expert?.full_name || expert?.name }</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Service Name</label>
-                <p className="text-gray-900">{booking.service_default_name}</p>
+                <label className="text-sm font-medium text-gray-500">Phone Number</label>
+                <p className="text-gray-900">{expert?.phone_number}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Provided Name</label>
-                <p className="text-gray-900">{booking.clinic_provided_name}</p>
+                <label className="text-sm font-medium text-gray-500">Address</label>
+                <p className="text-gray-900">{expert?.address}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Clinic Service ID</label>
-                <p className="text-gray-900 font-mono text-sm">{booking.clinic_service}</p>
+                <label className="text-sm font-medium text-gray-500">Email</label>
+                <p className="text-gray-900 font-mono text-sm">{expert?.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">gender</label>
+                <p className="text-gray-900 font-mono text-sm">{expert?.gender}</p>
               </div>
             </div>
           </div>
@@ -483,7 +502,7 @@ export default function BookingManagement() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900">Booking #{booking.uuid.slice(0, 8)}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 capitalize">{booking?.customer_name}</h3>
                   {/* Remove rescheduled badge since we don't have this data */}
                 </div>
                 <p className="text-sm text-gray-600 capitalize">
@@ -497,12 +516,12 @@ export default function BookingManagement() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-600">
-              <Calendar size={14} />
-              <span>Starts: {formatDate(booking.start_time)}</span>
+              <Phone size={14} />
+              <span>Starts: {booking?.customer_phone_number}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <Clock size={14} />
-              <span>Ends: {formatDate(booking.end_time)}</span>
+              <span>Ends: {formatDate(booking?.start_time)}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <CreditCard size={14} />
@@ -519,7 +538,7 @@ export default function BookingManagement() {
             <div className="flex items-center gap-2">
               <Video size={14} className="text-blue-600" />
               <span className="text-blue-600 font-medium text-sm capitalize">
-                {booking.booking_type.toLowerCase().replace('_', ' ')}
+                {booking?.booking_type?.toLowerCase().replace('_', ' ')}
               </span>
             </div>
             <span className="text-gray-400">•</span>
@@ -854,7 +873,7 @@ export default function BookingManagement() {
         )}
 
         {
-          isExpertViewModal && <ExpertBookingDetails booking={selectedBooking} onClose={() => setIsExpertViewModal(false)} />
+          isExpertViewModal && <ExpertBookingDetails expert={expertData} booking={selectedBooking} onClose={() => setIsExpertViewModal(false)} />
         }
 
         {/* Notification */}
