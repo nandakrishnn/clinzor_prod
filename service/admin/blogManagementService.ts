@@ -1,20 +1,15 @@
 
 import { axiosPrivate } from "../../axios/axios";
 interface BlogPost {
- title: string;
-  excerpt: string;
+  title: string;
+  sub_heading?: string;
   content: string;
-  author: string;
-  date: string;
-  category: string;
-  readTime: string;
-
-  
-  // Add other fields as needed
+  image: string;
+  tags?: string; 
 }
 
 // Blog Api 
-export const createBlog = async (body:BlogPost) => {
+export const createBlog = async (body: BlogPost) => {
   try {
     const response = await axiosPrivate.post(
       `user/blog-list-create/`, // Changed from PUT to POST for creation
@@ -26,9 +21,10 @@ export const createBlog = async (body:BlogPost) => {
     throw error;
   }
 };
+
 export const editBlog = async (
   id: string,
- body: BlogPost) => {
+  body: BlogPost) => {
   try {
     const response = await axiosPrivate.put(
       `user/blog-rud/${id}/`,
@@ -40,6 +36,7 @@ export const editBlog = async (
     throw error;
   }
 };
+
 export const deleteBlog = async (Id: string) => {
   return await axiosPrivate.delete(`user/blog-rud/${Id}/`);
 };
@@ -47,12 +44,13 @@ export const GetABlog = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/faq-rud/${Id}`);
 };
 
-export const GetAllBlog= async () => {
+export const GetAllBlog = async (params: any = {}) => {
   try {
+    const queryString = new URLSearchParams(params).toString();
     const response = await axiosPrivate.get(
-      `user/blog-list-create/`
+      `user/blog-list-create/?${queryString}`
     );
-    return response.data.data.data;
+    return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
     throw error;

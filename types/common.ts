@@ -130,7 +130,6 @@ export interface Slot {
   female_doctor_count: number;
   clinic_name: string;
 }
-
 export interface FilterState {
   fromDate: Date | null;
   toDate: Date | null;
@@ -144,4 +143,12 @@ export interface FilterState {
 export interface ClinicService {
   id: string;
   name: string;
+}
+
+export interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
 }

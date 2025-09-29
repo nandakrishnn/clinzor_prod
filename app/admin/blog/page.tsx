@@ -4,31 +4,28 @@ import * as React from "react";
 import { useState, useEffect } from 'react';
 import { createBlog, deleteBlog, editBlog, GetAllBlog } from "@/service/admin/blogManagementService";
 import { uploadFiles } from "@/service/uploadService/uploadService";
-import { ImageIcon, Upload, RefreshCw, X, Plus, Edit, Trash2, Calendar, User, Clock, Folder } from 'lucide-react';
+import { ImageIcon, Upload, RefreshCw, X, Plus, Edit, Trash2, Calendar, User, Clock, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PaginationData } from "@/types/common";
+import { toast } from "sonner";
 
 interface BlogPost {
-  uuid: number;
+  uuid: string;
   title: string;
-  excerpt: string;
+  sub_heading?: string;
   content: string;
-  author: string;
-  date: string;
-  category: string;
-  readTime: string;
-  created_by: string;
-  created_at: string;
-  images?: string[];
+  created_by?: string;
+  created_at?: string;
+  image?: string;
+  tags?: string;
 }
 
 interface BlogForm {
   title: string;
-  excerpt: string;
+  sub_heading?: string;
   content: string;
-  author: string;
-  date: string;
-  category: string;
-  readTime: string;
-  images: string[];
+  author?: string;
+  image?: string;               // single image
+  tags?: string;                // new field
 }
 
 interface ImagePreview {
@@ -39,18 +36,17 @@ interface ImagePreview {
   serverUrl?: string;
 }
 
+
 export default function AdminBlogManagement() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<BlogForm>({
     title: '',
-    excerpt: '',
+    sub_heading: '',
     content: '',
     author: '',
-    date: '',
-    category: '',
-    readTime: '',
-    images: []
+    image: '',
+    tags: ''
   });
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -60,15 +56,43 @@ export default function AdminBlogManagement() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  // pagination part
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
+
   // New state for modal and confirmation
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | any>(null);
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (search = '') => {
     setLoading(true);
     try {
-      const data = await GetAllBlog();
-      setPosts(data);
+      const params: any = {
+        page_size: itemsPerPage,
+        page: currentPage,
+      };
+
+      if (search) {
+        params.search = search;
+      }
+
+      const data = await GetAllBlog(params);
+      console.log(data, 'all blogs')
+      setPaginationData({
+        current_page: data?.current_page,
+        total_pages: data?.total_pages,
+        total_items: data?.total_items,
+        next: data?.next,
+        previous: data?.previous
+      });
+      setPosts(data?.data);
     } catch (error) {
       console.error("fetching Blogs error:", error);
     } finally {
@@ -78,18 +102,15 @@ export default function AdminBlogManagement() {
 
   useEffect(() => {
     fetchBlogs();
-  }, []);
+  }, [currentPage]);
 
   const resetForm = () => {
     setForm({
       title: '',
-      excerpt: '',
+      sub_heading: '',
       content: '',
       author: '',
-      date: '',
-      category: '',
-      readTime: '',
-      images: []
+      image: ''
     });
     setImagePreviews([]);
     setSelectedImages([]);
@@ -101,86 +122,111 @@ export default function AdminBlogManagement() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setSelectedImages(prev => [...prev, ...filesArray]);
+  const handleImageSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
 
-      const newPreviews: ImagePreview[] = filesArray.map((file, index) => {
-        const id = `preview-${Date.now()}-${index}`;
-        const url = URL.createObjectURL(file);
-        return { id, url, file };
-      });
+      const preview: ImagePreview = {
+        id: `preview-${Date.now()}`,
+        url: URL.createObjectURL(file),
+        file,
+        isUploaded: false,
+      };
 
-      setImagePreviews(prev => [...prev, ...newPreviews]);
+      setImagePreviews([preview]);
+      setUploadingImages(true);
+
+      try {
+        const uploadedUrls = await uploadFiles([file]);
+        setForm(prev => ({
+          ...prev,
+          image: uploadedUrls[0]
+        }));
+
+        setImagePreviews([{
+          ...preview,
+          isUploaded: true,
+          serverUrl: uploadedUrls[0]
+        }]);
+      } catch (err) {
+        console.error("Upload error:", err);
+      } finally {
+        setUploadingImages(false);
+      }
     }
   };
 
-  const removeImage = (index: number) => {
-    const imageToRemove = imagePreviews[index];
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-    setSelectedImages(prev => prev.filter(file => file !== imageToRemove.file));
+  const removeImage = () => {
+    if (imagePreviews[0]) {
+      URL.revokeObjectURL(imagePreviews[0].url);
+    }
+    setImagePreviews([]);
+    setForm(prev => ({ ...prev, image: '' }));
+  };
 
-    if (imageToRemove.isUploaded && imageToRemove.serverUrl) {
-      setForm(prev => ({
-        ...prev,
-        images: prev.images.filter(img => img !== imageToRemove.serverUrl)
-      }));
+  const handleEdit = (post: BlogPost) => {
+    setForm({
+      title: post.title,
+      sub_heading: post.sub_heading || '',
+      content: post.content,
+      author: post.created_by || '',
+      image: post.image || '',
+      tags: post.tags || ''
+    });
+
+    setEditingId(post.uuid);
+
+    if (post.image) {
+      setImagePreviews([{
+        id: `existing-${Date.now()}`,
+        url: post.image,
+        file: new File([], 'existing'),
+        isUploaded: true,
+        serverUrl: post.image
+      }]);
+    } else {
+      setImagePreviews([]);
     }
 
-    URL.revokeObjectURL(imageToRemove.url);
+    openModal();
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeletingId(id);
+    try {
+      await deleteBlog(id.toString());
+      setPosts(posts.filter(post => post.uuid !== id.toString()));
+      setMessage('Blog post deleted successfully!');
+      await fetchBlogs();
+      if (editingId === id.toString()) {
+        resetForm();
+      }
+    } catch (error: any) {
+      console.error('Error deleting blog:', error);
+      setMessage(`Error: ${error.response?.data?.message || 'Failed to delete blog post'}`);
+    } finally {
+      setDeletingId(null);
+      setShowDeleteConfirm(null);
+      setTimeout(() => setMessage(''), 3000);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!form.title || !form.excerpt || !form.content) {
-      setMessage('Title, excerpt, and content are required.');
+    if (!form.title || !form.content) {
+      setMessage('Title and content are required.');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      let imageUrls = [...form.images];
-
-      if (selectedImages.length > 0) {
-        setUploadingImages(true);
-        try {
-          const uploadedUrls = await uploadFiles(selectedImages);
-          imageUrls = [...imageUrls, ...uploadedUrls];
-
-          setImagePreviews(prev =>
-            prev.map(preview => {
-              const fileIndex = selectedImages.findIndex(file => file === preview.file);
-              if (fileIndex !== -1) {
-                return {
-                  ...preview,
-                  isUploaded: true,
-                  serverUrl: uploadedUrls[fileIndex]
-                };
-              }
-              return preview;
-            })
-          );
-        } catch (uploadError) {
-          console.error("Error uploading images:", uploadError);
-          setMessage("Failed to upload images");
-          return;
-        } finally {
-          setUploadingImages(false);
-        }
-      }
-
       const blogData = {
-        title: form.title,
-        excerpt: form.excerpt,
-        content: form.content,
-        author: form.author,
-        date: form.date,
-        category: form.category,
-        readTime: form.readTime,
-        images: imageUrls
+        title: form?.title,
+        sub_heading: form?.sub_heading || '',
+        content: form?.content,
+        image: form?.image || '',
+        tags: form?.tags || ''
       };
 
       if (editingId) {
@@ -195,59 +241,10 @@ export default function AdminBlogManagement() {
       closeModal();
     } catch (error: any) {
       console.error('Error saving blog:', error);
+      toast.error(`Error: ${error.response?.data?.message || 'Failed to save blog post'}`)
       setMessage(`Error: ${error.response?.data?.message || 'Failed to save blog post'}`);
     } finally {
       setIsSubmitting(false);
-      setUploadingImages(false);
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  const handleEdit = (post: BlogPost) => {
-    setForm({
-      title: post.title,
-      excerpt: post.excerpt,
-      content: post.content,
-      author: post.author,
-      date: post.date,
-      category: post.category,
-      readTime: post.readTime,
-      images: post.images || []
-    });
-    setEditingId(post.uuid);
-    setImagePreviews([]);
-    setSelectedImages([]);
-
-    if (post.images && post.images.length > 0) {
-      const existingPreviews: ImagePreview[] = post.images.map((imgUrl, index) => ({
-        id: `existing-${Date.now()}-${index}`,
-        url: imgUrl,
-        file: new File([], `existing-${index}`),
-        isUploaded: true,
-        serverUrl: imgUrl
-      }));
-      setImagePreviews(existingPreviews);
-    }
-
-    openModal();
-  };
-
-  const handleDelete = async (id: number) => {
-    setDeletingId(id);
-    try {
-      await deleteBlog(id.toString());
-      setPosts(posts.filter(post => post.uuid !== id));
-      setMessage('Blog post deleted successfully!');
-      await fetchBlogs();
-      if (editingId === id) {
-        resetForm();
-      }
-    } catch (error: any) {
-      console.error('Error deleting blog:', error);
-      setMessage(`Error: ${error.response?.data?.message || 'Failed to delete blog post'}`);
-    } finally {
-      setDeletingId(null);
-      setShowDeleteConfirm(null);
       setTimeout(() => setMessage(''), 3000);
     }
   };
@@ -278,6 +275,50 @@ export default function AdminBlogManagement() {
       });
     };
   }, []);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paginationData.total_pages) {
+      console.log(newPage, paginationData.total_pages)
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Generate page numbers for pagination display
+  const generatePageNumbers = () => {
+    const pages = [];
+    const totalPages = paginationData.total_pages;
+    const current = paginationData.current_page;
+
+    // Always show first page
+    if (totalPages > 0) {
+      pages.push(1);
+    }
+
+    // Add ellipsis if needed
+    if (current > 3) {
+      pages.push('...');
+    }
+
+    // Add pages around current page
+    for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
+      if (!pages.includes(i)) {
+        pages.push(i);
+      }
+    }
+
+    // Add ellipsis if needed
+    if (current < totalPages - 2) {
+      pages.push('...');
+    }
+
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   if (loading) {
     return (
@@ -318,15 +359,22 @@ export default function AdminBlogManagement() {
           </div>
         )}
 
+        {/* Results Count */}
+        {/* <div className="flex items-center justify-between mb-6">
+          <p className="text-gray-600">
+            Showing page {paginationData.current_page} of {paginationData.total_pages} ({paginationData.total_items} total experts)
+          </p>
+        </div> */}
+
         {/* Blog Posts Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {posts.map(post => (
             <div key={post.uuid} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               {/* Blog Image */}
-              {post.images && post.images.length > 0 ? (
+              {post.image ? (
                 <div className="aspect-video relative">
                   <img
-                    src={post.images[0]}
+                    src={post.image}
                     alt={post.title}
                     className="w-full h-full object-cover"
                   />
@@ -337,15 +385,16 @@ export default function AdminBlogManagement() {
                 </div>
               )}
 
+
               {/* Blog Content */}
               <div className="p-6">
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                   <Calendar size={14} />
-                  <span>{formatDate(post.created_at)}</span>
+                  <span>{post?.created_at ? formatDate(post.created_at.toString()) : 'N/A'}</span>
                 </div>
 
-                <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{post.title}</h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">{post.excerpt || post.content.substring(0, 100)}...</p>
+                <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 capitalize">{post.title}</h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3">{post.sub_heading || post.content.substring(0, 100)}...</p>
 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                   <div className="flex items-center gap-4">
@@ -353,17 +402,7 @@ export default function AdminBlogManagement() {
                       <User size={14} />
                       <span>{post.created_by}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={14} />
-                      <span>{post.readTime}</span>
-                    </div>
                   </div>
-                  {post.category && (
-                    <div className="flex items-center gap-1">
-                      <Folder size={14} />
-                      <span>{post.category}</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Action Buttons */}
@@ -376,7 +415,7 @@ export default function AdminBlogManagement() {
                     Edit
                   </button>
                   <button
-                    onClick={() => setShowDeleteConfirm(post.uuid)}
+                    onClick={() => setShowDeleteConfirm(post?.uuid)}
                     className="flex-1 bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
                   >
                     <Trash2 size={16} />
@@ -399,6 +438,52 @@ export default function AdminBlogManagement() {
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 Create First Post
+              </button>
+            </div>
+          </div>
+        )}
+
+        {paginationData.total_pages > 1 && (
+          <div className="flex mt-5 flex-col sm:flex-row items-center justify-between bg-white px-4 sm:px-6 py-2 sm:py-4 rounded-xl border border-gray-200 gap-2 sm:gap-0 mb-8">
+            <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-0">
+              <span>
+                Showing page {paginationData.current_page} of {paginationData.total_pages} ({paginationData.total_items} total items)
+              </span>
+            </div>
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <button
+                onClick={() => handlePageChange(paginationData.current_page - 1)}
+                disabled={!paginationData.previous || loading}
+                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex space-x-0.5 sm:space-x-1">
+                {generatePageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return <span key={index} className="px-1 sm:px-2 text-gray-400">...</span>;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page as number)}
+                      disabled={loading}
+                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
+                        ? 'bg-primaryColor text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => handlePageChange(paginationData.current_page + 1)}
+                disabled={!paginationData.next || loading}
+                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -448,12 +533,12 @@ export default function AdminBlogManagement() {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-2 text-gray-700">Excerpt *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Sub Heading *</label>
                 <input
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  name="excerpt"
+                  name="sub_heading"
                   placeholder="Short description"
-                  value={form.excerpt}
+                  value={form.sub_heading}
                   onChange={handleChange}
                   required
                 />
@@ -473,37 +558,17 @@ export default function AdminBlogManagement() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">Publish Date</label>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2 text-gray-700">Tags (optional)</label>
                   <input
+                    type="text"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    name="date"
-                    placeholder="April 28, 2023"
-                    value={form.date}
+                    name="tags"
+                    placeholder="Healthcare, Growth"
+                    value={form.tags || ''}
                     onChange={handleChange}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">Category</label>
-                  <input
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    name="category"
-                    placeholder="Category"
-                    value={form.category}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">Read Time</label>
-                  <input
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    name="readTime"
-                    placeholder="5 min read"
-                    value={form.readTime}
-                    onChange={handleChange}
-                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
                 </div>
               </div>
 
@@ -556,7 +621,7 @@ export default function AdminBlogManagement() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => removeImage(index)}
+                              onClick={() => removeImage()}
                               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X size={12} />
@@ -616,7 +681,7 @@ export default function AdminBlogManagement() {
 
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={() => handleDelete(showDeleteConfirm)}
+                  onClick={() => showDeleteConfirm !== null && handleDelete(showDeleteConfirm)}
                   className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
                   disabled={deletingId === showDeleteConfirm}
                 >

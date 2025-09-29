@@ -1226,17 +1226,18 @@ export default function ClinicManagement() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        {clinic.name}
-                        <span className="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-100">
-                          {getBookingCount(clinic.name)} Bookings
-                        </span>
+                        {clinic?.name}
+                        <StatusBadge status={clinic?.status} />
+                        {/* <span className="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-100">
+                          {getBookingCount(clinic?.name)} Bookings
+                        </span> */}
                       </h3>
                       <p className="text-sm text-gray-600 flex items-center gap-1">
                         <MapPin size={14} />
-                        {clinic.address}, {clinic.city} - {clinic.pincode}
+                        {clinic?.address}, {clinic?.city} - {clinic?.pincode}
                       </p>
                     </div>
-                    <StatusBadge status={clinic.status} />
+
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
