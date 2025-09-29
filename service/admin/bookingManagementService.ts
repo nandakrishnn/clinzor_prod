@@ -88,6 +88,7 @@ export const rejectSlot = async (slotId: string, reason: string) => {
     throw error;
   }
 };
+
 export const getAdminSlotStaticData = async () => {
   const response = await axiosPrivate.get(`clinic/slot-tab-analytics/`);
   return response.data;
