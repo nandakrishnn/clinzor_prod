@@ -189,7 +189,7 @@ const ServiceManagement: React.FC = () => {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   // Add state for filters
-  const [statusFilter, setStatusFilter] = useState<string>('approved');
+  const [statusFilter, setStatusFilter] = useState<string>('APPROVED');
 
   // Modify the fetchService function to use parameters
   const fetchService = async (pageNum: number = currentPage, searchText: string = searchTerm, status: string = statusFilter) => {
@@ -201,9 +201,11 @@ const ServiceManagement: React.FC = () => {
 
       // Fetch services in parallel using clinic id with parameters
       const [servicesData, clinicServicesData] = await Promise.all([
-        GetAllServiceForClinic(),
+        GetAllServiceForClinic("APPROVED"),
         GetAllClinicService(clinicId, status, searchText, pageNum, itemsPerPage)
       ]);
+
+      console.log(servicesData,'service data fromt he fetch ')
 
       setClinicuser(clinicUserData);
       setServices(servicesData.data || []);
@@ -244,6 +246,7 @@ const ServiceManagement: React.FC = () => {
   }, [clinicUser]);
 
   console.log(services, "service data")
+  console.log(allServices, "service  all data")
   console.log(clinicServices, "service with data")
   console.log('Current session:', session);
 
@@ -504,7 +507,6 @@ const ServiceManagement: React.FC = () => {
     }
   };
 
-
   const handleDelete = async () => {
     if (!selectedItem) return;
 
@@ -634,6 +636,7 @@ const ServiceManagement: React.FC = () => {
     setShowServiceSearchModal(false);
     setServiceSearchTerm('');
   };
+
   const handleRequestService = async () => {
     // Basic validation
     if (!serviceRequest.name.trim()) {
@@ -741,7 +744,7 @@ const ServiceManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -751,7 +754,7 @@ const ServiceManagement: React.FC = () => {
   }
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="min-h-screen ">
         {/* Header */}
         <div className="backdrop-blur-xl bg-white/80 border-b border-slate-200/60 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -1876,7 +1879,7 @@ const ServiceManagement: React.FC = () => {
 
             {/* Services Grid */}
             <div className="p-4 sm:p-6">
-              {filteredAllServices.length === 0 ? (
+              {services.length === 0 ? (
                 <div className="text-center py-12 sm:py-16">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>

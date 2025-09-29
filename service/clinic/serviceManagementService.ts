@@ -80,9 +80,9 @@ export const deleteClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/clinic-service-rud/${Id}/`);
 };
 
-export const GetAllServiceForClinic = async () => {
+export const GetAllServiceForClinic = async (status?: string) => {
   try {
-    const response = await axiosPrivate.get(`clinic/service-lc/`);
+    const response = await axiosPrivate.get(`clinic/service-lc/?status=${status}`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
