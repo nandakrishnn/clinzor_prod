@@ -434,7 +434,6 @@ const DueManagement = () => {
     );
   }
 
-  console.log(dashData)
   return (
     <div className="min-h-screen">
       {/* Header */}
