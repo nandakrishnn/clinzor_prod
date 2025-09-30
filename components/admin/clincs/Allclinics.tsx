@@ -529,7 +529,6 @@ export default function ClinicManagement() {
     clinicsToShow = filteredClinics.filter((c) => c.is_active);
   else if (selectedHeader === "Deactivated")
     clinicsToShow = filteredClinics.filter((c) => !c.is_active);
-  console.log(selectedHeader, "selectedHeader");
 
   const handleWorkingDayToggle = (day: string) => {
     setNewClinic((prev) => ({
@@ -634,6 +633,15 @@ export default function ClinicManagement() {
   }
 
   const handleAddClinicStep1 = async () => {
+    const { isValid, errors } = validateClinicStep1();
+
+    if (!isValid) {
+      setNotification({
+        type: "error",
+        message: "Please fix the form errors before proceeding"
+      });
+      return;
+    }
     if (
       !newClinic.name ||
       !newClinic.city ||
@@ -749,6 +757,15 @@ export default function ClinicManagement() {
   };
 
   const handleAddUserStep2 = async () => {
+    const { isValid, errors } = validateUserStep2();
+
+    if (!isValid) {
+      setNotification({
+        type: "error",
+        message: "Please fix the form errors before creating the user"
+      });
+      return;
+    }
     if (
       !newUser.full_name ||
       !newUser.email ||
@@ -950,12 +967,6 @@ export default function ClinicManagement() {
       });
   }
 
-  // Calculate bookings per clinic (by name)
-  const getBookingCount = (clinicName: string) => {
-    return sampleBookings.filter((b: any) => b.clinic_name === clinicName)
-      .length;
-  };
-
   const getDashboardStatics = async () => {
     try {
       const res = await getAdminClinicStaticData();
@@ -966,6 +977,144 @@ export default function ClinicManagement() {
       console.log(error)
     }
   }
+
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { strength: 0, text: '', color: '' };
+
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[@$!%*?&]/.test(password)) strength++;
+
+    const strengthConfig = {
+      1: { text: 'Very Weak', color: 'bg-red-500' },
+      2: { text: 'Weak', color: 'bg-orange-500' },
+      3: { text: 'Medium', color: 'bg-yellow-500' },
+      4: { text: 'Strong', color: 'bg-green-500' },
+      5: { text: 'Very Strong', color: 'bg-green-600' }
+    };
+
+    return strengthConfig[strength as keyof typeof strengthConfig] || { text: '', color: '' };
+  };
+
+  const validateClinicStep1 = () => {
+    const errors = {
+      name: '',
+      city: '',
+      phone: '',
+      email: '',
+      address: '',
+      openingTime: '',
+      closingTime: '',
+      workingDays: ''
+    };
+
+    let isValid = true;
+
+    // Name validation
+    if (!newClinic.name.trim()) {
+      errors.name = 'Clinic name is required';
+      isValid = false;
+    } else if (newClinic.name.trim().length < 2) {
+      errors.name = 'Clinic name must be at least 2 characters long';
+      isValid = false;
+    }
+
+    // City validation
+    if (!newClinic.city.trim()) {
+      errors.city = 'City is required';
+      isValid = false;
+    }
+
+    // Email validation
+    if (!newClinic.email.match(/^\S+@\S+\.\S+$/)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Phone validation
+    if (!newClinic.phone.match(/^\d{10}$/)) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+      isValid = false;
+    }
+
+    // Address validation
+    if (!newClinic.address.trim()) {
+      errors.address = 'Address is required';
+      isValid = false;
+    } else if (newClinic.address.trim().length < 10) {
+      errors.address = 'Address must be at least 10 characters long';
+      isValid = false;
+    }
+
+    // Working hours validation
+    if (!newClinic.openingTime) {
+      errors.openingTime = 'Opening time is required';
+      isValid = false;
+    }
+
+    if (!newClinic.closingTime) {
+      errors.closingTime = 'Closing time is required';
+      isValid = false;
+    }
+
+    // Working days validation
+    if (newClinic.workingDays.length === 0) {
+      errors.workingDays = 'Please select at least one working day';
+      isValid = false;
+    }
+
+    return { isValid, errors };
+  };
+
+  // Update the validation for step 2 (user creation)
+  const validateUserStep2 = () => {
+    const errors = {
+      full_name: '',
+      email: '',
+      phone_number: '',
+      password: ''
+    };
+
+    let isValid = true;
+
+    // Full name validation
+    if (!newUser.full_name.trim()) {
+      errors.full_name = 'Full name is required';
+      isValid = false;
+    } else if (newUser.full_name.trim().length < 2) {
+      errors.full_name = 'Full name must be at least 2 characters long';
+      isValid = false;
+    }
+
+    // Email validation
+    if (!newUser.email.match(/^\S+@\S+\.\S+$/)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Phone validation
+    if (!newUser.phone_number.match(/^\d{10}$/)) {
+      errors.phone_number = 'Phone number must be exactly 10 digits';
+      isValid = false;
+    }
+
+    // Strong password validation
+    if (newUser.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long';
+      isValid = false;
+    } else {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+      if (!passwordRegex.test(newUser.password)) {
+        errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)';
+        isValid = false;
+      }
+    }
+
+    return { isValid, errors };
+  };
 
   useEffect(() => {
     getDashboardStatics()
@@ -1818,17 +1967,42 @@ export default function ClinicManagement() {
                       required
                       icon={Call}
                     />
-                    <InputField
-                      label="Password"
-                      type="password"
-                      value={newUser.password}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, password: e.target.value })
-                      }
-                      placeholder="Enter temporary password (min 6 chars)"
-                      required
-                      icon={Lock}
-                    />
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="password"
+                          value={newUser.password}
+                          onChange={(e) =>
+                            setNewUser({ ...newUser, password: e.target.value })
+                          }
+                          placeholder="Enter temporary password (min 8 chars with uppercase, lowercase, number & special character)"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          required
+                        />
+                      </div>
+
+                      {newUser.password && (
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>Password strength:</span>
+                            <span className={`font-medium ${getPasswordStrength(newUser.password).text === 'Very Weak' ? 'text-red-600' :
+                              getPasswordStrength(newUser.password).text === 'Weak' ? 'text-orange-600' :
+                                getPasswordStrength(newUser.password).text === 'Medium' ? 'text-yellow-600' :
+                                  'text-green-600'
+                              }`}>
+                              {getPasswordStrength(newUser.password).text}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Must include: uppercase, lowercase, number, special character (@$!%*?&)
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-between gap-4 pt-6 border-t border-gray-200">
