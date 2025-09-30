@@ -276,10 +276,11 @@ const InputField = ({
   </div>
 );
 
+
+
 export default function ExpertManagement() {
   // State
   const [experts, setExperts] = useState<Expert[]>([]);
-  const [filteredExperts, setFilteredExperts] = useState<Expert[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [tempSearchQuery, setTempSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'ENABLED' | 'DISABLED'>('ALL');
@@ -396,7 +397,7 @@ export default function ExpertManagement() {
     try {
       const params = { expert: expertUuid };
       const slotsResponse = await getAllSlotsforExpret(params);
-      
+
       console.log(slotsResponse, 'fromt he expert')
       // Transform the API response to match our Slot type
       const transformedSlots = slotsResponse.data.map((slot: any) => ({
@@ -563,31 +564,94 @@ export default function ExpertManagement() {
 
   const validateForm = () => {
     let valid = true;
-    const errors = { name: '', email: '', password: '', phone_number: '', dob: '', addresss: "", };
+    const errors = { name: '', email: '', password: '', phone_number: '', dob: '', addresss: "" };
 
+    // Name validation
     if (!newExpert.name.trim()) {
       errors.name = 'Name is required';
       valid = false;
+    } else if (newExpert.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters long';
+      valid = false;
     }
 
+    // Email validation
     if (!newExpert.email.match(/^\S+@\S+\.\S+$/)) {
       errors.email = 'Please enter a valid email address';
       valid = false;
     }
 
-    if (newExpert.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+    // Password validation - Strong password requirements
+    if (newExpert.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long';
+      valid = false;
+    } else {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+      if (!passwordRegex.test(newExpert.password)) {
+        errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)';
+        valid = false;
+      }
+    }
+
+    // Phone number validation
+    if (!newExpert.phone_number.match(/^\d{10}$/)) {
+      errors.phone_number = 'Phone number must be exactly 10 digits';
       valid = false;
     }
 
-    if (!newExpert.phone_number.match(/^\d{10}$/)) {
-      errors.phone_number = 'Phone number must be 10 digits';
+    // Date of Birth validation
+    if (!newExpert.dob) {
+      errors.dob = 'Date of birth is required';
+      valid = false;
+    } else {
+      const dobDate = new Date(newExpert.dob);
+      const today = new Date();
+      const minAgeDate = new Date();
+      minAgeDate.setFullYear(today.getFullYear() - 18); // Minimum 18 years old
+
+      if (dobDate > minAgeDate) {
+        errors.dob = 'Expert must be at least 18 years old';
+        valid = false;
+      }
+    }
+
+    // Address validation
+    if (!newExpert.addresss.trim()) {
+      errors.addresss = 'Address is required';
+      valid = false;
+    } else if (newExpert.addresss.trim().length < 10) {
+      errors.addresss = 'Address must be at least 10 characters long';
       valid = false;
     }
 
     setFormErrors(errors);
     return valid;
   };
+
+  // Add this function to check password strength
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { strength: 0, text: '', color: '' };
+
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[@$!%*?&]/.test(password)) strength++;
+
+    const strengthConfig = {
+      1: { text: 'Very Weak', color: 'bg-red-500' },
+      2: { text: 'Weak', color: 'bg-orange-500' },
+      3: { text: 'Medium', color: 'bg-yellow-500' },
+      4: { text: 'Strong', color: 'bg-green-500' },
+      5: { text: 'Very Strong', color: 'bg-green-600' }
+    };
+
+    return strengthConfig[strength as keyof typeof strengthConfig] || { text: '', color: '' };
+  };
+
+  // In the password field section, add this after the input field:
+  const passwordStrength = getPasswordStrength(newExpert.password);
 
   const handleAddExpert = async () => {
     if (!validateForm()) {
@@ -950,7 +1014,7 @@ export default function ExpertManagement() {
                 onKeyDown={(e) => { if (e.key === 'Enter') { handleSearch() } }}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none  shadow-sm"
               />
-              <button onClick={() => handleSearch()}  className='bg-primaryColor text-white rounded-lg px-5 cursor-pointer'>Search</button>
+              <button onClick={() => handleSearch()} className='bg-primaryColor text-white rounded-lg px-5 cursor-pointer'>Search</button>
             </div>
 
             {/* Status Filter */}
@@ -1191,13 +1255,14 @@ export default function ExpertManagement() {
             error={formErrors.email}
             icon={Mail}
           />
+          
           <div className='relative'>
             <InputField
               label="Password"
               type={passView ? "text" : "password"}
               value={newExpert.password}
               onChange={(e) => setNewExpert({ ...newExpert, password: e.target.value })}
-              placeholder="Enter password"
+              placeholder="Enter password "
               required
               error={formErrors.password}
             />
@@ -1208,6 +1273,25 @@ export default function ExpertManagement() {
                   <EyeOffIcon size={20} onClick={() => setPassView(true)} className='cursor-pointer' />
               }
             </div>
+
+            {/* Password strength indicator */}
+            {newExpert.password && (
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Password strength:</span>
+                  <span className={`font-medium ${passwordStrength.text === 'Very Weak' ? 'text-red-600' :
+                      passwordStrength.text === 'Weak' ? 'text-orange-600' :
+                        passwordStrength.text === 'Medium' ? 'text-yellow-600' :
+                          'text-green-600'
+                    }`}>
+                    {passwordStrength.text}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Must include: uppercase, lowercase, number, special character (@$!%*?&)
+                </div>
+              </div>
+            )}
           </div>
 
           <InputField
