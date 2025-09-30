@@ -13,14 +13,22 @@ import {
   MapPin,
   Calendar,
   AlertCircle,
-  Filter,
   Check,
   X,
   Stethoscope,
-  List,
-  AlertTriangle
+  AlertTriangle,
+  User,
+  GraduationCap,
+  Award
 } from 'lucide-react';
-import { approveOrRejectClinic, approveOrRejectService, getAllClinic, getClinicService } from '@/service/admin/clinicManagentService';
+import {
+  approveOrRejectClinic,
+  approveOrRejectDoctor,
+  approveOrRejectService,
+  getAllClinic,
+  getClinicDoctor,
+  getClinicService
+} from '@/service/admin/clinicManagentService';
 
 // Types
 interface Clinic {
@@ -67,8 +75,29 @@ interface ClinicService {
   service_name: string;
 }
 
+interface ClinicDoctor {
+  uuid: string;
+  clinic_service: string;
+  created_by: string;
+  name: string;
+  dob: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  specializaton: string;
+  experience: number;
+  phone_number: string;
+  email: string;
+  profile_pic: string;
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED';
+  reason_for_rejection: string | null;
+  education: string;
+  government_document: string[];
+  extra_info: string;
+  clinic_name?: string;
+  service_name?: string;
+}
+
 // Status Badge Component
-const StatusBadge = ({ status }: { status: Clinic['status'] | ClinicService['status'] }) => {
+const StatusBadge = ({ status }: { status: Clinic['status'] | ClinicService['status'] | ClinicDoctor['status'] }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Approved':
@@ -94,7 +123,7 @@ const StatusBadge = ({ status }: { status: Clinic['status'] | ClinicService['sta
   );
 };
 
-// Notification Component
+// Notification Component (keep existing implementation)
 const Notification = ({
   type,
   message,
@@ -138,7 +167,7 @@ const Notification = ({
   );
 };
 
-// Confirmation Dialog Component
+// Confirmation Dialog Component (keep existing implementation)
 const ConfirmationDialog = ({
   isOpen,
   onClose,
@@ -214,8 +243,8 @@ const ConfirmationDialog = ({
             <button
               type="button"
               className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm ${isDestructive
-                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                  : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
                 } focus:outline-none focus:ring-2 focus:ring-offset-2`}
               onClick={onConfirm}
             >
@@ -235,7 +264,7 @@ const ConfirmationDialog = ({
   );
 };
 
-// Modern Modal Component
+// Modern Modal Component (keep existing implementation)
 const ModernModal = ({
   isOpen,
   onClose,
@@ -281,7 +310,7 @@ const ModernModal = ({
   );
 };
 
-// Clinic Detail Modal Component
+// Clinic Detail Modal Component (keep existing implementation)
 const ClinicDetailModal = ({
   clinic,
   isOpen,
@@ -448,7 +477,7 @@ const ClinicDetailModal = ({
   );
 };
 
-// Service Detail Modal Component
+// Service Detail Modal Component (keep existing implementation)
 const ServiceDetailModal = ({
   service,
   isOpen,
@@ -579,6 +608,154 @@ const ServiceDetailModal = ({
   );
 };
 
+// Doctor Detail Modal Component
+const DoctorDetailModal = ({
+  doctor,
+  isOpen,
+  onClose,
+  onApprove,
+  onReject
+}: {
+  doctor: ClinicDoctor | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onApprove: (doctor: ClinicDoctor) => void;
+  onReject: (doctor: ClinicDoctor, reason?: string) => void;
+}) => {
+  if (!doctor) return null;
+
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  return (
+    <ModernModal isOpen={isOpen} onClose={onClose} title={`Review Doctor: ${doctor.name}`} size="lg">
+      <div className="space-y-6">
+        {/* Doctor Profile */}
+        <div className="flex items-start gap-4">
+          <img
+            src={doctor.profile_pic}
+            alt={doctor.name}
+            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+          />
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900">{doctor.name}</h3>
+            <p className="text-gray-600">{doctor.specializaton}</p>
+            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+              <span>{calculateAge(doctor.dob)} years</span>
+              <span>{doctor.gender}</span>
+              <span>{doctor.experience} years experience</span>
+            </div>
+          </div>
+          <StatusBadge status={doctor.status} />
+        </div>
+
+        {/* Professional Information */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <GraduationCap size={18} />
+            Professional Information
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-600">Specialization:</span>
+              <p className="text-gray-900">{doctor.specializaton}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Experience:</span>
+              <p className="text-gray-900">{doctor.experience} years</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Education:</span>
+              <p className="text-gray-900">{doctor.education}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Date of Birth:</span>
+              <p className="text-gray-900">{new Date(doctor.dob).toLocaleDateString()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+            <Phone size={18} />
+            Contact Information
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-blue-700">Phone:</span>
+              <p className="text-blue-900">{doctor.phone_number}</p>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Email:</span>
+              <p className="text-blue-900">{doctor.email}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Information */}
+        {doctor.extra_info && (
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-green-800 mb-3">Additional Information</h4>
+            <p className="text-green-900 text-sm">{doctor.extra_info}</p>
+          </div>
+        )}
+
+        {/* Government Documents */}
+        {doctor.government_document && doctor.government_document.length > 0 && (
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-3">Government Documents</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {doctor.government_document.map((doc, index) => (
+                <div key={index} className="text-center">
+                  <img
+                    src={doc}
+                    alt={`Government document ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border border-yellow-200"
+                  />
+                  <p className="text-xs text-yellow-700 mt-1">Document {index + 1}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
+          >
+            Close
+          </button>
+          <button
+            onClick={() => onReject(doctor)}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium flex items-center gap-2"
+          >
+            <X size={16} />
+            Reject
+          </button>
+          <button
+            onClick={() => onApprove(doctor)}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium flex items-center gap-2"
+          >
+            <Check size={16} />
+            Approve
+          </button>
+        </div>
+      </div>
+    </ModernModal>
+  );
+};
+
 // Simulate changed fields for demo
 const getChangedFields = (clinic: Clinic) => {
   const uuidLastChar = clinic.uuid.charAt(clinic.uuid.length - 1);
@@ -609,8 +786,8 @@ const TabButton = ({
   <button
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${active
-        ? 'bg-primaryColor text-white shadow-md'
-        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+      ? 'bg-primaryColor text-white shadow-md'
+      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
       }`}
   >
     <Icon size={18} />
@@ -624,23 +801,27 @@ const TabButton = ({
   </button>
 );
 
-
 // Main Component
 export default function PendingApprovalPage() {
-  const [activeTab, setActiveTab] = useState<'clinics' | 'services'>('clinics');
+  const [activeTab, setActiveTab] = useState<'clinics' | 'services' | 'doctors'>('clinics');
   const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [pendingClinics, setPendingClinics] = useState<Clinic[]>([]);
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [pendingServices, setPendingServices] = useState<ClinicService[]>([]);
+  const [clinicDoctors, setClinicDoctors] = useState<ClinicDoctor[]>([]);
+  const [pendingDoctors, setPendingDoctors] = useState<ClinicDoctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [filteredServices, setFilteredServices] = useState<ClinicService[]>([]);
+  const [filteredDoctors, setFilteredDoctors] = useState<ClinicDoctor[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [selectedService, setSelectedService] = useState<ClinicService | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<ClinicDoctor | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'warning';
     message: string;
@@ -650,8 +831,8 @@ export default function PendingApprovalPage() {
   const [confirmationDialog, setConfirmationDialog] = useState<{
     isOpen: boolean;
     type: 'approve' | 'reject';
-    itemType: 'clinic' | 'service';
-    item: Clinic | ClinicService | null;
+    itemType: 'clinic' | 'service' | 'doctor';
+    item: Clinic | ClinicService | ClinicDoctor | null;
     title: string;
     message: string;
     confirmText: string;
@@ -671,7 +852,7 @@ export default function PendingApprovalPage() {
     reason: ''
   });
 
-  // Fetch clinics and services
+  // Fetch clinics, services, and doctors
   useEffect(() => {
     const fetchData = async (page = 1) => {
       try {
@@ -689,11 +870,17 @@ export default function PendingApprovalPage() {
 
         // Fetch services
         const serviceData = await getClinicService(params);
-        setClinicServices(serviceData.dat || []);
+        setClinicServices(serviceData.data || []);
         setPendingServices(serviceData.data || []);
+
+        // Fetch doctors
+        const doctorData = await getClinicDoctor(params);
+        setClinicDoctors(doctorData.data || []);
+        setPendingDoctors(doctorData.data || []);
 
         console.log('Clinic data:', clinicData.data);
         console.log('Service data:', serviceData.data);
+        console.log('Doctor data:', doctorData.data?.data);
 
       } catch (error) {
         setNotification({
@@ -742,11 +929,28 @@ export default function PendingApprovalPage() {
     setFilteredServices(filtered);
   }, [pendingServices, searchQuery]);
 
+  // Search functionality for doctors
+  useEffect(() => {
+    let filtered = [...pendingDoctors];
+
+    if (searchQuery) {
+      filtered = filtered.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.specializaton.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.phone_number.includes(searchQuery) ||
+        doctor.education.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredDoctors(filtered);
+  }, [pendingDoctors, searchQuery]);
+
   // Show confirmation dialog
   const showConfirmation = (
     type: 'approve' | 'reject',
-    itemType: 'clinic' | 'service',
-    item: Clinic | ClinicService,
+    itemType: 'clinic' | 'service' | 'doctor',
+    item: Clinic | ClinicService | ClinicDoctor,
     title: string,
     message: string,
     confirmText: string,
@@ -781,12 +985,19 @@ export default function PendingApprovalPage() {
         } else {
           await handleRejectClinic(clinic, reason);
         }
-      } else {
+      } else if (itemType === 'service') {
         const service = item as ClinicService;
         if (type === 'approve') {
           await handleApproveService(service);
         } else {
           await handleRejectService(service, reason);
+        }
+      } else if (itemType === 'doctor') {
+        const doctor = item as ClinicDoctor;
+        if (type === 'approve') {
+          await handleApproveDoctor(doctor);
+        } else {
+          await handleRejectDoctor(doctor, reason);
         }
       }
     } catch (error) {
@@ -874,6 +1085,44 @@ export default function PendingApprovalPage() {
     }
   };
 
+  // Doctor approval handlers
+  const handleApproveDoctor = async (doctor: ClinicDoctor) => {
+    try {
+      await approveOrRejectDoctor(doctor.uuid, { status: 'APPROVED' });
+      setPendingDoctors(prev => prev.filter(d => d.uuid !== doctor.uuid));
+      setNotification({
+        type: 'success',
+        message: `Dr. ${doctor.name} has been approved successfully!`
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: `Failed to approve Dr. ${doctor.name}. Please try again.`
+      });
+      console.error("Error approving doctor:", error);
+    }
+  };
+
+  const handleRejectDoctor = async (doctor: ClinicDoctor, reason?: string) => {
+    try {
+      await approveOrRejectDoctor(doctor.uuid, {
+        status: 'REJECTED',
+        ...(reason && { reason_for_rejection: reason })
+      });
+      setPendingDoctors(prev => prev.filter(d => d.uuid !== doctor.uuid));
+      setNotification({
+        type: 'error',
+        message: `Dr. ${doctor.name} has been rejected.`
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: `Failed to reject Dr. ${doctor.name}. Please try again.`
+      });
+      console.error("Error rejecting doctor:", error);
+    }
+  };
+
   const handleViewClinicDetails = (clinic: Clinic) => {
     setSelectedClinic(clinic);
     setIsDetailModalOpen(true);
@@ -884,6 +1133,11 @@ export default function PendingApprovalPage() {
     setIsServiceModalOpen(true);
   };
 
+  const handleViewDoctorDetails = (doctor: ClinicDoctor) => {
+    setSelectedDoctor(doctor);
+    setIsDoctorModalOpen(true);
+  };
+
   const handleBulkApprove = () => {
     if (activeTab === 'clinics') {
       const count = filteredClinics.length;
@@ -892,12 +1146,19 @@ export default function PendingApprovalPage() {
         type: 'success',
         message: `${count} clinic(s) have been approved successfully!`
       });
-    } else {
+    } else if (activeTab === 'services') {
       const count = filteredServices.length;
       setPendingServices([]);
       setNotification({
         type: 'success',
         message: `${count} service(s) have been approved successfully!`
+      });
+    } else if (activeTab === 'doctors') {
+      const count = filteredDoctors.length;
+      setPendingDoctors([]);
+      setNotification({
+        type: 'success',
+        message: `${count} doctor(s) have been approved successfully!`
       });
     }
   };
@@ -924,10 +1185,9 @@ export default function PendingApprovalPage() {
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              {/* <Clock className="mr-3 text-yellow-600" size={32} /> */}
               Pending Approvals
             </h1>
-            <p className="text-gray-600 mt-1">Review and approve clinic registration requests and services</p>
+            <p className="text-gray-600 mt-1">Review and approve clinic registration requests, services, and doctors</p>
           </div>
 
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -938,7 +1198,7 @@ export default function PendingApprovalPage() {
               <RefreshCw size={16} />
               Refresh
             </button>
-            {(filteredClinics.length > 0 || filteredServices.length > 0) && (
+            {(filteredClinics.length > 0 || filteredServices.length > 0 || filteredDoctors.length > 0) && (
               <button
                 onClick={handleBulkApprove}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -956,7 +1216,7 @@ export default function PendingApprovalPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex gap-2">
+          <div className="flex flex-col md:flex-row gap-2">
             <TabButton
               active={activeTab === 'clinics'}
               onClick={() => setActiveTab('clinics')}
@@ -973,48 +1233,16 @@ export default function PendingApprovalPage() {
             >
               Service Approvals
             </TabButton>
+            <TabButton
+              active={activeTab === 'doctors'}
+              onClick={() => setActiveTab('doctors')}
+              icon={User}
+              count={filteredDoctors.length}
+            >
+              Doctor Approvals
+            </TabButton>
           </div>
         </motion.div>
-
-        {/* Stats */}
-        {/* <motion.div
-          className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-lg ${
-                activeTab === 'clinics' ? 'bg-yellow-100' : 'bg-blue-100'
-              }`}>
-                {activeTab === 'clinics' ? (
-                  <Building2 size={24} className="text-yellow-600" />
-                ) : (
-                  <Stethoscope size={24} className="text-blue-600" />
-                )}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {activeTab === 'clinics' ? filteredClinics.length : filteredServices.length}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {activeTab === 'clinics' ? 'Clinics' : 'Services'} awaiting approval
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">
-                {activeTab === 'clinics' 
-                  ? (filteredClinics.length === 0 ? 'All caught up!' : 'Requires attention')
-                  : (filteredServices.length === 0 ? 'All caught up!' : 'Requires attention')
-                }
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Last updated: {new Date().toLocaleTimeString()}
-              </p>
-            </div>
-          </div>
-        </motion.div> */}
 
         {/* Search Bar */}
         <motion.div
@@ -1029,7 +1257,9 @@ export default function PendingApprovalPage() {
               placeholder={
                 activeTab === 'clinics'
                   ? "Search pending clinics by name, city, email, or phone..."
-                  : "Search pending services by name, clinic, or description..."
+                  : activeTab === 'services'
+                    ? "Search pending services by name, clinic, or description..."
+                    : "Search pending doctors by name, specialization, or email..."
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -1180,7 +1410,7 @@ export default function PendingApprovalPage() {
               ))}
             </div>
           )
-        ) : (
+        ) : activeTab === 'services' ? (
           /* Service Approval Content */
           filteredServices.length === 0 ? (
             <motion.div
@@ -1305,6 +1535,149 @@ export default function PendingApprovalPage() {
               ))}
             </div>
           )
+        ) : (
+          /* Doctor Approval Content */
+          filteredDoctors.length === 0 ? (
+            <motion.div
+              className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">All Caught Up!</h3>
+              <p className="text-gray-600">
+                {searchQuery ? 'No pending doctors match your search.' : 'No doctors are currently pending approval.'}
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 text-blue-600 hover:text-blue-700 underline"
+                >
+                  Clear search
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              {filteredDoctors.map((doctor, index) => (
+                <motion.div
+                  key={doctor.uuid}
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      {/* Doctor Profile */}
+                      <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:gap-3 sm:flex-shrink-0">
+                        <img
+                          src={doctor.profile_pic}
+                          alt={doctor.name}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        {/* Status badge for mobile - shown below image on mobile */}
+                        <div className="sm:hidden">
+                          <StatusBadge status={doctor.status} />
+                        </div>
+                      </div>
+
+                      {/* Doctor Information */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
+                          <div className="flex-1">
+                            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
+                              Dr. {doctor.name}
+                            </h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-gray-600 mb-2">
+                              <span className="flex items-center gap-1">
+                                <Award size={14} />
+                                {doctor.specializaton}
+                              </span>
+                              <span className="hidden sm:inline">•</span>
+                              <span>{doctor.experience} years experience</span>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="text-xs sm:text-sm">{doctor.education}</span>
+                            </div>
+                          </div>
+                          {/* Status badge for desktop - shown on top right */}
+                          <div className="hidden sm:block">
+                            <StatusBadge status={doctor.status} />
+                          </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm text-gray-600 mb-4">
+                          <div className="flex items-center gap-2">
+                            <Mail size={14} className="flex-shrink-0" />
+                            <span className="truncate text-xs sm:text-sm">{doctor.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} className="flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">{doctor.phone_number}</span>
+                          </div>
+                        </div>
+
+                        {/* Additional Info */}
+                        {doctor.extra_info && (
+                          <div className="mb-4">
+                            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-2">
+                              {doctor.extra_info}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:items-center lg:items-end">
+                        <button
+                          onClick={() => handleViewDoctorDetails(doctor)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium text-xs sm:text-sm w-full sm:w-auto"
+                        >
+                          <Eye size={14} className="sm:size-[16px]" />
+                          <span>Details</span>
+                        </button>
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => showConfirmation(
+                              'reject',
+                              'doctor',
+                              doctor,
+                              'Reject Doctor',
+                              `Are you sure you want to reject Dr. ${doctor.name}? This action cannot be undone.`,
+                              'Reject Doctor',
+                              true,
+                              true
+                            )}
+                            className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 text-red-700 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors font-medium text-xs sm:text-sm flex-1 sm:flex-none"
+                          >
+                            <X size={14} className="sm:size-[16px]" />
+                            <span className="sm:hidden">Reject</span>
+                            <span className="hidden sm:inline">Reject</span>
+                          </button>
+                          <button
+                            onClick={() => showConfirmation(
+                              'approve',
+                              'doctor',
+                              doctor,
+                              'Approve Doctor',
+                              `Are you sure you want to approve Dr. ${doctor.name}?`,
+                              'Approve Doctor'
+                            )}
+                            className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium text-xs sm:text-sm flex-1 sm:flex-none shadow-sm"
+                          >
+                            <Check size={14} className="sm:size-[16px]" />
+                            <span className="sm:hidden">Approve</span>
+                            <span className="hidden sm:inline">Approve</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )
         )}
 
         {/* Modals */}
@@ -1351,6 +1724,30 @@ export default function PendingApprovalPage() {
             'Reject Service',
             `Are you sure you want to reject ${service.clinic_provided_name}? This action cannot be undone.`,
             'Reject Service',
+            true,
+            true
+          )}
+        />
+
+        <DoctorDetailModal
+          doctor={selectedDoctor}
+          isOpen={isDoctorModalOpen}
+          onClose={() => setIsDoctorModalOpen(false)}
+          onApprove={(doctor) => showConfirmation(
+            'approve',
+            'doctor',
+            doctor,
+            'Approve Doctor',
+            `Are you sure you want to approve Dr. ${doctor.name}?`,
+            'Approve Doctor'
+          )}
+          onReject={(doctor) => showConfirmation(
+            'reject',
+            'doctor',
+            doctor,
+            'Reject Doctor',
+            `Are you sure you want to reject Dr. ${doctor.name}? This action cannot be undone.`,
+            'Reject Doctor',
             true,
             true
           )}

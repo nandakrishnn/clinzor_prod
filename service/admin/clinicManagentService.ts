@@ -108,8 +108,8 @@ export const deleteClinic = async (Id: string) => {
 export const getAClinic = async (Id: string) => {
   return await axiosPrivate.get(`clinic/clinic-rud/${Id}`);
 };
-export const getClinicDoctors = async (Id: string) => {
-  const res = await axiosPrivate.get(`clinic/doctor-lc/?clinic=${Id}`);
+export const getClinicDoctors = async (Id: string, status?: string ) => {
+  const res = await axiosPrivate.get(`clinic/doctor-lc/?clinic=${Id}&status=${status}`);
   return res?.data
 };
 export const getAClinicService = async (Id: string) => {
@@ -158,7 +158,6 @@ export const getClinicTimingServiceData = async (id: string) => {
 }
 
 // In your clinicManagentService.ts file
-
 export const GetAllDoctor = async (page: number, clinicId?: string, status?: string) => {
   try {
     const params: any = { page };
@@ -197,4 +196,16 @@ export const GetAllSpecialties = async (page: number, clinicId?: string, status?
     console.error("Failed to fetch services", error);
     throw error;
   }
+};
+
+// service functions for doctor management
+export const getClinicDoctor = async (params: any) => {
+  const queryString = new URLSearchParams(params).toString();
+  const response = await axiosPrivate.get(`clinic/doctor-lc/?${queryString}`);
+  return response.data.data;
+};
+
+export const approveOrRejectDoctor = async (doctorUuid: string, data: { status: string; reason_for_rejection?: string }) => {
+  const response = await axiosPrivate.patch(`clinic/doctor-approval/${doctorUuid}/`, data);
+  return response.data;
 };

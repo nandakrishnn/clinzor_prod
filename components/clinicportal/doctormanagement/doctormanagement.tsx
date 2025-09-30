@@ -284,17 +284,10 @@ const DoctorManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleGenderFilterChange = (gender: string) => {
-    setGenderFilter(gender);
-    setCurrentPage(1);
-  };
-
   const handleSpecializationFilterChange = (specialization: string) => {
     setSpecializationFilter(specialization);
     setCurrentPage(1);
   };
-
-
 
   // Helper functions
   const getStatusConfig = (status: string) => {
@@ -331,20 +324,6 @@ const DoctorManagement: React.FC = () => {
     const age = new Date().getFullYear() - new Date(dob).getFullYear();
     return `${age} years`;
   };
-
-  // Filtering logic
-  // const filteredDoctors = doctors.filter(doctor => {
-  //   const matchesSearch = doctor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //                        doctor?.specializaton?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //                        doctor?.phone_number?.includes(searchTerm);
-  //   const matchesStatus = statusFilter ? doctor.status === statusFilter : true;
-  //   const matchesService = serviceFilter ? doctor.clinic_service === serviceFilter : true;
-  //   const matchesGender = genderFilter ? doctor.gender === genderFilter : true;
-  //   const matchesSpecialization = specializationFilter ? 
-  //     doctor.specializaton?.toLowerCase().includes(specializationFilter.toLowerCase()) : true;
-
-  //   return matchesSearch && matchesStatus && matchesService && matchesGender && matchesSpecialization;
-  // });
 
   // Backend paginates; render the page as delivered and keep client filters if needed
   const paginatedDoctors = doctors;
@@ -453,6 +432,7 @@ const DoctorManagement: React.FC = () => {
     // Simply return the array of URLs as the API expects
     return govtDocUrls;
   };
+
   // CRUD operations
   const handleCreateDoctor = async () => {
     try {
@@ -597,6 +577,7 @@ const DoctorManagement: React.FC = () => {
       // showToast('Failed to delete doctor', 'error');
     }
   };
+
   // Modal handlers
   const handleViewDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -667,7 +648,6 @@ const DoctorManagement: React.FC = () => {
     fetchDoctor(1, '', '', '', '', '');
   };
 
-
   // Image file handler for Doctor Image upload
   function handleImageFile(file: File) {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
@@ -716,6 +696,7 @@ const DoctorManagement: React.FC = () => {
       </div>
     );
   }
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -1547,8 +1528,8 @@ const DoctorManagement: React.FC = () => {
                         type="submit"
                         disabled={uploading}
                         className={`px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold border border-slate-300 transition-all duration-200 ${uploading
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:from-blue-700 hover:to-indigo-700'
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:from-blue-700 hover:to-indigo-700'
                           }`}
                       >
                         {uploading ? (

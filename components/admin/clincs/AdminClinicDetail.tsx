@@ -97,7 +97,7 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         setClinicRating(clinicData?.data?.data?.stats)
 
         // Fetch doctors for this clinic with query parameters
-        const doctorsResponse = await getClinicDoctors(clinicId);
+        const doctorsResponse = await getClinicDoctors(clinicId, "APPROVED");
         setDoctors(doctorsResponse?.data?.data);
 
         // Fetch services for this clinic with query parameters
