@@ -2,6 +2,7 @@ import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { Mail, Lock, Stethoscope, Shield, ArrowRight, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
+import ForgotPasswordModal from '@/components/authentication/ForgotPasswordModal';
 
 interface FormState {
   email: string;
@@ -31,11 +32,13 @@ const ExpertAuthentication: React.FC = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   useEffect(() => {
     if (status === "authenticated") {
       // Check if user has EXPERT role
@@ -122,6 +125,13 @@ const ExpertAuthentication: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-white flex">
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        endpoint="user/change-password/"
+      />
+
       {/* Left Panel - Expert Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
@@ -205,12 +215,12 @@ const ExpertAuthentication: React.FC = () => {
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField('')}
                   className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'email'
-                      ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                      : validationState.email === true
-                        ? 'border-green-500'
-                        : validationState.email === false
-                          ? 'border-red-500'
-                          : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                    : validationState.email === true
+                      ? 'border-green-500'
+                      : validationState.email === false
+                        ? 'border-red-500'
+                        : 'border-gray-200 hover:border-gray-300'
                     }`}
                   placeholder="expert@clinzor.com"
                 />
@@ -234,106 +244,107 @@ const ExpertAuthentication: React.FC = () => {
                 </label>
                 <button
                   type="button"
-                  className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
+                  onClick={() => setForgotPasswordOpen(true)}
+                className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
                 >
-                  Forgot password?
-                </button>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
-                    }`} />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formState.password}
-                  onChange={handleInputChange}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'password'
-                      ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                      : validationState.password === true
-                        ? 'border-green-500'
-                        : validationState.password === false
-                          ? 'border-red-500'
-                          : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  placeholder="••••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
+                Forgot password?
+              </button>
             </div>
-
-            {/* Remember Me */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formState.rememberMe}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
-                />
-                <span className="ml-2 text-sm text-gray-600">Remember this device</span>
-              </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
+                  }`} />
+              </div>
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formState.password}
+                onChange={handleInputChange}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')}
+                className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'password'
+                  ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                  : validationState.password === true
+                    ? 'border-green-500'
+                    : validationState.password === false
+                      ? 'border-red-500'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                placeholder="••••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
+        </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign in to Expert Portal
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+        {/* Remember Me */}
+        <div className="flex items-center justify-between">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              checked={formState.rememberMe}
+              onChange={handleInputChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+            />
+            <span className="ml-2 text-sm text-gray-600">Remember this device</span>
+          </label>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              Signing in...
+            </>
+          ) : (
+            <>
+              Sign in to Expert Portal
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Help Section */}
+      <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+        <div className="flex items-start gap-3">
+          <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-1">Need Expert Access?</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Contact your system administrator for expert portal credentials.
+            </p>
+            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
+              Contact Support →
             </button>
-          </form>
-
-          {/* Help Section */}
-          <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Need Expert Access?</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Contact your system administrator for expert portal credentials.
-                </p>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-                  Contact Support →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>© {new Date().getFullYear()} Clinzor Healthcare. All rights reserved.</p>
-            <div className="flex justify-center gap-4 mt-2">
-              <button className="hover:text-blue-600 transition-colors">Privacy Policy</button>
-              <button className="hover:text-blue-600 transition-colors">Terms of Service</button>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="mt-8 text-center text-sm text-gray-500">
+        <p>© {new Date().getFullYear()} Clinzor Healthcare. All rights reserved.</p>
+        <div className="flex justify-center gap-4 mt-2">
+          <button className="hover:text-blue-600 transition-colors">Privacy Policy</button>
+          <button className="hover:text-blue-600 transition-colors">Terms of Service</button>
+        </div>
+      </div>
     </div>
+      </div >
+    </div >
   );
 };
 

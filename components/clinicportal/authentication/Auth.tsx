@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Heart, Users, ArrowRight, Eye, EyeOff, CheckCircle, AlertCircle, Activity } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
+import ForgotPasswordModal from '@/components/authentication/ForgotPasswordModal';
 
 interface FormState {
   email: string;
@@ -29,22 +30,25 @@ const ClinicPortalLogin = () => {
     email: null,
     password: null,
   });
- const router = useRouter();
-    const [error, setError] =useState<string | null>(null);
-    const { data: session, status } = useSession();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-useEffect(() => {
-  if (status === "authenticated") {
-    // Check if user has EXPERT role
-    if (session?.user?.role === "CLINIC") {
-      router.replace("/clinicportal");
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      // Check if user has EXPERT role
+      if (session?.user?.role === "CLINIC") {
+        router.replace("/clinicportal");
+      }
+
     }
-   
-  }
-}, [status, router, session?.user?.role]);
+  }, [status, router, session?.user?.role]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked, type } = e.target;
     setFormState(prev => ({
@@ -60,7 +64,7 @@ useEffect(() => {
         email: value ? emailRegex.test(value) : null,
       }));
     }
-    
+
     if (name === 'password') {
       setValidationState(prev => ({
         ...prev,
@@ -73,26 +77,26 @@ useEffect(() => {
     e.preventDefault();
     setIsLoading(true);
 
-     try {
-        const result = await signIn('credentials', {
-          redirect: false,
-          email: formState.email,
-          password: formState.password,
-          callbackUrl: '/clinicportal', // Redirect after successful login
-        });
-    
-        if (result?.error) {
-          setError(result.error);
-        } else if (result?.url) {
-          router.push(result.url);
-        }
-      } catch (err) {
-        setError('An unexpected error occurred. Please try again.');
-        console.error('Login error:', err);
-      } finally {
-        setIsLoading(false);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: formState.email,
+        password: formState.password,
+        callbackUrl: '/clinicportal', // Redirect after successful login
+      });
+
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.url) {
+        router.push(result.url);
       }
-    
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+
     setTimeout(() => {
       // alert(`Welcome to Clinzor Portal!\n\nLogin Details:\n${JSON.stringify(formState, null, 2)}`);
       setIsLoading(false);
@@ -126,10 +130,18 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-white flex">
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        endpoint="user/change-password/"
+      />
+
       {/* Left Panel - Clinic Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-        
+
         <div className="relative z-10 p-12 flex flex-col justify-center text-white">
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-6">
@@ -140,7 +152,7 @@ useEffect(() => {
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-semibold mb-3">Patient Management</h3>
@@ -148,7 +160,7 @@ useEffect(() => {
                 Streamline appointments, manage patient records, and coordinate care with our comprehensive clinic management system.
               </p>
             </div>
-            
+
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-semibold mb-3">Digital Health Records</h3>
               <p className="text-blue-100 leading-relaxed">
@@ -163,14 +175,14 @@ useEffect(() => {
               </p>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t border-white/20">
             <p className="text-blue-200 text-sm">
               Empowering healthcare providers with modern technology
             </p>
           </div>
         </div>
-        
+
         <FloatingElements />
       </div>
 
@@ -205,9 +217,8 @@ useEffect(() => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className={`h-5 w-5 transition-colors ${
-                    focusedField === 'email' ? 'text-blue-500' : 'text-gray-400'
-                  }`} />
+                  <Mail className={`h-5 w-5 transition-colors ${focusedField === 'email' ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
                 </div>
                 <input
                   id="email"
@@ -218,15 +229,14 @@ useEffect(() => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${
-                    focusedField === 'email'
-                      ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                      : validationState.email === true
+                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'email'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                    : validationState.email === true
                       ? 'border-green-500'
                       : validationState.email === false
-                      ? 'border-red-500'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                        ? 'border-red-500'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   placeholder="doctor@clinic.com"
                 />
                 {validationState.email !== null && (
@@ -249,6 +259,7 @@ useEffect(() => {
                 </label>
                 <button
                   type="button"
+                  onClick={() => { setForgotPasswordOpen(true) }}
                   className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
                 >
                   Forgot password?
@@ -256,9 +267,8 @@ useEffect(() => {
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 transition-colors ${
-                    focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
-                  }`} />
+                  <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
                 </div>
                 <input
                   id="password"
@@ -269,15 +279,14 @@ useEffect(() => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${
-                    focusedField === 'password'
-                      ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                      : validationState.password === true
+                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'password'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                    : validationState.password === true
                       ? 'border-green-500'
                       : validationState.password === false
-                      ? 'border-red-500'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                        ? 'border-red-500'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   placeholder="••••••••••"
                 />
                 <button

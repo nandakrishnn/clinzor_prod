@@ -17,7 +17,8 @@ import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { LockOpenIcon } from '@heroicons/react/24/solid';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
-
+import { Toaster } from 'sonner';
+import ForgotPasswordModal from '@/components/authentication/ForgotPasswordModal';
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -28,23 +29,22 @@ interface SignInFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
 
-
-export default function () {
+export default function AdminLogin() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
-  const [passView, setPassView] = useState(false)
+  const [passView, setPassView] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
-      // Check if user has EXPERT role
       if (session?.user?.role === "ADMIN") {
         router.replace("/admin/dashboard");
       }
-
     }
   }, [status, router, session?.user?.role]);
+
   const handleSubmit = async (event: React.FormEvent<SignInFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -62,7 +62,7 @@ export default function () {
         redirect: false,
         email: credentials.email,
         password: credentials.password,
-        callbackUrl: '/admin/dashboard', // Redirect after successful login
+        callbackUrl: '/admin/dashboard',
       });
 
       if (result?.error) {
@@ -81,14 +81,23 @@ export default function () {
   return (
     <CssVarsProvider>
       <CssBaseline />
+      <Toaster position="top-right" richColors closeButton />
       <GlobalStyles
         styles={{
           ':root': {
             '--Form-maxWidth': '800px',
-            '--Transition-duration': '0.4s', // set to `none` to disable transition
+            '--Transition-duration': '0.4s',
           },
         }}
       />
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        endpoint="user/change-password/"
+      />
+
       <Box
         sx={(theme) => ({
           width: '100%',
@@ -167,9 +176,7 @@ export default function () {
               }}
             >
               <Stack sx={{ gap: 4, mt: 2 }}>
-                <form
-                  onSubmit={handleSubmit}
-                >
+                <form onSubmit={handleSubmit}>
                   <FormControl required>
                     <FormLabel>Email</FormLabel>
                     <Input type="email" name="email" />
@@ -179,10 +186,9 @@ export default function () {
                     <div className='relative '>
                       <Input type={passView ? "text" : "password"} name="password" />
                       <div className='absolute right-2 top-2'>
-                        {
-                          passView ?
-                            <EyeIcon onClick={() => setPassView(false)} size={18} className='cursor-pointer' /> :
-                            <EyeOffIcon onClick={() => setPassView(true)} size={18} className='cursor-pointer' />
+                        {passView ?
+                          <EyeIcon onClick={() => setPassView(false)} size={18} className='cursor-pointer' /> :
+                          <EyeOffIcon onClick={() => setPassView(true)} size={18} className='cursor-pointer' />
                         }
                       </div>
                     </div>
@@ -198,7 +204,14 @@ export default function () {
                       }}
                     >
                       <Checkbox size="sm" label="Remember me" name="persistent" />
-                      <Link level="title-sm" href="#replace-with-a-link">
+                      <Link
+                        level="title-sm"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setForgotPasswordOpen(true);
+                        }}
+                      >
                         Forgot your password?
                       </Link>
                     </Box>
@@ -207,7 +220,7 @@ export default function () {
                       fullWidth
                       loading={isLoading}
                       loadingPosition="start"
-                      startDecorator={isLoading ? undefined : <LockOpenIcon />} // Optional: Add an icon when not loading
+                      startDecorator={isLoading ? undefined : <LockOpenIcon />}
                     >
                       {isLoading ? 'Signing in...' : 'Sign in'}
                     </Button>
@@ -239,8 +252,7 @@ export default function () {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            backgroundImage:
-              'url(/admin.jpg)',
+            backgroundImage: 'url(/admin.jpg)',
           })}
         />
       </Box>

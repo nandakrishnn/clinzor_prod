@@ -26,7 +26,9 @@ import {
   ArrowLeft,
   Upload,
   ImageIcon,
-  FileText
+  FileText,
+  EyeIcon,
+  EyeOffIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -436,6 +438,7 @@ export default function ClinicManagement() {
   const [selectedRegistrationCertificate, setSelectedRegistrationCertificate] = useState<File | null>(null);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [uploadedCertificateUrl, setUploadedCertificateUrl] = useState<string>("");
+  const [passView, setPassView] = useState(false)
   const [selectedHeader, setSelectedHeader] = useState<
     "ALL" | "Approved" | "Pending" | "Active" | "Deactivated"
   >("ALL");
@@ -762,7 +765,7 @@ export default function ClinicManagement() {
     if (!isValid) {
       setNotification({
         type: "error",
-        message: "Please fix the form errors before creating the user"
+        message: ` "Please fix the form errors before creating the user"`
       });
       return;
     }
@@ -1974,7 +1977,7 @@ export default function ClinicManagement() {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
-                          type="password"
+                          type={passView ? "text" : "password"}
                           value={newUser.password}
                           onChange={(e) =>
                             setNewUser({ ...newUser, password: e.target.value })
@@ -1983,6 +1986,14 @@ export default function ClinicManagement() {
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                           required
                         />
+                        <div className='absolute right-2 top-4'>
+                          {
+                            passView ?
+                              <EyeIcon onClick={() => setPassView(false)} size={18} className='cursor-pointer' /> :
+                              <EyeOffIcon onClick={() => setPassView(true)} size={18} className='cursor-pointer' />
+                          }
+                        </div>
+
                       </div>
 
                       {newUser.password && (
