@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Search, Users, DollarSign, Star, Activity, ArrowUpRight, ArrowDownRight, Eye, Edit, Trash2 , IndianRupee } from 'lucide-react';
+import { Calendar, Search, Users, DollarSign, Star, Activity, ArrowUpRight, ArrowDownRight, Eye, Edit, Trash2, IndianRupee } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { getDashboardDataService } from '@/components/service/clinic/AdminDashh';
+import { getClinicDataService } from '@/service/clinic/slotManagementService';
+import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 
 type EnhancedMetricCardProps = {
   title: string;
@@ -70,6 +72,10 @@ const Dashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+
+  const { clinic } = useClinicByUser() as { clinic: any };
+
+  console.log(clinic, 'clinic data')
 
   const getInitialData = async () => {
     setIsLoading(true);
@@ -413,7 +419,7 @@ const Dashboard = () => {
                 <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-base sm:text-2xl font-bold text-gray-900 tracking-tight">Clinic Dashboard</h1>
+                <h1 className="text-base sm:text-2xl font-bold text-gray-900 tracking-tight">{clinic?.name} Dashboard</h1>
                 <p className="text-gray-500 mt-1 text-xs sm:text-base">Streamline your healthcare operations</p>
               </div>
             </div>
@@ -432,6 +438,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
       <div className="max-w-7xl mx-auto px-2 py-4">
         {/* Enhanced Date Range Filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-0">

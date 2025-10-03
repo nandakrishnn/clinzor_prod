@@ -11,7 +11,6 @@ import {
   X,
   ChevronLeft,
   LogOut,
-  Settings,
   Tag
 } from 'lucide-react';
 import React from 'react';
@@ -34,25 +33,24 @@ const itemVariants = {
 };
 
 const SidebarItem = ({ icon, label, href, collapsed, active = false, onClick }: SidebarItemProps) => (
-  <motion.a 
+  <motion.a
     href={href}
     onClick={onClick}
-    className={`flex items-center ${collapsed ? 'justify-center' : ''} w-full px-3 py-3 my-1 rounded-lg transition-all duration-200 group ${
-      active 
-        ? 'bg-blue-50 text-blue-600' 
-        : 'text-gray-600 hover:bg-gray-50'
-    }`}
+    className={`flex items-center ${collapsed ? 'justify-center' : ''} w-full px-3 py-3 my-1 rounded-lg transition-all duration-200 group ${active
+      ? 'bg-blue-50 text-blue-600'
+      : 'text-gray-600 hover:bg-gray-50'
+      }`}
     whileTap={{ scale: 0.97 }}
     initial={false}
-    animate={{ 
-      backgroundColor: active ? 'rgb(239, 246, 255)' : 'transparent', 
+    animate={{
+      backgroundColor: active ? 'rgb(239, 246, 255)' : 'transparent',
       transition: { type: 'tween', duration: 0.15 }
     }}
   >
-    <motion.div 
+    <motion.div
       className={`flex items-center justify-center ${collapsed ? 'w-8 h-8' : 'w-8 h-8 mr-3'} ${active ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-500'}`}
-      animate={{ 
-        color: active ? 'rgb(37, 99, 235)' : '', 
+      animate={{
+        color: active ? 'rgb(37, 99, 235)' : '',
         transition: { type: 'tween', duration: 0.15 }
       }}
     >
@@ -78,24 +76,27 @@ export default function ClinicSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('/clinicportal/dashboard');
-    const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   // Example user data - in a real app, this would come from your authentication system
-  const [user ,setUser] = useState<UserProfile>({
+
+  const [user, setUser] = useState<UserProfile>({
     name: 'Dr. Sarah Chen',
     email: 'sarah.chen@clinicportal.com',
     role: 'Clinic Administrator',
     avatar: '/api/placeholder/32/32' // This is a placeholder, replace with actual avatar URL in production
   });
-    useEffect(() => {
-      if (session?.user) {
-        setUser({
-          name: session.user.name || '',
-          email: session.user.email || '',
-          role: session.user.role || '',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
-        });
-      }
-    }, [session]);
+
+  useEffect(() => {
+    if (session?.user) {
+      setUser({
+        name: session.user.name || '',
+        email: session.user.email || '',
+        role: session.user.role || '',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
+      });
+    }
+  }, [session]);
+
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -105,10 +106,10 @@ export default function ClinicSidebar() {
           setMobileOpen(false);
         }
       };
-      
+
       window.addEventListener('resize', handleResize);
       handleResize();
-      
+
       return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
@@ -141,10 +142,10 @@ export default function ClinicSidebar() {
       setMobileOpen(false);
     }
   };
-  
+
   const handleLogout = () => {
     // Handle logout logic here
-        signOut({ callbackUrl: "/auth/clinicportallogin" });
+    signOut({ callbackUrl: "/auth/clinicportallogin" });
     console.log('Logging out...');
     // e.g., redirect to login page or call logout API
   };
@@ -152,41 +153,41 @@ export default function ClinicSidebar() {
   // Render sidebar content - used in both mobile and desktop views
   const renderSidebarContent = () => (
     <>
-      <motion.div 
-        className={`flex items-center ${collapsed ? 'justify-center py-8' : ''} px-5 py-8`}
+      <motion.div
+        className={`flex items-center ${collapsed ? 'justify-center py-8' : ''} px-4 sm:px-5 pt-6 pb-4 md:pt-8`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         {collapsed ? (
-          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 text-white">
-            <Home size={20} strokeWidth={1.5} />
+          <div className="w-10 h-10 flex items-center justify-center rounded-full border border-primaryColor overflow-hidden">
+            <img src="/assets/logo/fav.png" alt="logo" className='w-full' />
           </div>
         ) : (
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-              <Home size={20} strokeWidth={1.5} />
+          <div className="flex flex-col items-start ">
+            <div className="w-40 h-10 flex items-center justify-center ">
+              <img src="/assets/logo/logo.png" alt="logo" className='w-full' />
             </div>
-            <div className="ml-3">
-              <h1 className="font-semibold text-gray-800">Clinic Portal</h1>
-              <p className="text-xs text-blue-600">Healthcare Management</p>
+            <div className="pt-1.5 ml-1.5">
+              <h1 className="font-semibold text-gray-500 truncate tracking-[4px] text-xs uppercase">Clinic Portal</h1>
+              {/* <p className="text-xs text-purple-600 truncate">System Management</p> */}
             </div>
           </div>
         )}
       </motion.div>
-      
+
       <div className="mt-2 px-3 flex-grow">
-        <motion.nav 
+        <motion.nav
           className="space-y-0.5"
           initial="hidden"
           animate="visible"
           variants={{
-            visible: { 
-              transition: { 
-                staggerChildren: 0.05 
-              } 
+            visible: {
+              transition: {
+                staggerChildren: 0.05
+              }
             }
-          }}  
+          }}
         >
           {menuItems.map((item) => (
             <motion.div key={item.href} variants={itemVariants}>
@@ -202,26 +203,7 @@ export default function ClinicSidebar() {
           ))}
         </motion.nav>
       </div>
-      
-      {/* {!collapsed && (
-        <motion.div 
-          className="px-5 pt-2 mb-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-xs text-gray-600 mb-3">Need assistance with your dashboard?</p>
-            <a 
-              href="/help-center"
-              className="block w-full py-2 text-center text-xs font-medium text-blue-600 bg-white rounded-lg border border-gray-100 hover:border-blue-100 hover:shadow-sm transition-all duration-200"
-            >
-              Support Center
-            </a>
-          </div>
-        </motion.div>
-      )} */}
-      
+
       {/* User Profile Section */}
       <div className={`px-3 py-3 border-t border-gray-100 ${collapsed ? 'flex justify-center' : ''}`}>
         <AnimatePresence>
@@ -232,14 +214,14 @@ export default function ClinicSidebar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <img 
-                src={user.avatar} 
+              <img
+                src={user.avatar}
                 alt={user.name}
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-cover"
               />
             </motion.button>
           ) : (
-            <motion.div 
+            <motion.div
               className="flex items-center justify-between w-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -248,10 +230,10 @@ export default function ClinicSidebar() {
             >
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
-                  <img 
-                    src={user.avatar} 
+                  <img
+                    src={user.avatar}
                     alt={user.name}
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="ml-3 overflow-hidden">
@@ -279,7 +261,7 @@ export default function ClinicSidebar() {
     <>
       {/* Mobile toggle button - always visible on mobile */}
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <motion.button 
+        <motion.button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 bg-white rounded-lg text-blue-600 shadow-md border border-gray-100"
           whileHover={{ scale: 1.05 }}
@@ -288,19 +270,19 @@ export default function ClinicSidebar() {
           {mobileOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
         </motion.button>
       </div>
-      
+
       {/* Mobile sidebar - slides in from left */}
       <AnimatePresence>
         {mobileOpen && (
           <div className="md:hidden fixed inset-0 z-50">
-            <motion.div 
-              className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" 
+            <motion.div
+              className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
             />
-            <motion.div 
+            <motion.div
               className="relative w-72 h-full bg-white shadow-xl flex flex-col z-50"
               initial={{ x: "-100%" }}
               animate={{ x: "0%" }}
@@ -312,22 +294,22 @@ export default function ClinicSidebar() {
           </div>
         )}
       </AnimatePresence>
-      
+
       {/* Desktop sidebar - collapsible */}
       <div className="hidden md:block relative h-screen">
-        <motion.div 
+        <motion.div
           className={`h-full bg-white border-r border-gray-100 shadow-sm flex flex-col z-30`}
           initial={false}
-          animate={{ 
+          animate={{
             width: collapsed ? "5rem" : "16rem"
           }}
           transition={{ type: "spring", damping: 25, stiffness: 320 }}
         >
           {renderSidebarContent()}
         </motion.div>
-        
+
         {/* Collapse toggle button */}
-        <motion.button 
+        <motion.button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute -right-3 top-16 p-1.5 bg-white rounded-full border border-gray-100 text-gray-400 shadow-sm hover:text-blue-500 hover:border-blue-100 transition-colors duration-200"
           whileHover={{ scale: 1.1 }}

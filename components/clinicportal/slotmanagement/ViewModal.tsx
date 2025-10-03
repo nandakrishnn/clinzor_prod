@@ -6,25 +6,39 @@ interface ViewModalProps {
   showViewModal: boolean;
   setShowViewModal: (show: boolean) => void;
   viewingSlot: Slot | null;
-  getServiceName: (serviceId: string) => string;
 }
 
 const ViewModal: React.FC<ViewModalProps> = ({
   showViewModal,
   setShowViewModal,
   viewingSlot,
-  getServiceName
 }) => {
-  const formatDateTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+  const formatDate = (dateTime: string) => {
+    return new Date(dateTime).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric"
     });
   };
 
+  const convertTo12HourFormat = (utcDateString: string) => {
+    const date = new Date(utcDateString);
+
+    // Use UTC methods to get the original UTC time components
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+
+    return `${hh}:${mm} ${ampm}`;
+  };
+
+  console.log(viewingSlot)
   if (!showViewModal || !viewingSlot) return null;
 
   return (
@@ -42,9 +56,9 @@ const ViewModal: React.FC<ViewModalProps> = ({
           </div>
         </div>
         <div className="p-6 space-y-4">
-          <div><span className="font-bold">Service:</span> {getServiceName(viewingSlot.clinic_service)}</div>
-          <div><span className="font-bold">Start Time:</span> {formatDateTime(viewingSlot.start_time)}</div>
-          <div><span className="font-bold">End Time:</span> {formatDateTime(viewingSlot.end_time)}</div>
+          <div><span className="font-bold">Service:</span> {viewingSlot.slot_type}</div>
+          <div><span className="font-bold">Start Time:</span> {formatDate(viewingSlot.start_time) + " " + convertTo12HourFormat(viewingSlot.start_time)}</div>
+          <div><span className="font-bold">End Time:</span> {formatDate(viewingSlot.end_time) + " " + convertTo12HourFormat(viewingSlot.end_time)}</div>
           <div><span className="font-bold">Max Bookings:</span> {viewingSlot.max_bookings}</div>
           <div><span className="font-bold">Available Slots:</span> {viewingSlot.available_slots}</div>
           <div><span className="font-bold">Status:</span> {viewingSlot.status}</div>

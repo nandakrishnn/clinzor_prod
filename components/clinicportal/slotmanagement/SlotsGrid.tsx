@@ -23,7 +23,6 @@ interface SlotsGridProps {
 const SlotsGrid: React.FC<SlotsGridProps> = ({
   slots,
   loading,
-  getServiceName,
   handleEdit,
   handleDelete,
   handleView

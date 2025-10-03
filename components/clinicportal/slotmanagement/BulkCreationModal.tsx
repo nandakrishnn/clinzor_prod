@@ -24,14 +24,12 @@ import {
   createClinicBlukSlot,
   getClinicDataService
 } from "@/service/clinic/slotManagementService";
-import type { ClinicService } from "@/types/common";
 
 interface BulkCreationModalProps {
   showBulkForm: boolean;
   setShowBulkForm: (show: boolean) => void;
   currentPage: number;
   fetchSlots: (page?: number) => void;
-  clinicServices: ClinicService[];
   showNotification: (
     type: "success" | "error" | "warning",
     message: string
@@ -408,7 +406,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   setShowBulkForm,
   currentPage,
   fetchSlots,
-  clinicServices,
   showNotification
 }) => {
   const [clinicInfo, setClinicInfo] = useState<any>(null);
@@ -635,11 +632,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   /* ------------------------------ Selections ------------------------------ */
 
   const currentDay = days[selectedDayIndex];
-  const currentDate = currentDay?.date ?? "";
-  const currentSelectedSet = useMemo(
-    () => selectedByDate[currentDate] ?? new Set<number>(),
-    [selectedByDate, currentDate]
-  );
 
   const isSelected = (dayIndex: number, slotIndex: number) => {
     const date = days[dayIndex]?.date;
@@ -744,19 +736,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     // no-op
   };
 
-  const handleTimeChange = (
-    field: "start_time" | "end_time",
-    time24: string,
-    index: number
-  ) => {
-    const updated = [...days];
-    const day = updated[selectedDayIndex];
-    const slot = day.slots[index];
-    const datePart = slot[field].split("T")[0];
-    day.slots[index] = { ...slot, [field]: `${datePart}T${time24}` };
-    setDays(updated);
-  };
-
   const removeSlot = (index: number) => {
     const updated = [...days];
     const day = updated[selectedDayIndex];
@@ -774,32 +753,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
       }
       return { ...prev, [date]: nextSet };
     });
-  };
-
-  const addNewSlot = () => {
-    const updated = [...days];
-    const day = updated[selectedDayIndex];
-    const baseStart =
-      day.slots.length === 0
-        ? createLocalDate(day.date, startTime)
-        : new Date(day.slots.at(-1)!.end_time);
-    const newStart = new Date(baseStart);
-    newStart.setHours(
-      newStart.getHours() + (day.slots.length === 0 ? 0 : timeGap)
-    );
-    const newEnd = new Date(newStart);
-    newEnd.setHours(newEnd.getHours() + 1);
-
-    day.slots.push({
-      start_time: newStart.toISOString(),
-      end_time: newEnd.toISOString(),
-      max_bookings: maxBookings,
-      female_doctors: femaleDoctors,
-      is_video_call: isVideo,
-      is_physical_visit: isPhysical
-    });
-
-    setDays(updated);
   };
 
   /* ---------------------------- Review Lists ----------------------------- */
@@ -1072,7 +1025,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col">
         {/* Header */}
-        <div className="bg-gray-900 text-white p-6 rounded-t-3xl">
+        <div className="bg-primaryColor text-white p-6 rounded-t-3xl">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold">Bulk Create Slots</h2>
@@ -1108,10 +1061,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold transition-all ${activeStep === i
-                      ? "bg-gray-800 text-white shadow-lg scale-110"
-                      : i < activeStep
-                        ? "bg-gray-600 text-white shadow-md"
-                        : "bg-white border-2 border-gray-300 text-gray-400"
+                    ? "bg-primaryColor text-white shadow-lg scale-110"
+                    : i < activeStep
+                      ? "bg-primaryColor text-white shadow-md"
+                      : "bg-white border-2 border-gray-300 text-gray-400"
                     }`}
                 >
                   {i < activeStep ? <Check size={20} /> : step.icon}
@@ -1119,10 +1072,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                 <div className="mt-2 text-center">
                   <div
                     className={`font-semibold text-sm ${activeStep === i
-                        ? "text-gray-800"
-                        : i < activeStep
-                          ? "text-gray-600"
-                          : "text-gray-500"
+                      ? "text-gray-800"
+                      : i < activeStep
+                        ? "text-gray-600"
+                        : "text-gray-500"
                       }`}
                   >
                     {step.title}
@@ -1353,8 +1306,8 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                       key={day.date}
                       onClick={() => handleDaySelect(index)}
                       className={`min-w-[110px] p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${selectedDayIndex === index
-                          ? "border-gray-800 bg-gray-100 shadow-md"
-                          : "border-gray-200 hover:border-gray-400"
+                        ? "border-gray-800 bg-gray-100 shadow-md"
+                        : "border-gray-200 hover:border-gray-400"
                         }`}
                     >
                       <span className="font-bold text-gray-800">
@@ -1401,8 +1354,8 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                       <div
                         key={`${currentDay.date}-${index}`}
                         className={`p-4 border-2 rounded-xl relative cursor-pointer transition-all ${selected
-                            ? "border-gray-800 bg-gray-100 shadow-md"
-                            : "border-gray-200 hover:border-gray-400 bg-white"
+                          ? "border-gray-800 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-400 bg-white"
                           }`}
                         onClick={() => toggleSelection(selectedDayIndex, index)}
                       >
@@ -1512,8 +1465,8 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                         key={day.date}
                         onClick={() => handleCopyDaySelect(index)}
                         className={`p-4 rounded-xl border-2 flex flex-col items-center cursor-pointer transition-all ${day.selected
-                            ? "border-gray-800 bg-gray-100 shadow-md"
-                            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                          ? "border-gray-800 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-300 hover:shadow-md"
                           }`}
                       >
                         <span className="text-sm font-bold text-gray-800">

@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ setShowBulkForm }) => {
           <div className="flex items-center space-x-2 sm:space-x-3 mt-2 sm:mt-0">
             <button
               onClick={() => setShowBulkForm(true)}
-              className="bg-gray-900 hover:bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors duration-200 flex items-center space-x-2 text-sm sm:text-base"
+              className="bg-primaryColor hover:bg-primaryColor text-white px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 text-sm sm:text-base"
             >
               <CalendarDays className="w-4 h-4" />
               <span>Bulk Create</span>

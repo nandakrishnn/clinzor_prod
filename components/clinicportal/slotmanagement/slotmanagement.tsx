@@ -288,7 +288,6 @@ const SlotManagementSystem = () => {
         setShowBulkForm={setShowBulkForm}
         currentPage={currentPage}
         fetchSlots={fetchSlots}
-        clinicServices={clinicServices}
         showNotification={showNotification}
       />
 
@@ -307,8 +306,8 @@ const SlotManagementSystem = () => {
         showViewModal={showViewModal}
         setShowViewModal={setShowViewModal}
         viewingSlot={viewingSlot}
-        getServiceName={getServiceName}
       />
+
       {/* Notification */}
       <AnimatePresence>
         {notification && (
