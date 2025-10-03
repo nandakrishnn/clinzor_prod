@@ -23,12 +23,11 @@ export const GetClinicDues = async (Id: string) => {
 };
 
 export const GetAllClinicTransactions = async (
-    clinicUuid: string,
+  clinicUuid: string,
   page: number = 1,
   pageSize: number = 10,
   search: string = '',
   status: string = '',
-  clinic: string = '',
   dateRange: string = 'all'
 ) => {
   try {
@@ -36,11 +35,10 @@ export const GetAllClinicTransactions = async (
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('page_size', pageSize.toString());
-        // Always include the clinic UUID
+    // Always include the clinic UUID
     params.append('clinic_uuid', clinicUuid);
     if (search) params.append('search', search);
     if (status) params.append('status', status);
-    if (clinic) params.append('clinic', clinic);
     if (dateRange && dateRange !== 'all') params.append('date_range', dateRange);
 
     const response = await axiosPrivate.get(`clinic/list-transactions/?transaction_type=DUE&${params.toString()}`);

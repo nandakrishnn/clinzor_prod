@@ -9,3 +9,7 @@ export const getClinicDataService = async () => {
     const res = await axiosPrivate.get(CLINIC_DASHBOARD.GET_CLINIC_BY_USER)
     return res.data
 }
+export const getCliniCDueDashboardService = async () => {
+    const res = await axiosPrivate.get(CLINIC_DASHBOARD.GET_CLINIC_DUE_DASHBOARD)
+    return res.data
+}
