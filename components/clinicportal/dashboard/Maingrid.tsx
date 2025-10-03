@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar, Filter, Search, TrendingUp, Users, Clock, DollarSign, Star, Activity, ArrowUpRight, ArrowDownRight, ChevronDown, MoreHorizontal, Bell, Settings, Plus, Download, Eye, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import { Calendar, Search, Users, DollarSign, Star, Activity, ArrowUpRight, ArrowDownRight, Eye, Edit, Trash2 , IndianRupee } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { getDashboardDataService } from '@/components/service/clinic/AdminDashh';
 
 type EnhancedMetricCardProps = {
   title: string;
@@ -36,14 +37,137 @@ type AvatarProps = {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 };
 
+// Type for API response
+type DashboardData = {
+  bookings: {
+    today: number | null;
+    week: number | null;
+    month: number | null;
+    quarter: number | null;
+  };
+  revenue: {
+    today: number | null;
+    week: number | null;
+    month: number | null;
+    quarter: number | null;
+  };
+  doctors: {
+    count: number | null;
+  };
+  reviews: {
+    avg_today: number | null;
+    avg_week: number | null;
+    avg_month: number | null;
+    avg_quarter: number | null;
+  };
+};
+
 const Dashboard = () => {
-  const [dateRange, setDateRange] = useState('7d');
+  const [dateRange, setDateRange] = useState<'24h' | '7d' | '30d' | '90d'>('7d');
   const [selectedService, setSelectedService] = useState('all');
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
-  // Enhanced sample data
+  const getInitialData = async () => {
+    setIsLoading(true);
+    try {
+      const [getDashboardData] = await Promise.allSettled([getDashboardDataService()]);
+
+      console.log("✅ Dashboard:", getDashboardData);
+
+      if (getDashboardData?.status === "fulfilled") {
+        setDashboardData(getDashboardData?.value?.data);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch initial data:", error?.response?.data);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getInitialData();
+  }, []);
+
+  // Helper function to handle null values
+  const safeNumber = (value: number | null): number => {
+    return value === null ? 0 : value;
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (value: number | null): string => {
+    const numValue = safeNumber(value);
+    return `₹${numValue.toLocaleString()}`;
+  };
+
+  // Helper function to format rating
+  const formatRating = (value: number | null): string => {
+    const numValue = safeNumber(value);
+    return numValue.toFixed(1);
+  };
+
+  // Get metrics based on selected date range
+  const getMetrics = () => {
+    if (!dashboardData) return null;
+
+    const rangeMap = {
+      '24h': 'today',
+      '7d': 'week',
+      '30d': 'month',
+      '90d': 'quarter'
+    } as const;
+
+    const currentRange = rangeMap[dateRange];
+
+    return {
+      bookings: safeNumber(dashboardData.bookings[currentRange]),
+      revenue: safeNumber(dashboardData.revenue[currentRange]),
+      doctors: safeNumber(dashboardData.doctors.count),
+      rating: safeNumber(dashboardData.reviews[`avg_${currentRange}` as keyof typeof dashboardData.reviews])
+    };
+  };
+
+  const metrics = getMetrics();
+
+  // Get filter counts for buttons
+  const getFilterCounts = () => {
+    if (!dashboardData) return { '24h': 0, '7d': 0, '30d': 0, '90d': 0 };
+
+    return {
+      '24h': safeNumber(dashboardData.bookings.today),
+      '7d': safeNumber(dashboardData.bookings.week),
+      '30d': safeNumber(dashboardData.bookings.month),
+      '90d': safeNumber(dashboardData.bookings.quarter)
+    };
+  };
+
+  const filterCounts = getFilterCounts()
+
+  // For demo purposes - you might want to get actual trend data from API
+  const getTrendData = () => {
+    // This is mock data - replace with actual trend calculation from your API
+    // For now, we'll show positive trends for non-zero values, zero otherwise
+    if (!metrics) return { bookings: 0, revenue: 0, doctors: 0, rating: 0 };
+
+    return {
+      bookings: metrics.bookings > 0 ? 12.5 : 0,
+      revenue: metrics.revenue > 0 ? 8.2 : 0,
+      doctors: metrics.doctors > 0 ? 4.1 : 0,
+      rating: metrics.rating > 0 ? 2.3 : 0
+    };
+  };
+
+  const trends = getTrendData();
+
+  // Determine trend direction based on value
+  const getTrendDirection = (value: number): 'up' | 'down' => {
+    return value > 0 ? 'up' : 'down';
+  };
+
+  // Enhanced sample data (you might want to fetch this based on date range too)
   const bookingsData = [
     { date: '2025-06-20', bookings: 45, revenue: 3200, patients: 38 },
     { date: '2025-06-21', bookings: 52, revenue: 3800, patients: 44 },
@@ -92,12 +216,6 @@ const Dashboard = () => {
     { id: 4, name: 'Dr. Emily Davis', specialty: 'Dermatology', patients: 33, rating: 4.6, available: true, experience: '10 years', location: 'Building C, Floor 1', phone: '+1 (555) 456-7890' }
   ];
 
-  const notifications = [
-    { id: 1, title: 'New appointment booked', message: 'John Smith booked for 3:00 PM today', time: '5 min ago', type: 'booking', unread: true },
-    { id: 2, title: 'Payment received', message: '$300 payment from Lisa Wilson', time: '15 min ago', type: 'payment', unread: true },
-    { id: 3, title: 'Staff meeting reminder', message: 'Team meeting in Conference Room A', time: '1 hour ago', type: 'reminder', unread: false }
-  ];
-
   const EnhancedMetricCard = ({
     title,
     value,
@@ -120,12 +238,19 @@ const Dashboard = () => {
           <div className={`p-4 rounded-2xl border ${colorClasses[color]} group-hover:scale-110 transition-transform duration-200`}>
             <Icon className="w-6 h-6" />
           </div>
-          <div className={`flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-            trend === 'up' 
-              ? 'bg-green-50 text-green-700 border border-green-200' 
+          <div className={`flex items-center px-3 py-1 rounded-full text-sm font-semibold ${trend === 'up'
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : change === '0.0'
+              ? 'bg-gray-50 text-gray-700 border border-gray-200'
               : 'bg-red-50 text-red-700 border border-red-200'
-          }`}>
-            {trend === 'up' ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}
+            }`}>
+            {trend === 'up' ? (
+              <ArrowUpRight className="w-4 h-4 mr-1" />
+            ) : trend === 'down' ? (
+              <ArrowDownRight className="w-4 h-4 mr-1" />
+            ) : (
+              <span className="w-4 h-4 mr-1">-</span>
+            )}
             {change}%
           </div>
         </div>
@@ -146,17 +271,15 @@ const Dashboard = () => {
   }: FilterButtonProps) => (
     <button
       onClick={onClick}
-      className={`relative px-6 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${
-        active 
-          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25 scale-105' 
-          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
-      }`}
+      className={`relative px-6 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${active
+        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25 scale-105'
+        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
+        }`}
     >
       {children}
-      {count && (
-        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-          active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
-        }`}>
+      {count !== undefined && (
+        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+          }`}>
           {count}
         </span>
       )}
@@ -171,11 +294,10 @@ const Dashboard = () => {
   }: TabButtonProps) => (
     <button
       onClick={onClick}
-      className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium rounded-2xl transition-all duration-200 ${
-        active 
-          ? 'bg-white text-blue-600 shadow-lg shadow-blue-500/10 border border-blue-100' 
-          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-      }`}
+      className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium rounded-2xl transition-all duration-200 ${active
+        ? 'bg-white text-blue-600 shadow-lg shadow-blue-500/10 border border-blue-100'
+        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+        }`}
     >
       {Icon && <Icon className="w-4 h-4" />}
       <span>{children}</span>
@@ -248,11 +370,43 @@ const Dashboard = () => {
     );
   };
 
+  // Handle date range change
+  const handleDateRangeChange = (range: '24h' | '7d' | '30d' | '90d') => {
+    setDateRange(range);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData || !metrics) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Failed to load dashboard data</p>
+          <button
+            onClick={getInitialData}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen ">
       {/* Enhanced Header */}
-      <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-6">
+      <div className="bg-white/80 backdrop-blur-lg">
+        <div className="max-w-7xl mx-auto px-2  py-3 sm:py-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
               <div className="w-9 h-9 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -271,129 +425,83 @@ const Dashboard = () => {
                   placeholder="Search patients, doctors, appointments..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 pr-4 py-2 sm:py-3 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 w-full text-xs sm:text-sm"
+                  className="pl-12 pr-4 py-2 sm:py-3 bg-gray-50 border-0 rounded-lg transition-all  duration-200 w-full text-xs sm:text-sm"
                 />
               </div>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <button 
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    className="p-2 sm:p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors relative"
-                  >
-                    <Bell className="w-5 h-5 text-gray-600" />
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                  </button>
-                  {showNotifications && (
-                    <div className="absolute right-0 mt-2 w-64 sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-900">Notifications</h3>
-                      </div>
-                      {notifications.map(notification => (
-                        <div key={notification.id} className={`px-4 py-3 hover:bg-gray-50 ${notification.unread ? 'bg-blue-50/50' : ''}`}>
-                          <div className="flex items-start space-x-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 ${notification.unread ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900 text-xs sm:text-sm">{notification.title}</p>
-                              <p className="text-gray-600 text-xs mt-1">{notification.message}</p>
-                              <p className="text-gray-400 text-xs mt-1">{notification.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button className="p-2 sm:p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                  <Settings className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-              <button className="flex items-center justify-center space-x-2 bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25 w-full sm:w-auto text-xs sm:text-base">
-                <Plus className="w-4 h-4" />
-                <span className="font-medium">New Appointment</span>
-              </button>
             </div>
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 py-4">
         {/* Enhanced Date Range Filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-0">
           <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
             <div className="flex flex-wrap gap-1 sm:space-x-3">
               {[
-                { key: '24h', label: 'Today', count: 42 },
-                { key: '7d', label: 'Week', count: 287 },
-                { key: '30d', label: 'Month', count: 1234 },
-                { key: '90d', label: 'Quarter', count: 3421 }
+                { key: '24h' as const, label: 'Today' },
+                { key: '7d' as const, label: 'Week' },
+                { key: '30d' as const, label: 'Month' },
+                { key: '90d' as const, label: 'Quarter' }
               ].map(range => (
                 <FilterButton
                   key={range.key}
                   active={dateRange === range.key}
-                  onClick={() => setDateRange(range.key)}
-                  count={range.count}
+                  onClick={() => handleDateRangeChange(range.key)}
+                  count={filterCounts[range.key]}
                 >
                   {range.label}
                 </FilterButton>
               ))}
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-            <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors w-full sm:w-auto text-xs sm:text-sm">
-              <Download className="w-4 h-4 text-gray-600" />
-              <span className="font-medium">Export</span>
-            </button>
-            <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors w-full sm:w-auto text-xs sm:text-sm">
-              <Filter className="w-4 h-4 text-gray-600" />
-              <span className="font-medium">Filter</span>
-            </button>
-          </div>
         </div>
+
         {/* Enhanced Metrics Cards */}
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
           <EnhancedMetricCard
             title="Total Bookings"
-            value="1,234"
-            subtitle="vs 1,103 last period"
-            change="12.5"
-            trend="up"
+            value={metrics.bookings.toString()}
+            subtitle={`vs previous period`}
+            change={trends.bookings.toFixed(1)}
+            trend={getTrendDirection(trends.bookings)}
             icon={Calendar}
             color="blue"
           />
           <EnhancedMetricCard
             title="Revenue"
-            value="$45,670"
-            subtitle="vs $42,100 last period"
-            change="8.2"
-            trend="up"
-            icon={DollarSign}
+            value={formatCurrency(metrics.revenue)}
+            subtitle={`vs previous period`}
+            change={trends.revenue.toFixed(1)}
+            trend={getTrendDirection(trends.revenue)}
+            icon={IndianRupee}
             color="green"
           />
           <EnhancedMetricCard
             title="Active Doctors"
-            value="24"
-            subtitle="vs 23 last period"
-            change="4.1"
-            trend="up"
+            value={metrics.doctors.toString()}
+            subtitle={`vs previous period`}
+            change={trends.doctors.toFixed(1)}
+            trend={getTrendDirection(trends.doctors)}
             icon={Users}
             color="orange"
           />
           <EnhancedMetricCard
             title="Avg Rating"
-            value="4.8"
-            subtitle="vs 4.7 last period"
-            change="2.3"
-            trend="up"
+            value={formatRating(metrics.rating)}
+            subtitle={`vs previous period`}
+            change={trends.rating.toFixed(1)}
+            trend={getTrendDirection(trends.rating)}
             icon={Star}
             color="purple"
           />
         </div>
+
         {/* Enhanced Tab Navigation */}
         <div className="bg-gray-50 p-1 sm:p-2 rounded-3xl mb-4 sm:mb-8 flex flex-wrap gap-1 w-full">
           {[
             { key: 'overview', label: 'Overview', icon: Activity },
             { key: 'bookings', label: 'Bookings', icon: Calendar },
-            { key: 'transactions', label: 'Transactions', icon: DollarSign },
+            { key: 'transactions', label: 'Transactions', icon: IndianRupee },
             { key: 'reviews', label: 'Reviews', icon: Star },
             { key: 'doctors', label: 'Doctors', icon: Users }
           ].map(tab => (
@@ -407,6 +515,8 @@ const Dashboard = () => {
             </TabButton>
           ))}
         </div>
+
+        {/* Rest of your tab content remains exactly the same */}
         {activeTab === 'overview' && (
           <div className="space-y-4 sm:space-y-8">
             {/* Enhanced Charts Section */}
@@ -433,19 +543,19 @@ const Dashboard = () => {
                   <AreaChart data={bookingsData}>
                     <defs>
                       <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#007AFF" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#007AFF" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#007AFF" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#007AFF" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       stroke="#9ca3af"
                       fontSize={10}
                       tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     />
                     <YAxis stroke="#9ca3af" fontSize={10} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
                         backgroundColor: 'white',
                         border: 'none',
@@ -484,7 +594,7 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
                         backgroundColor: 'white',
                         border: 'none',
@@ -519,14 +629,14 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={bookingsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     stroke="#9ca3af"
                     fontSize={10}
                     tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis stroke="#9ca3af" fontSize={10} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: 'none',

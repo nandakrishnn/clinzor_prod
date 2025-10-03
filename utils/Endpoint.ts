@@ -45,6 +45,7 @@ export const USER_PROFILE = {
     GET_LOGOUT: 'user/logout/',
     GET_UPDATE_USER_DETAILS: 'customer/update-customer-detail/',
 }
+
 export const USER_EXPERT = {
     GET_EXPERT: 'clinic/list-experts/',
     GET_EXPERT_SLOT: 'customer/expert-slots/',
@@ -52,4 +53,10 @@ export const USER_EXPERT = {
     GET_EXPERT_SLOT_ALL_BOOKING: 'customer/expert-booking-lc/',
     CANCEL_EXPERT_BOOKING: 'customer/expert-booking-cancel/',
     EXPERT_BOOKING_SUGGESTION: 'customer/list-suggestion/',
+}
+
+
+// CLINIC ENDPOINTS
+export const CLINIC_DASHBOARD = {
+    GETALL_DASH_STATIC: 'clinic/clinic-portal-dashboard-analytics/'
 }
