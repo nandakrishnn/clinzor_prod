@@ -22,7 +22,6 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
   clinics,
   onSearchChange,
   onStatusFilterChange,
-  onClinicFilterChange,
   onDateRangeChange
 }) => {
   return (
@@ -56,21 +55,6 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
             <option value="PENDING">Pending</option>
             <option value="CREATED">Created</option>
             <option value="FAILED">Failed</option>
-          </select>
-        </div>
-        
-        {/* Clinic Filter */}
-        <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Clinic</label>
-          <select
-            value={clinicFilter}
-            onChange={(e) => onClinicFilterChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
-          >
-            <option value="">All Clinics</option>
-            {clinics.map(clinic => (
-              <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
-            ))}
           </select>
         </div>
         
