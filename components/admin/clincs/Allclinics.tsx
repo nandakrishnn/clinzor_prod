@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   approveOrRejectClinic,
   createClinic,
@@ -43,7 +42,6 @@ import {
   toggleActiveClinic
 } from "@/service/admin/clinicManagentService";
 import { Call } from "@mui/icons-material";
-import { sampleBookings } from "@/components/clinicportal/dues/duesmanagement";
 import { uploadFiles } from "@/service/uploadService/uploadService";
 
 interface Clinic {
