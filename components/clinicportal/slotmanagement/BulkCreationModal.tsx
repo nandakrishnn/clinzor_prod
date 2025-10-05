@@ -1503,7 +1503,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                     />
                     <button
                       onClick={applyForNDays}
-                      className="px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl"
+                      className="px-6 py-3 bg-primaryColor text-white rounded-xl"
                     >
                       Apply
                     </button>
@@ -1700,7 +1700,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
             <button
               onClick={() => setActiveStep((p) => Math.min(3, p + 1))}
               disabled={!canGoNext || (activeStep === 0 && !showBasicConfig)}
-              className="px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center gap-2"
+              className="px-8 py-3 bg-primaryColor text-white rounded-xl font-semibold disabled:opacity-50 flex items-center gap-2"
             >
               Next
               <ChevronRight size={18} />
@@ -1708,7 +1708,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
           ) : (
             <button
               onClick={submitBulkSlots}
-              className="px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-semibold flex items-center gap-2"
+              className="px-8 py-3 bg-primaryColor text-white rounded-xl font-semibold flex items-center gap-2"
             >
               <Save size={18} />
               Create All Slots
