@@ -688,7 +688,7 @@ const DoctorManagement: React.FC = () => {
   }
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -699,79 +699,98 @@ const DoctorManagement: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        {/* Header */}
-        <div className="backdrop-blur-xl bg-white/80 border-b border-slate-200/60 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-between h-20">
-              <div className="flex items-center space-x-8">
+      <div className="min-h-screen ">
+        {/* Header Section */}
+        <div className="bg-white/80 backdrop-blur-xl ">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-6 space-y-4 lg:space-y-0">
+              {/* Title Section */}
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+                  <Stethoscope className="w-8 h-8 text-white" />
+                </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">
                     Doctor Management
                   </h1>
-                  <p className="text-sm text-slate-500 mt-1">Manage your clinic doctors</p>
+                  <p className="text-sm text-slate-500 mt-1 font-medium">
+                    Manage your clinic doctors efficiently
+                  </p>
                 </div>
+              </div>
 
-                {/* Stats Cards */}
-                <div className="hidden lg:flex items-center space-x-6">
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                    <div className="p-2 bg-blue-500 rounded-lg">
-                      <Users className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-medium">Total Doctors</p>
-                      <p className="text-lg font-bold text-blue-700">{totalDoctors}</p>
-                    </div>
+              {/* Add Doctor Button */}
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-semibold max-w-fit"
+              >
+                <div className="absolute inset-0 bg-white/20 rounded-2xl transform scale-0 group-hover:scale-100 transition-transform duration-300"></div>
+                <Plus className="w-5 h-5 mr-3 relative z-10" />
+                <span className="relative z-10">Add New Doctor</span>
+              </button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-6">
+              <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl p-5 border border-blue-100/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100">
-                    <div className="p-2 bg-emerald-500 rounded-lg">
-                      <UserCheck className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-emerald-600 font-medium">Approved</p>
-                      <p className="text-lg font-bold text-emerald-700">{approvedDoctors}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
-                    <div className="p-2 bg-amber-500 rounded-lg">
-                      <Clock className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-amber-600 font-medium">Pending</p>
-                      <p className="text-lg font-bold text-amber-700">{pendingDoctors}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-100">
-                    <div className="p-2 bg-red-500 rounded-lg">
-                      <UserX className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-red-600 font-medium">Rejected</p>
-                      <p className="text-lg font-bold text-red-700">{rejectedDoctors}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-600/80">Total Doctors</p>
+                    <p className="text-2xl font-bold text-blue-900">{totalDoctors}</p>
                   </div>
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                <Plus className="w-5 h-5 mr-2 relative" />
-                <span className="relative">Add Doctor</span>
-              </button>
+              <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-2xl p-5 border border-emerald-100/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                    <UserCheck className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-600/80">Approved</p>
+                    <p className="text-2xl font-bold text-emerald-900">{approvedDoctors}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-white to-amber-50/50 rounded-2xl p-5 border border-amber-100/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-600/80">Pending</p>
+                    <p className="text-2xl font-bold text-amber-900">{pendingDoctors}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-white to-red-50/50 rounded-2xl p-5 border border-red-100/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
+                    <UserX className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-600/80">Rejected</p>
+                    <p className="text-2xl font-bold text-red-900">{rejectedDoctors}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Filters Section */}
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white/80 border border-slate-200 rounded-2xl shadow-md p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto ">
+          {/* Filters Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm p-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               {/* Search Bar */}
-              <div className="xl:col-span-2">
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Search</label>
+              <div className="lg:col-span-2">
+                <label className="text-sm font-semibold text-slate-700 mb-2 ml-1 block">Search Doctors</label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
@@ -779,18 +798,18 @@ const DoctorManagement: React.FC = () => {
                     placeholder="Search by name, specialization, or phone..."
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
+                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400 shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Status</label>
+                <label className="text-sm font-semibold text-slate-700 mb-2 ml-1 block">Filter by Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => handleStatusFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all duration-200 shadow-sm"
                 >
                   <option value="">All Status</option>
                   <option value="APPROVED">Approved</option>
@@ -799,252 +818,208 @@ const DoctorManagement: React.FC = () => {
                 </select>
               </div>
 
-              {/* Service Filter */}
-              <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Service</label>
-                <select
-                  value={serviceFilter}
-                  onChange={(e) => handleServiceFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
+              {/* Reset Filters */}
+              <div className="flex flex-col justify-end">
+                <button
+                  onClick={resetFilters}
+                  className="px-6 py-3.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold hover:from-slate-700 hover:to-slate-800 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  <option value="">All Services</option>
-                  {services.map(service => (
-                    <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
-                  ))}
-                </select>
+                  Reset Filters
+                </button>
               </div>
-
-              {/* Gender Filter */}
-              <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Gender</label>
-                <select
-                  value={genderFilter}
-                  onChange={(e) => setGenderFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/80 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200"
-                >
-                  <option value="">All Genders</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-
-              {/* Specialization Filter */}
-              <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Specialization</label>
-                <input
-                  type="text"
-                  placeholder="Filter by specialization..."
-                  value={specializationFilter}
-                  onChange={(e) => handleSpecializationFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-slate-700 placeholder-slate-400"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={resetFilters}
-                className="px-6 py-2 rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700 font-semibold border border-slate-300 hover:from-slate-300 hover:to-slate-200 transition-all duration-200"
-              >
-                Reset Filters
-              </button>
             </div>
           </div>
 
           {/* Doctors Grid */}
-          {paginatedDoctors.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-                <Stethoscope className="relative w-16 h-16 text-slate-400 mx-auto mb-6" />
+          {paginatedDoctors?.length === 0 ? (
+            <div className="text-center py-16 bg-white/50 rounded-3xl border border-slate-200/60 shadow-sm">
+              <div className="max-w-md mx-auto">
+                <div className="relative inline-block mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
+                  <div className="relative p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl">
+                    <Stethoscope className="w-12 h-12 text-slate-400" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">No doctors found</h3>
+                <p className="text-slate-500 text-base mb-8">
+                  Try adjusting your search criteria or add your first doctor to get started
+                </p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold hover:scale-105"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Your First Doctor
+                </button>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">No doctors found</h3>
-              <p className="text-slate-500 text-lg mb-8 max-w-md mx-auto">
-                Try adjusting your search terms or add your first doctor
-              </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg font-semibold"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Your First Doctor
-              </button>
             </div>
           ) : (
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-              {paginatedDoctors.map((doctor) => {
-                const statusConfig = getStatusConfig(doctor.status);
-                const StatusIcon = statusConfig.icon;
+            <>
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {paginatedDoctors?.map((doctor) => {
+                  const statusConfig = getStatusConfig(doctor.status);
+                  const StatusIcon = statusConfig.icon;
 
-                return (
-                  <div key={doctor.uuid} className="group relative">
-                    <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 overflow-hidden">
-                      <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-6">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                                <Stethoscope className="w-6 h-6 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                  {doctor.name}
-                                </h3>
-                                <p className="text-sm text-slate-600 capitalize">{doctor.specializaton}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {doctor.status}
-                            </span>
-                            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </div>
+                  return (
+                    <div key={doctor.uuid} className="group">
+                      <div className="relative bg-white rounded-2xl border border-slate-200/60 hover:border-blue-200 transition-all duration-300 shadow-sm hover:shadow-xl overflow-hidden">
+                        {/* Status Ribbon */}
+                        <div className={`absolute top-4 right-4 z-10 ${statusConfig.color} px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm`}>
+                          <StatusIcon className="w-3 h-3 mr-1 inline" />
+                          {doctor.status}
                         </div>
 
-                        {/* Info */}
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center text-sm text-slate-600">
-                            <MapPin className="w-4 h-4 mr-3 text-slate-400" />
-                            <span>{getServiceName(doctor.clinic_service)}</span>
+                        <div className="p-6">
+                          {/* Doctor Header */}
+                          <div className="flex items-start space-x-3 mb-6">
+                            <div className="flex-shrink-0">
+                              {doctor?.profile_pic ? (
+                                <img src={doctor?.profile_pic} alt={doctor.name} className="h-20 w-20 object-cover rounded-xl border border-slate-200" />
+                              ) : (
+                                <div className="h-20 w-20 flex items-center justify-center rounded-xl bg-slate-200 text-slate-400 text-3xl font-bold">
+                                  {doctor.name.charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                {doctor.name}
+                              </h3>
+                              <p className="text-sm text-slate-600 font-medium capitalize mt-1">
+                                {doctor.specializaton}
+                              </p>
+                            </div>
                           </div>
-                          {doctor.phone_number && (
-                            <div className="flex items-center text-sm text-slate-600">
-                              <Phone className="w-4 h-4 mr-3 text-slate-400" />
-                              <span>{doctor.phone_number}</span>
+
+                          {/* Doctor Information */}
+                          <div className="space-y-3 mb-6">
+                            <div className="flex items-center text-sm text-slate-700">
+                              <MapPin className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                              <span className="truncate">{getServiceName(doctor.clinic_service)}</span>
+                            </div>
+                            {doctor.phone_number && (
+                              <div className="flex items-center text-sm text-slate-700">
+                                <Phone className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                <span>{doctor.phone_number}</span>
+                              </div>
+                            )}
+                            {doctor.email && (
+                              <div className="flex items-center text-sm text-slate-700">
+                                <Mail className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                <span className="truncate">{doctor.email}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center text-sm text-slate-700">
+                              <Calendar className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                              <span>{calculateAge(doctor.dob)} • {doctor.gender}</span>
+                            </div>
+                          </div>
+
+                          {/* Experience Badge */}
+                          {doctor.experience && (
+                            <div className="mb-6">
+                              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl shadow-lg">
+                                <span className="text-lg font-bold mr-2">{doctor.experience}</span>
+                                <span className="text-sm font-medium">Years Experience</span>
+                              </div>
                             </div>
                           )}
-                          {doctor.email && (
-                            <div className="flex items-center text-sm text-slate-600">
-                              <Mail className="w-4 h-4 mr-3 text-slate-400" />
-                              <span className="truncate">{doctor.email}</span>
+
+                          {/* Rejection Reason */}
+                          {doctor.status === 'REJECTED' && doctor.reason_for_rejection && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                              <p className="text-xs font-semibold text-red-600 mb-1">Rejection Reason</p>
+                              <p className="text-sm text-red-700">{doctor.reason_for_rejection}</p>
                             </div>
                           )}
-                          <div className="flex items-center text-sm text-slate-600">
-                            <Calendar className="w-4 h-4 mr-3 text-slate-400" />
-                            <span>{calculateAge(doctor.dob)} • {doctor.gender}</span>
-                          </div>
-                        </div>
 
-                        {/* Experience */}
-                        {doctor.experience && (
-                          <div className="mb-6">
-                            <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-100">
-                              <p className="text-2xl font-bold text-emerald-700">{doctor.experience}</p>
-                              <p className="text-xs text-emerald-600 font-medium">Years Experience</p>
+                          {/* Action Buttons */}
+                          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div className="text-xs text-slate-500 font-medium">
+                              ID: {doctor.uuid.slice(0, 8)}...
                             </div>
-                          </div>
-                        )}
-
-                        {/* Rejection Reason */}
-                        {doctor.status === 'REJECTED' && doctor.reason_for_rejection && (
-                          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-xs text-red-600 font-medium">Rejection Reason:</p>
-                            <p className="text-sm text-red-700">{doctor.reason_for_rejection}</p>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                          <div />
-                          <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() => handleViewDoctor(doctor)}
-                              className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleEditDoctor(doctor)}
-                              className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteConfirm(doctor)}
-                              className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleViewDoctor(doctor)}
+                                className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleEditDoctor(doctor)}
+                                className="p-2.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                title="Edit Doctor"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteConfirm(doctor)}
+                                className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                title="Delete Doctor"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
-              <button
-                onClick={() => {
-                  const nextPage = Math.max(1, currentPage - 1);
-                  if (nextPage !== currentPage) {
-                    setCurrentPage(nextPage);
-                    fetchDoctor(
-                      nextPage,
-                      searchTerm,
-                      statusFilter,
-                      serviceFilter,
-                      genderFilter,
-                      specializationFilter
-                    );
-                  }
-                }}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-              >
-                Prev
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setCurrentPage(i + 1);
-                    fetchDoctor(
-                      i + 1,
-                      searchTerm,
-                      statusFilter,
-                      serviceFilter,
-                      genderFilter,
-                      specializationFilter
-                    );
-                  }}
-                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  const nextPage = Math.min(totalPages, currentPage + 1);
-                  if (nextPage !== currentPage) {
-                    setCurrentPage(nextPage);
-                    fetchDoctor(
-                      nextPage,
-                      searchTerm,
-                      statusFilter,
-                      serviceFilter,
-                      genderFilter,
-                      specializationFilter
-                    );
-                  }
-                }}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-wrap justify-center items-center gap-3 mt-12">
+                  <button
+                    onClick={() => {
+                      const nextPage = Math.max(1, currentPage - 1);
+                      if (nextPage !== currentPage) {
+                        setCurrentPage(nextPage);
+                        fetchDoctor(nextPage, searchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                      }
+                    }}
+                    disabled={currentPage === 1}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setCurrentPage(i + 1);
+                          fetchDoctor(i + 1, searchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                        }}
+                        className={`w-10 h-10 rounded-xl border font-semibold transition-all duration-200 ${currentPage === i + 1
+                          ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm'
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const nextPage = Math.min(totalPages, currentPage + 1);
+                      if (nextPage !== currentPage) {
+                        setCurrentPage(nextPage);
+                        fetchDoctor(nextPage, searchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                      }
+                    }}
+                    disabled={currentPage === totalPages}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1052,7 +1027,7 @@ const DoctorManagement: React.FC = () => {
       {/* Create/Edit/View Doctor Modal */}
       {(showCreateModal || modalMode === 'edit' || modalMode === 'view') && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl relative">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar  border border-white/20 shadow-2xl relative">
             {/* Close Button */}
             <button
               onClick={closeModal}
@@ -1167,7 +1142,7 @@ const DoctorManagement: React.FC = () => {
                       <div>
                         <h3 className="text-blue-700 font-semibold text-lg mb-2">Verification Documents</h3>
                         <p className="text-xs text-blue-700 mb-2">Uploaded government-issued documents for identity and credential verification.</p>
-                     // In the view modal section, update the verification documents display
+                        {/* // In the view modal section, update the verification documents display */}
                         {selectedDoctor.government_document && selectedDoctor.government_document.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {selectedDoctor.government_document.map((url, idx) => {
@@ -1617,6 +1592,7 @@ const DoctorManagement: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Notification */}
       <AnimatePresence>
         {notification && (
