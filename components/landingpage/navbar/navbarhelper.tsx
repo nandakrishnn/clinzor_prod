@@ -181,7 +181,7 @@ export const NavItems = ({
             />
           )}
           <span
-            className={cn(`relative z-10 font-medium ${hovered === idx ? "text-black": ""} `)}
+            className={cn(`relative z-10 font-medium ${hovered === idx ? "text-black" : ""} `)}
           >
             {item.name}
           </span>
@@ -248,7 +248,9 @@ export const MobileNav = ({
     }}
   >
     <div className="flex justify-between w-full">
-      <NavbarLogo visible={visible || false} />
+      <Link href={'/'} className=" w-full h-full">
+        <NavbarLogo visible={visible || false} />
+      </Link>
       {children}
     </div>
   </motion.div>
