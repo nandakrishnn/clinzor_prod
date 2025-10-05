@@ -154,7 +154,7 @@ export const NavItems = ({
     <motion.div
       onMouseLeave={() => setHovered(null)}
       className={cn(
-        "absolute inset-0 z-50 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-bold  lg:flex",
+        "z-50 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-bold  lg:flex",
         className
       )}
     >
@@ -173,7 +173,7 @@ export const NavItems = ({
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className={`absolute inset - 0 rounded - full  bg - gradient - to - r from - slate - 100 to - slate - 200 `}
+              className={`absolute inset-0 rounded-full  bg-gradient-to-r from-slate-100 to-slate-200 `}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -181,7 +181,7 @@ export const NavItems = ({
             />
           )}
           <span
-            className={cn(`relative z - 10 font - medium group - hover: text - black`)}
+            className={cn(`relative z-10 font-medium ${hovered === idx ? "text-black": ""} `)}
           >
             {item.name}
           </span>
