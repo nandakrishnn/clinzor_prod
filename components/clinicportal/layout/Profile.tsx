@@ -15,13 +15,10 @@ import {
   Search as SearchIcon,
   CheckCircle2,
   AlertCircle,
-  Star,
   Users,
   Calendar,
   Shield,
   Award,
-  ChevronLeft,
-  ChevronRight
 } from 'lucide-react';
 import MapPicker from './MapPicker';
 import { useSession } from 'next-auth/react';
@@ -136,7 +133,6 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
 }
 
 const ClinicSettingsDashboard = () => {
-  const { data: user, status } = useSession();
   const { clinic, loading: isClinicLoading, error: clinicError } = useClinicByUser();
 
   const [clinicData, setClinicData] = useState<ClinicData>({
@@ -682,24 +678,6 @@ const ClinicSettingsDashboard = () => {
             >
               <div className="absolute inset-0 bg-black/40"></div>
             </div>
-
-            {/* Navigation Arrows */}
-            {/* {clinicData.images.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-200"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-200"
-                >
-                  <ChevronRight className="w-6 h-6 text-white" />
-                </button>
-              </>
-            )} */}
 
             {/* Image Indicators */}
             {clinicData.images.length > 1 && (

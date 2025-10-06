@@ -12,7 +12,7 @@ const Header: React.FC<HeaderProps> = ({ setShowBulkForm }) => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Slots</h1>
+              <h1 className="text-xl sm:text-3xl font-semibold text-gray-900">Slots Management</h1> 
               <p className="text-xs sm:text-sm text-gray-500">Manage your appointment slots</p>
             </div>
           </div>
