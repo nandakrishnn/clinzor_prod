@@ -77,3 +77,10 @@ export const getStatusConfig = (status: string) => {
 export const getStatusIcon = (iconName: string): React.ComponentType<any> => {
   return LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any> || LucideIcons.AlertCircle;
 };
+
+export const formatLocalDate = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T00:00:00`;   // local midnight
+};

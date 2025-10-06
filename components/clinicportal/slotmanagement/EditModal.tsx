@@ -54,7 +54,7 @@ const EditModal: React.FC<EditModalProps> = ({
       };
 
       await editClinicSlot(editingSlot.uuid, slotData);
-      
+
       showNotification('success', 'Slot updated successfully');
       fetchSlots(); // Refresh the slots list
       setShowEditModal(false);
@@ -70,7 +70,7 @@ const EditModal: React.FC<EditModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto hide-scrollbar ">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Edit Slot</h2>
@@ -83,7 +83,7 @@ const EditModal: React.FC<EditModalProps> = ({
             </button>
           </div>
         </div>
-        
+
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Service</label>
@@ -98,7 +98,7 @@ const EditModal: React.FC<EditModalProps> = ({
               ))}
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
             <div className="relative">
@@ -111,8 +111,8 @@ const EditModal: React.FC<EditModalProps> = ({
               <DatePicker
                 id="editStartTimePicker"
                 selected={editingSlot.start_time ? new Date(editingSlot.start_time) : null}
-                onChange={(date: Date | null) => updateEditingSlot({ 
-                  start_time: date?.toISOString() || '' 
+                onChange={(date: Date | null) => updateEditingSlot({
+                  start_time: date?.toISOString() || ''
                 })}
                 showTimeSelect
                 timeFormat="HH:mm"
@@ -125,7 +125,7 @@ const EditModal: React.FC<EditModalProps> = ({
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
             <div className="relative">
@@ -138,8 +138,8 @@ const EditModal: React.FC<EditModalProps> = ({
               <DatePicker
                 id="editEndTimePicker"
                 selected={editingSlot.end_time ? new Date(editingSlot.end_time) : null}
-                onChange={(date: Date | null) => updateEditingSlot({ 
-                  end_time: date?.toISOString() || '' 
+                onChange={(date: Date | null) => updateEditingSlot({
+                  end_time: date?.toISOString() || ''
                 })}
                 showTimeSelect
                 timeFormat="HH:mm"
@@ -152,28 +152,28 @@ const EditModal: React.FC<EditModalProps> = ({
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Max Bookings</label>
             <input
               type="number"
               value={editingSlot.max_bookings}
-              onChange={(e) => updateEditingSlot({ 
-                max_bookings: parseInt(e.target.value) || 0 
+              onChange={(e) => updateEditingSlot({
+                max_bookings: parseInt(e.target.value) || 0
               })}
               min="1"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isLoading}
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots</label>
             <input
               type="number"
               value={editingSlot.available_slots}
-              onChange={(e) => updateEditingSlot({ 
-                available_slots: parseInt(e.target.value) || 0 
+              onChange={(e) => updateEditingSlot({
+                available_slots: parseInt(e.target.value) || 0
               })}
               min="0"
               max={editingSlot.max_bookings}
@@ -181,7 +181,7 @@ const EditModal: React.FC<EditModalProps> = ({
               disabled={isLoading}
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
@@ -201,8 +201,8 @@ const EditModal: React.FC<EditModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Rejection</label>
               <textarea
                 value={editingSlot.reason_for_rejection || ''}
-                onChange={(e) => updateEditingSlot({ 
-                  reason_for_rejection: e.target.value 
+                onChange={(e) => updateEditingSlot({
+                  reason_for_rejection: e.target.value
                 })}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"

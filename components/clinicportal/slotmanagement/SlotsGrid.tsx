@@ -14,7 +14,6 @@ import { Slot } from "@/types/common";
 interface SlotsGridProps {
   slots: Slot[];
   loading: boolean;
-  getServiceName: (serviceId: string) => string;
   handleEdit: (slot: Slot) => void;
   handleDelete: (uuid: string) => void;
   handleView: (slot: Slot) => void;

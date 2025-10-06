@@ -8,15 +8,14 @@ import SlotsGrid from './SlotsGrid';
 import BulkCreationModal from './BulkCreationModal';
 import EditModal from './EditModal';
 import ViewModal from './ViewModal';
-import Pagination from './Pagination';
 import { AlertCircle, CheckCircle, X, XCircle } from 'lucide-react';
+import Pagination from '@/components/common/Pagination';
 
 interface NotificationProps {
   type: "success" | "error" | "warning";
   message: string;
   onClose: () => void;
 }
-
 
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
@@ -64,29 +63,25 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
 
 const SlotManagementSystem = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [filteredSlots, setFilteredSlots] = useState<Slot[]>([]);
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalSlot, setTotalSlot] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingSlot, setViewingSlot] = useState<Slot | null>(null);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
-  
+
   const [filters, setFilters] = useState<FilterState>({
     fromDate: null,
     toDate: null,
     status: '',
-    clinicService: '',
-    timeRange: '',
-    capacity: '',
-    availability: ''
+    serviceType: '',
   });
 
   const clinicServices = [
@@ -104,13 +99,13 @@ const SlotManagementSystem = () => {
     }, 5000);
   };
 
-  const fetchSlots = async (page = 1) => {
+  const fetchSlots = async (page = 1,) => {
     try {
       setLoading(true);
-      const data = await GetAllClinicSlot(page);
+      const data = await GetAllClinicSlot(page, filters);
       setSlots(data.data);
-      setFilteredSlots(data.data);
       setTotalPages(data.total_pages || 1);
+      setTotalSlot(data.total_items || 1);
     } catch (error) {
       console.error(error);
     } finally {
@@ -120,82 +115,7 @@ const SlotManagementSystem = () => {
 
   useEffect(() => {
     fetchSlots(currentPage);
-  }, [currentPage]);
-
-  useEffect(() => {
-    let filtered = slots;
-
-    if (searchTerm) {
-      filtered = filtered.filter(slot => {
-        const serviceName = getServiceName(slot.clinic_service);
-        return serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          slot.created_by.toLowerCase().includes(searchTerm.toLowerCase());
-      });
-    }
-
-    if (filters.fromDate) {
-      filtered = filtered.filter(slot =>
-        filters.fromDate && new Date(slot.start_time) >= filters.fromDate
-      );
-    }
-
-    if (filters.toDate) {
-      filtered = filtered.filter(slot =>
-        filters.toDate && new Date(slot.start_time) <= filters.toDate
-      );
-    }
-
-    if (filters.status) {
-      filtered = filtered.filter(slot => slot.status === filters.status);
-    }
-
-    if (filters.clinicService) {
-      filtered = filtered.filter(slot => slot.clinic_service === filters.clinicService);
-    }
-
-    if (filters.timeRange) {
-      filtered = filtered.filter(slot => {
-        const hour = new Date(slot.start_time).getHours();
-        switch (filters.timeRange) {
-          case 'morning': return hour >= 6 && hour < 12;
-          case 'afternoon': return hour >= 12 && hour < 17;
-          case 'evening': return hour >= 17 && hour < 24;
-          default: return true;
-        }
-      });
-    }
-
-    if (filters.capacity) {
-      filtered = filtered.filter(slot => {
-        switch (filters.capacity) {
-          case 'low': return slot.max_bookings <= 4;
-          case 'medium': return slot.max_bookings > 4 && slot.max_bookings <= 8;
-          case 'high': return slot.max_bookings > 8;
-          default: return true;
-        }
-      });
-    }
-
-    if (filters.availability) {
-      filtered = filtered.filter(slot => {
-        const availabilityRatio = slot.available_slots / slot.max_bookings;
-        switch (filters.availability) {
-          case 'full': return availabilityRatio === 1;
-          case 'available': return availabilityRatio > 0.5;
-          case 'limited': return availabilityRatio > 0 && availabilityRatio <= 0.5;
-          case 'booked': return availabilityRatio === 0;
-          default: return true;
-        }
-      });
-    }
-
-    setFilteredSlots(filtered);
-  }, [filters, slots, searchTerm]);
-
-  const getServiceName = (serviceId: string) => {
-    const service = clinicServices.find(s => s.id === serviceId);
-    return service ? service.name : 'Unknown Service';
-  };
+  }, [currentPage, filters]);
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters((prev: FilterState) => ({
@@ -210,12 +130,8 @@ const SlotManagementSystem = () => {
       fromDate: null,
       toDate: null,
       status: '',
-      clinicService: '',
-      timeRange: '',
-      capacity: '',
-      availability: ''
+      serviceType: '',
     });
-    setSearchTerm('');
     setCurrentPage(1);
     fetchSlots(1);
   };
@@ -252,6 +168,8 @@ const SlotManagementSystem = () => {
     setShowViewModal(true);
   };
 
+  console.log(filters, 'filter data')
+
   return (
     <div className="min-h-screen ">
       <Header setShowBulkForm={setShowBulkForm} />
@@ -259,18 +177,14 @@ const SlotManagementSystem = () => {
       <div className="max-w-7xl mx-auto  py-4 sm:py-6">
         <FilterSection
           filters={filters}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
           handleFilterChange={handleFilterChange}
           clearFilters={clearFilters}
-          filteredSlots={filteredSlots}
-          clinicServices={clinicServices}
+          totalSlot={totalSlot}
         />
 
         <SlotsGrid
-          slots={filteredSlots}
+          slots={slots}
           loading={loading}
-          getServiceName={getServiceName}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
           handleView={handleView}

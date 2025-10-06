@@ -1,8 +1,8 @@
 
 export interface CommonHeroSectionProps {
-    title?: string;
-    subTitle?: string;
-    className?: string;
+  title?: string;
+  subTitle?: string;
+  className?: string;
 }
 
 export interface Clinic {
@@ -134,10 +134,11 @@ export interface FilterState {
   fromDate: Date | null;
   toDate: Date | null;
   status: string;
-  clinicService: string;
-  timeRange: string;
-  capacity: string;
-  availability: string;
+  clinicService?: string;
+  serviceType?: string;
+  timeRange?: string;
+  capacity?: string;
+  availability?: string;
 }
 
 export interface ClinicService {

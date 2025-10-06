@@ -1,5 +1,7 @@
 
+import { FilterState } from "@/types/common";
 import { axiosPrivate } from "../../axios/axios";
+import { formatLocalDate } from "@/utils/formatters";
 
 interface Slot {
   start_time: string;
@@ -97,11 +99,29 @@ export const getClinicDataService = async () => {
   return res?.data
 };
 
-export const GetAllClinicSlot = async (page: number) => {
+export const GetAllClinicSlot = async (page: number, filters: FilterState) => {
   try {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+
+    if (filters.fromDate) {
+      params.append("from_date", formatLocalDate(filters.fromDate));
+    }
+
+    if (filters.toDate) {
+      params.append("to_date", formatLocalDate(filters.toDate));
+    }
+
+    // Handle service type filters
+    if (filters.serviceType) {
+      // If your serviceType directly maps to the query key
+      params.append(filters.serviceType, "true");
+    }
+
     const response = await axiosPrivate.get(
-      `clinic/slot-lc/?page=${page}`
+      `clinic/slot-lc/?${params.toString()}`
     );
+
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch users", error);
