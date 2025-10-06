@@ -14,7 +14,7 @@ export const useOperatingHours = (initialHours?: OperatingHours) => {
 
   const [operatingHours, setOperatingHours] = useState<OperatingHours>(initialHours || defaultHours);
 
-  const handleHoursChange = (day: keyof OperatingHours, field: keyof OperatingHour, value: string | boolean) => {
+  const handleHoursChange = (day: keyof OperatingHours, field: keyof OperatingHours, value: string | boolean) => {
     setOperatingHours(prev => ({
       ...prev,
       [day]: { ...prev[day], [field]: value }
