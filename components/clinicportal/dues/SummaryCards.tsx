@@ -5,14 +5,12 @@ import { formatCurrency } from '@/utils/formatters';
 
 interface SummaryCardsProps {
   duesSummary: DuesSummary;
-  bookingsCount: number;
-  onPaymentHistoryClick: () => void;
+  onTabChange: (tab: 'transactions') => void;
 }
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({
   duesSummary,
-  bookingsCount,
-  onPaymentHistoryClick
+  onTabChange
 }) => {
   const cards = [
     {
@@ -20,14 +18,14 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
       value: formatCurrency(duesSummary.total_dues),
       icon: IndianRupee,
       gradient: "from-blue-500 to-indigo-600",
-      trend: { icon: TrendingUp, color: "text-blue-600", text: "Outstanding" }
+      trend: { icon: TrendingUp, color: "text-blue-600", text: "Bookings" }
     },
     {
-      title: "Total Bookings",
-      value: bookingsCount.toString(),
+      title: "Total Remaining",
+      value: formatCurrency(duesSummary.remaining_dues),
       icon: Calendar,
       gradient: "from-green-500 to-emerald-600",
-      trend: { icon: TrendingUp, color: "text-green-600", text: "Bookings" }
+      trend: { icon: TrendingUp, color: "text-green-600", text: "Outstanding" }
     },
     {
       title: "Total Paid to Clinzor",
@@ -47,18 +45,17 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-5">
       {cards.map((card, index) => {
         const Icon = card.icon;
         const TrendIcon = card.trend.icon;
-        
+
         return (
           <div
             key={index}
-            className={`group bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/60 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 ${
-              card.clickable ? 'cursor-pointer' : ''
-            }`}
-            onClick={card.clickable ? onPaymentHistoryClick : undefined}
+            className={`group bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/60 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 ${card.clickable ? 'cursor-pointer' : ''
+              }`}
+            onClick={card.clickable ? () => onTabChange('transactions') : undefined}
           >
             <div className="flex items-center justify-between mb-6">
               <div className={`p-4 bg-gradient-to-r ${card.gradient} rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>

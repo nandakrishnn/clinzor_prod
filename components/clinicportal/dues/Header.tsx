@@ -2,17 +2,15 @@ import React from 'react';
 import { RefreshCw } from 'lucide-react';
 
 interface HeaderProps {
-  onRefresh: () => void;
-  activeTab: 'overview' | 'bookings' | 'transactions' | 'clinics';
-  onTabChange: (tab: 'overview' | 'bookings' | 'transactions' | 'clinics') => void;
+  onRefresh: any;
+  activeTab: 'overview' |'transactions' ;
+  onTabChange: (tab: 'overview' | 'transactions') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onRefresh, activeTab, onTabChange }) => {
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'bookings', label: 'Bookings' },
-    { id: 'transactions', label: 'Transactions' },
-    { id: 'clinics', label: 'Clinics' },
+    { id: 'transactions', label: 'Transactions' }
   ];
 
   return (
@@ -30,9 +28,9 @@ const Header: React.FC<HeaderProps> = ({ onRefresh, activeTab, onTabChange }) =>
           <div className="flex items-center space-x-3 sm:space-x-4 mt-2 sm:mt-0">
             <button
               onClick={onRefresh}
-              className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="p-3  sm:px-5  rounded-lg bg-primaryColor text-white transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              <RefreshCw className="w-5 h-5" />
+              Pay Now
             </button>
           </div>
         </div>

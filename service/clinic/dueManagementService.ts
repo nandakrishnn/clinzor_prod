@@ -19,7 +19,8 @@ export const deleteClinicDues = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
 export const GetClinicDues = async (Id: string) => {
-  return await axiosPrivate.delete(`clinic/get-clinic-dues/${Id}`);
+  const res = await axiosPrivate.get(`clinic/get-clinic-dues/${Id}/`);
+  return res
 };
 
 export const GetAllClinicTransactions = async (

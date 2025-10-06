@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { GetAllClinicTransactions } from '@/service/clinic/dueManagementService';
+import { GetAllClinicTransactions, GetClinicDues } from '@/service/clinic/dueManagementService';
 import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 
 // Import components
@@ -29,11 +29,11 @@ import TransactionsList from './TransactionsList';
 
 const DuesManagement: React.FC = () => {
   // State management
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'transactions' | 'clinics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('overview');
   const [duesSummary, setDuesSummary] = useState<DuesSummary>({
-    total_dues: 5500,
-    total_paid: 600,
-    remaining_dues: 4900
+    total_dues: 0,
+    total_paid: 0,
+    remaining_dues: 0
   });
 
   const [clinics, setClinics] = useState<Clinic[]>(sampleClinics);
@@ -43,7 +43,6 @@ const DuesManagement: React.FC = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
-  const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
 
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
@@ -197,20 +196,24 @@ const DuesManagement: React.FC = () => {
     setSelectedClinic(null);
   };
 
-  const refreshDuesSummary = async () => {
-    const totalDues = clinics.reduce((sum, clinic) => sum + clinic.current_dues, 0);
-    const totalPaid = clinics.reduce((sum, clinic) => sum + clinic.total_paid, 0);
+  const DuesSummaryData = async (id: string) => {
+    const res = await GetClinicDues(id)
+    if (res?.status === 200) {
+      const data = res?.data?.data
+      setDuesSummary({
+        total_dues: data?.total_dues,
+        total_paid: data?.total_paid,
+        remaining_dues: data?.remaining_dues
+      });
+    }
 
-    setDuesSummary({
-      total_dues: totalDues,
-      total_paid: totalPaid,
-      remaining_dues: totalDues
-    });
   };
 
   useEffect(() => {
-    refreshDuesSummary();
-  }, [clinics]);
+    if (clinic?.uuid) {
+      DuesSummaryData(clinic?.uuid);
+    }
+  }, [clinic?.uuid]);
 
   // Render active tab content
   const renderTabContent = () => {
@@ -219,30 +222,6 @@ const DuesManagement: React.FC = () => {
         return (
           <>
             <BookingsWithDues
-              bookings={bookings}
-              currentPage={1}
-              totalPages={1}
-              onPageChange={() => { }}
-            />
-            <PastDueBookings
-              bookings={bookings}
-              currentPage={1}
-              totalPages={1}
-              onPageChange={() => { }}
-            />
-            <ClinicsOverview clinics={clinics} />
-          </>
-        );
-      case 'bookings':
-        return (
-          <>
-            <BookingsWithDues
-              bookings={bookings}
-              currentPage={1}
-              totalPages={1}
-              onPageChange={() => { }}
-            />
-            <PastDueBookings
               bookings={bookings}
               currentPage={1}
               totalPages={1}
@@ -262,26 +241,24 @@ const DuesManagement: React.FC = () => {
             onPageChange={(page) => fetchTransactions(page)}
           />
         );
-      case 'clinics':
-        return <ClinicsOverview clinics={clinics} />;
       default:
         return null;
     }
   };
 
+  console.log(clinic, 'from the clinic')
   return (
     <div className="min-h-screen">
       <Header
-        onRefresh={refreshDuesSummary}
+        onRefresh={DuesSummaryData}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
 
       <div className="max-w-7xl mx-auto">
         <SummaryCards
+          onTabChange={setActiveTab}
           duesSummary={duesSummary}
-          bookingsCount={bookings.length}
-          onPaymentHistoryClick={() => setShowPaymentHistoryModal(true)}
         />
 
         <FiltersSection
@@ -328,16 +305,6 @@ const DuesManagement: React.FC = () => {
           setShowTransactionModal(false);
           setSelectedTransaction(null);
         }}
-      />
-
-      <PaymentHistoryModal
-        isOpen={showPaymentHistoryModal}
-        transactions={transactions}
-        searchTerm={paymentHistorySearch}
-        statusFilter={paymentHistoryStatus}
-        onClose={() => setShowPaymentHistoryModal(false)}
-        onSearchChange={setPaymentHistorySearch}
-        onStatusFilterChange={setPaymentHistoryStatus}
       />
     </div>
   );
