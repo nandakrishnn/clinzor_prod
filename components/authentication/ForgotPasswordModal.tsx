@@ -15,11 +15,13 @@ import {
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { baseUrl } from '@/utils/Endpoint';
+import { axiosPrivate, axiosPublic } from '@/axios/axios';
 
 interface ForgotPasswordModalProps {
   open: boolean;
   onClose: () => void;
   endpoint?: string; // API endpoint for password change
+  login?: boolean
 }
 
 interface PasswordErrors {
@@ -30,10 +32,11 @@ interface PasswordErrors {
   hasSpecialChar: boolean;
 }
 
-export default function ForgotPasswordModal({ 
-  open, 
-  onClose, 
-  endpoint = 'user/change-password/' 
+export default function ForgotPasswordModal({
+  open,
+  onClose,
+  endpoint = 'user/change-password/',
+  login
 }: ForgotPasswordModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -64,7 +67,7 @@ export default function ForgotPasswordModal({
 
   const handlePasswordChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (field === 'new_password') {
       setPasswordErrors(validatePassword(value));
     }
@@ -86,7 +89,7 @@ export default function ForgotPasswordModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       toast.error('Please fix all validation errors before submitting.');
       return;
@@ -95,20 +98,26 @@ export default function ForgotPasswordModal({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      let response;
+
+      if (login) {
+        response = await axiosPrivate.patch(`${baseUrl}${endpoint}`, {
           old_password: formData.old_password,
           new_password: formData.new_password,
-        }),
-      });
+        });
+      } else {
+        response = await axiosPublic.patch(`${baseUrl}${endpoint}`, {
+          old_password: formData.old_password,
+          new_password: formData.new_password,
+        });
+      }
 
-      const data = await response.json();
 
-      if (response.ok) {
+      console.log(response)
+
+      const data = await response.data;
+
+      if (response?.status === 200) {
         toast.success(data.detail || 'Password updated successfully!');
         onClose();
         setFormData({ old_password: '', new_password: '', confirm_password: '' });
@@ -122,9 +131,9 @@ export default function ForgotPasswordModal({
       } else {
         toast.error(data.detail || 'Failed to update password. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password change error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error(error?.response?.data?.old_password[0] || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +159,7 @@ export default function ForgotPasswordModal({
         }}
       >
         <ModalClose />
-        
+
         <Typography level="h4" component="h2" mb={2}>
           Change Password
         </Typography>
@@ -173,16 +182,16 @@ export default function ForgotPasswordModal({
                 />
                 <div className="absolute right-2 top-2">
                   {showOldPassword ? (
-                    <EyeIcon 
-                      onClick={() => setShowOldPassword(false)} 
-                      size={18} 
-                      className="cursor-pointer" 
+                    <EyeIcon
+                      onClick={() => setShowOldPassword(false)}
+                      size={18}
+                      className="cursor-pointer"
                     />
                   ) : (
-                    <EyeOffIcon 
-                      onClick={() => setShowOldPassword(true)} 
-                      size={18} 
-                      className="cursor-pointer" 
+                    <EyeOffIcon
+                      onClick={() => setShowOldPassword(true)}
+                      size={18}
+                      className="cursor-pointer"
                     />
                   )}
                 </div>
@@ -202,57 +211,57 @@ export default function ForgotPasswordModal({
                 />
                 <div className="absolute right-2 top-2">
                   {showNewPassword ? (
-                    <EyeIcon 
-                      onClick={() => setShowNewPassword(false)} 
-                      size={18} 
-                      className="cursor-pointer" 
+                    <EyeIcon
+                      onClick={() => setShowNewPassword(false)}
+                      size={18}
+                      className="cursor-pointer"
                     />
                   ) : (
-                    <EyeOffIcon 
-                      onClick={() => setShowNewPassword(true)} 
-                      size={18} 
-                      className="cursor-pointer" 
+                    <EyeOffIcon
+                      onClick={() => setShowNewPassword(true)}
+                      size={18}
+                      className="cursor-pointer"
                     />
                   )}
                 </div>
               </div>
-              
+
               {/* Password Requirements */}
               {formData.new_password && (
                 <Stack spacing={0.5} mt={1}>
                   <Typography level="body-xs" fontWeight="bold">
                     Password must contain:
                   </Typography>
-                  <PasswordRequirement 
-                    met={passwordErrors.minLength} 
-                    text="At least 8 characters" 
+                  <PasswordRequirement
+                    met={passwordErrors.minLength}
+                    text="At least 8 characters"
                   />
-                  <PasswordRequirement 
-                    met={passwordErrors.hasUpperCase} 
-                    text="One uppercase letter (A-Z)" 
+                  <PasswordRequirement
+                    met={passwordErrors.hasUpperCase}
+                    text="One uppercase letter (A-Z)"
                   />
-                  <PasswordRequirement 
-                    met={passwordErrors.hasLowerCase} 
-                    text="One lowercase letter (a-z)" 
+                  <PasswordRequirement
+                    met={passwordErrors.hasLowerCase}
+                    text="One lowercase letter (a-z)"
                   />
-                  <PasswordRequirement 
-                    met={passwordErrors.hasNumber} 
-                    text="One number (0-9)" 
+                  <PasswordRequirement
+                    met={passwordErrors.hasNumber}
+                    text="One number (0-9)"
                   />
-                  <PasswordRequirement 
-                    met={passwordErrors.hasSpecialChar} 
-                    text="One special character (!@#$% etc.)" 
+                  <PasswordRequirement
+                    met={passwordErrors.hasSpecialChar}
+                    text="One special character (!@#$% etc.)"
                   />
                 </Stack>
               )}
             </FormControl>
 
             {/* Confirm Password */}
-            <FormControl 
-              required 
+            <FormControl
+              required
               color={
-                formData.confirm_password ? 
-                  (formData.new_password === formData.confirm_password ? 'success' : 'danger') 
+                formData.confirm_password ?
+                  (formData.new_password === formData.confirm_password ? 'success' : 'danger')
                   : 'neutral'
               }
             >
