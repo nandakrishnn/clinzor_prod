@@ -6,7 +6,7 @@ import { dayNames, generateTimeOptions } from '@/utils/clinicUtils';
 interface OperatingHoursProps {
   operatingHours: OperatingHoursType;
   isEditMode: boolean;
-  onHoursChange: (day: keyof OperatingHoursType, field: keyof any, value: string | boolean) => void;
+  onHoursChange: any;
   onToggleDayClosed: (day: keyof OperatingHoursType) => void;
 }
 
