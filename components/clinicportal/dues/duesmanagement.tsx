@@ -1,5 +1,5 @@
+// DuesManagement.tsx
 import React, { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
 import { GetAllClinicTransactions, GetClinicDues } from '@/service/clinic/dueManagementService';
 import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 
@@ -9,7 +9,6 @@ import SummaryCards from './SummaryCards';
 import FiltersSection from './FiltersSection';
 import PaymentModal from './PaymentModal';
 import TransactionModal from './TransactionModal';
-import PaymentHistoryModal from './PaymentHistoryModal';
 
 // Import types
 import {
@@ -17,15 +16,12 @@ import {
   Clinic,
   Transaction,
   Booking,
-  PaginationData
+  PaginationData,
+  FiltersState
 } from './types';
-import { sampleBookings, sampleClinics } from './data/sampleData';
+import { sampleClinics } from './data/sampleData';
 import BookingsWithDues from './BookingsWithDues';
-import PastDueBookings from './PastDueBookings';
-import ClinicsOverview from './ClinicsOverview';
 import TransactionsList from './TransactionsList';
-
-// Sample data
 
 const DuesManagement: React.FC = () => {
   // State management
@@ -42,7 +38,6 @@ const DuesManagement: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
 
   const [paginationData, setPaginationData] = useState<PaginationData>({
     current_page: 1,
@@ -55,28 +50,31 @@ const DuesManagement: React.FC = () => {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [clinicFilter, setClinicFilter] = useState('');
-  const [dateRangeFilter, setDateRangeFilter] = useState('all');
+  const [filters, setFilters] = useState<FiltersState>({
+    searchTerm: '',
+    statusFilter: '',
+    dateRange: {
+      fromDate: '',
+      toDate: ''
+    },
+    transactionType: ''
+  });
 
   // Payment form state
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDescription, setPaymentDescription] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  // Payment History modal enhancements
-  const [paymentHistorySearch, setPaymentHistorySearch] = useState('');
-  const [paymentHistoryStatus, setPaymentHistoryStatus] = useState('');
-
   // Clinic hook
   const { clinic, loading: clinicLoading } = useClinicByUser() as { clinic: Clinic | null; loading: boolean };
 
   const fetchTransactions = async (
     page: number = 1,
-    search: string = searchTerm,
-    status: string = statusFilter,
-    dateRange: string = dateRangeFilter
+    search: string = filters.searchTerm,
+    status: string = filters.statusFilter,
+    fromDate: string = filters.dateRange.fromDate,
+    toDate: string = filters.dateRange.toDate,
+    transactionType: string
   ) => {
     if (!clinic || !clinic?.uuid) {
       console.error("Clinic ID not available");
@@ -90,7 +88,9 @@ const DuesManagement: React.FC = () => {
         10,
         search,
         status,
-        dateRange
+        fromDate,
+        toDate,
+        transactionType
       );
 
       setTransactions(data.data);
@@ -108,12 +108,19 @@ const DuesManagement: React.FC = () => {
 
   useEffect(() => {
     if (clinic && clinic?.uuid) {
-      fetchTransactions(1, searchTerm, statusFilter, dateRangeFilter);
+      fetchTransactions(
+        1,
+        filters.searchTerm,
+        filters.statusFilter,
+        filters.dateRange.fromDate,
+        filters.dateRange.toDate,
+        activeTab == "overview" ? "DUE" : "PAID"
+      );
     }
-  }, [clinic, searchTerm, statusFilter, dateRangeFilter]);
+  }, [clinic, filters, activeTab]);
 
   const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
+    setFilters(prev => ({ ...prev, searchTerm: term }));
 
     if (searchTimeout) {
       clearTimeout(searchTimeout);
@@ -121,7 +128,7 @@ const DuesManagement: React.FC = () => {
 
     const timeoutId = setTimeout(() => {
       if (clinic && clinic?.uuid) {
-        fetchTransactions(1, term, statusFilter, dateRangeFilter);
+        fetchTransactions(1, term, filters.statusFilter, filters.dateRange.fromDate, filters.dateRange.toDate, filters.transactionType);
       }
     }, 500);
 
@@ -129,24 +136,30 @@ const DuesManagement: React.FC = () => {
   };
 
   const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status);
-    if (clinic && clinic?.uuid) {
-      fetchTransactions(1, searchTerm, status, dateRangeFilter);
-    }
+    setFilters(prev => ({ ...prev, statusFilter: status }));
   };
 
-  const handleDateRangeChange = (range: string) => {
-    setDateRangeFilter(range);
-    if (clinic && clinic?.uuid) {
-      fetchTransactions(1, searchTerm, statusFilter, range);
-    }
+  const handleDateRangeChange = (fromDate: string, toDate: string) => {
+    setFilters(prev => ({
+      ...prev,
+      dateRange: { fromDate, toDate }
+    }));
   };
 
-  const handleClinicFilterChange = (clinicId: string) => {
-    setClinicFilter(clinicId);
-    if (clinic && clinic?.uuid) {
-      fetchTransactions(1, searchTerm, statusFilter, dateRangeFilter);
-    }
+  const handleTransactionTypeChange = (type: string) => {
+    setFilters(prev => ({ ...prev, transactionType: type }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      searchTerm: '',
+      statusFilter: '',
+      dateRange: {
+        fromDate: '',
+        toDate: ''
+      },
+      transactionType: 'ALL'
+    });
   };
 
   // Clean up timeout on unmount
@@ -166,26 +179,19 @@ const DuesManagement: React.FC = () => {
       uuid: `txn_${Date.now()}`,
       clinic_id: clinicId,
       clinic_name: clinics.find(c => c.id === clinicId)?.name || 'Unknown Clinic',
-      amount: amount,
+      amount: amount.toString(),
       status: 'CREATED',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       description: paymentDescription || 'Manual payment',
       transaction_type: 'PAYMENT',
-      payment_order: {
-        amount: amount * 100,
-        amount_due: amount * 100,
-        amount_paid: 0,
-        attempts: 0,
-        created_at: Math.floor(Date.now() / 1000),
-        currency: "INR",
-        entity: "order",
-        id: `order_${Math.random().toString(36).substr(2, 9)}`,
-        notes: [],
-        offer_id: null,
-        receipt: null,
-        status: "created"
-      }
+      discount_amount: "0.00",
+      final_amount: amount.toString(),
+      booking: "",
+      clinic: clinicId,
+      service_name: "Manual Payment",
+      clinic_service_name: "",
+      patient_name: "Manual Entry"
     };
 
     setTransactions([newTransaction, ...transactions]);
@@ -206,7 +212,6 @@ const DuesManagement: React.FC = () => {
         remaining_dues: data?.remaining_dues
       });
     }
-
   };
 
   useEffect(() => {
@@ -215,6 +220,8 @@ const DuesManagement: React.FC = () => {
     }
   }, [clinic?.uuid]);
 
+  console.log(selectedTransaction, 'selected transactions')
+
   // Render active tab content
   const renderTabContent = () => {
     switch (activeTab) {
@@ -222,10 +229,18 @@ const DuesManagement: React.FC = () => {
         return (
           <>
             <BookingsWithDues
-              bookings={bookings}
-              currentPage={1}
-              totalPages={1}
-              onPageChange={() => { }}
+              transactions={transactions}
+              paginationData={paginationData}
+              onTransactionClick={(transaction) => {
+                setSelectedTransaction(transaction);
+                setShowTransactionModal(true);
+              }}
+              onPageChange={(page) => fetchTransactions(page,
+                filters.searchTerm,
+                filters.statusFilter,
+                filters.dateRange.fromDate,
+                filters.dateRange.toDate,
+                activeTab == "overview" ? "DUE" : "PAID")}
             />
           </>
         );
@@ -238,7 +253,14 @@ const DuesManagement: React.FC = () => {
               setSelectedTransaction(transaction);
               setShowTransactionModal(true);
             }}
-            onPageChange={(page) => fetchTransactions(page)}
+            onPageChange={(page) => fetchTransactions(
+              page,
+              filters.searchTerm,
+              filters.statusFilter,
+              filters.dateRange.fromDate,
+              filters.dateRange.toDate,
+              filters.transactionType
+            )}
           />
         );
       default:
@@ -246,7 +268,6 @@ const DuesManagement: React.FC = () => {
     }
   };
 
-  console.log(clinic, 'from the clinic')
   return (
     <div className="min-h-screen">
       <Header
@@ -262,15 +283,12 @@ const DuesManagement: React.FC = () => {
         />
 
         <FiltersSection
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          clinicFilter={clinicFilter}
-          dateRangeFilter={dateRangeFilter}
-          clinics={clinics}
+          filters={filters}
           onSearchChange={handleSearchChange}
           onStatusFilterChange={handleStatusFilterChange}
-          onClinicFilterChange={handleClinicFilterChange}
           onDateRangeChange={handleDateRangeChange}
+          onTransactionTypeChange={handleTransactionTypeChange}
+          onClearFilters={clearFilters}
         />
 
         {renderTabContent()}

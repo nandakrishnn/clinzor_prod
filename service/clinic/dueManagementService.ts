@@ -23,26 +23,32 @@ export const GetClinicDues = async (Id: string) => {
   return res
 };
 
+// service/clinic/dueManagementService.ts
 export const GetAllClinicTransactions = async (
   clinicUuid: string,
   page: number = 1,
   pageSize: number = 10,
   search: string = '',
   status: string = '',
-  dateRange: string = 'all'
+  fromDate: string = '',
+  toDate: string = '',
+  transactionType: string = 'DUE' //  DUE, PAID
 ) => {
   try {
-    // Build query parameters
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('page_size', pageSize.toString());
-    // Always include the clinic UUID
     params.append('clinic_uuid', clinicUuid);
+
     if (search) params.append('search', search);
     if (status) params.append('status', status);
-    if (dateRange && dateRange !== 'all') params.append('date_range', dateRange);
+    if (fromDate) params.append('from_date', fromDate);
+    if (toDate) params.append('to_date', toDate);
+    if (transactionType && transactionType !== 'ALL') {
+      params.append('transaction_type', transactionType);
+    }
 
-    const response = await axiosPrivate.get(`clinic/list-transactions/?transaction_type=DUE&${params.toString()}`);
+    const response = await axiosPrivate.get(`clinic/list-transactions/?${params.toString()}`);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch transactions", error);

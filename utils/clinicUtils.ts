@@ -59,3 +59,16 @@ export const transformOperatingHoursToAPI = (operatingHours: OperatingHours): Ti
 
   return timingList;
 };
+
+export const getTransactionTypeConfig = (type: string) => {
+  switch (type) {
+    case 'DUE':
+      return { color: 'bg-red-500/10 text-red-700 border-red-500/20', label: 'Due' };
+    case 'PAID':
+      return { color: 'bg-green-500/10 text-green-700 border-green-500/20', label: 'Paid' };
+    case 'PAYMENT':
+      return { color: 'bg-blue-500/10 text-blue-700 border-blue-500/20', label: 'Payment' };
+    default:
+      return { color: 'bg-gray-500/10 text-gray-700 border-gray-500/20', label: type };
+  }
+};

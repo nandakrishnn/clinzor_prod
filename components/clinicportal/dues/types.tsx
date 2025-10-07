@@ -23,15 +23,21 @@ export interface Transaction {
   uuid: string;
   clinic_id: string;
   clinic_name: string;
-  amount: number;
-  status: 'CREATED' | 'COMPLETED' | 'FAILED' | 'PENDING';
+  amount?: any;
+  status: string;
   created_at: string;
   updated_at: string;
   payment_order?: PaymentOrder;
   description: string;
-  transaction_type: 'PAYMENT' | 'DUE' | 'REFUND';
+  transaction_type: 'PAYMENT' | 'DUE' | 'REFUND' | 'PAID';
   service_name?: string;
   patient_name?: string;
+  created_by?: string | null;
+  discount_amount?: string;
+  final_amount?: string;
+  booking?: string;
+  clinic?: string;
+  clinic_service_name?: string;
 }
 
 export interface Clinic {
@@ -72,4 +78,14 @@ export interface StatusConfig {
   color: string;
   dot: string;
   icon: React.ComponentType<any>;
+}
+
+export interface FiltersState {
+  searchTerm: string;
+  statusFilter: string;
+  dateRange: {
+    fromDate: string;
+    toDate: string;
+  };
+  transactionType: string;
 }
