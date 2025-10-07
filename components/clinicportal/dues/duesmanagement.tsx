@@ -7,7 +7,6 @@ import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 import Header from './Header';
 import SummaryCards from './SummaryCards';
 import FiltersSection from './FiltersSection';
-import PaymentModal from './PaymentModal';
 import TransactionModal from './TransactionModal';
 
 // Import types
@@ -19,7 +18,6 @@ import {
   PaginationData,
   FiltersState
 } from './types';
-import { sampleClinics } from './data/sampleData';
 import BookingsWithDues from './BookingsWithDues';
 import TransactionsList from './TransactionsList';
 
@@ -33,8 +31,6 @@ const DuesManagement: React.FC = () => {
   });
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
@@ -58,11 +54,6 @@ const DuesManagement: React.FC = () => {
     },
     transactionType: ''
   });
-
-  // Payment form state
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentDescription, setPaymentDescription] = useState('');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Clinic hook
   const { clinic, loading: clinicLoading } = useClinicByUser() as { clinic: Clinic | null; loading: boolean };
