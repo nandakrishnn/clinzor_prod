@@ -271,9 +271,10 @@ const DuesManagement: React.FC = () => {
   return (
     <div className="min-h-screen">
       <Header
-        onRefresh={DuesSummaryData}
+        due={duesSummary}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        clinicData={clinic}
       />
 
       <div className="max-w-7xl mx-auto">

@@ -70,35 +70,37 @@ export const initializeRazorpayPayment = async (
   bookingId: string,
   patient: { name?: any; email?: any; phone_number?: any },
   onSuccess: (response: any) => void,
-  onError: (error: any) => void
+  onError: (error: any) => void,
+  name?: string,
+  description?: string,
 ) => {
   const isLoaded = await loadRazorpay();
-  
+
   if (!isLoaded) {
     onError(new Error('Failed to load Razorpay'));
     return;
   }
 
 
-  console.log(orderData,'from the razorpyment response')
+  console.log(orderData, 'from the razorpyment response')
   const { pg_response } = orderData.data;
   const amountInRupees = pg_response.amount / 100; // Convert back to rupees from paise
 
   const options = {
-    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ,
+    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     amount: pg_response.amount,
     currency: pg_response.currency,
-    name: 'Healthcare Service Booking',
-    description: `Booking payment for ${amountInRupees} INR`,
+    name: name || 'Healthcare Service Booking',
+    description: `${description}  ${amountInRupees} INR` || `Booking payment for ${amountInRupees} INR`,
     order_id: pg_response.id,
     handler: onSuccess,
     prefill: {
-      name: patient.name,
-      email: patient.email,
-      contact: patient.phone_number,
+      name: patient?.name,
+      email: patient?.email,
+      contact: patient?.phone_number,
     },
     notes: {
-      booking_id: bookingId,
+      booking_id: bookingId ? bookingId : pg_response.id,
     },
     theme: {
       color: '#3399cc',

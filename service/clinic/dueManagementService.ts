@@ -18,9 +18,14 @@ export const approveOrRejectDue = async (id: string, body: {
 export const deleteClinicDues = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/doctor-rud/${Id}/`);
 };
+
 export const GetClinicDues = async (Id: string) => {
   const res = await axiosPrivate.get(`clinic/get-clinic-dues/${Id}/`);
   return res
+};
+export const clearClinicDues = async (data: any) => {
+  const res = await axiosPrivate.post(`clinic/clear-dues/`, data);
+  return res?.data
 };
 
 // service/clinic/dueManagementService.ts

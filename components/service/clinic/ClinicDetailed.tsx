@@ -79,11 +79,6 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         }
     }, []);
 
-    console.log(clinicData, 'clinic data')
-    console.log(selectedService, 'selected service data')
-    console.log(clinicService, 'clinic services data')
-    console.log(doctorsService, 'Doctor data')
-
     return (
         <>
             <section className="max-w-screen-xl mx-auto pb-10 px-3">
