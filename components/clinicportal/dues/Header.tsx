@@ -77,6 +77,7 @@ const Header: React.FC<HeaderProps> = ({ due, activeTab, onTabChange, clinicData
       console.log(error?.response?.data)
     } finally {
       setShowConfirmModal(false)
+      setIsConfirming(false);
     }
   }
 

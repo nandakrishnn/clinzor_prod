@@ -81,8 +81,6 @@ export const initializeRazorpayPayment = async (
     return;
   }
 
-
-  console.log(orderData, 'from the razorpyment response')
   const { pg_response } = orderData.data;
   const amountInRupees = pg_response.amount / 100; // Convert back to rupees from paise
 
