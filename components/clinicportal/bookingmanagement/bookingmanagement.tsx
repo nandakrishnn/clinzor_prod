@@ -23,6 +23,8 @@ interface Booking {
   service_default_name: string;
   is_rescheduled: boolean;
   offers_applied: string[];
+  bill_no: string;
+  room_id: string;
 }
 
 const BookingManagement = () => {
@@ -49,6 +51,72 @@ const BookingManagement = () => {
   // Add state for search timeout
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10; // Add this line
+
+  // Time conversion function
+  const convertTo12HourFormat = (utcDateString: string) => {
+    const date = new Date(utcDateString);
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    return `${hh}:${mm} ${ampm}`;
+  };
+
+  // Check if meeting can be joined (5 minutes before start time until end time)
+  const canJoinMeeting = (startTime: string, endTime: string): { canJoin: boolean; status: 'upcoming' | 'active' | 'past' } => {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const fiveMinutesBefore = new Date(start.getTime() - 5 * 60 * 1000);
+
+    if (now < fiveMinutesBefore) {
+      return { canJoin: false, status: 'upcoming' };
+    } else if (now >= fiveMinutesBefore && now <= end) {
+      return { canJoin: true, status: 'active' };
+    } else {
+      return { canJoin: false, status: 'past' };
+    }
+  };
+
+  // Get join button text and status
+  const getJoinButtonInfo = (booking: Booking) => {
+    if (booking.booking_type !== 'VIDEO_CALL' || !booking.clinic_meeting_link) {
+      return { text: 'Not Available', disabled: true, variant: 'disabled' };
+    }
+
+    const { canJoin, status } = canJoinMeeting(booking.start_time, booking.end_time);
+    
+    switch (status) {
+      case 'upcoming':
+        return { 
+          text: `Starts at ${convertTo12HourFormat(booking.start_time)}`, 
+          disabled: true, 
+          variant: 'upcoming' 
+        };
+      case 'active':
+        return { 
+          text: 'Join Now', 
+          disabled: false, 
+          variant: 'active' 
+        };
+      case 'past':
+        return { 
+          text: 'Call Ended', 
+          disabled: true, 
+          variant: 'past' 
+        };
+      default:
+        return { text: 'Not Available', disabled: true, variant: 'disabled' };
+    }
+  };
+
+  // Handle join meeting
+  const handleJoinMeeting = (meetingLink: string) => {
+    window.open(meetingLink, '_blank', 'noopener,noreferrer');
+  };
 
   const fetchBookings = async (
     page: number = currentPage,
@@ -166,12 +234,27 @@ const BookingManagement = () => {
     }
   };
 
+  // Join button configuration
+  const getJoinButtonConfig = (variant: string) => {
+    switch (variant) {
+      case 'active':
+        return 'bg-green-600 hover:bg-green-700 text-white';
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-700 border border-blue-200';
+      case 'past':
+        return 'bg-gray-100 text-gray-500 border border-gray-200';
+      case 'disabled':
+      default:
+        return 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed';
+    }
+  };
+
   // Format date
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+      time: convertTo12HourFormat(dateString)
     };
   };
 
@@ -248,8 +331,6 @@ const BookingManagement = () => {
       </div>
     );
   }
-
-  console.log(bookings)
 
   return (
     <div className="min-h-screen ">
@@ -412,13 +493,14 @@ const BookingManagement = () => {
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Type</th>
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Status</th>
                 <th className="hidden sm:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Amount</th>
+                <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Join</th>
                 <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 ">
               {bookings?.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-400 text-lg">
+                  <td colSpan={8} className="py-16 text-center text-slate-400 text-lg">
                     <span className="inline-block mb-2 text-4xl">😕</span><br />
                     No bookings found matching your filters.
                   </td>
@@ -427,6 +509,8 @@ const BookingManagement = () => {
                 bookings?.map((booking) => {
                   const statusConfig = getStatusConfig(booking?.booking_status);
                   const scheduledDateTime = formatDateTime(booking?.start_time);
+                  const joinButtonInfo = getJoinButtonInfo(booking);
+                  
                   return (
                     <tr key={booking?.uuid} className="hover:bg-slate-50/70 transition-colors duration-150 align-middle">
                       {/* Patient Info */}
@@ -510,6 +594,17 @@ const BookingManagement = () => {
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="font-semibold text-slate-900 leading-tight">₹{parseFloat(booking?.booking_charge).toFixed(2)}</div>
                       </td>
+                      {/* Join Button */}
+                      <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+                        <button
+                          onClick={() => handleJoinMeeting(booking.clinic_meeting_link)}
+                          disabled={joinButtonInfo.disabled}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${getJoinButtonConfig(joinButtonInfo.variant)}`}
+                          title={joinButtonInfo.text}
+                        >
+                          {joinButtonInfo.text}
+                        </button>
+                      </td>
                       {/* Actions */}
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center justify-center space-x-2 relative">
@@ -540,9 +635,6 @@ const BookingManagement = () => {
                               className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               View Details
                             </button>
-                            {/* <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
-                              Send Message
-                            </button> */}
                             <button
                               onClick={() => handleCancelBooking(booking.uuid)}
                               className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
@@ -570,6 +662,8 @@ const BookingManagement = () => {
             bookings.map((booking) => {
               const statusConfig = getStatusConfig(booking.booking_status);
               const scheduledDateTime = formatDateTime(booking.start_time);
+              const joinButtonInfo = getJoinButtonInfo(booking);
+              
               return (
                 <div key={booking.uuid} className="bg-white/90 rounded-2xl shadow-lg border border-slate-200 p-4 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
@@ -589,9 +683,17 @@ const BookingManagement = () => {
                     <div className="flex items-center gap-2"><span className="font-medium">Booking ID:</span> #{booking.uuid}</div>
                     <div className="flex items-center gap-2"><span className="font-medium">Type:</span> {booking.booking_type === 'VIDEO_CALL' ? 'Video Call' : 'In-Person'}</div>
                     <div className="flex items-center gap-2"><span className="font-medium">Consultation:</span> {booking.session_type}</div>
-                    <div className="flex items-center gap-2"><span className="font-medium">Amount:</span> ${parseFloat(booking.booking_charge).toFixed(2)}</div>
+                    <div className="flex items-center gap-2"><span className="font-medium">Amount:</span> ₹{parseFloat(booking.booking_charge).toFixed(2)}</div>
                     <div className="flex items-center gap-2"><span className="font-medium">Schedule:</span> {scheduledDateTime.date}, {scheduledDateTime.time}</div>
                   </div>
+                  {/* Join Button for Mobile */}
+                  <button
+                    onClick={() => handleJoinMeeting(booking.clinic_meeting_link)}
+                    disabled={joinButtonInfo.disabled}
+                    className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${getJoinButtonConfig(joinButtonInfo.variant)}`}
+                  >
+                    {joinButtonInfo.text}
+                  </button>
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => setSelectedBooking(booking)}
@@ -610,9 +712,6 @@ const BookingManagement = () => {
                   {showActionMenu === booking.uuid && (
                     <div className="mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
                       <button className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl">View Details</button>
-                      <button
-
-                        className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700">Send Message</button>
                       <button
                         onClick={() => handleCancelBooking(booking.uuid)}
                         className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
@@ -716,6 +815,7 @@ const BookingManagement = () => {
                       <div><span className="font-medium">Service:</span> {selectedBooking.service_default_name}</div>
                       <div><span className="font-medium">Amount:</span> ₹{parseFloat(selectedBooking.booking_charge).toFixed(2)}</div>
                       <div><span className="font-medium">Clinic:</span> {selectedBooking.clinic_name}</div>
+                      <div><span className="font-medium">Bill No:</span> {selectedBooking.bill_no}</div>
                     </div>
                   </div>
                 </div>
@@ -737,6 +837,22 @@ const BookingManagement = () => {
                     <h3 className="font-semibold text-slate-900 mb-2">Offers Applied</h3>
                     <div className="text-sm">
                       {selectedBooking.offers_applied.join(', ')}
+                    </div>
+                  </div>
+                )}
+
+                {/* Join Button in Modal */}
+                {selectedBooking.booking_type === 'VIDEO_CALL' && selectedBooking.clinic_meeting_link && (
+                  <div className="md:col-span-2">
+                    <h3 className="font-semibold text-slate-900 mb-2">Video Call</h3>
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => handleJoinMeeting(selectedBooking.clinic_meeting_link)}
+                        disabled={getJoinButtonInfo(selectedBooking).disabled}
+                        className={`px-6 py-3 rounded-lg text-lg font-medium transition-all duration-200 ${getJoinButtonConfig(getJoinButtonInfo(selectedBooking).variant)}`}
+                      >
+                        {getJoinButtonInfo(selectedBooking).text}
+                      </button>
                     </div>
                   </div>
                 )}
