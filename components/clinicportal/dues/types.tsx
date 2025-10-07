@@ -48,7 +48,7 @@ export interface Clinic {
   phone: string;
   address: string;
   current_dues: number;
-  contact_number: string;
+  contact_number?: string;
   total_paid: number;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 }

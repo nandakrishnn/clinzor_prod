@@ -32,7 +32,6 @@ const DuesManagement: React.FC = () => {
     remaining_dues: 0
   });
 
-  const [clinics, setClinics] = useState<Clinic[]>(sampleClinics);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -171,37 +170,6 @@ const DuesManagement: React.FC = () => {
     };
   }, [searchTimeout]);
 
-  const initiatePayment = async (clinicId: string, amount: number) => {
-    setIsProcessingPayment(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const newTransaction: Transaction = {
-      uuid: `txn_${Date.now()}`,
-      clinic_id: clinicId,
-      clinic_name: clinics.find(c => c.id === clinicId)?.name || 'Unknown Clinic',
-      amount: amount.toString(),
-      status: 'CREATED',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      description: paymentDescription || 'Manual payment',
-      transaction_type: 'PAYMENT',
-      discount_amount: "0.00",
-      final_amount: amount.toString(),
-      booking: "",
-      clinic: clinicId,
-      service_name: "Manual Payment",
-      clinic_service_name: "",
-      patient_name: "Manual Entry"
-    };
-
-    setTransactions([newTransaction, ...transactions]);
-    setIsProcessingPayment(false);
-    setShowPaymentModal(false);
-    setPaymentAmount('');
-    setPaymentDescription('');
-    setSelectedClinic(null);
-  };
-
   const DuesSummaryData = async (id: string) => {
     const res = await GetClinicDues(id)
     if (res?.status === 200) {
@@ -294,28 +262,6 @@ const DuesManagement: React.FC = () => {
 
         {renderTabContent()}
       </div>
-
-      {/* Modals */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        selectedClinic={selectedClinic}
-        paymentAmount={paymentAmount}
-        paymentDescription={paymentDescription}
-        isProcessing={isProcessingPayment}
-        onClose={() => {
-          setShowPaymentModal(false);
-          setSelectedClinic(null);
-          setPaymentAmount('');
-          setPaymentDescription('');
-        }}
-        onPaymentAmountChange={setPaymentAmount}
-        onPaymentDescriptionChange={setPaymentDescription}
-        onSubmit={() => {
-          if (!selectedClinic) return;
-          if (!paymentAmount || isNaN(Number(paymentAmount)) || Number(paymentAmount) <= 0) return;
-          initiatePayment(selectedClinic.id, Number(paymentAmount));
-        }}
-      />
 
       <TransactionModal
         isOpen={showTransactionModal}

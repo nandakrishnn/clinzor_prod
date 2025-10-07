@@ -49,60 +49,60 @@ const BookingManagement = () => {
   // Add state for search timeout
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10; // Add this line
-const fetchBookings = async (
-  page: number = currentPage,
-  search: string = searchTerm,
-  status: string = statusFilter,
-  type: string = typeFilter,
-  date: string = dateFilter
-) => {
-  try {
-    setLoading(true);
-    
-    // Determine if we should show today's bookings
-    let showTodayParam = false;
-    let dateParam = dateFilter;
-    
-    // If date filter is today, set show_today=true and clear the date parameter
-    if (dateFilter === format(new Date(), 'yyyy-MM-dd')) {
-      showTodayParam = true;
-      dateParam = ''; // Clear date parameter since we're using show_today
+  const fetchBookings = async (
+    page: number = currentPage,
+    search: string = searchTerm,
+    status: string = statusFilter,
+    type: string = typeFilter,
+    date: string = dateFilter
+  ) => {
+    try {
+      setLoading(true);
+
+      // Determine if we should show today's bookings
+      let showTodayParam = false;
+      let dateParam = dateFilter;
+
+      // If date filter is today, set show_today=true and clear the date parameter
+      if (dateFilter === format(new Date(), 'yyyy-MM-dd')) {
+        showTodayParam = true;
+        dateParam = ''; // Clear date parameter since we're using show_today
+      }
+
+      const data = await getAllClinicBookings(
+        page,
+        10,
+        search,
+        status,
+        type,
+        dateParam,
+        showTodayParam
+      );
+
+      setBookings(data.data);
+      setPaginationData({
+        current_page: data.current_page,
+        total_pages: data.total_pages,
+        total_items: data.total_items,
+        next: data.next,
+        previous: data.previous
+      });
+    } catch (error) {
+      console.error("Error fetching data ", error);
+    } finally {
+      setLoading(false);
     }
-    
-    const data = await getAllClinicBookings(
-      page, 
-      10, 
-      search, 
-      status, 
-      type, 
-      dateParam, 
-      showTodayParam
-    );
-
-    setBookings(data.data);
-    setPaginationData({
-      current_page: data.current_page,
-      total_pages: data.total_pages,
-      total_items: data.total_items,
-      next: data.next,
-      previous: data.previous
-    });
-  } catch (error) {
-    console.error("Error fetching data ", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   // Initial fetch and when filters change
-useEffect(() => {
-  fetchBookings(1, searchTerm, statusFilter, typeFilter, dateFilter);
-  setCurrentPage(1);
-}, [searchTerm, statusFilter, typeFilter, dateFilter]);
+  useEffect(() => {
+    fetchBookings(1, searchTerm, statusFilter, typeFilter, dateFilter);
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, typeFilter, dateFilter]);
 
-// In your useEffect for page changes:
-useEffect(() => {
-  fetchBookings(currentPage, searchTerm, statusFilter, typeFilter, dateFilter);
-}, [currentPage]);
+  // In your useEffect for page changes:
+  useEffect(() => {
+    fetchBookings(currentPage, searchTerm, statusFilter, typeFilter, dateFilter);
+  }, [currentPage]);
 
   // Update search handler with debounce
   const handleSearchChange = (term: string) => {
@@ -130,14 +130,14 @@ useEffect(() => {
     setTypeFilter(type);
   };
 
-const handleDateFilterChange = (date: string) => {
-  setDateFilter(date);
-  
-  // If selecting today, we might want to trigger a refresh immediately
-  if (date === format(new Date(), 'yyyy-MM-dd')) {
-    fetchBookings(1, searchTerm, statusFilter, typeFilter, date);
-  }
-};
+  const handleDateFilterChange = (date: string) => {
+    setDateFilter(date);
+
+    // If selecting today, we might want to trigger a refresh immediately
+    if (date === format(new Date(), 'yyyy-MM-dd')) {
+      fetchBookings(1, searchTerm, statusFilter, typeFilter, date);
+    }
+  };
 
   // Clean up timeout on unmount
   useEffect(() => {
@@ -635,49 +635,49 @@ const handleDateFilterChange = (date: string) => {
             })
           )}
         </div>
-       {/* Pagination */}
-{paginationData.total_pages > 1 && (
-  <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
-    <div className="text-xs sm:text-sm text-slate-500">
-      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, paginationData.total_items)} of {paginationData.total_items} bookings
-    </div>
-    <div className="flex flex-wrap justify-center items-center gap-2">
-      <button
-        onClick={() => {
-          const nextPage = Math.max(1, currentPage - 1);
-          if (nextPage !== currentPage) {
-            setCurrentPage(nextPage);
-          }
-        }}
-        disabled={currentPage === 1}
-        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-      >
-        Prev
-      </button>
-      {Array.from({ length: paginationData.total_pages }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => setCurrentPage(i + 1)}
-          className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
-        >
-          {i + 1}
-        </button>
-      ))}
-      <button
-        onClick={() => {
-          const nextPage = Math.min(paginationData.total_pages, currentPage + 1);
-          if (nextPage !== currentPage) {
-            setCurrentPage(nextPage);
-          }
-        }}
-        disabled={currentPage === paginationData.total_pages}
-        className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-)}
+        {/* Pagination */}
+        {paginationData.total_pages > 1 && (
+          <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
+            <div className="text-xs sm:text-sm text-slate-500">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, paginationData.total_items)} of {paginationData.total_items} bookings
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-2">
+              <button
+                onClick={() => {
+                  const nextPage = Math.max(1, currentPage - 1);
+                  if (nextPage !== currentPage) {
+                    setCurrentPage(nextPage);
+                  }
+                }}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+              >
+                Prev
+              </button>
+              {Array.from({ length: paginationData.total_pages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white/80 text-slate-700'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  const nextPage = Math.min(paginationData.total_pages, currentPage + 1);
+                  if (nextPage !== currentPage) {
+                    setCurrentPage(nextPage);
+                  }
+                }}
+                disabled={currentPage === paginationData.total_pages}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white/80 text-slate-700 font-semibold disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {/* Detail Modal with transition and focus trap */}
       {selectedBooking && (
