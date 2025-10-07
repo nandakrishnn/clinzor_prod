@@ -49,6 +49,7 @@ const BookingManagement = () => {
   // Add state for search timeout
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10; // Add this line
+
   const fetchBookings = async (
     page: number = currentPage,
     search: string = searchTerm,
@@ -93,6 +94,7 @@ const BookingManagement = () => {
       setLoading(false);
     }
   };
+
   // Initial fetch and when filters change
   useEffect(() => {
     fetchBookings(1, searchTerm, statusFilter, typeFilter, dateFilter);
@@ -173,30 +175,10 @@ const BookingManagement = () => {
     };
   };
 
-  // Filter bookings by date (default: today)
-  // const filteredBookings = useMemo(() => {
-  //   return bookings.filter(booking => {
-  //     const matchesSearch = booking.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       booking.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       booking.uuid?.toLowerCase().includes(searchTerm.toLowerCase());
-  //     const matchesStatus = statusFilter ? booking.booking_status === statusFilter : true;
-  //     const matchesType = typeFilter ? booking.booking_type === typeFilter : true;
-  //     // Date filter: show only bookings for selected date
-  //     const matchesDate = dateFilter ? format(parseISO(booking.start_time), 'yyyy-MM-dd') === dateFilter : true;
-  //     return matchesSearch && matchesStatus && matchesType && matchesDate;
-  //   });
-  // }, [bookings, searchTerm, statusFilter, typeFilter, dateFilter]);
-
-  // const [showAll, setShowAll] = useState(false);
-  // const bookingsToShow = showAll ? bookings : filteredBookings;
-  // const totalPages = Math.ceil(bookingsToShow.length / itemsPerPage);
-  const paginatedBookings = bookings;
-
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, typeFilter]);
 
-  // Header stats
   // Header stats
   const stats = useMemo(() => {
     const total = paginationData.total_items; // Use this instead of totalBookings
@@ -223,7 +205,8 @@ const BookingManagement = () => {
       mostBookedService,
       mostBookedServiceCount
     };
-  }, [bookings, paginationData.total_items]); // Add paginationData.total_items to dependencies
+  }, [bookings, paginationData.total_items]);
+
   // Avatar with initials
   const getInitials = (name: string) => {
     return name
@@ -240,6 +223,7 @@ const BookingManagement = () => {
       modalRef.current.focus();
     }
   }, [selectedBooking]);
+
   // Add this function to your component
   const handleCancelBooking = async (bookingId: string) => {
     try {
@@ -254,10 +238,9 @@ const BookingManagement = () => {
     }
   };
 
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -266,55 +249,57 @@ const BookingManagement = () => {
     );
   }
 
+  console.log(bookings)
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen ">
       {/* Sticky Header */}
-      <div className="backdrop-blur-xl bg-white/80 border-b border-slate-200/60 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-transparent">
-                Booking Management
-              </h1>
-              <p className="text-sm text-slate-500 mt-1">Manage your clinic bookings</p>
+      <div className="max-w-7xl mx-auto ">
+        <div className="flex items-center justify-between h-20">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-transparent">
+              Booking Management
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">Manage your clinic bookings</p>
+          </div>
+          {/* Stats Cards */}
+          <div className="hidden lg:flex items-center space-x-6">
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <Calendar className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-medium">Total Bookings</p>
+                <p className="text-lg font-bold text-blue-700">{stats.total}</p>
+              </div>
             </div>
-            {/* Stats Cards */}
-            <div className="hidden lg:flex items-center space-x-6">
-              <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <Calendar className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-blue-600 font-medium">Total Bookings</p>
-                  <p className="text-lg font-bold text-blue-700">{stats.total}</p>
-                </div>
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100">
+              <div className="p-2 bg-emerald-500 rounded-lg">
+                <Clock className="w-4 h-4 text-white" />
               </div>
-              <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100">
-                <div className="p-2 bg-emerald-500 rounded-lg">
-                  <Clock className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-emerald-600 font-medium">Total Amount Received</p>
-                  <p className="text-lg font-bold text-emerald-700">${stats.totalAmount.toFixed(2)}</p>
-                </div>
+              <div>
+                <p className="text-xs text-emerald-600 font-medium">Total Amount Received</p>
+                <p className="text-lg font-bold text-emerald-700">${stats.totalAmount.toFixed(2)}</p>
               </div>
-              <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-100">
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <Info className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-purple-600 font-medium">Most Booked Service</p>
-                  <p className="text-lg font-bold text-purple-700">
-                    {stats.mostBookedService !== '-' ? `${stats.mostBookedService} (${stats.mostBookedServiceCount})` : '-'}
-                  </p>
-                </div>
+            </div>
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-100">
+              <div className="p-2 bg-purple-500 rounded-lg">
+                <Info className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-purple-600 font-medium">Most Booked Service</p>
+                <p className="text-lg font-bold text-purple-700">
+                  {stats.mostBookedService !== '-' ? `${stats.mostBookedService} (${stats.mostBookedServiceCount})` : '-'}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* Filters Section */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
+
+
+      {/* Section */}
+      <div className="max-w-7xl mx-auto mt-4">
         <div className="bg-white/80 border border-slate-200 rounded-2xl shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
             {/* Date Filter */}
@@ -415,9 +400,10 @@ const BookingManagement = () => {
             </div>
           </div>
         </div>
+
         {/* Table (Responsive) */}
-        <div className="w-full overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block">
-          <table className="min-w-[900px] w-full text-xs sm:text-sm md:text-base align-middle">
+        <div className="w-full h-full overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block overflow-hidden">
+          <table className="min-w-[900px]  w-full text-xs sm:text-sm md:text-base align-middle">
             <thead className="sticky top-0 bg-white/90 z-10">
               <tr className="bg-slate-50/80 border-b border-slate-200/60">
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Patient</th>
@@ -429,8 +415,8 @@ const BookingManagement = () => {
                 <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/60">
-              {paginatedBookings.length === 0 ? (
+            <tbody className="divide-y divide-slate-200/60 ">
+              {bookings?.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-slate-400 text-lg">
                     <span className="inline-block mb-2 text-4xl">😕</span><br />
@@ -438,38 +424,39 @@ const BookingManagement = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedBookings.map((booking) => {
-                  const statusConfig = getStatusConfig(booking.booking_status);
-                  const scheduledDateTime = formatDateTime(booking.start_time);
+                bookings?.map((booking) => {
+                  const statusConfig = getStatusConfig(booking?.booking_status);
+                  const scheduledDateTime = formatDateTime(booking?.start_time);
                   return (
-                    <tr key={booking.uuid} className="hover:bg-slate-50/70 transition-colors duration-150 align-middle">
+                    <tr key={booking?.uuid} className="hover:bg-slate-50/70 transition-colors duration-150 align-middle">
                       {/* Patient Info */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
-                            <span className="text-white font-bold text-lg" aria-label={`Avatar for ${booking.patient_name}`}>{getInitials(booking.patient_name)}</span>
+                            <span className="text-white font-bold text-lg" aria-label={`Avatar for ${booking?.patient_name}`}>{getInitials(booking?.patient_name)}</span>
                           </div>
                           <div className="flex flex-col justify-center">
-                            <div className="font-semibold text-slate-900 leading-tight">{booking.patient_name}</div>
-                            <div className="text-xs text-slate-500 flex flex-col sm:flex-row sm:items-center sm:space-x-4 leading-tight">
+                            <div className="font-semibold text-slate-900 leading-tight">{booking?.patient_name}</div>
+                            <div className="text-xs text-slate-500 flex flex-col sm:items-start mt-1 leading-tight">
                               <span className="flex items-center">
                                 <Mail className="w-3 h-3 mr-1" />
-                                {booking.patient_email}
+                                {booking?.patient_email}
                               </span>
                               <span className="flex items-center">
                                 <Phone className="w-3 h-3 mr-1" />
-                                {booking.patient_mobile}
+                                {booking?.patient_mobile}
                               </span>
                             </div>
                           </div>
                         </div>
                       </td>
+
                       {/* Booking Details */}
                       <td className="hidden md:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex flex-col justify-center gap-1">
-                          <div className="font-medium text-sm text-slate-900 leading-tight whitespace-nowrap">#{booking.uuid}</div>
-                          <div className="text-xs text-slate-500 leading-tight">{booking.session_type}</div>
-                          {booking.patient_address && (
+                          <div className="font-medium text-sm text-slate-900 leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]">#{booking?.uuid}</div>
+                          <div className="text-xs text-slate-500 leading-tight">{booking?.session_type}</div>
+                          {booking?.patient_address && (
                             <div className="text-xs text-slate-500 flex items-center leading-tight">
                               <MapPin className="w-3 h-3 mr-1" />
                               {booking.patient_address}
@@ -480,15 +467,15 @@ const BookingManagement = () => {
                       {/* Schedule */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex flex-col justify-center gap-1">
-                          <div className="font-medium text-slate-900 leading-tight">{scheduledDateTime.date}</div>
-                          <div className="text-xs text-slate-500 leading-tight">{scheduledDateTime.time}</div>
+                          <div className="font-medium text-slate-900 leading-tight">{scheduledDateTime?.date}</div>
+                          <div className="text-xs text-slate-500 leading-tight">{scheduledDateTime?.time}</div>
                         </div>
                       </td>
                       {/* Type */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center space-x-2">
-                          {booking.booking_type === 'VIDEO_CALL' ? (
-                            <a href={booking.clinic_meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
+                          {booking?.booking_type === 'VIDEO_CALL' ? (
+                            <a href={booking?.clinic_meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
                               <div className="flex items-center space-x-2">
                                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                   <Video className="w-4 h-4 text-blue-600" />
@@ -514,14 +501,14 @@ const BookingManagement = () => {
                       </td>
                       {/* Status */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}>
-                          <div className={`w-1.5 h-1.5 ${statusConfig.dot} rounded-full mr-2`}></div>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig?.color}`}>
+                          <div className={`w-1.5 h-1.5 ${statusConfig?.dot} rounded-full mr-2`}></div>
                           {booking.booking_status.replace('_', ' ')}
                         </span>
                       </td>
                       {/* Amount */}
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
-                        <div className="font-semibold text-slate-900 leading-tight">${parseFloat(booking.booking_charge).toFixed(2)}</div>
+                        <div className="font-semibold text-slate-900 leading-tight">₹{parseFloat(booking?.booking_charge).toFixed(2)}</div>
                       </td>
                       {/* Actions */}
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
@@ -535,7 +522,7 @@ const BookingManagement = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => setShowActionMenu(showActionMenu === booking.uuid ? null : booking.uuid)}
+                            onClick={() => setShowActionMenu(showActionMenu === booking.uuid ? null : booking?.uuid)}
                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
                             title="More Actions"
                             aria-label="More Actions"
@@ -571,6 +558,7 @@ const BookingManagement = () => {
             </tbody>
           </table>
         </div>
+
         {/* Mobile Card List */}
         <div className="sm:hidden space-y-4">
           {bookings.length === 0 ? (
@@ -635,9 +623,10 @@ const BookingManagement = () => {
             })
           )}
         </div>
+
         {/* Pagination */}
         {paginationData.total_pages > 1 && (
-          <div className="bg-slate-50/50 px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 sticky bottom-0 z-30 mt-4">
+          <div className="bg-white px-2 sm:px-6 py-3 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 z-30 mt-4">
             <div className="text-xs sm:text-sm text-slate-500">
               Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, paginationData.total_items)} of {paginationData.total_items} bookings
             </div>
@@ -679,6 +668,7 @@ const BookingManagement = () => {
           </div>
         )}
       </div>
+
       {/* Detail Modal with transition and focus trap */}
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-all duration-300 animate-fade-in">
@@ -724,7 +714,7 @@ const BookingManagement = () => {
                       <div><span className="font-medium">Payment Status:</span> {selectedBooking.payment_status}</div>
                       <div><span className="font-medium">Consultation:</span> {selectedBooking.session_type}</div>
                       <div><span className="font-medium">Service:</span> {selectedBooking.service_default_name}</div>
-                      <div><span className="font-medium">Amount:</span> ${parseFloat(selectedBooking.booking_charge).toFixed(2)}</div>
+                      <div><span className="font-medium">Amount:</span> ₹{parseFloat(selectedBooking.booking_charge).toFixed(2)}</div>
                       <div><span className="font-medium">Clinic:</span> {selectedBooking.clinic_name}</div>
                     </div>
                   </div>
@@ -763,6 +753,7 @@ const BookingManagement = () => {
           </div>
         </div>
       )}
+
       {/* Animations */}
       <style jsx global>{`
         @keyframes fade-in {
