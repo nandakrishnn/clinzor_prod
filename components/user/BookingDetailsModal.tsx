@@ -12,6 +12,7 @@ import {
   Info,
 } from "lucide-react"
 import type { Booking } from "@/types/user"
+import { convertTo12HourFormat } from "@/utils/formatters";
 
 export default function BookingDetailsModal({ booking, isOpen, onClose }: { booking: any; isOpen: boolean; onClose: () => void }) {
   if (!isOpen || !booking) return null
@@ -20,7 +21,6 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
     if (!isoDate) return "-"
     return new Date(isoDate).toLocaleString("en-IN", {
       dateStyle: "medium",
-      timeStyle: "short",
     })
   }
 
@@ -66,7 +66,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900">{formatDate(booking?.start_time)}</p>
+                  <p className="font-medium text-gray-900">{`${formatDate(booking?.start_time)}, ${convertTo12HourFormat(booking?.start_time)}`}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">End Time</p>
-                  <p className="font-medium text-gray-900">{formatDate(booking?.end_time)}</p>
+                  <p className="font-medium text-gray-900">{`${formatDate(booking?.end_time)}, ${convertTo12HourFormat(booking?.end_time)}`}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

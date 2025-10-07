@@ -86,3 +86,16 @@ export const formatLocalDate = (date: Date) => {
   const dd = String(date.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}T00:00:00`;   // local midnight
 };
+
+
+export const convertTo12HourFormat = (utcDateString: string) => {
+  const date = new Date(utcDateString);
+  let hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  return `${hh}:${mm} ${ampm}`;
+};

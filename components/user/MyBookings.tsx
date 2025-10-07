@@ -8,6 +8,7 @@ import BookingDetailsModal from "./BookingDetailsModal"
 import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
 import { toast } from "sonner"
 import { ConfirmationModal } from "../common/ConfirmationModal"
+import { convertTo12HourFormat, formatLocalDate } from "@/utils/formatters"
 
 export default function MyBookings() {
   const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
@@ -26,7 +27,6 @@ export default function MyBookings() {
     if (!isoDate) return "-"
     return new Date(isoDate).toLocaleString("en-IN", {
       dateStyle: "medium",
-      timeStyle: "short",
     })
   }
 
@@ -175,11 +175,11 @@ export default function MyBookings() {
                 <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} />
-                    <span>{formatDate(booking?.start_time)}</span>
+                    <span>{`${formatDate(booking?.start_time)}, ${convertTo12HourFormat(booking?.start_time)}`}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock size={16} />
-                    <span>{formatDate(booking?.end_time)}</span>
+                    <span>{`${formatDate(booking?.end_time)}, ${convertTo12HourFormat(booking?.end_time)}`}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin size={16} />

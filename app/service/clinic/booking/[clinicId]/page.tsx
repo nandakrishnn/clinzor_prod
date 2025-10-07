@@ -392,8 +392,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
 
-  console.log(clinicOwnServiceId, 'service own id')
-
   return (
     <section aria-label="Clinic Booking" className="">
       <nav>
