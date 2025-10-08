@@ -32,7 +32,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
-import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, requestNewService, updateClinicService, updateRankClinicService } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, getClinicServiceStaticData, requestNewService, updateClinicService, updateRankClinicService } from '@/service/clinic/serviceManagementService';
 import { uploadFiles } from '@/service/uploadService/uploadService';
 
 // Types
@@ -111,8 +111,9 @@ const ServiceManagement: React.FC = () => {
   // Session management
   const { data: session } = useSession();
 
+  const [dashData, setDashData] = useState<any>()
   // State management
-  const [clinicUser, setClinicuser] = useState<ClinicUserMinimal | null>(null);
+  const [clinicUser, setClinicUser] = useState<ClinicUserMinimal | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,17 +197,17 @@ const ServiceManagement: React.FC = () => {
       const clinicId = clinicUserData?.uuid as string;
 
       // Fetch services in parallel using clinic id with parameters
-      const [servicesData, clinicServicesData] = await Promise.all([
+      const [servicesData, clinicServicesData, dashData] = await Promise.all([
         GetAllServiceForClinic("APPROVED"),
-        GetAllClinicService(clinicId, status = statusFilter, searchText, pageNum, itemsPerPage)
+        GetAllClinicService(clinicId, status = statusFilter, searchText, pageNum, itemsPerPage),
+        getClinicServiceStaticData()
       ]);
 
-      console.log(servicesData, 'service data from the fetch ')
-
-      setClinicuser(clinicUserData);
+      setClinicUser(clinicUserData);
       setServices(servicesData.data || []);
       setAllServices(servicesData.data || []);
       setClinicServices(clinicServicesData.data || []);
+      setDashData(dashData?.data)
 
       setPaginationData({
         current_page: clinicServicesData.current_page || 1,
@@ -307,12 +308,6 @@ const ServiceManagement: React.FC = () => {
 
     return matchesSearch;
   });
-
-  // Statistics
-  const totalClinicServices = clinicServices.length;
-  const approvedClinicServices = clinicServices.filter(cs => cs.status === 'APPROVED').length;
-  const pendingClinicServices = clinicServices.filter(cs => cs.status === 'DRAFT').length;
-  const rejectedClinicServices = clinicServices.filter(cs => cs.status === 'REJECTED').length;
 
   // Validation functions
   const validateClinicServiceForm = () => {
@@ -906,7 +901,7 @@ const ServiceManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-blue-600 mb-1">Total Services</p>
-                      <p className="text-3xl font-bold text-slate-900">{totalClinicServices}</p>
+                      <p className="text-3xl font-bold text-slate-900">{dashData?.total_clinic_service}</p>
                       <p className="text-xs text-slate-500 mt-1">All clinic services</p>
                     </div>
                     <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -921,7 +916,7 @@ const ServiceManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-emerald-600 mb-1">Approved</p>
-                      <p className="text-3xl font-bold text-slate-900">{approvedClinicServices}</p>
+                      <p className="text-3xl font-bold text-slate-900">{dashData?.approved_service}</p>
                       <p className="text-xs text-slate-500 mt-1">Active services</p>
                     </div>
                     <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -936,7 +931,7 @@ const ServiceManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-amber-600 mb-1">Pending</p>
-                      <p className="text-3xl font-bold text-slate-900">{pendingClinicServices}</p>
+                      <p className="text-3xl font-bold text-slate-900">{dashData?.pending_service}</p>
                       <p className="text-xs text-slate-500 mt-1">Awaiting approval</p>
                     </div>
                     <div className="p-3 bg-amber-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -951,7 +946,7 @@ const ServiceManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-red-600 mb-1">Rejected</p>
-                      <p className="text-3xl font-bold text-slate-900">{rejectedClinicServices}</p>
+                      <p className="text-3xl font-bold text-slate-900">{dashData?.rejected_service}</p>
                       <p className="text-xs text-slate-500 mt-1">Needs revision</p>
                     </div>
                     <div className="p-3 bg-red-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">

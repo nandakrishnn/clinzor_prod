@@ -40,7 +40,7 @@ export const createClinicService = async (body: NewClinicService) => {
 export const updateClinicService = async (body: any, id: string) => {
   try {
     const response = await axiosPrivate.put(
-      `clinic/clinic-service-rud/${id}/`, 
+      `clinic/clinic-service-rud/${id}/`,
       body
     );
     return response.data;
@@ -131,3 +131,7 @@ export const Clinic_by_clinic_user = async () => {
     throw error;
   }
 };
+export const getClinicServiceStaticData = async () => {
+  const res = await axiosPrivate.get(`clinic/clinic-service-analytics/`);
+  return res.data;
+}
