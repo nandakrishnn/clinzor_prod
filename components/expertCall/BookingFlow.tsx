@@ -20,6 +20,7 @@ import { format, addDays, parseISO, isToday, isTomorrow } from "date-fns";
 import Title from "../ui/title";
 import { useSession } from "next-auth/react";
 import { getAllExpertService, getExpertSlotBookingService, getExpertSlotService } from "@/service/user/expert";
+import { convertTo12HourFormat } from "@/utils/formatters";
 
 // Types for API responses
 interface Expert {
@@ -491,7 +492,7 @@ const BookingFlow = () => {
                                     : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
                                     }`}
                                 >
-                                  {format(new Date(slot.start_time), "hh:mm a")}
+                                  {convertTo12HourFormat(slot.start_time)}
                                 </button>
                               ))}
                             </div>

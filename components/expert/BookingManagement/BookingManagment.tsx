@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  Search, Filter, RefreshCw, Calendar, CheckCircle, XCircle, 
+import {
+  Search, Filter, RefreshCw, Calendar, CheckCircle, XCircle,
   AlertCircle, Eye, ChevronLeft, ChevronRight, Clock, X
 } from 'lucide-react';
 import { GetAllExpertBooking } from '@/service/expert/bookingMangementService';
@@ -115,7 +115,7 @@ const ExpertBookingManager: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [totalItemsCount ,setTotalItemsCount] = useState(0);
+  const [totalItemsCount, setTotalItemsCount] = useState(0);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [modalType, setModalType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -167,10 +167,10 @@ const ExpertBookingManager: React.FC = () => {
     };
   }, [searchTerm]);
 
- const fetchBooking = async (page = 1, search = '', filters: Filters) => {
+  const fetchBooking = async (page = 1, search = '', filters: Filters) => {
     try {
       setIsLoading(true);
-      
+
       // Prepare query parameters
       const params: any = {
         page: page
@@ -223,7 +223,7 @@ const ExpertBookingManager: React.FC = () => {
     fetchBooking(currentPage, debouncedSearchTerm, filters);
   }, [currentPage, debouncedSearchTerm, filters]);
 
-  console.log("Bookings fetched:", bookings); 
+  console.log("Bookings fetched:", bookings);
 
   const filteredBookings = bookings;
   // Memoize pagination calculations
@@ -276,21 +276,21 @@ const ExpertBookingManager: React.FC = () => {
   const formatDateTime = useCallback((startTime: string, endTime: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    
-    const date = start.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+
+    const date = start.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
-    
-    const time = `${start.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })} - ${end.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+
+    const time = `${start.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })} - ${end.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     })}`;
-    
+
     return { date, time };
   }, []);
 
@@ -333,12 +333,12 @@ const ExpertBookingManager: React.FC = () => {
 
   const handleCancelConfirm = () => {
     if (!selectedBooking) return;
-    
+
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      setBookings(prev => prev.map(b => 
-        b.uuid === selectedBooking.uuid 
+      setBookings(prev => prev.map(b =>
+        b.uuid === selectedBooking.uuid
           ? { ...b, booking_status: 'CANCELED' }
           : b
       ));
@@ -380,15 +380,14 @@ const ExpertBookingManager: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-3">
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg transform transition-all duration-300 ease-in-out ${
-          notification?.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-          notification?.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-          'bg-amber-50 text-amber-800 border border-amber-200'
-        }`}>
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg transform transition-all duration-300 ease-in-out ${notification?.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+            notification?.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+              'bg-amber-50 text-amber-800 border border-amber-200'
+          }`}>
           <div className="flex items-center space-x-2">
             {notification?.type === 'success' ? <CheckCircle size={20} className="text-emerald-600" /> :
-             notification?.type === 'error' ? <XCircle size={20} className="text-red-600" /> :
-             <AlertCircle size={20} className="text-amber-600" />}
+              notification?.type === 'error' ? <XCircle size={20} className="text-red-600" /> :
+                <AlertCircle size={20} className="text-amber-600" />}
             <span className="font-medium">{notification?.message}</span>
           </div>
         </div>
@@ -490,18 +489,17 @@ const ExpertBookingManager: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-2 px-5 py-3 rounded-xl transition-all duration-200 ${
-                  showFilters ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`flex items-center space-x-2 px-5 py-3 rounded-xl transition-all duration-200 ${showFilters ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 <Filter size={18} />
                 <span className="text-base font-medium">Advanced Filters</span>
               </button>
-              
+
               {(Object.values(filters).some(f => f !== 'ALL' && f !== '') || searchTerm) && (
                 <button
                   onClick={clearFilters}
@@ -522,7 +520,7 @@ const ExpertBookingManager: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Quick Date Filter</label>
                   <select
                     value={filters.quick_date}
-                    onChange={(e) => setFilters({...filters, quick_date: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, quick_date: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   >
                     {quickDateOptions.map(option => (
@@ -536,7 +534,7 @@ const ExpertBookingManager: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
                   <select
                     value={filters.sort_by}
-                    onChange={(e) => setFilters({...filters, sort_by: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, sort_by: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   >
                     {sortOptions.map(option => (
@@ -550,7 +548,7 @@ const ExpertBookingManager: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Booking Status</label>
                   <select
                     value={filters.booking_status}
-                    onChange={(e) => setFilters({...filters, booking_status: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, booking_status: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   >
                     <option value="ALL">All Status</option>
@@ -564,7 +562,7 @@ const ExpertBookingManager: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
                   <select
                     value={filters.payment_status}
-                    onChange={(e) => setFilters({...filters, payment_status: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, payment_status: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   >
                     <option value="ALL">All Payments</option>
@@ -579,7 +577,7 @@ const ExpertBookingManager: React.FC = () => {
                   <input
                     type="date"
                     value={filters.from_date}
-                    onChange={(e) => setFilters({...filters, from_date: e.target.value, quick_date: 'ALL'})}
+                    onChange={(e) => setFilters({ ...filters, from_date: e.target.value, quick_date: 'ALL' })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   />
                 </div>
@@ -589,7 +587,7 @@ const ExpertBookingManager: React.FC = () => {
                   <input
                     type="date"
                     value={filters.to_date}
-                    onChange={(e) => setFilters({...filters, to_date: e.target.value, quick_date: 'ALL'})}
+                    onChange={(e) => setFilters({ ...filters, to_date: e.target.value, quick_date: 'ALL' })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all duration-200"
                   />
                 </div>
@@ -654,12 +652,12 @@ const ExpertBookingManager: React.FC = () => {
                     <tr key={booking.uuid} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {paginationData.startIndex + index} 
+                          {paginationData.startIndex + index}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {booking?.customer_name} 
+                          {booking?.customer_name}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -673,7 +671,7 @@ const ExpertBookingManager: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium`}>
-                           {booking.payment_mode}
+                          {booking.payment_mode}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -809,7 +807,7 @@ const ExpertBookingManager: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700">Booking Status</label>
               <select
                 value={editData.booking_status || selectedBooking.booking_status}
-                onChange={(e) => setEditData({...editData, booking_status: e.target.value})}
+                onChange={(e) => setEditData({ ...editData, booking_status: e.target.value })}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 {bookingStatuses.map(status => (
@@ -821,7 +819,7 @@ const ExpertBookingManager: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700">Payment Status</label>
               <select
                 value={editData.payment_status || selectedBooking.payment_status}
-                onChange={(e) => setEditData({...editData, payment_status: e.target.value})}
+                onChange={(e) => setEditData({ ...editData, payment_status: e.target.value })}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 {paymentStatuses.map(status => (
@@ -840,7 +838,7 @@ const ExpertBookingManager: React.FC = () => {
                 onClick={() => {
                   setIsLoading(true);
                   setTimeout(() => {
-                    setBookings(prev => prev.map(b => 
+                    setBookings(prev => prev.map(b =>
                       b.uuid === selectedBooking.uuid ? { ...b, ...editData } : b
                     ));
                     setIsLoading(false);
@@ -916,7 +914,7 @@ const ExpertBookingManager: React.FC = () => {
                 onClick={() => {
                   setIsLoading(true);
                   setTimeout(() => {
-                    setBookings(prev => prev.map(b => 
+                    setBookings(prev => prev.map(b =>
                       b.uuid === selectedBooking.uuid ? { ...b, booking_status: 'COMPLETED' } : b
                     ));
                     setIsLoading(false);
@@ -975,7 +973,7 @@ const ExpertBookingManager: React.FC = () => {
               <X size={16} />
             </button>
           </div>
-          
+
           <div className="flex-1 p-4 overflow-y-auto space-y-3">
             {chatMessages.length === 0 ? (
               <p className="text-gray-500 text-center text-sm">No messages yet</p>

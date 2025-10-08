@@ -29,6 +29,7 @@ import {
   GetAllSlot
 } from "@/service/expert/slotManangementService";
 import { motion, AnimatePresence } from "framer-motion";
+import { convertTo12HourFormat } from "@/utils/formatters";
 
 // Type definitions
 interface ExpertSlot {
@@ -941,11 +942,7 @@ export default function ExpertSlotManagement() {
         day: "numeric",
         year: "numeric"
       }),
-      time: date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      })
+      time: convertTo12HourFormat(dateTimeString)
     };
   }, []);
 
