@@ -37,6 +37,18 @@ export const createClinicService = async (body: NewClinicService) => {
     throw error;
   }
 };
+export const updateClinicService = async (body: any, id: string) => {
+  try {
+    const response = await axiosPrivate.put(
+      `clinic/clinic-service-rud/${id}/`, 
+      body
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Expert creation error:", error);
+    throw error;
+  }
+};
 export const requestNewService = async (body: { name: string; description: string; tags: string }) => {
   try {
     const response = await axiosPrivate.post(
@@ -49,7 +61,6 @@ export const requestNewService = async (body: { name: string; description: strin
     throw error;
   }
 };
-
 export const editClinicService = async (id: string, body: Slot) => {
   try {
     const response = await axiosPrivate.put(`clinic/slot-rud/${id}/`, body);
@@ -79,7 +90,6 @@ export const updateRankClinicService = async (
 export const deleteClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/clinic-service-rud/${Id}/`);
 };
-
 export const GetAllServiceForClinic = async (status?: string) => {
   try {
     const response = await axiosPrivate.get(`clinic/service-lc/?status=${status}`);
@@ -112,8 +122,6 @@ export const GetAllClinicService = async (
     throw error;
   }
 };
-
-
 export const Clinic_by_clinic_user = async () => {
   try {
     const response = await axiosPrivate.get(`clinic/get-clinic-by-user/`);

@@ -32,7 +32,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import type { DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
 import { isBefore, startOfDay } from 'date-fns';
-import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, requestNewService, updateRankClinicService } from '@/service/clinic/serviceManagementService';
+import { Clinic_by_clinic_user, createClinicService, deleteClinicService, GetAllClinicService, GetAllServiceForClinic, requestNewService, updateClinicService, updateRankClinicService } from '@/service/clinic/serviceManagementService';
 import { uploadFiles } from '@/service/uploadService/uploadService';
 
 // Types
@@ -116,7 +116,7 @@ const ServiceManagement: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
 
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
@@ -185,7 +185,7 @@ const ServiceManagement: React.FC = () => {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   // Add state for filters
-  const [statusFilter, setStatusFilter] = useState<string>('APPROVED');
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
   // Modify the fetchService function to use parameters
   const fetchService = async (pageNum: number = currentPage, searchText: string = searchTerm, status: string = statusFilter) => {
@@ -198,7 +198,7 @@ const ServiceManagement: React.FC = () => {
       // Fetch services in parallel using clinic id with parameters
       const [servicesData, clinicServicesData] = await Promise.all([
         GetAllServiceForClinic("APPROVED"),
-        GetAllClinicService(clinicId, status = "", searchText, pageNum, itemsPerPage)
+        GetAllClinicService(clinicId, status = statusFilter, searchText, pageNum, itemsPerPage)
       ]);
 
       console.log(servicesData, 'service data from the fetch ')
@@ -227,9 +227,6 @@ const ServiceManagement: React.FC = () => {
   useEffect(() => {
     fetchService(1, searchTerm, statusFilter);
   }, [statusFilter]); // Refetch when status filter changes
-
-  console.log(clinicUser, "clinic user data")
-  // Set clinic ID when clinicUser is available
 
   useEffect(() => {
     if (clinicUser?.uuid) {
@@ -311,13 +308,10 @@ const ServiceManagement: React.FC = () => {
     return matchesSearch;
   });
 
-  // Listing sorting logic
-  const sortedClinicServices = [...clinicServices].sort((a, b) => a.rank - b.rank);
-
   // Statistics
   const totalClinicServices = clinicServices.length;
   const approvedClinicServices = clinicServices.filter(cs => cs.status === 'APPROVED').length;
-  const pendingClinicServices = clinicServices.filter(cs => cs.status === 'PENDING').length;
+  const pendingClinicServices = clinicServices.filter(cs => cs.status === 'DRAFT').length;
   const rejectedClinicServices = clinicServices.filter(cs => cs.status === 'REJECTED').length;
 
   // Validation functions
@@ -527,6 +521,8 @@ const ServiceManagement: React.FC = () => {
   const handleEdit = (item: ClinicService) => {
     setSelectedItem(item);
     setModalMode('edit');
+    setSelectedImageFile(null);
+    setImagePreviewUrl(item.image || null);
   };
 
   const handleDeleteConfirm = (item: ClinicService) => {
@@ -540,6 +536,8 @@ const ServiceManagement: React.FC = () => {
     resetClinicServiceForm();
     setFormErrors({});
     setShowCreateModal(false);
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
   };
 
   const resetClinicServiceForm = () => {
@@ -570,13 +568,6 @@ const ServiceManagement: React.FC = () => {
 
   // Add state for rank editing
   const [rankEditValue, setRankEditValue] = useState('');
-
-  // Add handler to open rank edit modal
-  const handleEditRank = (clinicService: ClinicService) => {
-    setSelectedItem(clinicService);
-    setRankEditValue(clinicService.rank.toString());
-    setModalMode('edit-rank');
-  };
 
   // Add handler to save rank
   const handleSaveRank = async () => {
@@ -759,6 +750,99 @@ const ServiceManagement: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [datePickerModal.open]);
 
+  // Populate edit form when modal opens
+  useEffect(() => {
+    if (modalMode === 'edit' && selectedItem) {
+      console.log('Populating edit form with:', selectedItem);
+
+      // Find the service name from the service UUID
+      const serviceName = services.find(s => s.uuid === selectedItem.service)?.name || selectedItem.service_name;
+
+      setNewClinicService({
+        clinic: selectedItem.clinic,
+        service: selectedItem.service, // This should be the service UUID
+        rank: selectedItem?.rank?.toString(),
+        consultation_charge_video_call: selectedItem.consultation_charge_video_call || '',
+        consultation_charge_home_visit: selectedItem.consultation_charge_home_visit || '',
+        treatment_charge_video_call: selectedItem.treatment_charge_video_call || '',
+        treatment_charge_physical_visit: selectedItem.treatment_charge_physical_visit || '',
+        consultation_charge_physical_visit: selectedItem.consultation_charge_physical_visit || '',
+        treatment_charge_home_visit: selectedItem.treatment_charge_home_visit || '',
+        is_video_call: selectedItem.is_video_call,
+        is_home_service: selectedItem.is_home_visit,
+        is_clinic_visit: selectedItem.is_physical_visit,
+        is_home_visit: selectedItem.is_home_visit,
+        is_physical_visit: selectedItem.is_physical_visit,
+        clinic_provided_name: selectedItem.clinic_provided_name || '',
+        image: selectedItem.image || '',
+        description: selectedItem.description || '',
+        start_time: selectedItem.display_date || '',
+        max_bookings: 0
+      });
+    }
+  }, [modalMode, selectedItem, services]);
+
+  const handleUpdateClinicService = async () => {
+    if (!selectedItem) return;
+
+    const errors = validateClinicServiceForm();
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    try {
+      // Upload new image if selected
+      let imageUrl = newClinicService.image;
+
+      if (selectedImageFile) {
+        setUploadingImage(true);
+        try {
+          const uploadedUrls = await uploadFiles([selectedImageFile]);
+          if (uploadedUrls && uploadedUrls.length > 0) {
+            imageUrl = uploadedUrls[0];
+          }
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          showToast("Failed to upload image. Please try again.", "error");
+          setUploadingImage(false);
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
+      // Prepare update data - you'll need to create an update API function
+      const updateData = {
+        clinic: newClinicService.clinic,
+        service: newClinicService.service,
+        clinic_provided_name: newClinicService.clinic_provided_name,
+        description: newClinicService.description,
+        image: imageUrl,
+        consultation_charge_video_call: newClinicService.consultation_charge_video_call,
+        consultation_charge_home_visit: newClinicService.consultation_charge_home_visit,
+        treatment_charge_video_call: newClinicService.treatment_charge_video_call,
+        treatment_charge_physical_visit: newClinicService.treatment_charge_physical_visit,
+        consultation_charge_physical_visit: newClinicService.consultation_charge_physical_visit,
+        treatment_charge_home_visit: newClinicService.treatment_charge_home_visit,
+        is_video_call: newClinicService.is_video_call,
+        is_home_service: newClinicService.is_home_service,
+        is_clinic_visit: newClinicService.is_clinic_visit,
+        rank: newClinicService.rank,
+      };
+
+      // Call your update API here - you'll need to create this function
+      const res = await updateClinicService(updateData, selectedItem?.uuid)
+      console.log(res, 'response fromt he updaate ')
+      if (res?.status == 200) {
+        fetchService(1, searchTerm, statusFilter);
+        closeModal();
+        showToast('Clinic service updated successfully!', 'success');
+      }
+    } catch (error: any) {
+      console.error('Error updating clinic service:', error, error?.response?.data);
+      showToast('Failed to update clinic service', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen  flex items-center justify-center">
@@ -901,6 +985,21 @@ const ServiceManagement: React.FC = () => {
                 </div>
               </div>
 
+              {/* Status Filter */}
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-2 ml-1 block">Filter by Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all duration-200 shadow-sm"
+                >
+                  <option value="">All Status</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+
               {/* View Toggle and Filters */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* View Toggle */}
@@ -934,7 +1033,7 @@ const ServiceManagement: React.FC = () => {
           </div>
 
           {/* Services Grid/List */}
-          {filteredClinicServices.length === 0 ? (
+          {clinicServices.length === 0 ? (
             <div className="text-center py-16 bg-white/50 rounded-2xl border-2 border-dashed border-slate-200">
               <div className="max-w-md mx-auto">
                 <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -962,7 +1061,7 @@ const ServiceManagement: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">
-                    Clinic Services ({filteredClinicServices.length})
+                    Clinic Services ({clinicServices.length})
                   </h2>
                   <p className="text-sm text-slate-600">
                     Services by priority
@@ -986,7 +1085,7 @@ const ServiceManagement: React.FC = () => {
                           : 'flex flex-col gap-4'
                       }
                     >
-                      {sortedClinicServices.map((clinicService: any, idx) => {
+                      {clinicServices.map((clinicService: any, idx) => {
                         const statusConfig = getStatusConfig(clinicService.status);
                         const StatusIcon = statusConfig.icon;
 
@@ -1807,22 +1906,7 @@ const ServiceManagement: React.FC = () => {
             <div className="p-6 space-y-6">
               <form onSubmit={e => {
                 e.preventDefault();
-                const errors = validateClinicServiceForm();
-                setFormErrors(errors);
-                if (Object.keys(errors).length > 0) return;
-                setClinicServices(clinicServices.map(cs => cs.uuid === selectedItem.uuid ? {
-                  ...cs,
-                  ...newClinicService,
-                  rank: parseInt(newClinicService.rank),
-                  service_name: newClinicService.service,
-                  is_video_call: newClinicService.is_video_call,
-                  is_home_visit: newClinicService.is_home_service,
-                  is_physical_visit: newClinicService.is_clinic_visit,
-                  image: newClinicService.image || null,
-                  description: newClinicService.description || null,
-                } : cs));
-                closeModal();
-                showToast('Clinic service updated successfully!', 'success');
+                handleUpdateClinicService();
               }} className="space-y-5">
                 {/* Service */}
                 <div>
@@ -1913,24 +1997,59 @@ const ServiceManagement: React.FC = () => {
                     rows={3}
                   />
                 </div>
+
                 {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 sm:mb-2">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-200 bg-white text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm sm:text-base"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // In a real app, you would upload the file to a server and get back a URL
-                        // For now, we'll create a local URL for preview
-                        const imageUrl = URL.createObjectURL(file);
-                        setNewClinicService(cs => ({ ...cs, image: imageUrl }));
-                      }
-                    }}
-                  />
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2">Image</label>
+
+                  {/* Disclaimer text */}
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                    <strong>Note:</strong> Please name your image file the same as your service name for better organization.
+                  </div>
+
+                  {imagePreviewUrl || newClinicService.image ? (
+                    <div className="relative group mb-3">
+                      <img
+                        src={imagePreviewUrl || newClinicService.image}
+                        alt="Service preview"
+                        className="h-32 w-full object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full mb-3">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 10MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleImageSelection}
+                          accept="image/*"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {uploadingImage && (
+                    <div className="mt-2 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Uploading image...</p>
+                    </div>
+                  )}
                 </div>
+
                 {/* Rank */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Rank <span className="text-red-500">*</span></label>
@@ -1939,11 +2058,12 @@ const ServiceManagement: React.FC = () => {
                     className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border ${formErrors.rank ? 'border-red-400' : 'border-slate-200'} bg-white text-slate-700 text-sm sm:text-base`}
                     value={newClinicService.rank}
                     onChange={e => setNewClinicService(cs => ({ ...cs, rank: e.target.value }))}
-                    min={1}
+
                     placeholder="e.g. 1"
                   />
                   {formErrors.rank && <p className="text-xs text-red-500 mt-1">{formErrors.rank}</p>}
                 </div>
+
                 {/* Facility Toggles */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <label className="flex items-center gap-2 text-sm sm:text-base">
@@ -1968,6 +2088,7 @@ const ServiceManagement: React.FC = () => {
                     /> Home Visit
                   </label>
                 </div>
+
                 {/* Charges - show fields as per toggles */}
                 {newClinicService.is_video_call && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
