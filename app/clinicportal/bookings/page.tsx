@@ -7,7 +7,6 @@ import BookingManagementTable from "@/components/clinicportal/bookingmanagement/
 export default function Bookingmanagement() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Table Section */}
       <BookingManagementTable />
     </Box>
   );

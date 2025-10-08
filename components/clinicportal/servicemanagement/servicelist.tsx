@@ -3,11 +3,9 @@ import { useSession } from 'next-auth/react';
 import {
   Search,
   Plus,
-  Filter,
   Edit3,
   Eye,
   Trash2,
-  MoreHorizontal,
   Settings,
   CheckCircle,
   AlertCircle,
@@ -17,14 +15,11 @@ import {
   Stethoscope,
   Brain,
   Activity,
-  DollarSign,
   Video,
   Home,
   Building,
-  Star,
   Tag,
-  FileText,
-  Image as ImageIcon,
+  Image,
   XCircle,
   Building2,
   LayoutGrid,
@@ -142,7 +137,8 @@ const ServiceManagement: React.FC = () => {
   const [serviceRequest, setServiceRequest] = useState({
     name: '',
     description: '',
-    tags: '', // This will be a comma-separated string
+    tags: '',
+    image: ""
   });
 
 
@@ -244,10 +240,6 @@ const ServiceManagement: React.FC = () => {
       console.log('Clinic ID set from clinicUser:', clinicUser.uuid);
     }
   }, [clinicUser]);
-
-  console.log(services, "service data")
-  console.log(allServices, "service  all data")
-  console.log(clinicServices, "service with data")
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -368,6 +360,10 @@ const ServiceManagement: React.FC = () => {
     setSelectedImageFile(null);
     setImagePreviewUrl(null);
     setNewClinicService(prev => ({
+      ...prev,
+      image: ''
+    }));
+    setServiceRequest(prev => ({
       ...prev,
       image: ''
     }));
@@ -649,11 +645,37 @@ const ServiceManagement: React.FC = () => {
     }
 
     try {
+
+      let imageUrl = serviceRequest.image;
+
+      // If we have a selected image file, upload it using the presigned URL API
+      if (selectedImageFile) {
+        setUploadingImage(true);
+
+        try {
+          // Upload the file using the presigned URL API
+          const uploadedUrls = await uploadFiles([selectedImageFile]);
+
+          if (uploadedUrls && uploadedUrls.length > 0) {
+            imageUrl = uploadedUrls[0];
+            console.log('Image uploaded successfully. URL:', imageUrl);
+          }
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          showToast("Failed to upload image. Please try again.", "error");
+          setUploadingImage(false);
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
       // Prepare the request body according to backend expectations
       const requestBody = {
         name: serviceRequest.name.trim(),
         description: serviceRequest.description.trim(),
-        tags: serviceRequest.tags.trim()
+        tags: serviceRequest.tags.trim(),
+        image: imageUrl
       };
 
       console.log('Sending service request:', requestBody);
@@ -675,10 +697,13 @@ const ServiceManagement: React.FC = () => {
 
   // 4. Update the resetServiceRequest function
   const resetServiceRequest = () => {
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
     setServiceRequest({
       name: '',
       description: '',
-      tags: ''
+      tags: '',
+      image: ''
     });
   };
 
@@ -1265,7 +1290,7 @@ const ServiceManagement: React.FC = () => {
       {/* Modal for Add Clinic Service */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto hide-scrollbar">
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
@@ -1404,6 +1429,7 @@ const ServiceManagement: React.FC = () => {
                     rows={3}
                   />
                 </div>
+
                 {/* Image Upload Section */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold mb-2">Image</label>
@@ -1455,6 +1481,7 @@ const ServiceManagement: React.FC = () => {
                     </div>
                   )}
                 </div>
+
                 {/* Rank */}
                 <div>
                   <label className="block text-sm font-semibold mb-1 sm:mb-2">Rank <span className="text-red-500">*</span></label>
@@ -1468,6 +1495,7 @@ const ServiceManagement: React.FC = () => {
                   />
                   {formErrors.rank && <p className="text-xs text-red-500 mt-1">{formErrors.rank}</p>}
                 </div>
+
                 {/* Facility Toggles */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <label className="flex items-center gap-2 text-sm sm:text-base">
@@ -1492,6 +1520,7 @@ const ServiceManagement: React.FC = () => {
                     /> Home Visit
                   </label>
                 </div>
+
                 {/* Charges - show fields as per toggles */}
                 {newClinicService.is_video_call && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -1617,10 +1646,10 @@ const ServiceManagement: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Status</span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedItem?.status === 'DRAFT'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : selectedItem.status === 'REJECTED'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-green-100 text-green-800'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : selectedItem.status === 'REJECTED'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-green-100 text-green-800'
                   }`}>
                   {selectedItem.status}
                 </span>
@@ -1647,8 +1676,8 @@ const ServiceManagement: React.FC = () => {
                               <span
                                 key={star}
                                 className={`text-lg ${star <= selectedItem.rank
-                                    ? 'text-yellow-400'
-                                    : 'text-gray-300'
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-300'
                                   }`}
                               >
                                 ★
@@ -2044,7 +2073,7 @@ const ServiceManagement: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {modalMode === 'delete' && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto hide-scrollbar">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Confirm Delete</h2>
               <button onClick={closeModal} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg" aria-label="Close">
@@ -2077,7 +2106,7 @@ const ServiceManagement: React.FC = () => {
       {/* Edit Rank Modal */}
       {modalMode === 'edit-rank' && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto hide-scrollbar">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Edit Rank</h2>
               <button onClick={closeModal} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg" aria-label="Close">
@@ -2117,7 +2146,7 @@ const ServiceManagement: React.FC = () => {
       {/* Service Search Modal */}
       {showServiceSearchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto hide-scrollbar">
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -2312,7 +2341,7 @@ const ServiceManagement: React.FC = () => {
       {/* Request a Service Modal */}
       {showRequestServiceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto hide-scrollbar">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Request a Service</h2>
@@ -2362,6 +2391,58 @@ const ServiceManagement: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-1">
                     Be specific about the medical specialty, conditions treated, and any unique aspects of this service.
                   </p>
+                </div>
+
+                {/* Image Upload Section */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2">Image</label>
+
+                  {/* Disclaimer text */}
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                    <strong>Note:</strong> Please name your image file the same as your service name for better organization.
+                  </div>
+
+                  {imagePreviewUrl || serviceRequest.image ? (
+                    <div className="relative group mb-3">
+                      <img
+                        src={imagePreviewUrl || serviceRequest.image}
+                        alt="Service preview"
+                        className="h-32 w-full object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full mb-3">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF (MAX. 10MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleImageSelection}
+                          accept="image/*"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {uploadingImage && (
+                    <div className="mt-2 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Uploading image...</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Tags */}
@@ -2437,7 +2518,7 @@ const ServiceManagement: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
+                    className="px-4 sm:px-6 py-2 sm:py-2 rounded-xl bg-primaryColor text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
                   >
                     Submit Request
                   </button>
