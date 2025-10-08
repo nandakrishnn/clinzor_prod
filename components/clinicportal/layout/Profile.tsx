@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 // Hooks
 import { useClinicData } from '@/hooks/useClinicData';
 import { useOperatingHours } from '@/hooks/useOperatingHours';
-import { useLocationSearch } from '@/hooks/useLocationSearch';
 
 // Services
 import { editClinicODetails } from '@/service/clinic/profileService';
@@ -25,85 +24,209 @@ import LoadingState from './LoadingState';
 import ForgotPasswordModal from '@/components/authentication/ForgotPasswordModal';
 
 // Types
-import { SaveStatus, BackendClinic, NominatimResult } from '@/types/clinic';
+import { ClinicData, SaveStatus } from '@/types/clinic';
+import { getPresignedUrls, uploadFileToS3 } from '@/service/uploadService/uploadService';
+
+interface PresignedUrlRequest {
+  file_name: string;
+  file_type: string;
+}
 
 const ClinicSettingsDashboard = () => {
   // State
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [mapZoom, setMapZoom] = useState(13);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState<boolean>(false);
+  const [operatingHoursSaveStatus, setOperatingHoursSaveStatus] = useState<SaveStatus>('idle');
 
   // Hooks
   const {
     clinicData,
     setClinicData,
     isClinicLoading,
-    clinicError,
     handleInputChange,
-    addInsurance,
-    removeInsurance,
-    addSpecialty,
-    removeSpecialty
   } = useClinicData();
 
   const {
     operatingHours,
     handleHoursChange,
-    toggleDayClosed
+    toggleDayClosed,
+    hasOperatingHoursChanged,
+    resetOperatingHoursChanges,
+    loadOperatingHours
   } = useOperatingHours();
 
-  const {
-    searchQuery,
-    searchResults,
-    isSearching,
-    dropdownOpen,
-    highlightedIndex,
-    searchRef,
-    handleSearchChange,
-    handleSearchKeyDown,
-    handleClearSearch,
-    fetchAddressFromCoords
-  } = useLocationSearch();
+  useEffect(() => {
+    if (clinicData.uuid) {
+      loadOperatingHours(clinicData.uuid);
+    }
+  }, [clinicData]);
 
-  // Save operating hours function
-  const saveOperatingHours = async (clinicId: string) => {
+  // Handle map change
+  const handleMapChange = (coords: { lat: number; lng: number }) => {
+    if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
+      setClinicData(prev => ({
+        ...prev,
+        location: coords
+      }));
+    }
+  };
+
+  // Main function to handle multiple file uploads
+  const uploadFiles = async (files: File[]): Promise<string[]> => {
     try {
-      const timingList = transformOperatingHoursToAPI(operatingHours);
-      const body = {
-        clinic: clinicId,
-        timing_list: timingList
-      };
+      // Prepare file requests for presigned URLs
+      const fileRequests: PresignedUrlRequest[] = files.map(file => ({
+        file_name: file.name,
+        file_type: file.type
+      }));
 
-      const response = await axiosPrivate.post('/clinic/clinic-timing-create/', body);
-      return response.data;
+      // Get presigned URLs
+      const presignedResponse = await getPresignedUrls(fileRequests);
+
+      // Upload each file to S3
+      const uploadPromises = files.map((file, index) =>
+        uploadFileToS3(presignedResponse.data.uploads[index], file)
+      );
+
+      // Wait for all uploads to complete
+      const uploadedFileKeys = await Promise.all(uploadPromises);
+
+      // Return full URLs (combine upload_url with file_key)
+      const baseUrl = presignedResponse.data.uploads[0]?.upload_url.split('/').slice(0, 3).join('/');
+      const fullUrls = uploadedFileKeys.map((key: any) => `${baseUrl}/${key}`);
+
+      return fullUrls;
     } catch (error) {
-      console.error("Operating hours update error:", error);
+      console.error("Error in upload process:", error);
       throw error;
     }
   };
 
-  // Handle save
-  const handleSave = async () => {
+  // Handle file upload for registration certificate
+  const handleFileUpload = async (field: keyof ClinicData, file: File) => {
+    try {
+      setSaveStatus('saving');
+
+      // Upload file using presigned URL
+      const uploadedUrls = await uploadFiles([file]);
+
+      if (uploadedUrls && uploadedUrls.length > 0) {
+        const fileUrl = uploadedUrls[0];
+
+        // Update clinic data with the new file URL
+        setClinicData(prev => ({
+          ...prev,
+          [field]: fileUrl
+        }));
+
+        console.log('File uploaded successfully. URL:', fileUrl);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
+  // Handle multiple images upload for clinic images
+  const handleImagesUpload = async (files: File[]) => {
+    try {
+      setUploadingImages(true);
+      setSaveStatus('saving');
+
+      // Upload images using presigned URL
+      const uploadedUrls = await uploadFiles(files);
+
+      if (uploadedUrls && uploadedUrls.length > 0) {
+        // Update clinic data with new image URLs
+        setClinicData(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...uploadedUrls]
+        }));
+
+        console.log('Images uploaded successfully:', uploadedUrls);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }
+    } catch (error) {
+      console.error('Images upload error:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  // Remove specific image from clinic images
+  const removeImage = (imageUrl: string) => {
+    setClinicData(prev => ({
+      ...prev,
+      images: prev.images?.filter((img: any) => img !== imageUrl) || []
+    }));
+  };
+
+  // Save operating hours separately
+  const saveOperatingHours = async (): Promise<boolean> => {
+    setOperatingHoursSaveStatus('saving');
+    try {
+      const timingList = transformOperatingHoursToAPI(operatingHours, clinicData.uuid);
+      const clinicId = clinicData.uuid || '';
+
+      if (!clinicId) {
+        throw new Error('Clinic ID not found');
+      }
+
+      const response = await axiosPrivate.put('/clinic/clinic-timing-update/', timingList);
+
+      if (response.data.status === 200) {
+        console.log('Operating hours updated successfully');
+        setOperatingHoursSaveStatus('saved');
+        resetOperatingHoursChanges(); // Reset the change tracking
+        setTimeout(() => setOperatingHoursSaveStatus('idle'), 2000);
+        return true;
+      } else {
+        throw new Error(response.data.message || 'Failed to update operating hours');
+      }
+    } catch (error: any) {
+      console.error("Operating hours update error:", error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update operating hours';
+      setOperatingHoursSaveStatus('error');
+      setTimeout(() => setOperatingHoursSaveStatus('idle'), 3000);
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Handle save clinic details (without operating hours)
+  const handleSaveClinicDetails = async () => {
     setSaveStatus('saving');
     try {
       const requestData = {
         name: clinicData.name,
         email: clinicData.email,
-        contact_number: clinicData.phone,
+        contact_number: clinicData.contact_number,
         address: clinicData.address,
         city: clinicData.city,
-        pincode: clinicData.postalCode,
-        about_clinic: clinicData.about,
-        coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`
+        pincode: clinicData.pincode,
+        landmark: clinicData.landmark,
+        map_link: clinicData.map_link,
+        about_clinic: clinicData.about_clinic,
+        gst_no: clinicData.gst_no,
+        founded_on: clinicData.founded_on,
+        coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`,
+        images: clinicData.images,
+        registration_certificate: clinicData.registration_certificate,
+        languages: clinicData.languages
       };
 
       const clinicId = clinicData.uuid || '';
 
       await editClinicODetails(clinicId, requestData);
-      await saveOperatingHours(clinicId);
 
-      console.log('Clinic details and operating hours updated successfully');
+      console.log('Clinic details updated successfully');
       setSaveStatus('saved');
       setIsEditMode(false);
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -114,51 +237,28 @@ const ClinicSettingsDashboard = () => {
     }
   };
 
+  // Combined save handler
+  const handleSave = async () => {
+    try {
+      // Save clinic details first
+      await handleSaveClinicDetails();
+
+      // Only save operating hours if they have changed
+      if (hasOperatingHoursChanged && isEditMode) {
+        await saveOperatingHours();
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+      // Error states are handled in individual functions
+    }
+  };
+
   // Handle cancel edit
   const handleCancelEdit = () => {
     setIsEditMode(false);
     setSaveStatus('idle');
-    // Reset form data by reloading from hook
-    window.location.reload(); // Simple reset by reloading
-  };
-
-  // Handle search select
-  const handleSearchSelect = (result: NominatimResult) => {
-    setClinicData(prev => ({
-      ...prev,
-      location: {
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-      },
-      address: result.display_name || prev.address,
-      city: result.address?.city || result.address?.town || result.address?.village || prev.city,
-      state: result.address?.state || prev.state,
-      postalCode: result.address?.postcode || prev.postalCode,
-    }));
-    handleClearSearch();
-    setMapZoom(16);
-  };
-
-  // Handle map change
-  const handleMapChange = (coords: { lat: number; lng: number }) => {
-    if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
-      setClinicData(prev => ({ ...prev, location: coords }));
-    }
-  };
-
-  // Handle fetch address from coordinates
-  const handleFetchAddress = async (lat: number, lng: number) => {
-    const data = await fetchAddressFromCoords(lat, lng);
-    if (data && data.address) {
-      setClinicData(prev => ({
-        ...prev,
-        address: data.display_name || prev.address,
-        city: data.address?.city || data.address?.town || data.address?.village || prev.city,
-        state: data.address?.state || prev.state,
-        postalCode: data.address?.postcode || prev.postalCode,
-      }));
-    }
-    setMapZoom(13);
+    setOperatingHoursSaveStatus('idle');
+    resetOperatingHoursChanges();
   };
 
   // Loading state
@@ -212,19 +312,8 @@ const ClinicSettingsDashboard = () => {
               clinicData={clinicData}
               isEditMode={isEditMode}
               onInputChange={handleInputChange}
-              searchQuery={searchQuery}
-              searchResults={searchResults}
-              isSearching={isSearching}
-              dropdownOpen={dropdownOpen}
-              highlightedIndex={highlightedIndex}
-              searchRef={searchRef}
-              mapZoom={mapZoom}
-              onSearchChange={handleSearchChange}
-              onSearchKeyDown={handleSearchKeyDown}
-              onSearchSelect={handleSearchSelect}
-              onClearSearch={handleClearSearch}
-              onMapChange={handleMapChange}
-              onFetchAddress={handleFetchAddress}
+              onLocationChange={handleMapChange}
+              onFileUpload={handleFileUpload}
             />
 
             <OperatingHours
@@ -232,16 +321,18 @@ const ClinicSettingsDashboard = () => {
               isEditMode={isEditMode}
               onHoursChange={handleHoursChange}
               onToggleDayClosed={toggleDayClosed}
+              saveStatus={operatingHoursSaveStatus}
+              onSaveOperatingHours={saveOperatingHours}
+              hasChanges={hasOperatingHoursChanged}
             />
 
             <AdditionalInformation
               clinicData={clinicData}
               isEditMode={isEditMode}
               onInputChange={handleInputChange}
-              onAddInsurance={addInsurance}
-              onRemoveInsurance={removeInsurance}
-              onAddSpecialty={addSpecialty}
-              onRemoveSpecialty={removeSpecialty}
+              onImageUpload={handleImagesUpload}
+              onRemoveImage={removeImage}
+              uploadingImages={uploadingImages}
             />
           </div>
         </div>

@@ -1,40 +1,41 @@
-import React, { useState } from 'react';
-import { Settings, Plus, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Settings, Plus, X, MessageSquare, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { ClinicData } from '@/types/clinic';
 
 interface AdditionalInformationProps {
   clinicData: ClinicData;
   isEditMode: boolean;
   onInputChange: (field: keyof ClinicData, value: string) => void;
-  onAddInsurance: (insurance: string) => void;
-  onRemoveInsurance: (insurance: string) => void;
-  onAddSpecialty: (specialty: string) => void;
-  onRemoveSpecialty: (specialty: string) => void;
+  onImageUpload?: (images: File[]) => void;
+  onRemoveImage?: (imageUrl: string) => void;
+  uploadingImages?: boolean;
 }
 
 const AdditionalInformation: React.FC<AdditionalInformationProps> = ({
   clinicData,
   isEditMode,
   onInputChange,
-  onAddInsurance,
-  onRemoveInsurance,
-  onAddSpecialty,
-  onRemoveSpecialty
+  onImageUpload,
+  onRemoveImage,
+  uploadingImages = false
 }) => {
-  const [newInsurance, setNewInsurance] = useState('');
   const [newSpecialty, setNewSpecialty] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddInsurance = () => {
-    if (newInsurance.trim()) {
-      onAddInsurance(newInsurance.trim());
-      setNewInsurance('');
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0 && onImageUpload) {
+      onImageUpload(files);
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  const handleAddSpecialty = () => {
-    if (newSpecialty.trim()) {
-      onAddSpecialty(newSpecialty.trim());
-      setNewSpecialty('');
+  const handleRemoveImage = (imageUrl: string) => {
+    if (onRemoveImage) {
+      onRemoveImage(imageUrl);
     }
   };
 
@@ -50,105 +51,108 @@ const AdditionalInformation: React.FC<AdditionalInformationProps> = ({
             <p className="text-gray-500">Tell us more about your clinic</p>
           </div>
         </div>
+
         <div className="space-y-8">
           {/* About Clinic */}
           <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block">About Your Clinic</label>
+            <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block flex items-center">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              About Your Clinic *
+            </label>
             <textarea
-              value={clinicData.about}
-              onChange={(e) => onInputChange('about', e.target.value)}
+              value={clinicData.about_clinic}
+              onChange={(e) => onInputChange('about_clinic', e.target.value)}
               disabled={!isEditMode}
-              rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 resize-none"
-              placeholder="Describe your clinic, services, and what makes you unique..."
+              rows={6}
+              className="w-full px-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 resize-none text-lg"
+              placeholder="Describe your clinic, services, expertise, facilities, and what makes you unique. Include your mission, vision, and any special features that set your clinic apart..."
             />
           </div>
 
-          {/* Insurance Networks */}
+          {/* Clinic Images */}
           <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block">Insurance Networks</label>
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {clinicData.insuranceNetworks.map((insurance, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                  >
-                    {insurance}
-                    {isEditMode && (
-                      <button
-                        onClick={() => onRemoveInsurance(insurance)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
+            <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block flex items-center">
+              <ImageIcon className="w-4 h-4 mr-2" />
+              Clinic Images
+              {uploadingImages && (
+                <Loader2 className="w-4 h-4 ml-2 animate-spin text-blue-500" />
+              )}
+            </label>
+            <div className="space-y-4">
+              {/* Display existing images */}
+              {clinicData.images && clinicData.images.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {clinicData.images.map((image: any, index: any) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Clinic image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-2xl"
+                      />
+                      {isEditMode && (
+                        <button
+                          onClick={() => handleRemoveImage(image)}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-2xl">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2">No images uploaded yet</p>
+                  <p className="text-sm text-gray-400">Upload images of your clinic facilities</p>
+                </div>
+              )}
+
+              {/* Upload new images */}
               {isEditMode && (
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-blue-500 transition-colors">
                   <input
-                    type="text"
-                    value={newInsurance}
-                    onChange={(e) => setNewInsurance(e.target.value)}
-                    placeholder="Add insurance network..."
-                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddInsurance()}
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="clinic-images"
+                    disabled={uploadingImages}
                   />
-                  <button
-                    onClick={handleAddInsurance}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  <label
+                    htmlFor="clinic-images"
+                    className={`cursor-pointer flex flex-col items-center ${uploadingImages ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                   >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                    {uploadingImages ? (
+                      <Loader2 className="w-8 h-8 text-blue-500 mb-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                    )}
+                    <span className="text-blue-600 font-medium">
+                      {uploadingImages ? 'Uploading Images...' : 'Upload Clinic Images'}
+                    </span>
+                    <span className="text-sm text-gray-500 mt-1">
+                      JPG, PNG, WebP (Max 5MB each)
+                    </span>
+                  </label>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Specialties */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 ml-1 block">Specialties</label>
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {clinicData.specialties.map((specialty, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium"
-                  >
-                    {specialty}
-                    {isEditMode && (
-                      <button
-                        onClick={() => onRemoveSpecialty(specialty)}
-                        className="ml-2 text-emerald-600 hover:text-emerald-800"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-              {isEditMode && (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="text"
-                    value={newSpecialty}
-                    onChange={(e) => setNewSpecialty(e.target.value)}
-                    placeholder="Add specialty..."
-                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddSpecialty()}
-                  />
-                  <button
-                    onClick={handleAddSpecialty}
-                    className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+          {/* Reason for Rejection (Read-only) */}
+          {clinicData.reason_for_rejection && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+              <h3 className="text-lg font-semibold text-red-800 mb-2 flex items-center">
+                <X className="w-5 h-5 mr-2" />
+                Reason for Rejection
+              </h3>
+              <p className="text-red-700">{clinicData.reason_for_rejection}</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

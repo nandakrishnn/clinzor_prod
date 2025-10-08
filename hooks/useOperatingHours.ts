@@ -1,37 +1,115 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { OperatingHours } from '@/types/clinic';
+import { getOperatingHours } from '@/service/clinic/profileService';
+import useClinicByUser from './cilincHook/useClinicByUser';
 
-export const useOperatingHours = (initialHours?: OperatingHours) => {
-  const defaultHours: OperatingHours = {
-    monday: { open: '09:00', close: '18:00', closed: false },
-    tuesday: { open: '09:00', close: '18:00', closed: false },
-    wednesday: { open: '09:00', close: '18:00', closed: false },
-    thursday: { open: '09:00', close: '18:00', closed: false },
-    friday: { open: '09:00', close: '18:00', closed: false },
-    saturday: { open: '10:00', close: '16:00', closed: false },
-    sunday: { open: '10:00', close: '14:00', closed: true }
+// Initial operating hours structure
+const initialOperatingHours: OperatingHours = {
+  monday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  tuesday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  wednesday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  thursday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  friday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  saturday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  sunday: { open: '09:00', close: '17:00', closed: true, uuid: undefined }
+};
+
+export const useOperatingHours = () => {
+  const [operatingHours, setOperatingHours] = useState<OperatingHours>(initialOperatingHours);
+  const [originalOperatingHours, setOriginalOperatingHours] = useState<OperatingHours>(initialOperatingHours);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const [existingTimings, setExistingTimings] = useState<any[]>([]);
+
+  // Load operating hours from API
+  const loadOperatingHours = async (clinicId: any, apiData: any[] = []) => {
+    try {
+      const res = await getOperatingHours(clinicId)
+      const data = res?.data?.data
+      if (data.length > 0) {
+        setExistingTimings(data);
+        const formattedHours = formatApiDataToOperatingHours(data);
+        setOperatingHours(formattedHours);
+        setOriginalOperatingHours(formattedHours);
+      } else {
+        // Use initial data if no API data
+        setOperatingHours(initialOperatingHours);
+        setOriginalOperatingHours(initialOperatingHours);
+      }
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Error loading operating hours:', error);
+    }
   };
 
-  const [operatingHours, setOperatingHours] = useState<OperatingHours>(initialHours || defaultHours);
+  // Format API data to our operating hours structure
+  const formatApiDataToOperatingHours = (apiData: any[]): OperatingHours => {
+    const formatted: OperatingHours = { ...initialOperatingHours };
 
-  const handleHoursChange = (day: keyof OperatingHours, field: keyof OperatingHours, value: string | boolean) => {
+    apiData.forEach(item => {
+      const day = item.day.toLowerCase() as keyof OperatingHours;
+      if (formatted[day]) {
+        formatted[day] = {
+          open: item.opening_time?.slice(0, 5) || '09:00', // Remove seconds
+          close: item.closing_time?.slice(0, 5) || '17:00', // Remove seconds
+          closed: false, // Assuming if there's an entry, it's not closed
+          uuid: item.uuid
+        };
+      }
+    });
+
+    return formatted;
+  };
+
+  // Get UUID for a specific day
+  const getTimingUuid = (day: keyof OperatingHours): string | undefined => {
+    const timing = existingTimings.find(item =>
+      item.day.toLowerCase() === day.toLowerCase()
+    );
+    return timing?.uuid;
+  };
+
+  // Handle hours change
+  const handleHoursChange = (day: keyof OperatingHours, field: 'open' | 'close', value: string) => {
     setOperatingHours(prev => ({
       ...prev,
-      [day]: { ...prev[day], [field]: value }
+      [day]: {
+        ...prev[day],
+        [field]: value
+      }
     }));
   };
 
+  // Toggle day closed
   const toggleDayClosed = (day: keyof OperatingHours) => {
     setOperatingHours(prev => ({
       ...prev,
-      [day]: { ...prev[day], closed: !prev[day].closed }
+      [day]: {
+        ...prev[day],
+        closed: !prev[day].closed
+      }
     }));
   };
 
+  // Reset changes
+  const resetOperatingHoursChanges = () => {
+    setOperatingHours(operatingHours);
+    setHasChanges(false);
+  };
+
+  // Check for changes
+  useEffect(() => {
+    const changed = JSON.stringify(operatingHours) !== JSON.stringify(originalOperatingHours);
+    setHasChanges(changed);
+  }, [operatingHours, originalOperatingHours]);
+
   return {
     operatingHours,
-    setOperatingHours,
     handleHoursChange,
-    toggleDayClosed
+    toggleDayClosed,
+    hasOperatingHoursChanged: hasChanges,
+    resetOperatingHoursChanges,
+    loadOperatingHours,
+    getTimingUuid,
+    existingTimings
   };
 };

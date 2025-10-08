@@ -5,24 +5,34 @@ import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 export const useClinicData = () => {
   const { clinic, loading: isClinicLoading, error: clinicError } = useClinicByUser();
   const [clinicData, setClinicData] = useState<ClinicData>({
+    uuid: '',
     name: '',
     email: '',
     phone: '',
-    type: 'General Practice',
+    contact_number: '',
+    country_code: '91',
     address: '',
     city: '',
-    state: '',
-    postalCode: '',
-    about: '',
-    insuranceNetworks: [],
-    specialties: [],
+    pincode: 0,
+    landmark: '',
+    map_link: '',
+    coordinates: '',
     location: { lat: 0, lng: 0 },
-    images: []
+    about: '',
+    about_clinic: '',
+    gst_no: '',
+    founded_on: null,
+    status: '',
+    is_active: false,
+    languages: [],
+    images: [],
+    registration_certificate: null,
+    reason_for_rejection: null
   });
 
   const parseCoordinates = (coordinatesString?: string): { lat: number; lng: number } => {
     if (!coordinatesString) return { lat: 8.5241, lng: 76.9366 };
-    
+
     try {
       if (coordinatesString.includes('POINT')) {
         const match = coordinatesString.match(/POINT\(([^)]+)\)/);
@@ -33,25 +43,11 @@ export const useClinicData = () => {
           if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
         }
       }
-
-      const coords = coordinatesString.trim().split(/\s+/);
-      if (coords.length >= 2) {
-        const lng = parseFloat(coords[0]);
-        const lat = parseFloat(coords[1]);
-        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
-      }
-
-      const commaCoords = coordinatesString.split(',');
-      if (commaCoords.length === 2) {
-        const lat = parseFloat(commaCoords[0].trim());
-        const lng = parseFloat(commaCoords[1].trim());
-        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
-      }
+      return { lat: 8.5241, lng: 76.9366 };
     } catch (error) {
       console.error('Error parsing coordinates:', error);
+      return { lat: 8.5241, lng: 76.9366 };
     }
-
-    return { lat: 8.5241, lng: 76.9366 };
   };
 
   useEffect(() => {
@@ -61,60 +57,58 @@ export const useClinicData = () => {
 
       setClinicData(prev => ({
         ...prev,
+        uuid: backendClinic?.uuid || '',
         name: backendClinic?.name || '',
         email: backendClinic?.email || '',
         phone: backendClinic?.contact_number || '',
+        contact_number: backendClinic?.contact_number || '',
+        country_code: backendClinic?.country_code || '91',
         address: backendClinic?.address || '',
         city: backendClinic?.city || '',
-        postalCode: backendClinic?.pincode?.toString() || '',
-        about: backendClinic?.about_clinic || '',
+        pincode: backendClinic?.pincode || 0,
+        landmark: backendClinic?.landmark || '',
+        map_link: backendClinic?.map_link || '',
+        coordinates: backendClinic?.coordinates || '',
         location: coordinates,
-        uuid: backendClinic?.uuid || '',
-        images: backendClinic?.images || [],
+        about: backendClinic?.about_clinic || '',
+        about_clinic: backendClinic?.about_clinic || '',
+        gst_no: backendClinic?.gst_no || '',
+        founded_on: backendClinic?.founded_on || null,
         status: backendClinic?.status || '',
-        gstNo: backendClinic?.gst_no || '',
-        foundedOn: backendClinic?.founded_on || null
+        is_active: backendClinic?.is_active || false,
+        images: backendClinic?.images || [],
+        registration_certificate: backendClinic?.registration_certificate || null,
+        reason_for_rejection: backendClinic?.reason_for_rejection || null,
+        specialties: [],
+        languages: backendClinic?.languages || []
       }));
     }
   }, [clinic]);
 
-  // Input change handler
-  const handleInputChange = (field: keyof ClinicData, value: string) => {
-    setClinicData(prev => ({ ...prev, [field]: value }));
-  };
+  // Input change handler with type safety
+  const handleInputChange = (field: keyof ClinicData, value: any) => {
+    setClinicData(prev => {
+      // Handle location object separately
+      if (field === 'location' && typeof value === 'object') {
+        return { ...prev, location: value };
+      }
 
-  // Insurance functions
-  const addInsurance = (newInsurance: string) => {
-    if (newInsurance.trim() && !clinicData.insuranceNetworks.includes(newInsurance.trim())) {
-      setClinicData(prev => ({
-        ...prev,
-        insuranceNetworks: [...prev.insuranceNetworks, newInsurance.trim()]
-      }));
-    }
-  };
+      // Handle languages array (comma separated string to array)
+      if (field === 'languages' && typeof value === 'string') {
+        return {
+          ...prev,
+          languages: value.split(',').map(lang => lang.trim()).filter(lang => lang.length > 0)
+        };
+      }
 
-  const removeInsurance = (insurance: string) => {
-    setClinicData(prev => ({
-      ...prev,
-      insuranceNetworks: prev.insuranceNetworks.filter(i => i !== insurance)
-    }));
-  };
+      // Handle images array
+      if (field === 'images' && Array.isArray(value)) {
+        return { ...prev, images: value };
+      }
 
-  // Specialty functions
-  const addSpecialty = (newSpecialty: string) => {
-    if (newSpecialty.trim() && !clinicData.specialties.includes(newSpecialty.trim())) {
-      setClinicData(prev => ({
-        ...prev,
-        specialties: [...prev.specialties, newSpecialty.trim()]
-      }));
-    }
-  };
-
-  const removeSpecialty = (specialty: string) => {
-    setClinicData(prev => ({
-      ...prev,
-      specialties: prev.specialties.filter(s => s !== specialty)
-    }));
+      // Handle other fields
+      return { ...prev, [field]: value };
+    });
   };
 
   return {
@@ -122,10 +116,6 @@ export const useClinicData = () => {
     setClinicData,
     isClinicLoading,
     clinicError,
-    handleInputChange,
-    addInsurance,
-    removeInsurance,
-    addSpecialty,
-    removeSpecialty
+    handleInputChange
   };
 };

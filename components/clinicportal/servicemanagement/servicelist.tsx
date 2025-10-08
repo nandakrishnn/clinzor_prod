@@ -678,8 +678,6 @@ const ServiceManagement: React.FC = () => {
         image: imageUrl
       };
 
-      console.log('Sending service request:', requestBody);
-
       // Call the API
       await requestNewService(requestBody);
 

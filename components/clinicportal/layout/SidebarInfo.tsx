@@ -55,7 +55,7 @@ const SidebarInfo: React.FC<SidebarInfoProps> = ({ clinicData, operatingHours })
           </div>
           <div className="flex items-center space-x-3">
             <MapPin className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600 text-sm">{clinicData.city}, {clinicData.state}</span>
+            <span className="text-gray-600 text-sm">{clinicData.city}</span>
           </div>
         </div>
       </div>
@@ -69,8 +69,6 @@ const SidebarInfo: React.FC<SidebarInfoProps> = ({ clinicData, operatingHours })
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-2xl">
             <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{clinicData.specialties.length}+</div>
-            <div className="text-xs text-gray-600">Specialties</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-2xl">
             <Calendar className="w-6 h-6 text-green-600 mx-auto mb-2" />

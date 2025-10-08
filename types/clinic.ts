@@ -1,31 +1,44 @@
+
 export interface ClinicData {
+  // Basic Information
   uuid?: string;
   name: string;
   email: string;
   phone: string;
-  type: string;
+  contact_number: string;
+  country_code: string;
+
+  // Location Information
   address: string;
   city: string;
-  state: string;
-  postalCode: string;
-  about: string;
-  insuranceNetworks: string[];
-  specialties: string[];
-  location: {
-    lat: number;
-    lng: number;
-  };
+  pincode: number;
   landmark?: string;
-  gstNo?: string;
-  foundedOn?: string | null;
-  images?: string[];
-  status?: string;
-}
+  map_link: string;
+  coordinates: string;
+  location: { lat: number; lng: number };
 
+  // Clinic Details
+  about: string;
+  about_clinic: string;
+  gstNo?: string;
+  gst_no: string;
+  founded_on?: string | null;
+  status?: string;
+  is_active: boolean;
+
+  // Additional
+  languages: string[];
+  images?: any;
+
+  // Certificates
+  registration_certificate: string | null;
+  reason_for_rejection: string | null;
+}
 export interface OperatingHour {
   open: string;
   close: string;
   closed: boolean;
+  uuid: undefined | string
 }
 
 export interface OperatingHours {
@@ -44,13 +57,20 @@ export interface BackendClinic {
   contact_number: string;
   address: string;
   city: string;
-  pincode: string;
+  pincode: number; // Change from string to number
   about_clinic: string;
   coordinates?: string;
   uuid?: string;
   images?: string[];
   status?: string;
   gst_no?: string;
+  country_code?: string;
+  map_link?: string;
+  landmark?: string;
+  is_active?: boolean;
+  registration_certificate?: string;
+  reason_for_rejection?: string;
+  languages?: string[];
   founded_on?: string | null;
 }
 

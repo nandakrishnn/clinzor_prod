@@ -87,7 +87,6 @@ export const formatLocalDate = (date: Date) => {
   return `${yyyy}-${mm}-${dd}T00:00:00`;   // local midnight
 };
 
-
 export const convertTo12HourFormat = (utcDateString: string) => {
   const date = new Date(utcDateString);
   let hours = date.getUTCHours();
@@ -98,4 +97,83 @@ export const convertTo12HourFormat = (utcDateString: string) => {
   const hh = String(hours).padStart(2, "0");
   const mm = String(minutes).padStart(2, "0");
   return `${hh}:${mm} ${ampm}`;
+};
+
+
+// Convert 24-hour format to 12-hour format for display
+export const convertTo12HourFormatN = (time24: string): string => {
+  if (!time24) return '';
+
+  try {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    const minutesStr = minutes.toString().padStart(2, '0');
+    return `${hours12}:${minutesStr} ${ampm}`;
+  } catch (error) {
+    console.error('Error converting time to 12-hour format:', error);
+    return time24;
+  }
+};
+
+// Convert 12-hour format to 24-hour format for API
+export const convertTo24HourFormat = (time12: string): string => {
+  if (!time12) return '';
+
+  try {
+    const time = time12.trim();
+    const [timePart, ampm] = time.split(' ');
+    const [hours, minutes] = timePart.split(':').map(Number);
+
+    let hours24 = hours;
+
+    if (ampm?.toUpperCase() === 'PM' && hours !== 12) {
+      hours24 = hours + 12;
+    } else if (ampm?.toUpperCase() === 'AM' && hours === 12) {
+      hours24 = 0;
+    }
+
+    return `${hours24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  } catch (error) {
+    console.error('Error converting time to 24-hour format:', error);
+    return time12;
+  }
+};
+
+// Generate time options in 12-hour format for dropdown
+export const generate12HourTimeOptions = () => {
+  const options = [];
+
+  // Add times for AM
+  for (let hour = 0; hour < 12; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const displayHour = hour === 0 ? 12 : hour;
+      const timeString = `${displayHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const value24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({
+        value: value24, // Store as 24-hour for API
+        label: `${timeString} AM` // Display as 12-hour
+      });
+    }
+  }
+
+  // Add times for PM
+  for (let hour = 12; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const displayHour = hour === 12 ? 12 : hour - 12;
+      const timeString = `${displayHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const value24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({
+        value: value24, // Store as 24-hour for API
+        label: `${timeString} PM` // Display as 12-hour
+      });
+    }
+  }
+
+  return options;
+};
+
+// Format time for API (ensure it has seconds)
+export const formatTimeForAPI = (time: string): string => {
+  return time.includes(':') ? `${time}:00` : time;
 };
