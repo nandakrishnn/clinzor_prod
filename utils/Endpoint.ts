@@ -26,6 +26,8 @@ export const USER_SERVICE = {
     CREATE_RAYZOR_PAY: "customer/create-payment/",
     VERIFY_STATUS: "customer/create-payment/",
     CREATE_CAMP: "clinic/camp-lc/",
+    LIST_REVIEW: "customer/list-review/",
+    CREATE_REVIEW: "customer/create-review/",
 }
 
 export const USER_CLINIC = {

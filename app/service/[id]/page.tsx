@@ -3,7 +3,6 @@ import FooterSection from "@/components/landingpage/footer/footer";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
-import Review from "@/components/service/Review";
 import ServiceDetailedViewComponents from "@/components/service/ServiceDetailedViewComponents";
 
 type ServiceDetailPageProps = {
@@ -27,12 +26,6 @@ const ServiceDetailPage = ({ params }: ServiceDetailPageProps) => {
       <section className="max-w-screen-xl mx-auto pb-5 md:pb-10 flex flex-col md:flex-row">
         <ServiceDetailedViewComponents id={params?.id} />
       </section>
-
-
-      {/* Review Part */}
-      {/* <main className="max-w-screen-xl mx-auto py-10 md:py-20">
-        <Review />
-      </main> */}
 
       {/* Footer */}
       <section>

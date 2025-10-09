@@ -5,6 +5,14 @@ export const getUserService = async () => {
   const res = await axiosPrivate.get(`${USER_HOME.GET_USER}`);
   return res.data;
 };
+export const getAllReviewService = async (clinicId: string, serviceId: string, page: number) => {
+  const res = await axiosPublic.get(`${USER_SERVICE.LIST_REVIEW}?clinic=${clinicId}&service=${serviceId}&page=${page}`);
+  return res.data;
+};
+export const addReviewService = async (reviewData: any) => {
+  const res = await axiosPrivate.post(`${USER_SERVICE.CREATE_REVIEW}`, reviewData);
+  return res.data;
+};
 
 export const getAllService = async (page?: number, search?: string) => {
   let url = `${USER_SERVICE.GET_ALL_SERVICE}?page=${page || 1}`;

@@ -2,12 +2,12 @@ import CommonHeroSection from "@/components/common/CommonHeroSection";
 import FooterSection from "@/components/landingpage/footer/footer";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import ClinicDetailed from "@/components/service/clinic/ClinicDetailed";
+import ReviewSection from "@/components/service/Review";
 import React from "react";
 
 type ServiceClinicBookingProps = {
   params: { id: string }
 }
-
 
 const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
   return (
@@ -25,6 +25,11 @@ const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
       <section>
         <ClinicDetailed id={params.id} />
       </section>
+
+      {/* Review Part */}
+      <main className="max-w-screen-xl mx-auto mb-10 md:mb-20">
+        <ReviewSection id={params.id} />
+      </main>
 
       {/* Footer */}
       <section>
