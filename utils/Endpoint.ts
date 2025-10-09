@@ -59,6 +59,9 @@ export const USER_EXPERT = {
 // CLINIC ENDPOINTS
 export const CLINIC_DASHBOARD = {
     GETALL_DASH_STATIC: 'clinic/clinic-portal-dashboard-analytics/',
+    GETALL_DASH_BOOKING: 'clinic/booking-weekly-trend/',
+    GETALL_DASH_REVENUE: 'clinic/revenue-trend/',
+    GETALL_DASH_SERVICE: 'clinic/clinic-service-usage-analytics/',
     GET_CLINIC_BY_USER: 'clinic/get-clinic-by-user/',
     GET_CLINIC_DUE_DASHBOARD: 'clinic/get-clinic-by-user/'
 }

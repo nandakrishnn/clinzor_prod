@@ -118,7 +118,7 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
                     {dayNames[day as keyof OperatingHoursType]}
                   </span>
                 </div>
-                <button
+                {/* <button
                   onClick={() => onToggleDayClosed(day as keyof OperatingHoursType)}
                   disabled={!isEditMode}
                   className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
@@ -130,7 +130,7 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
                       hours.closed ? 'translate-x-1' : 'translate-x-7'
                     }`}
                   />
-                </button>
+                </button> */}
               </div>
               <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full">
                 {hours.closed ? (

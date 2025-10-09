@@ -5,6 +5,18 @@ export const getDashboardDataService = async () => {
     const res = await axiosPrivate.get(CLINIC_DASHBOARD.GETALL_DASH_STATIC)
     return res.data
 }
+export const getDashboardBookingTrendService = async () => {
+    const res = await axiosPrivate.get(CLINIC_DASHBOARD.GETALL_DASH_BOOKING)
+    return res.data
+}
+export const getDashboardRevenueTrendService = async () => {
+    const res = await axiosPrivate.get(CLINIC_DASHBOARD.GETALL_DASH_REVENUE)
+    return res.data
+}
+export const getDashboardServiceTrendService = async () => {
+    const res = await axiosPrivate.get(CLINIC_DASHBOARD.GETALL_DASH_SERVICE)
+    return res.data
+}
 export const getClinicDataService = async () => {
     const res = await axiosPrivate.get(CLINIC_DASHBOARD.GET_CLINIC_BY_USER)
     return res.data
