@@ -25,6 +25,8 @@ import {
 import { GetAllServiceForClinic } from "@/service/clinic/serviceManagementService";
 import { convertTo12HourFormat } from "@/utils/formatters";
 import { getAllClinicBookings, updateBookingStatus } from "@/service/clinic/bookingManagmentService";
+import { toast } from "sonner"; // Import Sonner
+import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 
 interface VideoCall {
   uuid: string;
@@ -446,6 +448,11 @@ function VideoCallPortalContent() {
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   const userName = searchParams.get("userName") || "Clinic User";
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
+    bookingId: string;
+    newStatus: string;
+  } | null>(null);
 
   const isWithin10Minutes = (startTime: string) => {
     const now = new Date();
@@ -547,6 +554,52 @@ function VideoCallPortalContent() {
       console.error("Error updating booking status:", error);
     } finally {
       setIsUpdatingStatus(null);
+    }
+  };
+
+  const handleStatusChange = (bookingId: string, newStatus: string) => {
+    // Show confirmation modal for destructive actions
+    if (newStatus === "CANCELLED" || newStatus === "NOT_CONDUCTED") {
+      setPendingStatusUpdate({ bookingId, newStatus });
+      setShowConfirmationModal(true);
+    } else {
+      // Direct update for non-destructive actions
+      handleUpdateStatus(bookingId, newStatus);
+    }
+  };
+
+  const confirmStatusUpdate = () => {
+    if (pendingStatusUpdate) {
+      handleUpdateStatus(pendingStatusUpdate.bookingId, pendingStatusUpdate.newStatus);
+      setShowConfirmationModal(false);
+    }
+  };
+
+  const cancelStatusUpdate = () => {
+    setPendingStatusUpdate(null);
+    setShowConfirmationModal(false);
+    setEditingStatusId(null);
+  };
+
+  const getStatusChangeMessage = (newStatus: string) => {
+    switch (newStatus) {
+      case "CANCELLED":
+        return "Are you sure you want to cancel this booking? This action cannot be undone.";
+      case "NOT_CONDUCTED":
+        return "Are you sure you want to mark this booking as not conducted?";
+      default:
+        return "Are you sure you want to update the booking status?";
+    }
+  };
+
+  const getStatusChangeTitle = (newStatus: string) => {
+    switch (newStatus) {
+      case "CANCELLED":
+        return "Cancel Booking";
+      case "NOT_CONDUCTED":
+        return "Mark as Not Conducted";
+      default:
+        return "Update Booking Status";
     }
   };
 
@@ -801,26 +854,35 @@ function VideoCallPortalContent() {
                           </div>
 
                           {/* Status Section with Edit */}
-                          <div className="flex items-center space-x-2">
-                            {isEditing ? (
-                              <div className="flex flex-col space-y-2">
-                                <select
-                                  className="text-xs border border-gray-300 rounded px-2 py-1"
-                                  onChange={(e) => handleUpdateStatus(videoCall.uuid, e.target.value)}
-                                  disabled={isUpdatingStatus === videoCall.uuid}
-                                >
-                                  <option value="COMPLETED">Completed</option>
-                                  <option value="CANCELLED">Cancelled</option>
-                                  <option value="NOT_CONDUCTED">Not Conducted</option>
-                                </select>
+                          {isEditing ? (
+                            <div className="flex flex-col space-y-2">
+                              <select
+                                className="text-xs border border-gray-300 rounded px-2 py-1"
+                                onChange={(e) => handleStatusChange(videoCall.uuid, e.target.value)}
+                                disabled={isUpdatingStatus === videoCall.uuid}
+                                value={videoCall.booking_status}
+                              >
+                                <option value="">Select</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELED">Cancelled</option>
+                              </select>
+                              {isUpdatingStatus === videoCall.uuid ? (
+                                <div className="flex items-center justify-center">
+                                  <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-xs text-gray-500 ml-1">Updating...</span>
+                                </div>
+                              ) : (
                                 <button
                                   onClick={() => setEditingStatusId(null)}
                                   className="text-xs text-gray-500 hover:text-gray-700"
+                                  disabled={isUpdatingStatus === videoCall.uuid}
                                 >
                                   Cancel
                                 </button>
-                              </div>
-                            ) : (
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
                               <div
                                 className={`ml-3 flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.color}`}
                               >
@@ -829,18 +891,19 @@ function VideoCallPortalContent() {
                                 ></div>
                                 {statusConfig.label}
                               </div>
-                            )}
 
-                            {!isEditing && (
-                              <button
-                                onClick={() => setEditingStatusId(videoCall.uuid)}
-                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                                title="Edit Status"
-                              >
-                                <Edit size={14} />
-                              </button>
-                            )}
-                          </div>
+                              {!isEditing && (
+                                <button
+                                  onClick={() => setEditingStatusId(videoCall.uuid)}
+                                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                  title="Edit Status"
+                                  disabled={isUpdatingStatus === videoCall.uuid}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-2 mb-4">
@@ -1017,6 +1080,17 @@ function VideoCallPortalContent() {
           )}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showConfirmationModal}
+        onClose={cancelStatusUpdate}
+        onConfirm={confirmStatusUpdate}
+        title={pendingStatusUpdate ? getStatusChangeTitle(pendingStatusUpdate.newStatus) : "Update Status"}
+        message={pendingStatusUpdate ? getStatusChangeMessage(pendingStatusUpdate.newStatus) : "Are you sure?"}
+        confirmText="Yes, Update"
+        cancelText="Cancel"
+        isLoading={isUpdatingStatus === pendingStatusUpdate?.bookingId}
+      />
     </div>
   );
 }

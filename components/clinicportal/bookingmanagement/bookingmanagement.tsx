@@ -3,6 +3,7 @@ import { Calendar, Clock, User, Phone, Mail, Video, MapPin, Filter, Search, Chev
 import { format, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { cancelClinicBookings, getAllClinicBookings } from '@/service/clinic/bookingManagmentService';
 import { convertTo12HourFormat, convertTo12HourFormatN, formatDate, formatDateTime, parse12HourFormat } from '@/utils/formatters';
+import { toast } from 'sonner';
 
 // Updated TypeScript types to match the new data structure
 interface Booking {
@@ -289,8 +290,6 @@ const BookingManagement = () => {
     }
   };
 
-
-
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, typeFilter]);
@@ -348,8 +347,24 @@ const BookingManagement = () => {
       await fetchBookings();
       // Close the action menu
       setShowActionMenu(null);
+      toast.success("Successfully canceled this meeting.")
     } catch (error) {
       console.error("Error canceling booking:", error);
+      toast.error("Cancellation have some issue please try again latter.")
+      // You might want to add error handling here (e.g., show a toast notification)
+    }
+  };
+  const handleCompletedBooking = async (bookingId: string) => {
+    try {
+      await cancelClinicBookings(bookingId, { booking_status: 'COMPLETED' });
+      // Refresh bookings after successful cancellation
+      await fetchBookings();
+      // Close the action menu
+      setShowActionMenu(null);
+      toast.success("Status update successfully")
+    } catch (error: any) {
+      console.error("Error canceling booking:", error);
+      toast.error(error?.response?.data?.detail || "Status updating have some issue please try again latter.")
       // You might want to add error handling here (e.g., show a toast notification)
     }
   };
@@ -516,7 +531,7 @@ const BookingManagement = () => {
         </div>
 
         {/* Table (Responsive) */}
-        <div className="w-full h-full overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block overflow-hidden">
+        <div className="w-full min-h-[50vh] overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block overflow-hidden">
           <table className="min-w-[900px]  w-full text-xs sm:text-sm md:text-base align-middle">
             <thead className="sticky top-0 bg-white/90 z-10">
               <tr className="bg-slate-50/80 border-b border-slate-200/60">
@@ -654,7 +669,7 @@ const BookingManagement = () => {
                           </button>
                           {/* Action Menu with transition */}
                           <div
-                            className={`absolute right-0 top-12 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-50 transition-all duration-200 ${showActionMenu === booking.uuid ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+                            className={`absolute z-50 right-0 top-12 w-40 bg-white border border-slate-200 rounded-xl shadow-xl transition-all duration-200 ${showActionMenu === booking.uuid ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
                             tabIndex={-1}
                             aria-label="Action Menu"
                           >
@@ -662,6 +677,12 @@ const BookingManagement = () => {
                               onClick={() => setSelectedBooking(booking)}
                               className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 rounded-t-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
                               View Details
+                            </button>
+
+                            <button
+                              onClick={() => handleCompletedBooking(booking.uuid)}
+                              className="w-full text-nowrap text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl" tabIndex={showActionMenu === booking.uuid ? 0 : -1}>
+                              Completed
                             </button>
                             <button
                               onClick={() => handleCancelBooking(booking.uuid)}
@@ -744,6 +765,9 @@ const BookingManagement = () => {
                       <button
                         onClick={() => handleCancelBooking(booking.uuid)}
                         className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Cancel Booking</button>
+                      <button
+                        onClick={() => handleCompletedBooking(booking.uuid)}
+                        className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl">Completed Booking</button>
                     </div>
                   )}
                 </div>

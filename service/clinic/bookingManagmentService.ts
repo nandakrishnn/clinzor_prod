@@ -44,9 +44,13 @@ export const cancelClinicBookings = async (id: string, body: {
     throw error;
   }
 };
+
 export const updateBookingStatus = async (id: string, newStatus: any) => {
   try {
-    const response = await axiosPrivate.patch(``,);
+    const body = {
+      booking_status: newStatus
+    }
+    const response = await axiosPrivate.patch(`clinic/mark-booking-complete/${id}/`, body);
     return response.data;
   } catch (error) {
     console.error("User status update error:", error);
