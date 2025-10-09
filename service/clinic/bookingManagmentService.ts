@@ -1,5 +1,5 @@
 
-import  { axiosPrivate } from "../../axios/axios";
+import { axiosPrivate } from "../../axios/axios";
 
 
 // Clinic Booking  api
@@ -18,7 +18,7 @@ export const getAllClinicBookings = async (
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('page_size', pageSize.toString());
-    
+
     if (search) params.append('search', search);
     if (status) params.append('booking_status', status);
     if (type) params.append('booking_type', type);
@@ -44,4 +44,12 @@ export const cancelClinicBookings = async (id: string, body: {
     throw error;
   }
 };
-
+export const updateBookingStatus = async (id: string, newStatus: any) => {
+  try {
+    const response = await axiosPrivate.patch(``,);
+    return response.data;
+  } catch (error) {
+    console.error("User status update error:", error);
+    throw error;
+  }
+};

@@ -28,6 +28,7 @@ import {
   addSuggestion
 } from "@/service/expert/bookingMangementService";
 import { GetAllServiceForClinic } from "@/service/clinic/serviceManagementService";
+import { convertTo12HourFormat } from "@/utils/formatters";
 
 interface VideoCall {
   uuid: string;
@@ -37,11 +38,11 @@ interface VideoCall {
   startTime: string;
   endTime: string;
   booking_status:
-    | "SCHEDULED"
-    | "ACTIVE"
-    | "COMPLETED"
-    | "CANCELLED"
-    | "NOT_CONDUCTED";
+  | "SCHEDULED"
+  | "ACTIVE"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "NOT_CONDUCTED";
   bookingId?: string;
   userType: "expert" | "customer" | "clinic";
   expert_meeting_link?: string;
@@ -192,17 +193,15 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
   return (
     <div
       ref={videoCallRef}
-      className={`relative overflow-hidden ${
-        isFullscreen ? "fixed inset-4 z-50" : "w-full h-full"
-      }`}
+      className={`relative overflow-hidden ${isFullscreen ? "fixed inset-4 z-50" : "w-full h-full"
+        }`}
       style={isFullscreen ? { width: "auto", height: "auto" } : {}}
     >
       <div className="flex h-full gap-5">
         {/* Video/Meeting Container (Left Side) */}
         <div
-          className={`${
-            showMeetingFrame && expertMeetingLink ? "w-2/3" : "w-full"
-          } relative`}
+          className={`${showMeetingFrame && expertMeetingLink ? "w-2/3" : "w-full"
+            } relative`}
         >
           {/* Meeting Link Iframe - Full overlay when active */}
           {showMeetingFrame && expertMeetingLink && (
@@ -275,21 +274,19 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
                 <>
                   <button
                     onClick={toggleAudio}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                      isAudioEnabled
-                        ? "bg-gray-600 hover:bg-gray-500 text-white"
-                        : "bg-red-500 hover:bg-red-600 text-white"
-                    }`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isAudioEnabled
+                      ? "bg-gray-600 hover:bg-gray-500 text-white"
+                      : "bg-red-500 hover:bg-red-600 text-white"
+                      }`}
                   >
                     {isAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
                   </button>
                   <button
                     onClick={toggleVideo}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                      isVideoEnabled
-                        ? "bg-gray-600 hover:bg-gray-500 text-white"
-                        : "bg-red-500 hover:bg-red-600 text-white"
-                    }`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isVideoEnabled
+                      ? "bg-gray-600 hover:bg-gray-500 text-white"
+                      : "bg-red-500 hover:bg-red-600 text-white"
+                      }`}
                   >
                     {isVideoEnabled ? (
                       <Video size={20} />
@@ -346,20 +343,18 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
                   {services.map((service) => (
                     <div
                       key={service.uuid}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedServices.includes(service.uuid)
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-blue-300"
-                      }`}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedServices.includes(service.uuid)
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-blue-300"
+                        }`}
                       onClick={() => handleServiceSelect(service.uuid)}
                     >
                       <div className="flex items-start">
                         <div
-                          className={`w-5 h-5 rounded border flex items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${
-                            selectedServices.includes(service.uuid)
-                              ? "bg-blue-500 border-blue-500"
-                              : "bg-white border-gray-300"
-                          }`}
+                          className={`w-5 h-5 rounded border flex items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${selectedServices.includes(service.uuid)
+                            ? "bg-blue-500 border-blue-500"
+                            : "bg-white border-gray-300"
+                            }`}
                         >
                           {selectedServices.includes(service.uuid) && (
                             <Check size={14} className="text-white" />
@@ -392,11 +387,10 @@ const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
               <button
                 onClick={handleSubmit}
                 disabled={selectedServices.length === 0 || isSubmitting}
-                className={`w-full py-2 px-4 rounded-lg flex items-center justify-center ${
-                  selectedServices.length === 0
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                } transition-colors`}
+                className={`w-full py-2 px-4 rounded-lg flex items-center justify-center ${selectedServices.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+                  } transition-colors`}
               >
                 {isSubmitting ? (
                   <>
@@ -671,20 +665,13 @@ function VideoCallPortalContent() {
 
   const formatDateTime = (startTime: string, endTime: string) => {
     const start = new Date(startTime);
-    const end = new Date(endTime);
 
     const date = start.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric"
     });
 
-    const time = `${start.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit"
-    })} – ${end.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit"
-    })}`;
+    const time = `${convertTo12HourFormat(startTime)} – ${convertTo12HourFormat(endTime)}`;
 
     return { date, time };
   };
@@ -801,9 +788,8 @@ function VideoCallPortalContent() {
 
       {!isInCall ? (
         <div
-          className={`py-6 transition-all duration-300 ${
-            isJoining ? "blur-sm" : ""
-          }`}
+          className={`py-6 transition-all duration-300 ${isJoining ? "blur-sm" : ""
+            }`}
         >
           <div className="max-w-7xl mx-auto px-6">
             <div className="relative">
@@ -822,15 +808,13 @@ function VideoCallPortalContent() {
                   return (
                     <div
                       key={videoCall.uuid}
-                      className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 cursor-pointer ${
-                        isSelected
-                          ? "border-blue-600 shadow-lg shadow-blue-600/10 ring-1 ring-blue-600/20"
-                          : "border-gray-200 hover:border-gray-300 hover:shadow-md hover:shadow-gray-500/5"
-                      } ${
-                        isJoiningThis
+                      className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 cursor-pointer ${isSelected
+                        ? "border-blue-600 shadow-lg shadow-blue-600/10 ring-1 ring-blue-600/20"
+                        : "border-gray-200 hover:border-gray-300 hover:shadow-md hover:shadow-gray-500/5"
+                        } ${isJoiningThis
                           ? "ring-2 ring-blue-600/30 scale-[1.02]"
                           : "hover:scale-[1.01]"
-                      }`}
+                        }`}
                       onClick={() => !isJoining && handleSelectCall(videoCall)}
                     >
                       <div className="p-5">
@@ -907,7 +891,7 @@ function VideoCallPortalContent() {
                         </div>
 
                         {videoCall.booking_status === "ACTIVE" ||
-                        videoCall.booking_status === "SCHEDULED" ? (
+                          videoCall.booking_status === "SCHEDULED" ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -924,23 +908,21 @@ function VideoCallPortalContent() {
                               (videoCall.booking_status === "SCHEDULED" &&
                                 !isWithin10Minutes(videoCall.startTime))
                             }
-                            className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm ${
-                              videoCall.booking_status === "ACTIVE" ||
+                            className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm ${videoCall.booking_status === "ACTIVE" ||
                               (videoCall.booking_status === "SCHEDULED" &&
                                 isWithin10Minutes(videoCall.startTime))
-                                ? videoCall.booking_status === "ACTIVE"
-                                  ? "bg-green-600 hover:bg-green-700 text-white shadow-green-600/20"
-                                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
-                                : "bg-gray-400 text-white cursor-not-allowed"
-                            } ${
-                              isJoiningThis
+                              ? videoCall.booking_status === "ACTIVE"
+                                ? "bg-green-600 hover:bg-green-700 text-white shadow-green-600/20"
+                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                              : "bg-gray-400 text-white cursor-not-allowed"
+                              } ${isJoiningThis
                                 ? "scale-105 shadow-lg"
                                 : isJoining ||
                                   (videoCall.booking_status === "SCHEDULED" &&
                                     !isWithin10Minutes(videoCall.startTime))
-                                ? "opacity-70 cursor-not-allowed"
-                                : "hover:scale-105 hover:shadow-lg"
-                            }`}
+                                  ? "opacity-70 cursor-not-allowed"
+                                  : "hover:scale-105 hover:shadow-lg"
+                              }`}
                           >
                             {isJoiningThis ? (
                               <>
@@ -1016,22 +998,20 @@ function VideoCallPortalContent() {
                   <button
                     onClick={prevCarousel}
                     disabled={isJoining}
-                    className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2.5 shadow-lg transition-all duration-200 ${
-                      isJoining
-                        ? "opacity-50 cursor-not-allowed"
-                        : "hover:bg-white hover:scale-110 hover:shadow-xl"
-                    }`}
+                    className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2.5 shadow-lg transition-all duration-200 ${isJoining
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-white hover:scale-110 hover:shadow-xl"
+                      }`}
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
                     onClick={nextCarousel}
                     disabled={isJoining}
-                    className={`absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2.5 shadow-lg transition-all duration-200 ${
-                      isJoining
-                        ? "opacity-50 cursor-not-allowed"
-                        : "hover:bg-white hover:scale-110 hover:shadow-xl"
-                    }`}
+                    className={`absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full p-2.5 shadow-lg transition-all duration-200 ${isJoining
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-white hover:scale-110 hover:shadow-xl"
+                      }`}
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -1046,15 +1026,13 @@ function VideoCallPortalContent() {
                     key={index}
                     onClick={() => !isJoining && setCurrentCarouselIndex(index)}
                     disabled={isJoining}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentCarouselIndex
-                        ? "bg-blue-600 scale-125"
-                        : "bg-gray-300"
-                    } ${
-                      isJoining
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentCarouselIndex
+                      ? "bg-blue-600 scale-125"
+                      : "bg-gray-300"
+                      } ${isJoining
                         ? "opacity-50 cursor-not-allowed"
                         : "hover:bg-blue-500 hover:scale-110"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -1063,7 +1041,7 @@ function VideoCallPortalContent() {
         </div>
       ) : null}
 
-      <div className={`${ isInCall ? "min-h-[calc(100vh-80px)]" : "min-h-[60vh]" } flex item-center justify-center`}
+      <div className={`${isInCall ? "min-h-[calc(100vh-80px)]" : "min-h-[60vh]"} flex item-center justify-center`}
         ref={videoContainerRef}
       >
         <div className="max-w-7xl mx-auto px-6 py-8">

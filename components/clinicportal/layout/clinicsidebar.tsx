@@ -11,11 +11,13 @@ import {
   X,
   ChevronLeft,
   LogOut,
-  Tag
+  Tag,
+  Video
 } from 'lucide-react';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
+import useClinicByUser from '@/hooks/cilincHook/useClinicByUser';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -77,6 +79,7 @@ export default function ClinicSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('/clinicportal/dashboard');
   const { data: session, status } = useSession();
+  const { clinic: clinicData } = useClinicByUser() as { clinic: any | null };
   // Example user data - in a real app, this would come from your authentication system
 
   const [user, setUser] = useState<UserProfile>({
@@ -87,15 +90,15 @@ export default function ClinicSidebar() {
   });
 
   useEffect(() => {
-    if (session?.user) {
+    if (session?.user && clinicData) {
       setUser({
         name: session.user.name || '',
         email: session.user.email || '',
         role: session.user.role || '',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=64&h=64&q=80'
+        avatar: clinicData && clinicData.images[0] || '/clinic.png'
       });
     }
-  }, [session]);
+  }, [session, clinicData]);
 
   // Handle resize to switch between mobile and desktop views
   useEffect(() => {
@@ -131,6 +134,7 @@ export default function ClinicSidebar() {
     { icon: <Clock size={20} strokeWidth={1.5} />, label: 'Slot Management', href: '/clinicportal/slotmanagement' },
     { icon: <DollarSign size={20} strokeWidth={1.5} />, label: 'Dues to Clinzor', href: '/clinicportal/dues' },
     { icon: <BookOpen size={20} strokeWidth={1.5} />, label: 'Booking Management', href: '/clinicportal/bookings' },
+    { icon: <Video size={20} strokeWidth={1.5} />, label: 'Clinic Video Calls', href: '/clinicportal/videocall/portal' },
     { icon: <AlignLeft size={20} strokeWidth={1.5} />, label: 'Service Management', href: '/clinicportal/servicemanagement' },
     { icon: <Users size={20} strokeWidth={1.5} />, label: 'Doctor Management', href: '/clinicportal/doctors' },
     { icon: <Tag size={20} strokeWidth={1.5} />, label: 'Offers', href: '/clinicportal/offers' },
@@ -176,7 +180,7 @@ export default function ClinicSidebar() {
         )}
       </motion.div>
 
-      <div className="mt-2 px-3 flex-grow">
+      <div className="mt-2 px-3 flex-grow overflow-y-scroll hide-scrollbar">
         <motion.nav
           className="space-y-0.5"
           initial="hidden"
@@ -296,9 +300,9 @@ export default function ClinicSidebar() {
       </AnimatePresence>
 
       {/* Desktop sidebar - collapsible */}
-      <div className="hidden md:block relative h-screen">
+      <div className="hidden md:block relative min-h-screen ">
         <motion.div
-          className={`h-full bg-white border-r border-gray-100 shadow-sm flex flex-col z-30`}
+          className={`h-full  bg-white border-r border-gray-100 shadow-sm flex flex-col z-30`}
           initial={false}
           animate={{
             width: collapsed ? "5rem" : "16rem"

@@ -578,7 +578,7 @@ const BookingFlow = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Time:</span>
                       <span className="text-gray-900">
-                        {selectedTime && format(new Date(selectedTime.start_time), "hh:mm a")}
+                        {selectedTime && convertTo12HourFormat(selectedTime.start_time)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -637,7 +637,7 @@ const BookingFlow = () => {
                 <p className="text-gray-600 mb-6">
                   Your appointment with {selectedExpert?.name} is scheduled for{" "}
                   {bookingData && format(new Date(bookingData.start_time), "MMMM do")} at{" "}
-                  {bookingData && format(new Date(bookingData.start_time), "hh:mm a")}.
+                  {bookingData && convertTo12HourFormat(bookingData.start_time)}.
                   Confirmation has been sent to {userData.email}.
                 </p>
 

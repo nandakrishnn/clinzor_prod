@@ -52,69 +52,125 @@ const BookingManagement = () => {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10; // Add this line
 
-  // Time conversion function
+  // Time conversion function - FIXED VERSION
   const convertTo12HourFormat = (utcDateString: string) => {
-    const date = new Date(utcDateString);
-    let hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const hh = String(hours).padStart(2, "0");
-    const mm = String(minutes).padStart(2, "0");
-    return `${hh}:${mm} ${ampm}`;
+    try {
+      const date = new Date(utcDateString);
+
+      // Use local time instead of UTC to match the user's timezone
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      // Don't pad with zeros for 12-hour format (optional)
+      const hh = String(hours);
+      const mm = String(minutes).padStart(2, "0");
+
+      return `${hh}:${mm} ${ampm}`;
+    } catch (error) {
+      console.error('Error converting time:', error);
+      return 'Invalid Time';
+    }
   };
 
-  // Check if meeting can be joined (5 minutes before start time until end time)
+  // Improved meeting join logic
   const canJoinMeeting = (startTime: string, endTime: string): { canJoin: boolean; status: 'upcoming' | 'active' | 'past' } => {
-    const now = new Date();
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const fiveMinutesBefore = new Date(start.getTime() - 5 * 60 * 1000);
+    try {
+      const now = new Date();
+      const start = new Date(startTime);
+      const end = new Date(endTime);
 
-    if (now < fiveMinutesBefore) {
-      return { canJoin: false, status: 'upcoming' };
-    } else if (now >= fiveMinutesBefore && now <= end) {
-      return { canJoin: true, status: 'active' };
-    } else {
+      // 5 minutes before start time
+      const fiveMinutesBefore = new Date(start.getTime() - 5 * 60 * 1000);
+
+      if (now < fiveMinutesBefore) {
+        return { canJoin: false, status: 'upcoming' };
+      } else if (now >= fiveMinutesBefore && now <= end) {
+        return { canJoin: true, status: 'active' };
+      } else {
+        return { canJoin: false, status: 'past' };
+      }
+    } catch (error) {
+      console.error('Error checking meeting time:', error);
       return { canJoin: false, status: 'past' };
     }
   };
 
-  // Get join button text and status
+  // Get join button text and status - IMPROVED VERSION
   const getJoinButtonInfo = (booking: Booking) => {
+    // Only enable for video calls with valid meeting links
     if (booking.booking_type !== 'VIDEO_CALL' || !booking.clinic_meeting_link) {
-      return { text: 'Not Available', disabled: true, variant: 'disabled' };
+      return {
+        text: 'Not Available',
+        disabled: true,
+        variant: 'disabled',
+        tooltip: 'Video call not available'
+      };
+    }
+
+    // Don't allow joining canceled or completed bookings
+    if (booking.booking_status === 'CANCELED' || booking.booking_status === 'COMPLETED') {
+      return {
+        text: booking.booking_status === 'CANCELED' ? 'Call Canceled' : 'Call Completed',
+        disabled: true,
+        variant: 'past',
+        tooltip: `Booking is ${booking.booking_status.toLowerCase()}`
+      };
     }
 
     const { canJoin, status } = canJoinMeeting(booking.start_time, booking.end_time);
-    
+
     switch (status) {
       case 'upcoming':
-        return { 
-          text: `Starts at ${convertTo12HourFormat(booking.start_time)}`, 
-          disabled: true, 
-          variant: 'upcoming' 
+        const timeUntil = convertTo12HourFormat(booking.start_time);
+        return {
+          text: `Starts at ${timeUntil}`,
+          disabled: true,
+          variant: 'upcoming',
+          tooltip: `Meeting starts at ${timeUntil}`
         };
       case 'active':
-        return { 
-          text: 'Join Now', 
-          disabled: false, 
-          variant: 'active' 
+        return {
+          text: 'Join Now',
+          disabled: false,
+          variant: 'active',
+          tooltip: 'Click to join the video call'
         };
       case 'past':
-        return { 
-          text: 'Call Ended', 
-          disabled: true, 
-          variant: 'past' 
+        return {
+          text: 'Call Ended',
+          disabled: true,
+          variant: 'past',
+          tooltip: 'This meeting has ended'
         };
       default:
-        return { text: 'Not Available', disabled: true, variant: 'disabled' };
+        return {
+          text: 'Not Available',
+          disabled: true,
+          variant: 'disabled',
+          tooltip: 'Video call not available'
+        };
     }
   };
 
-  // Handle join meeting
-  const handleJoinMeeting = (meetingLink: string) => {
+  // Handle join meeting - IMPROVED VERSION
+  const handleJoinMeeting = (meetingLink: string, booking: Booking) => {
+    if (!meetingLink) {
+      console.error('No meeting link available');
+      return;
+    }
+
+    // Double-check if meeting can be joined
+    const { canJoin } = canJoinMeeting(booking.start_time, booking.end_time);
+
+    if (!canJoin) {
+      console.error('Meeting cannot be joined at this time');
+      return;
+    }
+
+    // Open meeting in new tab
     window.open(meetingLink, '_blank', 'noopener,noreferrer');
   };
 
@@ -238,11 +294,11 @@ const BookingManagement = () => {
   const getJoinButtonConfig = (variant: string) => {
     switch (variant) {
       case 'active':
-        return 'bg-green-600 hover:bg-green-700 text-white';
+        return 'bg-green-600 hover:bg-green-700 text-white cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200';
       case 'upcoming':
-        return 'bg-blue-100 text-blue-700 border border-blue-200';
+        return 'bg-blue-100 text-blue-700 border border-blue-200 cursor-not-allowed';
       case 'past':
-        return 'bg-gray-100 text-gray-500 border border-gray-200';
+        return 'bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed';
       case 'disabled':
       default:
         return 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed';
@@ -510,7 +566,7 @@ const BookingManagement = () => {
                   const statusConfig = getStatusConfig(booking?.booking_status);
                   const scheduledDateTime = formatDateTime(booking?.start_time);
                   const joinButtonInfo = getJoinButtonInfo(booking);
-                  
+
                   return (
                     <tr key={booking?.uuid} className="hover:bg-slate-50/70 transition-colors duration-150 align-middle">
                       {/* Patient Info */}
@@ -594,13 +650,13 @@ const BookingManagement = () => {
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="font-semibold text-slate-900 leading-tight">₹{parseFloat(booking?.booking_charge).toFixed(2)}</div>
                       </td>
-                      {/* Join Button */}
+                      {/* Join Button - FIXED VERSION */}
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <button
-                          onClick={() => handleJoinMeeting(booking.clinic_meeting_link)}
+                          onClick={() => handleJoinMeeting(booking.clinic_meeting_link, booking)}
                           disabled={joinButtonInfo.disabled}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${getJoinButtonConfig(joinButtonInfo.variant)}`}
-                          title={joinButtonInfo.text}
+                          title={joinButtonInfo.tooltip}
                         >
                           {joinButtonInfo.text}
                         </button>
@@ -663,7 +719,7 @@ const BookingManagement = () => {
               const statusConfig = getStatusConfig(booking.booking_status);
               const scheduledDateTime = formatDateTime(booking.start_time);
               const joinButtonInfo = getJoinButtonInfo(booking);
-              
+
               return (
                 <div key={booking.uuid} className="bg-white/90 rounded-2xl shadow-lg border border-slate-200 p-4 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
@@ -686,11 +742,12 @@ const BookingManagement = () => {
                     <div className="flex items-center gap-2"><span className="font-medium">Amount:</span> ₹{parseFloat(booking.booking_charge).toFixed(2)}</div>
                     <div className="flex items-center gap-2"><span className="font-medium">Schedule:</span> {scheduledDateTime.date}, {scheduledDateTime.time}</div>
                   </div>
-                  {/* Join Button for Mobile */}
+                  {/* Join Button for Mobile - FIXED VERSION */}
                   <button
-                    onClick={() => handleJoinMeeting(booking.clinic_meeting_link)}
+                    onClick={() => handleJoinMeeting(booking.clinic_meeting_link, booking)}
                     disabled={joinButtonInfo.disabled}
                     className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${getJoinButtonConfig(joinButtonInfo.variant)}`}
+                    title={joinButtonInfo.tooltip}
                   >
                     {joinButtonInfo.text}
                   </button>
@@ -824,10 +881,10 @@ const BookingManagement = () => {
                   <h3 className="font-semibold text-slate-900 mb-2">Schedule</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                     <div>
-                      <span className="font-medium">Start:</span> {formatDateTime(selectedBooking.start_time).date} at {formatDateTime(selectedBooking.start_time).time}
+                      <span className="font-medium">Start:</span> {formatDateTime(selectedBooking.start_time).date} at {convertTo12HourFormat(selectedBooking.start_time)}
                     </div>
                     <div>
-                      <span className="font-medium">End:</span> {formatDateTime(selectedBooking.end_time).date} at {formatDateTime(selectedBooking.end_time).time}
+                      <span className="font-medium">End:</span> {formatDateTime(selectedBooking.end_time).date} at {convertTo12HourFormat(selectedBooking.end_time)}
                     </div>
                   </div>
                 </div>
@@ -841,15 +898,16 @@ const BookingManagement = () => {
                   </div>
                 )}
 
-                {/* Join Button in Modal */}
+                {/* Join Button in Modal - FIXED VERSION */}
                 {selectedBooking.booking_type === 'VIDEO_CALL' && selectedBooking.clinic_meeting_link && (
                   <div className="md:col-span-2">
                     <h3 className="font-semibold text-slate-900 mb-2">Video Call</h3>
                     <div className="flex justify-center">
                       <button
-                        onClick={() => handleJoinMeeting(selectedBooking.clinic_meeting_link)}
+                        onClick={() => handleJoinMeeting(selectedBooking.clinic_meeting_link, selectedBooking)}
                         disabled={getJoinButtonInfo(selectedBooking).disabled}
                         className={`px-6 py-3 rounded-lg text-lg font-medium transition-all duration-200 ${getJoinButtonConfig(getJoinButtonInfo(selectedBooking).variant)}`}
+                        title={getJoinButtonInfo(selectedBooking).tooltip}
                       >
                         {getJoinButtonInfo(selectedBooking).text}
                       </button>
