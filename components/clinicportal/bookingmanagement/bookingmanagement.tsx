@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar, Clock, User, Phone, Mail, Video, MapPin, Filter, Search, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Info } from 'lucide-react';
 import { format, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { cancelClinicBookings, getAllClinicBookings } from '@/service/clinic/bookingManagmentService';
+import { convertTo12HourFormat, convertTo12HourFormatN, formatDate, formatDateTime, parse12HourFormat } from '@/utils/formatters';
 
 // Updated TypeScript types to match the new data structure
 interface Booking {
@@ -52,35 +53,18 @@ const BookingManagement = () => {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10; // Add this line
 
-  // Time conversion function - FIXED VERSION
-  const convertTo12HourFormat = (utcDateString: string) => {
-    try {
-      const date = new Date(utcDateString);
-
-      // Use local time instead of UTC to match the user's timezone
-      let hours = date.getHours();
-      const minutes = date.getMinutes();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-
-      // Don't pad with zeros for 12-hour format (optional)
-      const hh = String(hours);
-      const mm = String(minutes).padStart(2, "0");
-
-      return `${hh}:${mm} ${ampm}`;
-    } catch (error) {
-      console.error('Error converting time:', error);
-      return 'Invalid Time';
-    }
-  };
-
   // Improved meeting join logic
   const canJoinMeeting = (startTime: string, endTime: string): { canJoin: boolean; status: 'upcoming' | 'active' | 'past' } => {
     try {
       const now = new Date();
-      const start = new Date(startTime);
-      const end = new Date(endTime);
+
+      // Convert to 12-hour format first
+      const start12Hour = convertTo12HourFormat(startTime);
+      const end12Hour = convertTo12HourFormat(endTime);
+
+      // Parse 12-hour format back to Date objects for calculations
+      const start = parse12HourFormat(start12Hour, new Date(startTime));
+      const end = parse12HourFormat(end12Hour, new Date(endTime));
 
       // 5 minutes before start time
       const fiveMinutesBefore = new Date(start.getTime() - 5 * 60 * 1000);
@@ -305,14 +289,7 @@ const BookingManagement = () => {
     }
   };
 
-  // Format date
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      time: convertTo12HourFormat(dateString)
-    };
-  };
+
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -544,7 +521,7 @@ const BookingManagement = () => {
             <thead className="sticky top-0 bg-white/90 z-10">
               <tr className="bg-slate-50/80 border-b border-slate-200/60">
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Patient</th>
-                <th className="hidden md:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Booking Details</th>
+                {/* <th className="hidden md:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Booking Details</th> */}
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Schedule</th>
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Type</th>
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Status</th>
@@ -563,8 +540,9 @@ const BookingManagement = () => {
                 </tr>
               ) : (
                 bookings?.map((booking) => {
+                  console.log(booking)
                   const statusConfig = getStatusConfig(booking?.booking_status);
-                  const scheduledDateTime = formatDateTime(booking?.start_time);
+                  const scheduledDateTime = formatDateTime(booking?.start_time, booking.end_time);
                   const joinButtonInfo = getJoinButtonInfo(booking);
 
                   return (
@@ -572,9 +550,9 @@ const BookingManagement = () => {
                       {/* Patient Info */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
+                          {/* <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
                             <span className="text-white font-bold text-lg" aria-label={`Avatar for ${booking?.patient_name}`}>{getInitials(booking?.patient_name)}</span>
-                          </div>
+                          </div> */}
                           <div className="flex flex-col justify-center">
                             <div className="font-semibold text-slate-900 leading-tight">{booking?.patient_name}</div>
                             <div className="text-xs text-slate-500 flex flex-col sm:items-start mt-1 leading-tight">
@@ -582,7 +560,7 @@ const BookingManagement = () => {
                                 <Mail className="w-3 h-3 mr-1" />
                                 {booking?.patient_email}
                               </span>
-                              <span className="flex items-center">
+                              <span className="flex items-center mt-1">
                                 <Phone className="w-3 h-3 mr-1" />
                                 {booking?.patient_mobile}
                               </span>
@@ -592,7 +570,7 @@ const BookingManagement = () => {
                       </td>
 
                       {/* Booking Details */}
-                      <td className="hidden md:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+                      {/* <td className="hidden md:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex flex-col justify-center gap-1">
                           <div className="font-medium text-sm text-slate-900 leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]">#{booking?.uuid}</div>
                           <div className="text-xs text-slate-500 leading-tight">{booking?.session_type}</div>
@@ -603,34 +581,28 @@ const BookingManagement = () => {
                             </div>
                           )}
                         </div>
-                      </td>
+                      </td> */}
                       {/* Schedule */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex flex-col justify-center gap-1">
-                          <div className="font-medium text-slate-900 leading-tight">{scheduledDateTime?.date}</div>
-                          <div className="text-xs text-slate-500 leading-tight">{scheduledDateTime?.time}</div>
+                          <div className="text-sm font-medium text-slate-900 leading-tight">{scheduledDateTime?.date}</div>
+                          <div className="text-xs text-slate-500 leading-tight">{convertTo12HourFormat(booking?.start_time)}</div>
                         </div>
                       </td>
                       {/* Type */}
                       <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center space-x-2">
                           {booking?.booking_type === 'VIDEO_CALL' ? (
-                            <a href={booking?.clinic_meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2">
                               <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <Video className="w-4 h-4 text-blue-600" />
-                                </div>
                                 <div className="flex flex-col justify-center">
                                   <div className="text-xs font-medium text-slate-900 leading-tight">Online</div>
                                   <div className="text-xs text-slate-500 leading-tight">Video Call</div>
                                 </div>
                               </div>
-                            </a>
+                            </div>
                           ) : (
                             <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                <MapPin className="w-4 h-4 text-emerald-600" />
-                              </div>
                               <div className="flex flex-col justify-center">
                                 <div className="text-xs font-medium text-slate-900 leading-tight">In-Person</div>
                                 <div className="text-xs text-slate-500 leading-tight">Clinic Visit</div>
@@ -717,7 +689,7 @@ const BookingManagement = () => {
           ) : (
             bookings.map((booking) => {
               const statusConfig = getStatusConfig(booking.booking_status);
-              const scheduledDateTime = formatDateTime(booking.start_time);
+              const scheduledDateTime = formatDateTime(booking.start_time, booking.end_time);
               const joinButtonInfo = getJoinButtonInfo(booking);
 
               return (
@@ -829,7 +801,7 @@ const BookingManagement = () => {
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-all duration-300 animate-fade-in">
           <div
-            className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl focus:outline-none animate-scale-in"
+            className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar border border-white/20 shadow-2xl focus:outline-none animate-scale-in"
             tabIndex={-1}
             ref={modalRef}
             aria-modal="true"
@@ -881,10 +853,10 @@ const BookingManagement = () => {
                   <h3 className="font-semibold text-slate-900 mb-2">Schedule</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                     <div>
-                      <span className="font-medium">Start:</span> {formatDateTime(selectedBooking.start_time).date} at {convertTo12HourFormat(selectedBooking.start_time)}
+                      <span className="font-medium">Start:</span> {formatDate(selectedBooking.start_time)} at {convertTo12HourFormat(selectedBooking.start_time)}
                     </div>
                     <div>
-                      <span className="font-medium">End:</span> {formatDateTime(selectedBooking.end_time).date} at {convertTo12HourFormat(selectedBooking.end_time)}
+                      <span className="font-medium">End:</span> {formatDate(selectedBooking.end_time)} at {convertTo12HourFormat(selectedBooking.end_time)}
                     </div>
                   </div>
                 </div>

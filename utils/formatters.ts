@@ -177,3 +177,36 @@ export const generate12HourTimeOptions = () => {
 export const formatTimeForAPI = (time: string): string => {
   return time.includes(':') ? `${time}:00` : time;
 };
+
+export const formatDateTime = (startTime: string, endTime: string) => {
+  const start = new Date(startTime);
+
+  const date = start.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+
+  const time = `${convertTo12HourFormat(startTime)} – ${convertTo12HourFormat(endTime)}`;
+
+  return { date, time };
+};
+
+export const parse12HourFormat = (time12Hour: string, originalDate: Date): Date => {
+  const [timePart, ampm] = time12Hour.split(' ');
+  const [hours, minutes] = timePart.split(':').map(Number);
+
+  let hour24 = hours;
+
+  if (ampm === 'PM' && hours !== 12) {
+    hour24 = hours + 12;
+  } else if (ampm === 'AM' && hours === 12) {
+    hour24 = 0;
+  }
+
+  // Use the original date but set the time from 12-hour format
+  const newDate = new Date(originalDate);
+  newDate.setHours(hour24, minutes, 0, 0);
+
+  return newDate;
+};

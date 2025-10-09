@@ -16,7 +16,6 @@ import {
   Maximize2,
   Minimize2,
   Check,
-  MoreVertical,
   Edit
 } from "lucide-react";
 import {
