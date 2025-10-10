@@ -25,6 +25,10 @@ export const getAdminDueStaticData = async () => {
   const res = await axiosPrivate.get(`clinic/dues-management-analytics/`);
   return res?.data
 };
+export const UpdateDueAmount = async (id: string, body: any) => {
+  const res = await axiosPrivate.patch(`clinic/add-discount-transaction/${id}/`, body);
+  return res?.data
+};
 
 export const GetAllDues = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
   try {
@@ -56,7 +60,7 @@ export const GetAllDues = async (page: number, search: string = '', filter: stri
     throw error;
   }
 };
-export const GetAllPayment = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
+export const GetAllPayment = async (page: number, search: string = '', clinic?: string, filter: string = 'all') => {
   try {
     const params: any = {
       page: page
@@ -69,15 +73,14 @@ export const GetAllPayment = async (page: number, search: string = '', filter: s
 
     // Add filter parameter if provided and not 'all'
     if (filter !== 'all') {
-      params.status = filter;
+      params.transaction_type = filter;
     }
 
-    // Add sort parameter if provided and not 'default'
-    if (sort !== 'default') {
-      params.sort = sort;
+    if (clinic) {
+      params.clinic_uuid = clinic;
     }
 
-    const response = await axiosPrivate.get('/clinic/payment-transaction-list/', {
+    const response = await axiosPrivate.get('clinic/list-transactions/', {
       params: params
     });
     return response.data.data;

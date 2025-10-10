@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, Building2, Calendar, MoreHorizontal, X, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, CreditCard, Eye } from 'lucide-react';
-import { getAdminDueStaticData, GetAllDues, GetAllPayment } from '@/service/admin/dueManagementService';
+import { Search, Filter, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, Building2, Calendar, MoreHorizontal, X, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, CreditCard, Eye, IndianRupeeIcon } from 'lucide-react';
+import { getAdminDueStaticData, GetAllDues, GetAllPayment, UpdateDueAmount } from '@/service/admin/dueManagementService';
 
 import * as XLSX from 'xlsx';
+import LoadingSkeleton from '@/components/common/LoadingSkeleton';
 
 // Modal component with Apple-style design
 const Modal = ({ isOpen, onClose, title, children, size = 'md' }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode; size?: 'sm' | 'md' | 'lg' }) => {
@@ -18,7 +19,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: { isOpen: bool
         <div className="fixed inset-0 transition-opacity bg-black/30 backdrop-blur-md" onClick={onClose}></div>
         <div className={`inline-block w-full ${sizeClasses[size || 'md']} p-0 my-8 overflow-hidden text-left align-middle transition-all transform bg-white/95 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/20`}>
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-xl font-semibold text-gray-900 capitalize">{title}</h3>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-all duration-200 group" aria-label="Close modal">
               <X className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
             </button>
@@ -184,8 +185,8 @@ const DueManagement = () => {
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
-  const itemsPerPage = 9;
-  const [dueTypeFilter, setDueTypeFilter] = useState('ALL');
+  const itemsPerPage = 10;
+  const [dueTypeFilter, setDueTypeFilter] = useState('CLINIC_DETAILS');
   const [activeTab, setActiveTab] = useState('DUES');
   const [sortBy, setSortBy] = useState<'default' | 'AMOUNT_DESC' | 'AMOUNT_ASC'>('default');
   const [duesData, setDuesData] = useState<Clinic[]>([]);
@@ -210,7 +211,15 @@ const DueManagement = () => {
   });
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
 
+  // New state variables for due list and edit modal
+  const [dueListData, setDueListData] = useState<any[]>([]);
+  const [dueListLoading, setDueListLoading] = useState(false);
+  const [editDueModalOpen, setEditDueModalOpen] = useState(false);
+  const [selectedDue, setSelectedDue] = useState<any>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editReason, setEditReason] = useState('');
 
   // Fetch dues data
   const fetchDuesData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
@@ -250,10 +259,10 @@ const DueManagement = () => {
   }
 
   // Fetch payment data
-  const fetchPaymentData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
+  const fetchPaymentData = async (page = 1, search = '', clinic = '', filter = 'PAID') => {
     setLoading(true);
     try {
-      const response = await GetAllPayment(page, search, filter, sort);
+      const response = await GetAllPayment(page, search, clinic, filter);
       setPaymentData(response.data);
       setPaymentPaginationData({
         current_page: response.current_page,
@@ -273,15 +282,75 @@ const DueManagement = () => {
     }
   };
 
+  // Fetch due list data for a specific clinic
+  const fetchDueListData = async (page = 1, search = '', clinic = '', filter = 'PAID') => {
+    setDueListLoading(true);
+    try {
+      // Replace with your actual API call
+      const response = await GetAllPayment(page, search, clinic, filter);
+      setDueListData(response.data);
+
+    } catch (error) {
+      console.error("Error fetching due list data:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to fetch due list'
+      });
+    } finally {
+      setDueListLoading(false);
+    }
+  };
+
+  // Edit due handlers
+  const handleEditDue = (due: any) => {
+    setSelectedDue(due);
+    setEditAmount(due.adjusted_amount || due?.amount);
+    setEditReason(due.reason || '');
+    setEditDueModalOpen(true);
+  };
+
+  const handleSaveDue = async () => {
+    setIsLoading(true)
+    try {
+      // Replace with your actual API call
+      const body = {
+        discount_amount: Number(editAmount),
+        description: editReason
+      }
+      const response = await UpdateDueAmount(selectedDue?.uuid, body);
+      console.log(response, 'from he update dur from admin ')
+
+      setNotification({
+        type: 'success',
+        message: 'Due amount updated successfully'
+      });
+      setEditDueModalOpen(false);
+
+      // Refresh due list data
+      if (selectedClinic) {
+        const page = 1
+        const filter = "DUE"
+        fetchDueListData(page, '', selectedClinic.clinic_detail.uuid, filter);
+      }
+    } catch (error) {
+      console.error("Error updating due:", error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to update due amount'
+      });
+    } finally {
+      setIsLoading(false)
+    }
+  };
+
   // Fetch data when filters change
   useEffect(() => {
-
     getDashboardStatics()
 
     if (activeTab === 'DUES') {
       fetchDuesData(currentPage, searchTerm, selectedFilter, sortBy);
     } else if (activeTab === 'PAYMENT_HISTORY') {
-      fetchPaymentData(paymentCurrentPage, searchTerm, selectedFilter, sortBy);
+      fetchPaymentData(paymentCurrentPage, searchTerm, '', 'PAID');
     }
     setTimeout(() => setAnimateCards(true), 100);
   }, [currentPage, paymentCurrentPage, searchTerm, selectedFilter, sortBy, activeTab]);
@@ -326,20 +395,18 @@ const DueManagement = () => {
   };
 
   const handleViewDetails = (clinic: Clinic) => {
-    if (clinic.due_detail.remaining_dues > 0) {
-      setDueTypeFilter('SERVICE');
-    } else if (clinic.due_detail.remaining_dues < 0) {
-      setDueTypeFilter('CREDIT');
-    } else {
-      setDueTypeFilter('ALL');
-    }
     setSelectedClinic(clinic);
     setViewModalOpen(true);
+    // Fetch due list data when modal opens
+    const page = 1
+    const filter = "DUE"
+    fetchDueListData(page, '', clinic.clinic_detail.uuid, filter);
   };
 
   const handleCloseModal = () => {
     setViewModalOpen(false);
     setSelectedClinic(null);
+    setDueTypeFilter('CLINIC_DETAILS');
   };
 
   const handlePageChange = (newPage: number) => {
@@ -408,21 +475,6 @@ const DueManagement = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Completed</span>;
-      case 'PENDING':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Pending</span>;
-      case 'FAILED':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Failed</span>;
-      case 'REFUNDED':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">Refunded</span>;
-      default:
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">{status}</span>;
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -433,6 +485,8 @@ const DueManagement = () => {
       </div>
     );
   }
+
+  console.log(selectedDue)
 
   return (
     <div className="min-h-screen">
@@ -562,7 +616,7 @@ const DueManagement = () => {
                 return (
                   <div
                     key={clinic.clinic_detail.uuid}
-                    className={`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 transform ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`bg-white rounded-2xl flex flex-col justify-between p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 transform ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                     style={{ transitionDelay: `${index * 50}ms` }}
                     onClick={e => {
                       if (selectedClinic && selectedClinic.clinic_detail.uuid === clinic.clinic_detail.uuid && viewModalOpen) {
@@ -577,65 +631,67 @@ const DueManagement = () => {
                     role="button"
                     aria-pressed={!!isSelected}
                   >
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-blue-50 rounded-xl">
-                          <Building2 className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 text-lg leading-tight">{clinic.clinic_detail.name}</h3>
-                          <p className="text-sm text-gray-500">{clinic.clinic_detail.city}</p>
-                        </div>
-                      </div>
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${statusInfo.color}`}>
-                        {statusInfo.icon}
-                        {statusInfo.text}
-                      </div>
-                    </div>
-
-                    {/* Financial Details */}
-                    <div className="space-y-4 mb-6">
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600 font-medium">Total Dues</span>
-                        <span className="font-semibold text-gray-900">{formatCurrency(clinic.due_detail.total_dues)}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600 font-medium">Paid</span>
-                        <span className="font-semibold text-green-600">{formatCurrency(clinic.due_detail.total_paid)}</span>
-                      </div>
-
-                      <div className="border-t border-gray-100 pt-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-900 font-semibold">Balance</span>
-                          <span className={`font-bold text-lg ${clinic.due_detail.remaining_dues > 0 ? 'text-red-600' :
-                            clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
-                            }`}>
-                            {clinic.due_detail.remaining_dues < 0 ? '−' : ''}{formatCurrency(clinic.due_detail.remaining_dues)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      {clinic.due_detail.total_dues > 0 && (
-                        <div className="pt-2">
-                          <div className="flex justify-between text-xs text-gray-500 mb-2">
-                            <span>Payment Progress</span>
-                            <span>{Math.round((clinic.due_detail.total_paid / clinic.due_detail.total_dues) * 100)}%</span>
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-blue-50 rounded-xl">
+                            <Building2 className="w-5 h-5 text-blue-600" />
                           </div>
-                          <div className="w-full bg-gray-100 rounded-full h-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full transition-all duration-700"
-                              style={{ width: `${Math.min((clinic.due_detail.total_paid / clinic.due_detail.total_dues) * 100, 100)}%` }}
-                            ></div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-lg leading-tight capitalize">{clinic.clinic_detail.name}</h3>
+                            <p className="text-sm text-gray-500">{clinic.clinic_detail.city}</p>
                           </div>
                         </div>
-                      )}
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${statusInfo.color}`}>
+                          {statusInfo.icon}
+                          {statusInfo.text}
+                        </div>
+                      </div>
+
+                      {/* Financial Details */}
+                      <div className="space-y-4 mb-6">
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600 font-medium">Total Dues</span>
+                          <span className="font-semibold text-gray-900">{formatCurrency(clinic.due_detail.total_dues)}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600 font-medium">Paid</span>
+                          <span className="font-semibold text-green-600">{formatCurrency(clinic.due_detail.total_paid)}</span>
+                        </div>
+
+                        <div className="border-t border-gray-100 pt-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-900 font-semibold">Balance</span>
+                            <span className={`font-bold text-lg ${clinic.due_detail.remaining_dues > 0 ? 'text-red-600' :
+                              clinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'
+                              }`}>
+                              {clinic.due_detail.remaining_dues < 0 ? '−' : ''}{formatCurrency(clinic.due_detail.remaining_dues)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        {clinic.due_detail.total_dues > 0 && (
+                          <div className="pt-2">
+                            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                              <span>Payment Progress</span>
+                              <span>{Math.round((clinic.due_detail.total_paid / clinic.due_detail.total_dues) * 100)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-700"
+                                style={{ width: `${Math.min((clinic.due_detail.total_paid / clinic.due_detail.total_dues) * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 ">
                       <button
                         className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                         tabIndex={-1}
@@ -644,12 +700,6 @@ const DueManagement = () => {
                         <Eye className="w-4 h-4" />
                         <span className='text-sm truncate'>View Details</span>
                       </button>
-                      {clinic.due_detail.remaining_dues > 0 && (
-                        <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer" tabIndex={-1} type="button">
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className='text-sm truncate'>Mark as Paid</span>
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -672,7 +722,7 @@ const DueManagement = () => {
             {/* Search and Filter for Payment History */}
             <div className="bg-white rounded-2xl p-6 mb-5 border border-gray-200 shadow-sm">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="relative flex-1 w-full">
+                <div className="relative flex gap-4 w-full">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
@@ -682,22 +732,16 @@ const DueManagement = () => {
                     onKeyDown={(e) => { if (e.key === "Enter") { searchHandler() } }}
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none  transition-all duration-200"
                   />
+                  <button
+                    onClick={() => searchHandler()}
+                    className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    Search
+                  </button>
                 </div>
                 <div className="flex items-center gap-4">
-                  <select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none transition-all duration-200 font-medium"
-                  >
-                    <option value="all">All Payments</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CREATED">Pending</option>
-                    <option value="FAILED">Failed</option>
-                    <option value="REFUNDED">Refunded</option>
-                  </select>
                   <button
                     onClick={handleExport}
-                    className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    className="px-6 py-3 text-nowrap bg-primaryColor text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Export Report
                   </button>
                 </div>
@@ -710,12 +754,13 @@ const DueManagement = () => {
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50 text-gray-700">
-                      <th className="p-4 text-left font-semibold">Transaction ID</th>
-                      <th className="p-4 text-left font-semibold">Amount</th>
-                      <th className="p-4 text-left font-semibold">Status</th>
-                      <th className="p-4 text-left font-semibold">Patient</th>
                       <th className="p-4 text-left font-semibold">Clinic</th>
+                      <th className="p-4 text-left font-semibold">Date</th>
+                      <th className="p-4 text-left font-semibold">Patient</th>
                       <th className="p-4 text-left font-semibold">Service</th>
+                      <th className="p-4 text-left font-semibold">Amount</th>
+                      <th className="p-4 text-left font-semibold">Discount</th>
+                      <th className="p-4 text-left font-semibold">Total Paid</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -732,15 +777,15 @@ const DueManagement = () => {
                         </td>
                       </tr>
                     ) : (
-                      paymentData.map((payment) => (
+                      paymentData.map((payment: any) => (
                         <tr key={payment.uuid} className="border-t hover:bg-blue-50/40 transition">
-                          <td className="p-4 font-medium text-gray-900">{payment.transaction_id}</td>
-                          {/* <td className="p-4">{payment.created_at ? formatDate(payment.created_at) : 'N/A'}</td> */}
-                          <td className="p-4">{formatCurrency(payment.amount)}</td>
-                          <td className="p-4">{getStatusBadge(payment.status)}</td>
-                          <td className="p-4">{payment.patient_name || 'N/A'}</td>
                           <td className="p-4">{payment.clinic_name || 'N/A'}</td>
-                          <td className="p-4">{payment.service_name || 'N/A'}</td>
+                          <td className="p-4">{payment.created_at ? formatDate(payment.created_at) : 'N/A'}</td>
+                          <td className="p-4">{payment.patient_name || 'N/A'}</td>
+                          <td className="p-4">{payment.clinic_service_name || payment.service_name || 'N/A'}</td>
+                          <td className="p-4">{formatCurrency(payment.amount)}</td>
+                          <td className="p-4">{payment.discount_amount || 'N/A'}</td>
+                          <td className="p-4">{payment.final_amount || 'N/A'}</td>
                         </tr>
                       ))
                     )}
@@ -764,63 +809,212 @@ const DueManagement = () => {
       {/* Clinic Details Modal */}
       <Modal isOpen={viewModalOpen} onClose={handleCloseModal} title={selectedClinic?.clinic_detail.name || 'Clinic Details'} size="lg">
         {selectedClinic && (
-          <div className="space-y-6">
-            {/* Clinic Info Section */}
-            <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="w-5 h-5 text-blue-500" />
-                <span className="font-semibold text-gray-900 text-lg">Clinic Information</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium">{selectedClinic.clinic_detail.address}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Contact</p>
-                  <p className="font-medium">+{selectedClinic.clinic_detail.country_code} {selectedClinic.clinic_detail.contact_number}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">City</p>
-                  <p className="font-medium">{selectedClinic.clinic_detail.city}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Pincode</p>
-                  <p className="font-medium">{selectedClinic.clinic_detail.pincode}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <p className="font-medium capitalize">{selectedClinic.clinic_detail.status.toLowerCase()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Total Bookings</p>
-                  <p className="font-medium">{selectedClinic.clinic_detail.total_bookings_completed}</p>
-                </div>
-              </div>
+          <>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 mb-6">
+              <button
+                className={`px-4 py-3 font-medium border-b-2 transition-all duration-200 ${dueTypeFilter === 'CLINIC_DETAILS'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                onClick={() => setDueTypeFilter('CLINIC_DETAILS')}
+              >
+                Clinic Details
+              </button>
+              <button
+                className={`px-4 py-3 font-medium border-b-2 transition-all duration-200 ${dueTypeFilter === 'DUE_LIST'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                onClick={() => setDueTypeFilter('DUE_LIST')}
+              >
+                Due List
+              </button>
             </div>
 
-            {/* Financial Summary Section */}
-            <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-blue-500" />
-                <span className="font-semibold text-gray-900 text-lg">Financial Summary</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-xl p-4 flex flex-col items-center">
-                  <div className="text-gray-600 text-xs mb-1">Total Dues</div>
-                  <div className="font-bold text-lg text-blue-700">{formatCurrency(selectedClinic.due_detail.total_dues)}</div>
+            {/* Tab Content */}
+            {dueTypeFilter === 'CLINIC_DETAILS' && (
+              <div className="space-y-6">
+                {/* Clinic Info Section */}
+                <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Building2 className="w-5 h-5 text-blue-500" />
+                    <span className="font-semibold text-gray-900 text-lg">Clinic Information</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="font-medium">{selectedClinic.clinic_detail.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Contact</p>
+                      <p className="font-medium">+{selectedClinic.clinic_detail.country_code} {selectedClinic.clinic_detail.contact_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">City</p>
+                      <p className="font-medium">{selectedClinic.clinic_detail.city}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Pincode</p>
+                      <p className="font-medium">{selectedClinic.clinic_detail.pincode}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="font-medium capitalize">{selectedClinic.clinic_detail.status.toLowerCase()}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Total Bookings</p>
+                      <p className="font-medium">{selectedClinic.clinic_detail.total_bookings_completed}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-green-50 rounded-xl p-4 flex flex-col items-center">
-                  <div className="text-gray-600 text-xs mb-1">Total Paid</div>
-                  <div className="font-bold text-lg text-green-700">{formatCurrency(selectedClinic.due_detail.total_paid)}</div>
-                </div>
-                <div className="bg-orange-50 rounded-xl p-4 flex flex-col items-center">
-                  <div className="text-gray-600 text-xs mb-1">Remaining Dues</div>
-                  <div className={`font-bold text-lg ${selectedClinic.due_detail.remaining_dues > 0 ? 'text-red-600' : selectedClinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                    {selectedClinic.due_detail.remaining_dues < 0 ? '-' : ''}{formatCurrency(selectedClinic.due_detail.remaining_dues)}
+
+                {/* Financial Summary Section */}
+                <div className="bg-white/90 border border-gray-100 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <IndianRupeeIcon className="w-5 h-5 text-blue-500" />
+                    <span className="font-semibold text-gray-900 text-lg">Financial Summary</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded-xl p-4 flex flex-col items-center">
+                      <div className="text-gray-600 text-xs mb-1">Total Dues</div>
+                      <div className="font-bold text-lg text-blue-700">{formatCurrency(selectedClinic.due_detail.total_dues)}</div>
+                    </div>
+                    <div className="bg-green-50 rounded-xl p-4 flex flex-col items-center">
+                      <div className="text-gray-600 text-xs mb-1">Total Paid</div>
+                      <div className="font-bold text-lg text-green-700">{formatCurrency(selectedClinic.due_detail.total_paid)}</div>
+                    </div>
+                    <div className="bg-orange-50 rounded-xl p-4 flex flex-col items-center">
+                      <div className="text-gray-600 text-xs mb-1">Remaining Dues</div>
+                      <div className={`font-bold text-lg ${selectedClinic.due_detail.remaining_dues > 0 ? 'text-red-600' : selectedClinic.due_detail.remaining_dues < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                        {selectedClinic.due_detail.remaining_dues < 0 ? '-' : ''}{formatCurrency(selectedClinic.due_detail.remaining_dues)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            {dueTypeFilter === 'DUE_LIST' && (
+              <div className="bg-white rounded-xl border border-gray-200">
+                {dueListLoading ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    Loading due list...
+                  </div>
+                ) : dueListData.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <CreditCard className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-lg font-medium mb-2">No dues found</p>
+                    <p className="text-sm">There are no outstanding dues for this clinic.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Service</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Amount</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Discount</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Pay</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Patient</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Contact</th>
+                          <th className="p-4 text-left font-semibold text-gray-700 text-sm">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dueListData.map((due) => (
+                          <tr key={due?.uuid} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td className="p-4 text-sm font-medium">{due?.service_name}</td>
+                            <td className="p-4 text-sm">{formatCurrency(due?.amount)}</td>
+                            <td className="p-4 text-sm">{formatCurrency(due?.discount_amount) || "No Discount"}</td>
+                            <td className="p-4 text-sm">{formatCurrency(due?.final_amount) || "No Discount"}</td>
+                            <td className="p-4 text-sm font-medium">{due?.patient_name || "No Data"}</td>
+                            <td className="p-4 text-sm text-gray-600 max-w-xs truncate">{due?.patient_mobile || "No Data"}</td>
+                            <td className="p-4">
+                              <button
+                                onClick={() => handleEditDue(due)}
+                                className="px-3 py-1.5 bg-primaryColor text-white text-sm rounded-lg  transition font-medium"
+                              >
+                                Edit Amount
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
+
+      {/* Edit Due Modal */}
+      <Modal isOpen={editDueModalOpen} onClose={() => setEditDueModalOpen(false)} title="Edit Due Amount" size="sm">
+        {selectedDue && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service
+              </label>
+              <p className="text-gray-900 font-medium">{selectedDue?.service_name}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Original Amount
+              </label>
+              <p className="text-gray-600">{formatCurrency(selectedDue?.amount)}</p>
+            </div>
+
+            <div>
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                Adjusted Amount *
+              </label>
+              <input
+                type="number"
+                id="amount"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter adjusted amount"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for Adjustment *
+              </label>
+              <textarea
+                id="reason"
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter reason for amount adjustment"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setEditDueModalOpen(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveDue}
+                disabled={!editAmount || !editReason}
+                className="flex-1 w-full items-center text-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (<>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2  border-white flex-1 items-center text-center justify-center "></div>
+                </>) : ('Save Changes')}
+              </button>
             </div>
           </div>
         )}
