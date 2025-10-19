@@ -78,16 +78,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   const [activePopular, setActivePopular] = useState<string | null>(null);
   const [filtersCount, setFiltersCount] = useState(0);
 
-  // Use our custom hooks for dropdowns
   // Use our custom dropdown hooks with unique IDs for coordination
-  const serviceDropdown = useDropdown(false, "service-dropdown");
-  const specialtyDropdown = useDropdown(false, "specialty-dropdown");
+  const serviceDropdown: ReturnType<typeof useDropdown> = useDropdown(
+    false,
+    "service-dropdown"
+  );
+  const specialtyDropdown: ReturnType<typeof useDropdown> = useDropdown(
+    false,
+    "specialty-dropdown"
+  );
 
   const searchFormRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isMobileView = useMedia("(max-width: 768px)");
-  const router = useRouter()
+  const router = useRouter();
 
   // Initialize filters visibility based on view
   useEffect(() => {
@@ -361,9 +366,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
                     placeholder={
-                      isMobileView
-                        ? "Search healthcare"
-                        : "Search services"
+                      isMobileView ? "Search healthcare" : "Search services"
                     }
                     className="w-full bg-transparent border-none text-gray-800 focus:outline-none text-sm md:text-base py-1"
                   />
@@ -430,7 +433,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                               serviceDropdown.isOpen
                                 ? "transform rotate-180"
                                 : "",
-                              serviceType ? "text-primaryColor" : "text-gray-500"
+                              serviceType
+                                ? "text-primaryColor"
+                                : "text-gray-500"
                             )}
                             fill="none"
                             viewBox="0 0 24 24"
@@ -743,6 +748,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           </AnimatePresence>
 
           {/* Mobile Search Button (Full-width) */}
+          {/* Mobile Search Button (Full-width) */}
           {isMobileView && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -751,9 +757,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             >
               <motion.button
                 type="submit"
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center gap-2 transition-colors"
+                className="w-full h-12 bg-primaryColor hover:bg-primaryColor text-white rounded-full flex items-center justify-center gap-2 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => router.push(`/service/?search=${keyword}`)}
               >
                 <IconSearch size={18} />
                 <span className="font-medium">Search</span>

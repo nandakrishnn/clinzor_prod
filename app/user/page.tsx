@@ -108,7 +108,7 @@ function UserDashContent() {
       case "profile":
         return <ProfileDetails user={user} onUpdate={getUser} />
       case "bookings":
-        return <MyBookings defaultTab={ bookingTab === "booking" ? "SCHEDULED" : 'COMPLETED' } />
+        return <MyBookings defaultTab={ bookingTab === "booking" ? "SCHEDULED" : 'SCHEDULED' } />
       case "expert_bookings":
         return <MyExpertBooking defaultTab={tabData === "SUGGESTIONS" ? "SUGGESTIONS" : "SCHEDULED"} />
       default:
