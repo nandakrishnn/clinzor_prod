@@ -748,7 +748,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           </AnimatePresence>
 
           {/* Mobile Search Button (Full-width) */}
-          {/* Mobile Search Button (Full-width) */}
           {isMobileView && (
             <motion.div
               initial={{ opacity: 0 }}
