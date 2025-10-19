@@ -59,7 +59,7 @@ export function Confirmation({
       </div>
 
       <div className="mt-6">
-        <a href="/user" className="text-sm text-primaryColor hover:underline">
+        <a href="/user?bookingTab=booking" className="text-sm text-primaryColor hover:underline">
           My Bookings
         </a>
       </div>

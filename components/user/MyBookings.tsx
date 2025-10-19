@@ -10,8 +10,12 @@ import { toast } from "sonner"
 import { ConfirmationModal } from "../common/ConfirmationModal"
 import { convertTo12HourFormat, formatLocalDate } from "@/utils/formatters"
 
-export default function MyBookings() {
-  const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">("SCHEDULED")
+interface defaultProps {
+  defaultTab?: "PENDING" | "SCHEDULED" | "COMPLETED"
+}
+
+export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
+  const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">(defaultTab)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [bookings, setBookings] = useState<any[]>([])

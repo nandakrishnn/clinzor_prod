@@ -26,6 +26,7 @@ function UserDashContent() {
 
   const searchParams = useSearchParams()
   const tabData = searchParams.get('tab')
+  const bookingTab = searchParams.get('bookingTab')
 
   const getUser = async () => {
     try {
@@ -107,7 +108,7 @@ function UserDashContent() {
       case "profile":
         return <ProfileDetails user={user} onUpdate={getUser} />
       case "bookings":
-        return <MyBookings />
+        return <MyBookings defaultTab={ bookingTab === "booking" ? "SCHEDULED" : 'COMPLETED' } />
       case "expert_bookings":
         return <MyExpertBooking defaultTab={tabData === "SUGGESTIONS" ? "SUGGESTIONS" : "SCHEDULED"} />
       default:
@@ -119,7 +120,10 @@ function UserDashContent() {
     if (tabData === "SUGGESTIONS") {
       setActiveSection('expert_bookings')
     }
-  }, [tabData])
+    if (bookingTab === "booking") {
+      setActiveSection('bookings')
+    }
+  }, [tabData, bookingTab])
 
   return (
     <div className="min-h-screen bg-background">

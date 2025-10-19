@@ -65,6 +65,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
 
     const activeTabObj = availableTabs.find((tab) => tab.id === activeServiceTab)
 
+     console.log(clinicService, ' service from the clinic')
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
             {/* Header Navigation */}

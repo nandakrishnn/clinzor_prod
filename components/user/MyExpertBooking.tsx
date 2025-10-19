@@ -5,11 +5,12 @@ import { useEffect, useState } from "react"
 import type { Booking } from "@/types/user"
 import { useRouter } from "next/navigation"
 import { ConfirmationModal } from "../common/ConfirmationModal"
-import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
+import { BookingsExpertSkeleton, BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
 import { Calendar, Clock, MapPin, Eye, X, CreditCard, User, Laptop, Lightbulb, ArrowRight } from "lucide-react"
 import { cancelExpertService, getAllExpertBookingService, getExpertSuggestionsService } from "@/service/user/expert"
 import BookingDetailsModal from "./BookingDetailsModal"
 import Image from "next/image"
+import { convertTo12HourFormat } from "@/utils/formatters"
 
 interface MyExpertBookingProps {
     defaultTab?: "PENDING" | "SCHEDULED" | "COMPLETED" | "SUGGESTIONS"
@@ -43,7 +44,6 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
         if (!isoDate) return "-"
         return new Date(isoDate).toLocaleString("en-IN", {
             dateStyle: "medium",
-            timeStyle: "short",
         })
     }
     // Format tags for display
@@ -51,7 +51,6 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
         if (!tags) return [];
         return tags.split(',').map(tag => tag.trim());
     }
-
 
     // Function to check if join button should be shown
     const shouldShowJoinButton = (booking: any) => {
@@ -90,8 +89,6 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
             setLoading(false)
         }
     }
-    
-    console.log(suggestions, 'from the expert data')
 
     const cancelExpertBooking = async (id: string) => {
         setIsConfirming(true)
@@ -150,7 +147,7 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
         router.push(`/service/${suggestion?.uuid}`);
     };
 
-    if (isLoading) return <BookingsSkeleton />
+    if (isLoading) return <BookingsExpertSkeleton />
     return (
         <>
             <div className="bg-card rounded-xl shadow-sm border border-border p-8">
@@ -219,11 +216,11 @@ export default function MyExpertBooking({ defaultTab = "SCHEDULED" }: MyExpertBo
                                     <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={16} />
-                                            <span>{formatDate(booking?.start_time)}</span>
+                                            <span>{`${formatDate(booking?.start_time)}, ${convertTo12HourFormat(booking?.start_time)}`}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Clock size={16} />
-                                            <span>{formatDate(booking?.end_time)}</span>
+                                            <span>{`${formatDate(booking?.end_time)}, ${convertTo12HourFormat(booking?.end_time)}`}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <MapPin size={16} />
