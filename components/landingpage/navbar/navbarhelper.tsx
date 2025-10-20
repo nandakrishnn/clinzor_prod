@@ -342,7 +342,7 @@ export const NavbarButton = ({
 
   const variantStyles = {
     primary:
-      "bg-white/80 text-slate-800 shadow-lg shadow-slate-200/50 backdrop-blur-md border border-slate-200 hover:border-slate-300 cursor-pointer",
+      "bg-white/80 text-slate-800  border border-slate-200 hover:border-slate-300 cursor-pointer",
     secondary:
       "bg-transparent border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/50 ",
     gradient:

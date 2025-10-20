@@ -85,7 +85,6 @@ const CampManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCompletion, setFilterCompletion] = useState("all");
-  const [viewMode, setViewMode] = useState("grid");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loadingCampId, setLoadingCampId] = useState<string | null>(null);
@@ -228,6 +227,7 @@ const CampManagement = () => {
     if (source?.includes("instagram")) return <Instagram className="w-4 h-4" />;
     return <MapPin className="w-4 h-4" />;
   };
+
   const filteredCamps = camps.filter((camp) => {
     const matchesSearch =
       camp.org_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -334,10 +334,8 @@ const CampManagement = () => {
               className="px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 shadow-lg text-base sm:text-lg"
             >
               <option value="all">All Status</option>
-              <option value="DRAFT">Draft</option>
-              <option value="APPROVED">Approved</option>
               <option value="COMPLETED">Completed</option>
-              <option value="REJECTED">Rejected</option>
+              <option value="PENDING">Pending</option>\
             </select>
 
             {/* Filter by Completion */}
