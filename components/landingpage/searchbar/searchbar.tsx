@@ -397,7 +397,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
               )}
             >
               {/* Service Type */}
-              <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
+              {/* <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
                 <div className="flex flex-col">
                   <label className="text-xs text-gray-500 mb-1.5 font-medium">
                     SERVICE TYPE
@@ -467,7 +467,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     )}
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Specialty */}
               {/* <div className="p-4 md:px-5 md:py-5 border-b md:border-b-0 md:border-r border-gray-100">
@@ -562,7 +562,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
           </div>
 
           {/* Mobile Filters Toggle */}
-          {isMobileView && (
+          {/* {isMobileView && (
             <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
               <motion.button
                 type="button"
@@ -580,7 +580,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 )}
               </motion.button>
 
-              {/* Active filters indicators for mobile view */}
               {!showFilters && filtersCount > 0 && (
                 <div className="flex items-center gap-2">
                   {serviceType && (
@@ -596,10 +595,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           {/* Mobile Filters */}
-          <AnimatePresence>
+          {/* <AnimatePresence>
             {isMobileView && showFilters && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
@@ -609,7 +608,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 className="overflow-hidden"
               >
                 <div className="px-4 py-4 border-t border-gray-100 grid grid-cols-1 gap-5">
-                  {/* Service Type */}
                   <div>
                     <div className="flex justify-between">
                       <label className="text-xs text-gray-500 mb-1.5 font-medium block">
@@ -676,7 +674,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                     </div>
                   </div>
 
-                  {/* Specialty */}
                   <div>
                     <div className="flex justify-between">
                       <label className="text-xs text-gray-500 mb-1.5 font-medium block">
@@ -745,7 +742,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </AnimatePresence> */}
 
           {/* Mobile Search Button (Full-width) */}
           {isMobileView && (
