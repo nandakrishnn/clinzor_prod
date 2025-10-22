@@ -97,13 +97,13 @@ export default function ServicesWeProvide() {
         />
 
         <motion.div
-          className="@min-4xl:max-w-full @min-4xl:grid-cols-3 mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:mt-16"
+          className="@min-4xl:max-w-full @min-4xl:grid-cols-4 mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:mt-16"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
         >
-          {serviceData?.slice(0, 6).map((service: any, index: any) => (
+          {serviceData?.slice(0, 4).map((service: any, index: any) => (
             <motion.div key={index} variants={itemVariants} whileHover="hover">
               <CardTwo
                 className=""
@@ -128,35 +128,3 @@ export default function ServicesWeProvide() {
     </section>
   );
 }
-
-const CardDecorator = ({ children }: { children: ReactNode }) => (
-  <motion.div
-    className="relative mx-auto size-36 duration-200 [--color-border:color-mix(in_oklab,var(--color-zinc-950)10%,transparent)] group-hover:[--color-border:color-mix(in_oklab,var(--color-zinc-950)20%,transparent)] dark:[--color-border:color-mix(in_oklab,var(--color-white)15%,transparent)] dark:group-hover:bg-white/5 dark:group-hover:[--color-border:color-mix(in_oklab,var(--color-white)20%,transparent)]"
-    whileHover={{
-      rotate: [0, -2, 0],
-      transition: { repeat: 0, duration: 0.5 }
-    }}
-  >
-    <div
-      aria-hidden
-      className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:24px_24px]"
-    />
-    <div
-      aria-hidden
-      className="bg-radial to-background absolute inset-0 from-transparent to-75%"
-    />
-    <motion.div
-      className="dark:bg-zinc-900 absolute inset-0 m-auto flex size-12 items-center justify-center border-l border-t bg-white shadow-sm"
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-    >
-      <motion.div
-        initial={{ opacity: 0.7 }}
-        whileHover={{ opacity: 1, scale: 1.1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-      >
-        {children}
-      </motion.div>
-    </motion.div>
-  </motion.div>
-);

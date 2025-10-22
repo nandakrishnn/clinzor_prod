@@ -14,7 +14,7 @@ export const CardSkelton = () => {
       <div className="@container mx-auto max-w-7xl px-6 ">
         <TitleSkeleton />
 
-        <div className="@min-4xl:max-w-full @min-4xl:grid-cols-3 mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:mt-16">
+        <div className="@min-4xl:max-w-full @min-4xl:grid-cols-4 mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:mt-16">
           <CardTwoSkeleton count={6} />
         </div>
 

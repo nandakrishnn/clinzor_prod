@@ -28,46 +28,6 @@ const BlogComponent = () => {
     getBlogData()
   }, [])
 
-  // Example blog data (you can replace this with API data)
-  const blogs = [
-    {
-      id: 1,
-      title: "10 Tips for a Healthy Smile",
-      excerpt:
-        "Discover the best dental hygiene tips for a brighter, healthier smile...",
-      image:
-        "https://picsum.photos/800/600?random=1",
-      date: "Aug 10, 2025"
-    },
-    {
-      id: 2,
-      title: "The Future of Telemedicine",
-      excerpt:
-        "Telemedicine is reshaping healthcare. Learn how to access doctors from anywhere...",
-      image:
-        "https://picsum.photos/800/600?random=1",
-      date: "Aug 8, 2025"
-    },
-    {
-      id: 3,
-      title: "Top 5 Nutrition Myths Debunked",
-      excerpt:
-        "Not everything you hear about dieting is true. Here’s what science says...",
-      image:
-        "https://picsum.photos/800/600?random=1",
-      date: "Aug 5, 2025"
-    },
-    {
-      id: 4,
-      title: "How to Choose the Right Clinic",
-      excerpt:
-        "Finding the best clinic can be tricky. Here’s a guide to help you decide...",
-      image:
-        "https://picsum.photos/800/600?random=1",
-      date: "Aug 1, 2025"
-    }
-  ];
-
   return (
     <section>
       <div className="mx-auto max-w-7xl px-6">
