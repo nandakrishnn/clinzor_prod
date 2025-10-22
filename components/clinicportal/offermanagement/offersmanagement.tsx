@@ -306,26 +306,6 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
         valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
         discount_percentage: newOffer.discount_percentage,
         clinic_service: newOffer.clinic_service,
-        // Add required fields for NewClinicOffer type (dummy/default values, replace as needed)
-        name: "",
-        email: "",
-        phone: "",
-        type: "",
-        address: "",
-        city: "",
-        state: "",
-        country: "",
-        pincode: "",
-        gst_number: "",
-        pan_number: "",
-        website: "",
-        logo: "",
-        // Add missing required fields for NewClinicOffer
-        postalCode: "",
-        about: "",
-        insuranceNetworks: [],
-        specialties: [],
-        location: { lat: 0, lng: 0 },
       };
 
       // Call the API
@@ -358,10 +338,10 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
       setShowCreateModal(false);
       fetchOffers();
     } catch (error: any) {
-      console.error("Failed to create offer:", error);
+      console.error("Failed to create offer:", error?.response?.data?.message);
       setNotification({
         type: 'error',
-        message: `Failed to save offer. Please try again ${error.response.data.non_field_errors || error.message}`
+        message: `Failed to save offer. Please try again ${error?.response?.data?.message  || error?.response?.data?.non_field_errors || error.message}`
       });
       // You might want to show an error message to the user here
     } finally {

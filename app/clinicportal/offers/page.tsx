@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Box, Button, Typography, Breadcrumbs, Link } from "@mui/joy";
-import SlotManagementView from "@/components/clinicportal/slotmanagement/slotmanagement";
+import { Box } from "@mui/joy";
 import ClinicOffersManager from "@/components/clinicportal/offermanagement/offersmanagement";
 
 export default function ClinicProfilePage() {

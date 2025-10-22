@@ -114,8 +114,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     const minPrice = priceData[minKey];
     const maxPrice = priceData[maxKey];
 
-    console.log(minPrice, maxPrice)
-
     if (minPrice && maxPrice && minPrice === maxPrice) {
       return parseFloat(minPrice);
     }
@@ -266,9 +264,13 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }, [mode, serviceId])
 
+  console.log(clinicOwnServiceId)
   useEffect(() => {
-    getCoupon("")
-  }, [])
+    console.log(clinicOwnServiceId)
+    if (serviceId) {
+      getCoupon(clinicOwnServiceId)
+    }
+  }, [serviceId, clinicOwnServiceId])
 
   useEffect(() => {
     if (session?.user) {

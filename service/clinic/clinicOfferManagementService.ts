@@ -27,10 +27,10 @@ interface NewClinicOffer {
   foundedOn?: string | null;
 }
 // Clinic-Service Management Api
-export const createClinicOffers = async (body: NewClinicOffer) => {
+export const createClinicOffers = async (body: any) => {
   try {
     const response = await axiosPrivate.post(
-      `/clinic/offer-lc/`, // Changed from PUT to POST for creation
+      `/clinic/offer-lc/`, 
       body
     );
     return response.data;

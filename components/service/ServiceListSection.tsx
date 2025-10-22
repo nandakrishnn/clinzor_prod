@@ -106,7 +106,7 @@ function ServiceListContent() {
     return (
       <>
         <SearchSkeleton />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-9">
           {Array.from({ length: 3 }).map((_, i) => (
             <ServiceCardSkeleton key={`skeleton-${i}`} />
           ))}
@@ -148,7 +148,7 @@ function ServiceListContent() {
       ) : (
         <>
           {/* Services grid */}
-          <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-9">
             {services.map((service) => (
               <ServiceCard
                 key={service.uuid}
@@ -202,7 +202,7 @@ const ServiceListSection = () => {
     <Suspense fallback={
       <>
         <SearchSkeleton />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-9">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-9">
           {Array.from({ length: 3 }).map((_, i) => (
             <ServiceCardSkeleton key={`skeleton-${i}`} />
           ))}

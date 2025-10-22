@@ -13,7 +13,6 @@ type Props = {
 }
 
 export function ServiceSummary({ service, sessionType, onSessionTypeChange, consultationPrice, sessionPrice }: Props) {
-  console.log(consultationPrice, sessionPrice)
   return (
     <div className="">
       <div className="">
