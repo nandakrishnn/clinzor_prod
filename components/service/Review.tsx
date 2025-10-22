@@ -46,7 +46,7 @@ const ReviewSection = ({ id }: { id: string }) => {
       if (res?.data?.data) {
         const newReviews = res.data.data.map((item: any) => ({
           id: item.id,
-          name: item.name,
+          name: item.name || item.created_by,
           rating: item.rating,
           comment: item.review || item.comment, // Handle both field names
           avatar: item.avatar,
@@ -137,8 +137,6 @@ const ReviewSection = ({ id }: { id: string }) => {
 
       const response = await addReviewService(reviewData);
 
-      console.log("Review to be submitted:", reviewData, response);
-
       // For now, we'll simulate success and add to local state
       const newReview: Review = {
         id: Date.now().toString(), // Temporary ID
@@ -205,17 +203,17 @@ const ReviewSection = ({ id }: { id: string }) => {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-start ">
                       <div className="flex text-yellow-400">
                         {Array.from({ length: 5 }, (_, i) => (
                           <span key={i}>{i < review.rating ? "★" : "☆"}</span>
                         ))}
                       </div>
-                      <span className="font-semibold text-gray-800">
+                      <div className="text-gray-600 text-sm">
                         {review.name}
-                      </span>
+                      </div>
                     </div>
-                    <p className="text-gray-600 mt-1 text-sm">{review.comment}</p>
+                    <p className="text-gray-800 mt-2 text-[15px]">{review.comment}</p>
                   </div>
                 </div>
               ))}
