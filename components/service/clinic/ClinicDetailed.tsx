@@ -22,7 +22,6 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         try {
             const res = await getAClinicDetailed(id)
             if (res.status === 200) {
-                console.log(res?.data, 'clinic Data form the get clinic detailed view')
                 setClinicData(res?.data)
             }
         } catch (error) {
@@ -36,7 +35,6 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         try {
             const res = await getAService(id)
             if (res.status === 200) {
-                console.log(res?.data, 'Service Data form the get clinic detailed view')
                 setService(res?.data)
             }
         } catch (error) {
