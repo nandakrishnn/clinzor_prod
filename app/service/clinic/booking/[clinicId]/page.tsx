@@ -191,7 +191,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       const res = await getAllClinicRelatedService(id)
       if (res?.status === 200) {
-        console.log(res?.data, 'services from the clinic')
         const getService = res?.data?.data?.find(
           (service: any) => service?.service === serviceId
         )
