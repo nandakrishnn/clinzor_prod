@@ -13,7 +13,7 @@ import { PatientForm } from "@/components/service/clinic/PatientForm"
 import { PaymentOptions } from "@/components/service/clinic/PaymentOptions"
 import { ServiceSummary } from "@/components/service/clinic/ServiceSummary"
 import { Stepper } from "@/components/service/clinic/Stepper"
-import { createBookingService, getAClinicDetailed, getAService, getClinicServiceData, getPrivateCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
+import { createBookingService, getAClinicDetailed, getAllClinicRelatedService, getAService, getClinicServiceData, getPrivateCouponService, getServiceCharges, getServiceSlots } from "@/service/user/sevicePage"
 import { useSearchParams } from "next/navigation"
 
 import PreviewCard from "@/components/service/clinic/PreviewCard"
@@ -30,7 +30,7 @@ type clinicBookingProps = {
   }
 }
 
-type SessionType = "CONSULTATION" | "SESSION"
+type SessionType = "CONSULTATION" | "TREATMENT"
 
 type Slot = {
   uuid: string
@@ -106,13 +106,15 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     if (!priceData) return 0;
 
     const baseKey = sessionType === "CONSULTATION" ? "consultation" : "treatment";
-    const modeKey = mode === "HOME_VISIT" ? "home_visit" : mode === "VIDEO_CALL" ? "video_call" : "clinic";
+    const modeKey = mode === "HOME_VISIT" ? "home_visit" : mode === "VIDEO_CALL" ? "video_call" : "physical_visit";
 
-    const minKey = `min_${baseKey}_charge_${modeKey}` as keyof typeof priceData;
-    const maxKey = `max_${baseKey}_charge_${modeKey}` as keyof typeof priceData;
+    const minKey = `${baseKey}_charge_${modeKey}` as keyof typeof priceData;
+    const maxKey = `${baseKey}_charge_${modeKey}` as keyof typeof priceData;
 
     const minPrice = priceData[minKey];
     const maxPrice = priceData[maxKey];
+
+    console.log(minPrice, maxPrice)
 
     if (minPrice && maxPrice && minPrice === maxPrice) {
       return parseFloat(minPrice);
@@ -156,7 +158,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   };
 
   const getSessionPrice = (mode: string) => {
-    return getPriceFromServiceCharges("SESSION", mode);
+    return getPriceFromServiceCharges("TREATMENT", mode);
   };
 
   const getService = async (id: string) => {
@@ -187,9 +189,13 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
 
   const getServiceChanges = async (id: string) => {
     try {
-      const res = await getServiceCharges(id)
+      const res = await getAllClinicRelatedService(id)
       if (res?.status === 200) {
-        setPriceData(res?.data)
+        console.log(res?.data, 'services from the clinic')
+        const getService = res?.data?.data?.find(
+          (service: any) => service?.service === serviceId
+        )
+        setPriceData(getService)
       }
     } catch (error) {
       console.log(error)
@@ -253,10 +259,10 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   useEffect(() => {
     getClinic()
     getClinicService()
+    getServiceChanges(clinicId)
 
     if (serviceId) {
       getService(serviceId)
-      getServiceChanges(serviceId)
       getSlotService(serviceId)
     }
   }, [mode, serviceId])
@@ -417,7 +423,6 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
           </div>
         </div>
       )}
-
 
       <section className="pb-10 md:mb-20 max-w-7xl mx-auto ">
         <div className="grid gap-6 md:grid-cols-3">

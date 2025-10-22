@@ -11,6 +11,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
   const [search, setSearch] = useState("");
   const [serviceTag, setServiceTag] = useState<any>()
   const [isSearching, setIsSearching] = useState(false);
+  const [visitType, setVisitType] = useState('')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -44,32 +45,46 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
     getAllServiceData()
   }, [])
 
+
   return (
     <div className="flex flex-col w-full">
       {/* Search Bar */}
       <div className="max-w-7xl mx-auto w-full md:my-4 px-5">
-        <div className='relative '>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Search clinics..."
-            className="w-full py-3 px-11 border border-gray-300 rounded-lg focus:outline-none "
-          />
+        <div className='flex flex-col md:flex-row items-center justify-center gap-2'>
+          {/* search  */}
+          <div className='relative w-full'>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Search clinics..."
+              className="w-full py-3 px-11 border border-gray-300 rounded-lg focus:outline-none "
+            />
 
-          {/* Right-side Icon / Loader */}
-          <div className="absolute inset-y-0 left-4 flex items-center">
-            {isSearching ? (
-              <div className="animate-spin h-5 w-5 border-2 border-primaryColor border-t-transparent rounded-full"></div>
-            ) : (
-              <button
-                onClick={triggerSearch}
-                className="text-gray-500 hover:text-primaryColor"
-              >
-                <FiSearch size={20} />
-              </button>
-            )}
+            {/* Right-side Icon / Loader */}
+            <div className="absolute inset-y-0 left-4 flex items-center">
+              {isSearching ? (
+                <div className="animate-spin h-5 w-5 border-2 border-primaryColor border-t-transparent rounded-full"></div>
+              ) : (
+                <button
+                  onClick={triggerSearch}
+                  className="text-gray-500 hover:text-primaryColor"
+                >
+                  <FiSearch size={20} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filter part */}
+          <div className='w-full md:w-[30%]'>
+            <select className='py-3.5 w-full px-5 border border-gray-300 rounded-lg focus:outline-none ' value={visitType} onChange={(e: any) => setVisitType(e.target.value)}>
+              <option value="">Select Options</option>
+              <option value="VIDEO_CALL">Video Call</option>
+              <option value="CLINIC_VISIT">Clinic Visit</option>
+              <option value="HOME_VISIT">Home Visit</option>
+            </select>
           </div>
         </div>
 
@@ -89,7 +104,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
 
       {/* Children */}
       <div className="max-w-7xl mx-auto min-w-full flex flex-col md:flex-row ">
-        <AvailableClinics id={id} search={search} />
+        <AvailableClinics id={id} search={search} type={visitType} />
         <ServiceDetailed id={id} />
       </div>
     </div>

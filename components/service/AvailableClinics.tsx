@@ -9,7 +9,7 @@ import ClinicCard from "./ClinicCard";
 import { getClinicListService } from "@/service/user/sevicePage";
 import DataPlaceholder from "../common/DataPlaceholder";
 
-const AvailableClinics = ({ id, search }: { id: string; search?: string }) => {
+const AvailableClinics = ({ id, search, type }: { id: string; search?: string, type: string }) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -71,8 +71,7 @@ const AvailableClinics = ({ id, search }: { id: string; search?: string }) => {
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(id, locationParams, search);
-      console.log(res, "service related clinic");
+      const res = await getClinicListService(id, locationParams, search, type);
 
       if (res.status === 200) {
         setClinicList(res?.data?.data);
@@ -89,7 +88,7 @@ const AvailableClinics = ({ id, search }: { id: string; search?: string }) => {
     if (!isLocating) {
       getClinicList();
     }
-  }, [isLocating, userLocation, search]);
+  }, [isLocating, userLocation, search, type]);
 
   // Calculate total slides and current slide
   const totalSlides = Math.ceil(clinicList.length / visibleCards);

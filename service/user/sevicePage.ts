@@ -77,7 +77,7 @@ export const getAllClinicDoctorsService = async (id?: string) => {
   return res.data;
 };
 
-export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null, search?: string) => {
+export const getClinicListService = async (id?: string, location?: { lat: number; lng: number } | null, search?: string, type?: string) => {
   let url = `${USER_SERVICE.GET_CLINIC_SERVICE_RELATED}${id}/`;
 
   const params: Record<string, string> = {};
@@ -90,6 +90,10 @@ export const getClinicListService = async (id?: string, location?: { lat: number
 
   if (search) {
     params.search = search;
+  }
+
+  if(type){
+    params.visit_type = type
   }
 
   const res = await axiosPublic.get(url, { params });

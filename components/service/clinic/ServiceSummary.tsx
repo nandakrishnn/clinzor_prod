@@ -6,13 +6,14 @@ type Props = {
     description: string
     image: string
   }
-  sessionType: "CONSULTATION" | "SESSION"
-  onSessionTypeChange: (t: "CONSULTATION" | "SESSION") => void
+  sessionType: "CONSULTATION" | "TREATMENT" 
+  onSessionTypeChange: (t: "CONSULTATION" |  "TREATMENT") => void
   consultationPrice: number 
   sessionPrice: number
 }
 
 export function ServiceSummary({ service, sessionType, onSessionTypeChange, consultationPrice, sessionPrice }: Props) {
+  console.log(consultationPrice, sessionPrice)
   return (
     <div className="">
       <div className="">
@@ -34,8 +35,8 @@ export function ServiceSummary({ service, sessionType, onSessionTypeChange, cons
               type="radio"
               name="sessionType"
               className="size-4 accent-primaryColor"
-              checked={sessionType === "SESSION"}
-              onChange={() => onSessionTypeChange("SESSION")}
+              checked={sessionType === "TREATMENT"}
+              onChange={() => onSessionTypeChange("TREATMENT")}
             />
           </label>
         </div>

@@ -27,7 +27,7 @@ export function OrderSummary({
   total,
 }: {
   service: Service
-  sessionType: "CONSULTATION" | "SESSION"
+  sessionType: "CONSULTATION" | "TREATMENT"
   mode: "HOME_VISIT" | "VIDEO_CALL" | "PHYSICAL_VISIT"
   slot: { label: string; dateKey: string } | null
   genderPref: "FEMALE" | "MALE" | "NONE"

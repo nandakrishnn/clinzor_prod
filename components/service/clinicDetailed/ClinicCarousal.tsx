@@ -25,7 +25,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
     const router = useRouter()
     const { data } = useSession()
 
-    if (loading) return <ClinicCarousalSkeleton /> 
+    if (loading) return <ClinicCarousalSkeleton />
 
     const serviceTabs = [
         {
@@ -65,7 +65,7 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
 
     const activeTabObj = availableTabs.find((tab) => tab.id === activeServiceTab)
 
-     console.log(clinicService, ' service from the clinic')
+    console.log(clinicService, serviceDetailed,' service from the clinic')
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
             {/* Header Navigation */}
@@ -80,8 +80,8 @@ const ClinicCarousal: React.FC<ClinicCarousalProps> = ({
                                     key={tab.id}
                                     onClick={() => setActiveServiceTab(tab.id)}
                                     className={`px-6 py-3 rounded-full border-2 flex items-center gap-2 transition-all duration-200 ${activeServiceTab === tab.id
-                                            ? "bg-[#033C8D] text-white border-[#033C8D]"
-                                            : "bg-white text-gray-700 border-gray-300 hover:border-[#033C8D]"
+                                        ? "bg-[#033C8D] text-white border-[#033C8D]"
+                                        : "bg-white text-gray-700 border-gray-300 hover:border-[#033C8D]"
                                         }`}
                                 >
                                     <Icon className="w-5 h-5" />
