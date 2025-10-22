@@ -15,6 +15,7 @@ import useMedia from "@/src/hooks/useMedia";
 import useDropdown from "./use";
 import ResponsiveDropdown from "./responsivedropdown";
 import { useRouter } from "next/navigation";
+import { getAllService } from "@/service/user/sevicePage";
 
 interface SearchParams {
   keyword: string;
@@ -78,6 +79,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   const [activePopular, setActivePopular] = useState<string | null>(null);
   const [filtersCount, setFiltersCount] = useState(0);
 
+  const [serviceList, setServiceList] = useState([])
+
   // Use our custom dropdown hooks with unique IDs for coordination
   const serviceDropdown: ReturnType<typeof useDropdown> = useDropdown(
     false,
@@ -97,7 +100,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
   // Initialize filters visibility based on view
   useEffect(() => {
     setShowFilters(!isMobileView);
+    getServiceList()
   }, [isMobileView]);
+
+  const getServiceList = async () => {
+    try {
+      const res = await getAllService()
+      console.log(res?.data?.data?.slice(0, 3), 'get all service from the hero section')
+      setServiceList(res?.data?.data?.slice(0, 3))
+    } catch (error) {
+      console.log(error)
+    } finally {
+
+    }
+
+  }
 
   // Update filters count
   useEffect(() => {
@@ -281,7 +298,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
             {/* Location */}
             <div className="p-4 md:pl-6 md:pr-4 md:py-5 border-b md:border-b-0 md:border-r border-gray-100 flex-shrink-0">
               <div className="flex flex-col">
-                <label className="text-xs text-gray-500 mb-1.5 font-medium">
+                <label className="text-xs  text-start text-gray-500 mb-1.5 font-medium">
                   LOCATION
                 </label>
                 <div className="flex items-center">
@@ -345,7 +362,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
               <div className="flex flex-col">
                 <label
                   htmlFor="keyword-search"
-                  className="text-xs text-gray-500 mb-1.5 font-medium"
+                  className="text-xs text-start text-gray-500 mb-1.5 font-medium"
                 >
                   SEARCH
                 </label>
@@ -776,21 +793,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch }) => {
         <span className="text-xs text-white font-medium mr-1 self-center">
           Popular:
         </span>
-        {popularSearches.map((term) => (
+        {serviceList?.map((term: any) => (
           <motion.button
-            key={term}
+            key={term?.uuid}
             type="button"
-            onClick={() => handlePopularSearch(term)}
+            onClick={() => handlePopularSearch(term?.name)}
             className={cn(
               "px-3 py-1 text-xs rounded-full border transition-all",
-              activePopular === term
+              activePopular === term?.name
                 ? "bg-blue-50 border-blue-200 text-blue-700"
                 : "border-gray-200 text-white hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
             )}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            {term}
+            {term?.name}
           </motion.button>
         ))}
       </motion.div>

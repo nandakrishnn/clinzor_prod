@@ -100,13 +100,16 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
           </div>
 
           {/* Service Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Service Details</h3>
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">{booking?.clinic_name}</h4>
-              <p className="text-sm text-gray-600">Service: {booking?.service_default_name}</p>
+          { booking?.clinic_name &&
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Service Details</h3>
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">{booking?.clinic_name}</h4>
+                <p className="text-sm text-gray-600">Service: {booking?.service_default_name}</p>
+              </div>
             </div>
-          </div>
+          }
+
 
           {/* Customer Information */}
           <div className="space-y-4">
@@ -118,7 +121,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Customer Name</p>
-                  <p className="font-medium text-gray-900">{booking?.patient_name}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_name  || booking?.customer_name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -127,7 +130,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium text-gray-900">{booking?.patient_email}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_email || booking?.customer_email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -136,7 +139,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: { book
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium text-gray-900">{booking?.patient_mobile}</p>
+                  <p className="font-medium text-gray-900">{booking?.patient_mobile  || booking?.customer_phone_number}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">

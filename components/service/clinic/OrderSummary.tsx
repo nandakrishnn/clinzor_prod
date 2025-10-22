@@ -49,8 +49,8 @@ export function OrderSummary({
       <div className="flex items-start gap-3">
         <img
           src={service.image || "/placeholder.svg?height=48&width=48&query=service"}
-          alt=""
-          className="size-12 rounded-md bg-gray-100"
+          alt="Order Summary Image"
+          className="size-12 rounded-md bg-gray-100 object-cover"
         />
         <div>
           <p className="text-sm font-medium text-gray-900">{service.title}</p>

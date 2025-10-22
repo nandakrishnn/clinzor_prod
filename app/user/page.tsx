@@ -78,9 +78,17 @@ function UserDashContent() {
     } catch (error) {
       console.error(error)
     } finally {
+      clearClientData();
       setShowLogoutConfirm(false)
     }
   }
+
+  const clearClientData = () => {
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+  };
 
   const handleNavigationClick = (itemId: string) => {
     if (itemId === "logout") {
@@ -108,7 +116,7 @@ function UserDashContent() {
       case "profile":
         return <ProfileDetails user={user} onUpdate={getUser} />
       case "bookings":
-        return <MyBookings defaultTab={ bookingTab === "booking" ? "SCHEDULED" : 'SCHEDULED' } />
+        return <MyBookings defaultTab={bookingTab === "booking" ? "SCHEDULED" : 'SCHEDULED'} />
       case "expert_bookings":
         return <MyExpertBooking defaultTab={tabData === "SUGGESTIONS" ? "SUGGESTIONS" : "SCHEDULED"} />
       default:
