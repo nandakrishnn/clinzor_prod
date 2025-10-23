@@ -181,6 +181,7 @@ type InputFieldProps = {
   type?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   required?: boolean;
   error?: string;
@@ -193,6 +194,7 @@ function InputField({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   required = false,
   error,
@@ -213,6 +215,7 @@ function InputField({
           type={type}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           className={`w-full ${Icon ? "pl-10" : "pl-4"
             } pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
             }`}
@@ -393,12 +396,21 @@ export default function ClinicManagement() {
     landmark: "",
     mapLink: "",
     gpsCoordinates: "",
-    openingTime: "",
-    closingTime: "",
-    workingDays: [] as string[],
     about_clinic: "",
     gst_no: "",
     images: [] as string[]
+  });
+
+  // Validation errors for step 1
+  const [clinicErrors, setClinicErrors] = useState({
+    name: '',
+    city: '',
+    phone: '',
+    email: '',
+    address: '',
+    pincode: '',
+    gst_no: '',
+    gpsCoordinates: ''
   });
 
   // Add User Form State - Step 2
@@ -408,6 +420,14 @@ export default function ClinicManagement() {
     email: "",
     phone_number: "",
     password: ""
+  });
+
+  // Validation errors for step 2
+  const [userErrors, setUserErrors] = useState({
+    full_name: '',
+    email: '',
+    phone_number: '',
+    password: ''
   });
 
   // Add state for confirmation modals
@@ -520,45 +540,20 @@ export default function ClinicManagement() {
     }
   };
 
-  // Filter for header selection
-  let clinicsToShow = filteredClinics;
-  if (selectedHeader === "Approved")
-    clinicsToShow = filteredClinics.filter((c) => c.status === "APPROVED");
-  else if (selectedHeader === "Pending")
-    clinicsToShow = filteredClinics.filter((c) => c.status === "DRAFT");
-  else if (selectedHeader === "Active")
-    clinicsToShow = filteredClinics.filter((c) => c.is_active);
-  else if (selectedHeader === "Deactivated")
-    clinicsToShow = filteredClinics.filter((c) => !c.is_active);
-
   const handleWorkingDayToggle = (day: string) => {
-    setNewClinic((prev) => ({
-      ...prev,
-      workingDays: prev.workingDays.includes(day)
-        ? prev.workingDays.filter((d) => d !== day)
-        : [...prev.workingDays, day]
-    }));
+    // Implementation for working day toggle
   };
 
   const handleSelectAllDays = () => {
-    setNewClinic((prev) => ({
-      ...prev,
-      workingDays: workingDayOptions.map((day) => day.value)
-    }));
+    // Implementation for select all days
   };
 
   const handleSelectWeekdays = () => {
-    setNewClinic((prev) => ({
-      ...prev,
-      workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"]
-    }));
+    // Implementation for select weekdays
   };
 
   const handleClearAllDays = () => {
-    setNewClinic((prev) => ({
-      ...prev,
-      workingDays: []
-    }));
+    // Implementation for clear all days
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -633,33 +628,137 @@ export default function ClinicManagement() {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   }
 
-  const handleAddClinicStep1 = async () => {
-    const { isValid, errors } = validateClinicStep1();
+  // Validation functions
+  const validateClinicField = (name: string, value: string): string => {
+    switch (name) {
+      case 'name':
+        if (!value.trim()) return 'Clinic name is required';
+        if (value.trim().length < 2) return 'Clinic name must be at least 2 characters long';
+        return '';
+      
+      case 'city':
+        if (!value.trim()) return 'City is required';
+        return '';
+      
+      case 'email':
+        if (!value.match(/^\S+@\S+\.\S+$/)) return 'Please enter a valid email address';
+        return '';
+      
+      case 'phone':
+        if (!value.match(/^\d{10}$/)) return 'Phone number must be exactly 10 digits';
+        return '';
+      
+      case 'address':
+        if (!value.trim()) return 'Address is required';
+        if (value.trim().length < 10) return 'Address must be at least 10 characters long';
+        return '';
+      
+      case 'pincode':
+        if (value && !value.match(/^\d{6}$/)) return 'Pincode must be exactly 6 digits';
+        return '';
+      
+      case 'gst_no':
+        if (value && !value.match(/^[0-9A-Z]{15}$/)) return 'GST number must be 15 characters long (alphanumeric)';
+        return '';
+      
+      case 'gpsCoordinates':
+        if (value && !value.match(/^-?\d+\.?\d*\s+-?\d+\.?\d*$/)) return 'Enter coordinates as "longitude latitude" (e.g., 77.5946 12.9716)';
+        return '';
+      
+      default:
+        return '';
+    }
+  };
 
-    if (!isValid) {
+  const validateUserField = (name: string, value: string): string => {
+    switch (name) {
+      case 'full_name':
+        if (!value.trim()) return 'Full name is required';
+        if (value.trim().length < 2) return 'Full name must be at least 2 characters long';
+        return '';
+      
+      case 'email':
+        if (!value.match(/^\S+@\S+\.\S+$/)) return 'Please enter a valid email address';
+        return '';
+      
+      case 'phone_number':
+        if (!value.match(/^\d{10}$/)) return 'Phone number must be exactly 10 digits';
+        return '';
+      
+      case 'password':
+        if (value.length < 8) return 'Password must be at least 8 characters long';
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+        if (!passwordRegex.test(value)) return 'Must include uppercase, lowercase, number & special character (@$!%*?&)';
+        return '';
+      
+      default:
+        return '';
+    }
+  };
+
+  const handleClinicInputChange = (field: string, value: string) => {
+    setNewClinic(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (clinicErrors[field as keyof typeof clinicErrors]) {
+      setClinicErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleClinicInputBlur = (field: string, value: string) => {
+    const error = validateClinicField(field, value);
+    setClinicErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const handleUserInputChange = (field: string, value: string) => {
+    setNewUser(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (userErrors[field as keyof typeof userErrors]) {
+      setUserErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleUserInputBlur = (field: string, value: string) => {
+    const error = validateUserField(field, value);
+    setUserErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const validateClinicStep1 = () => {
+    const errors = {
+      name: validateClinicField('name', newClinic.name),
+      city: validateClinicField('city', newClinic.city),
+      phone: validateClinicField('phone', newClinic.phone),
+      email: validateClinicField('email', newClinic.email),
+      address: validateClinicField('address', newClinic.address),
+      pincode: validateClinicField('pincode', newClinic.pincode),
+      gst_no: validateClinicField('gst_no', newClinic.gst_no),
+      gpsCoordinates: validateClinicField('gpsCoordinates', newClinic.gpsCoordinates)
+    };
+
+    setClinicErrors(errors);
+
+    return !Object.values(errors).some(error => error !== '');
+  };
+
+  const validateUserStep2 = () => {
+    const errors = {
+      full_name: validateUserField('full_name', newUser.full_name),
+      email: validateUserField('email', newUser.email),
+      phone_number: validateUserField('phone_number', newUser.phone_number),
+      password: validateUserField('password', newUser.password)
+    };
+
+    setUserErrors(errors);
+
+    return !Object.values(errors).some(error => error !== '');
+  };
+
+  const handleAddClinicStep1 = async () => {
+    if (!validateClinicStep1()) {
       setNotification({
         type: "error",
         message: "Please fix the form errors before proceeding"
-      });
-      return;
-    }
-    if (
-      !newClinic.name ||
-      !newClinic.city ||
-      !newClinic.email ||
-      !newClinic.phone
-    ) {
-      setNotification({
-        type: "error",
-        message: "Please fill in all required fields"
-      });
-      return;
-    }
-
-    if (newClinic.workingDays.length === 0) {
-      setNotification({
-        type: "error",
-        message: "Please select at least one working day"
       });
       return;
     }
@@ -715,9 +814,6 @@ export default function ClinicManagement() {
         landmark: newClinic.landmark,
         map_link: newClinic.mapLink,
         gps_coordinates: newClinic.gpsCoordinates,
-        opening_time: newClinic.openingTime,
-        closing_time: newClinic.closingTime,
-        working_days: newClinic.workingDays,
         about_clinic: newClinic.about_clinic,
         gst_no: newClinic.gst_no,
         images: imageUrls,
@@ -758,24 +854,10 @@ export default function ClinicManagement() {
   };
 
   const handleAddUserStep2 = async () => {
-    const { isValid, errors } = validateUserStep2();
-
-    if (!isValid) {
+    if (!validateUserStep2()) {
       setNotification({
         type: "error",
-        message: ` "Please fix the form errors before creating the user"`
-      });
-      return;
-    }
-    if (
-      !newUser.full_name ||
-      !newUser.email ||
-      !newUser.phone_number ||
-      !newUser.password
-    ) {
-      setNotification({
-        type: "error",
-        message: "Please fill in all required user fields"
+        message: "Please fix the form errors before creating the user"
       });
       return;
     }
@@ -804,9 +886,6 @@ export default function ClinicManagement() {
         landmark: "",
         mapLink: "",
         gpsCoordinates: "",
-        openingTime: "",
-        closingTime: "",
-        workingDays: [],
         about_clinic: "",
         gst_no: "",
         images: []
@@ -818,6 +897,24 @@ export default function ClinicManagement() {
         email: "",
         phone_number: "",
         password: ""
+      });
+
+      setClinicErrors({
+        name: '',
+        city: '',
+        phone: '',
+        email: '',
+        address: '',
+        pincode: '',
+        gst_no: '',
+        gpsCoordinates: ''
+      });
+
+      setUserErrors({
+        full_name: '',
+        email: '',
+        phone_number: '',
+        password: ''
       });
 
       setIsAddModalOpen(false);
@@ -998,123 +1095,6 @@ export default function ClinicManagement() {
     };
 
     return strengthConfig[strength as keyof typeof strengthConfig] || { text: '', color: '' };
-  };
-
-  const validateClinicStep1 = () => {
-    const errors = {
-      name: '',
-      city: '',
-      phone: '',
-      email: '',
-      address: '',
-      openingTime: '',
-      closingTime: '',
-      workingDays: ''
-    };
-
-    let isValid = true;
-
-    // Name validation
-    if (!newClinic.name.trim()) {
-      errors.name = 'Clinic name is required';
-      isValid = false;
-    } else if (newClinic.name.trim().length < 2) {
-      errors.name = 'Clinic name must be at least 2 characters long';
-      isValid = false;
-    }
-
-    // City validation
-    if (!newClinic.city.trim()) {
-      errors.city = 'City is required';
-      isValid = false;
-    }
-
-    // Email validation
-    if (!newClinic.email.match(/^\S+@\S+\.\S+$/)) {
-      errors.email = 'Please enter a valid email address';
-      isValid = false;
-    }
-
-    // Phone validation
-    if (!newClinic.phone.match(/^\d{10}$/)) {
-      errors.phone = 'Phone number must be exactly 10 digits';
-      isValid = false;
-    }
-
-    // Address validation
-    if (!newClinic.address.trim()) {
-      errors.address = 'Address is required';
-      isValid = false;
-    } else if (newClinic.address.trim().length < 10) {
-      errors.address = 'Address must be at least 10 characters long';
-      isValid = false;
-    }
-
-    // Working hours validation
-    if (!newClinic.openingTime) {
-      errors.openingTime = 'Opening time is required';
-      isValid = false;
-    }
-
-    if (!newClinic.closingTime) {
-      errors.closingTime = 'Closing time is required';
-      isValid = false;
-    }
-
-    // Working days validation
-    if (newClinic.workingDays.length === 0) {
-      errors.workingDays = 'Please select at least one working day';
-      isValid = false;
-    }
-
-    return { isValid, errors };
-  };
-
-  // Update the validation for step 2 (user creation)
-  const validateUserStep2 = () => {
-    const errors = {
-      full_name: '',
-      email: '',
-      phone_number: '',
-      password: ''
-    };
-
-    let isValid = true;
-
-    // Full name validation
-    if (!newUser.full_name.trim()) {
-      errors.full_name = 'Full name is required';
-      isValid = false;
-    } else if (newUser.full_name.trim().length < 2) {
-      errors.full_name = 'Full name must be at least 2 characters long';
-      isValid = false;
-    }
-
-    // Email validation
-    if (!newUser.email.match(/^\S+@\S+\.\S+$/)) {
-      errors.email = 'Please enter a valid email address';
-      isValid = false;
-    }
-
-    // Phone validation
-    if (!newUser.phone_number.match(/^\d{10}$/)) {
-      errors.phone_number = 'Phone number must be exactly 10 digits';
-      isValid = false;
-    }
-
-    // Strong password validation
-    if (newUser.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-      isValid = false;
-    } else {
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-      if (!passwordRegex.test(newUser.password)) {
-        errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)';
-        isValid = false;
-      }
-    }
-
-    return { isValid, errors };
   };
 
   useEffect(() => {
@@ -1378,9 +1358,6 @@ export default function ClinicManagement() {
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                         {clinic?.name}
                         <StatusBadge status={clinic?.status} />
-                        {/* <span className="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-100">
-                          {getBookingCount(clinic?.name)} Bookings
-                        </span> */}
                       </h3>
                       <p className="text-sm text-gray-600 flex items-center gap-1">
                         <MapPin size={14} />
@@ -1557,9 +1534,6 @@ export default function ClinicManagement() {
                 landmark: "",
                 mapLink: "",
                 gpsCoordinates: "",
-                openingTime: "",
-                closingTime: "",
-                workingDays: [],
                 about_clinic: "",
                 gst_no: "",
                 images: []
@@ -1570,6 +1544,22 @@ export default function ClinicManagement() {
                 email: "",
                 phone_number: "",
                 password: ""
+              });
+              setClinicErrors({
+                name: '',
+                city: '',
+                phone: '',
+                email: '',
+                address: '',
+                pincode: '',
+                gst_no: '',
+                gpsCoordinates: ''
+              });
+              setUserErrors({
+                full_name: '',
+                email: '',
+                phone_number: '',
+                password: ''
               });
             }}
             title="Add New Clinic"
@@ -1588,19 +1578,17 @@ export default function ClinicManagement() {
                     <InputField
                       label="Clinic Name"
                       value={newClinic.name}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, name: e.target.value })
-                      }
+                      onChange={(e) => handleClinicInputChange('name', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('name', e.target.value)}
                       placeholder="Enter clinic name"
                       required
+                      error={clinicErrors.name}
                       icon={Building}
                     />
                     <InputField
                       label="About Clinic"
                       value={newClinic.about_clinic}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, about_clinic: e.target.value })
-                      }
+                      onChange={(e) => handleClinicInputChange('about_clinic', e.target.value)}
                       placeholder="Enter about clinic"
                       optional
                       icon={Building}
@@ -1608,29 +1596,27 @@ export default function ClinicManagement() {
                     <InputField
                       label="GST No"
                       value={newClinic.gst_no}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, gst_no: e.target.value })
-                      }
-                      placeholder="Enter GST number"
+                      onChange={(e) => handleClinicInputChange('gst_no', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('gst_no', e.target.value)}
+                      placeholder="Enter 15-digit GST number"
                       optional
+                      error={clinicErrors.gst_no}
                       icon={Building}
                     />
                     <InputField
                       label="City"
                       value={newClinic.city}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, city: e.target.value })
-                      }
+                      onChange={(e) => handleClinicInputChange('city', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('city', e.target.value)}
                       placeholder="Enter city"
                       required
+                      error={clinicErrors.city}
                       icon={MapPin}
                     />
                     <InputField
                       label="Landmark"
                       value={newClinic.landmark}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, landmark: e.target.value })
-                      }
+                      onChange={(e) => handleClinicInputChange('landmark', e.target.value)}
                       placeholder="Enter landmark"
                       optional
                       icon={MapPin}
@@ -1638,11 +1624,11 @@ export default function ClinicManagement() {
                     <InputField
                       label="Pincode"
                       value={newClinic.pincode}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, pincode: e.target.value })
-                      }
-                      placeholder="Enter pincode"
+                      onChange={(e) => handleClinicInputChange('pincode', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('pincode', e.target.value)}
+                      placeholder="Enter 6-digit pincode"
                       optional
+                      error={clinicErrors.pincode}
                       icon={MapPin}
                     />
                   </div>
@@ -1657,22 +1643,22 @@ export default function ClinicManagement() {
                       label="Email"
                       type="email"
                       value={newClinic.email}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, email: e.target.value })
-                      }
+                      onChange={(e) => handleClinicInputChange('email', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('email', e.target.value)}
                       placeholder="Enter clinic email"
                       required
+                      error={clinicErrors.email}
                       icon={Mail}
                     />
                     <InputField
                       label="Contact Number"
                       type="tel"
                       value={newClinic.phone}
-                      onChange={(e) =>
-                        setNewClinic({ ...newClinic, phone: e.target.value })
-                      }
-                      placeholder="Enter clinic contact number"
+                      onChange={(e) => handleClinicInputChange('phone', e.target.value)}
+                      onBlur={(e) => handleClinicInputBlur('phone', e.target.value)}
+                      placeholder="Enter 10-digit contact number"
                       required
+                      error={clinicErrors.phone}
                       icon={Call}
                     />
                   </div>
@@ -1685,40 +1671,35 @@ export default function ClinicManagement() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Address
+                        Address <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         value={newClinic.address}
-                        onChange={(e) =>
-                          setNewClinic({ ...newClinic, address: e.target.value })
-                        }
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        onChange={(e) => handleClinicInputChange('address', e.target.value)}
+                        onBlur={(e) => handleClinicInputBlur('address', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${clinicErrors.address ? "border-red-300 focus:ring-red-500" : "border-gray-200"}`}
                         rows={3}
-                        placeholder="Enter full address"
+                        placeholder="Enter full address (minimum 10 characters)"
                       />
+                      {clinicErrors.address && <p className="mt-1 text-sm text-red-600">{clinicErrors.address}</p>}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <InputField
                         label="Google Maps Link"
                         type="url"
                         value={newClinic.mapLink}
-                        onChange={(e) =>
-                          setNewClinic({ ...newClinic, mapLink: e.target.value })
-                        }
+                        onChange={(e) => handleClinicInputChange('mapLink', e.target.value)}
                         placeholder="https://maps.google.com/..."
                         optional
                       />
                       <InputField
-                        label="Coordinates"
+                        label="GPS Coordinates"
                         value={newClinic.gpsCoordinates}
-                        onChange={(e) =>
-                          setNewClinic({
-                            ...newClinic,
-                            gpsCoordinates: e.target.value
-                          })
-                        }
-                        placeholder="POINT(longitude latitude)"
+                        onChange={(e) => handleClinicInputChange('gpsCoordinates', e.target.value)}
+                        onBlur={(e) => handleClinicInputBlur('gpsCoordinates', e.target.value)}
+                        placeholder="Enter as longitude latitude (e.g., 77.5946 12.9716)"
                         optional
+                        error={clinicErrors.gpsCoordinates}
                       />
                     </div>
                   </div>
@@ -1819,86 +1800,7 @@ export default function ClinicManagement() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Working Hours
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Opening Time <span className="text-red-500">*</span>
-                        </label>
-                        <TimePicker
-                          value={newClinic.openingTime}
-                          onChange={(value) =>
-                            setNewClinic({ ...newClinic, openingTime: value })
-                          }
-                          placeholder="Select opening time"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Closing Time <span className="text-red-500">*</span>
-                        </label>
-                        <TimePicker
-                          value={newClinic.closingTime}
-                          onChange={(value) =>
-                            setNewClinic({ ...newClinic, closingTime: value })
-                          }
-                          placeholder="Select closing time"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Working Days <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {workingDayOptions.map((day) => (
-                          <label
-                            key={day.value}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={newClinic.workingDays.includes(day.value)}
-                              onChange={() => handleWorkingDayToggle(day.value)}
-                              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                            />
-                            <span className="text-sm text-gray-700">
-                              {day.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          type="button"
-                          className="text-xs text-blue-600 underline"
-                          onClick={handleSelectAllDays}
-                        >
-                          All
-                        </button>
-                        <button
-                          type="button"
-                          className="text-xs text-blue-600 underline"
-                          onClick={handleSelectWeekdays}
-                        >
-                          Weekdays
-                        </button>
-                        <button
-                          type="button"
-                          className="text-xs text-blue-600 underline"
-                          onClick={handleClearAllDays}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
                 <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
                   <button
                     type="button"
@@ -1939,33 +1841,33 @@ export default function ClinicManagement() {
                     <InputField
                       label="Full Name"
                       value={newUser.full_name}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, full_name: e.target.value })
-                      }
+                      onChange={(e) => handleUserInputChange('full_name', e.target.value)}
+                      onBlur={(e) => handleUserInputBlur('full_name', e.target.value)}
                       placeholder="Enter user's full name"
                       required
+                      error={userErrors.full_name}
                       icon={User}
                     />
                     <InputField
                       label="Email"
                       type="email"
                       value={newUser.email}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, email: e.target.value })
-                      }
+                      onChange={(e) => handleUserInputChange('email', e.target.value)}
+                      onBlur={(e) => handleUserInputBlur('email', e.target.value)}
                       placeholder="Enter user email"
                       required
+                      error={userErrors.email}
                       icon={Mail}
                     />
                     <InputField
                       label="Phone Number"
                       type="tel"
                       value={newUser.phone_number}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, phone_number: e.target.value })
-                      }
-                      placeholder="Enter user phone number"
+                      onChange={(e) => handleUserInputChange('phone_number', e.target.value)}
+                      onBlur={(e) => handleUserInputBlur('phone_number', e.target.value)}
+                      placeholder="Enter 10-digit phone number"
                       required
+                      error={userErrors.phone_number}
                       icon={Call}
                     />
                     <div>
@@ -1977,11 +1879,10 @@ export default function ClinicManagement() {
                         <input
                           type={passView ? "text" : "password"}
                           value={newUser.password}
-                          onChange={(e) =>
-                            setNewUser({ ...newUser, password: e.target.value })
-                          }
+                          onChange={(e) => handleUserInputChange('password', e.target.value)}
+                          onBlur={(e) => handleUserInputBlur('password', e.target.value)}
                           placeholder="Enter temporary password (min 8 chars with uppercase, lowercase, number & special character)"
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${userErrors.password ? "border-red-300 focus:ring-red-500" : "border-gray-200"}`}
                           required
                         />
                         <div className='absolute right-2 top-4'>
@@ -1993,6 +1894,7 @@ export default function ClinicManagement() {
                         </div>
 
                       </div>
+                      {userErrors.password && <p className="mt-1 text-sm text-red-600">{userErrors.password}</p>}
 
                       {newUser.password && (
                         <div className="mt-2">

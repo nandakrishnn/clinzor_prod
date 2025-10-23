@@ -15,9 +15,6 @@ export const createClinic = async (clinicData: {
   gst_no?: string;
   about_clinic?: string;
   registration_certificate?: string;
-  opening_time?: string;
-  closing_time?: string;
-  working_days: string[];
   images: string[];
 
 }) => {
@@ -29,13 +26,10 @@ export const createClinic = async (clinicData: {
       city: clinicData.city,
       address: clinicData.address,
       map_link: clinicData.map_link,
-      gps_coordinates: clinicData.gps_coordinates,
+      coordinates: `POINT(${clinicData.gps_coordinates})`,
       registration_certificate: clinicData.registration_certificate,
       gst_no: clinicData.gst_no,
       about_clinic: clinicData.about_clinic,
-      opening_time: clinicData.opening_time,
-      closing_time: clinicData.closing_time,
-      working_days: clinicData.working_days,
       images: clinicData.images
     });
     return response.data;
@@ -44,6 +38,7 @@ export const createClinic = async (clinicData: {
     throw error;
   }
 };
+
 export const createUserForClinic = async (clinicData: {
   clinic: string;
   full_name: string;

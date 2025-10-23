@@ -303,7 +303,7 @@ export default function ExpertManagement() {
 
   // Add state for slots and bookings data
   const [expertSlots, setExpertSlots] = useState<{ [expertUuid: string]: Slot[] }>({});
-  const [expertBookings, setExpertBookings] = useState<{ [expertUuid: string]: Booking[] }>({});
+  const [expertBookings, setExpertBookings] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState<{ [expertUuid: string]: boolean }>({});
   const [loadingBookings, setLoadingBookings] = useState<{ [expertUuid: string]: boolean }>({});
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
@@ -433,23 +433,7 @@ export default function ExpertManagement() {
       const bookingsResponse = await getAllBookingForAExpert(params);
       console.log(bookingsResponse)
 
-      // Transform the API response to match our Booking type
-      const transformedBookings = bookingsResponse.data.map((booking: any) => ({
-        uuid: booking.uuid,
-        patientName: booking.patient_name,
-        patientEmail: booking.patient_email,
-        date: new Date(booking.start_time).toLocaleDateString(),
-        time: new Date(booking.start_time).toLocaleTimeString(),
-        status: booking.booking_status,
-        type: booking.session_type,
-        booking_type: booking.booking_type,
-        session_type: booking.session_type,
-        clinic_name: booking.clinic_name,
-        start_time: booking.start_time,
-        end_time: booking.end_time
-      }));
-
-      setExpertBookings(prev => ({ ...prev, [expertUuid]: transformedBookings }));
+      setExpertBookings(bookingsResponse?.data);
     } catch (error) {
       console.error("Failed to fetch expert bookings:", error);
       setNotification({
@@ -755,20 +739,6 @@ export default function ExpertManagement() {
     return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Filter bookings based on selected filter
-  const getFilteredBookings = () => {
-    if (!selectedExpert || !expertBookings[selectedExpert.uuid]) return [];
-
-    const today = new Date();
-    return expertBookings[selectedExpert.uuid].filter((booking) => {
-      if (bookingFilter === 'all') return true;
-      const bookingDate = new Date(booking.start_time);
-      if (bookingFilter === 'upcoming') return bookingDate >= today;
-      if (bookingFilter === 'past') return bookingDate < today;
-      return true;
-    });
-  };
-
   const handleApproveSlot = async (slot: Slot) => {
     setSelectedSlot(slot);
     setSlotActionType('approve');
@@ -831,6 +801,8 @@ export default function ExpertManagement() {
   const handleSearch = async () => {
     setSearchQuery(tempSearchQuery)
   }
+
+  console.log(expertBookings, "expert booking daata")
 
   return (
     <div className="min-h-screen  p-2 sm:p-4 md:p-6">
@@ -1255,7 +1227,7 @@ export default function ExpertManagement() {
             error={formErrors.email}
             icon={Mail}
           />
-          
+
           <div className='relative'>
             <InputField
               label="Password"
@@ -1280,9 +1252,9 @@ export default function ExpertManagement() {
                 <div className="flex justify-between text-xs text-gray-600 mb-1">
                   <span>Password strength:</span>
                   <span className={`font-medium ${passwordStrength.text === 'Very Weak' ? 'text-red-600' :
-                      passwordStrength.text === 'Weak' ? 'text-orange-600' :
-                        passwordStrength.text === 'Medium' ? 'text-yellow-600' :
-                          'text-green-600'
+                    passwordStrength.text === 'Weak' ? 'text-orange-600' :
+                      passwordStrength.text === 'Medium' ? 'text-yellow-600' :
+                        'text-green-600'
                     }`}>
                     {passwordStrength.text}
                   </span>
@@ -1415,7 +1387,7 @@ export default function ExpertManagement() {
       >
         <div className="space-y-6">
           {/* Booking Filters */}
-          <div className="flex gap-4 mb-4">
+          {/* <div className="flex gap-4 mb-4">
             <button
               className={`px-4 py-2 rounded-lg text-sm font-medium border ${bookingFilter === 'upcoming' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
               onClick={() => setBookingFilter('upcoming')}
@@ -1434,7 +1406,7 @@ export default function ExpertManagement() {
             >
               All
             </button>
-          </div>
+          </div> */}
 
           {/* Bookings List */}
           <div className="space-y-4">
@@ -1444,8 +1416,8 @@ export default function ExpertManagement() {
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">Loading bookings...</span>
               </div>
-            ) : selectedExpert && getFilteredBookings().length > 0 ? (
-              getFilteredBookings().map((booking) => (
+            ) : selectedExpert && expertBookings?.length > 0 ? (
+              expertBookings?.map((booking: any) => (
                 <div
                   key={booking.uuid}
                   className="bg-white border border-gray-100 rounded-xl p-6"
