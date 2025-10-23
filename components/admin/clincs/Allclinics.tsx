@@ -635,36 +635,36 @@ export default function ClinicManagement() {
         if (!value.trim()) return 'Clinic name is required';
         if (value.trim().length < 2) return 'Clinic name must be at least 2 characters long';
         return '';
-      
+
       case 'city':
         if (!value.trim()) return 'City is required';
         return '';
-      
+
       case 'email':
         if (!value.match(/^\S+@\S+\.\S+$/)) return 'Please enter a valid email address';
         return '';
-      
+
       case 'phone':
         if (!value.match(/^\d{10}$/)) return 'Phone number must be exactly 10 digits';
         return '';
-      
+
       case 'address':
         if (!value.trim()) return 'Address is required';
         if (value.trim().length < 10) return 'Address must be at least 10 characters long';
         return '';
-      
+
       case 'pincode':
         if (value && !value.match(/^\d{6}$/)) return 'Pincode must be exactly 6 digits';
         return '';
-      
+
       case 'gst_no':
         if (value && !value.match(/^[0-9A-Z]{15}$/)) return 'GST number must be 15 characters long (alphanumeric)';
         return '';
-      
+
       case 'gpsCoordinates':
         if (value && !value.match(/^-?\d+\.?\d*\s+-?\d+\.?\d*$/)) return 'Enter coordinates as "longitude latitude" (e.g., 77.5946 12.9716)';
         return '';
-      
+
       default:
         return '';
     }
@@ -676,21 +676,21 @@ export default function ClinicManagement() {
         if (!value.trim()) return 'Full name is required';
         if (value.trim().length < 2) return 'Full name must be at least 2 characters long';
         return '';
-      
+
       case 'email':
         if (!value.match(/^\S+@\S+\.\S+$/)) return 'Please enter a valid email address';
         return '';
-      
+
       case 'phone_number':
         if (!value.match(/^\d{10}$/)) return 'Phone number must be exactly 10 digits';
         return '';
-      
+
       case 'password':
         if (value.length < 8) return 'Password must be at least 8 characters long';
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
         if (!passwordRegex.test(value)) return 'Must include uppercase, lowercase, number & special character (@$!%*?&)';
         return '';
-      
+
       default:
         return '';
     }
@@ -698,7 +698,7 @@ export default function ClinicManagement() {
 
   const handleClinicInputChange = (field: string, value: string) => {
     setNewClinic(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when user starts typing
     if (clinicErrors[field as keyof typeof clinicErrors]) {
       setClinicErrors(prev => ({ ...prev, [field]: '' }));
@@ -712,7 +712,7 @@ export default function ClinicManagement() {
 
   const handleUserInputChange = (field: string, value: string) => {
     setNewUser(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when user starts typing
     if (userErrors[field as keyof typeof userErrors]) {
       setUserErrors(prev => ({ ...prev, [field]: '' }));
