@@ -710,42 +710,82 @@ const DoctorDetailModal = ({
         )}
 
         {/* Government Documents */}
+        {/* Government Documents */}
         {doctor.government_document && doctor.government_document.length > 0 && (
           <div className="bg-yellow-50 p-4 rounded-lg">
             <h4 className="font-semibold text-yellow-800 mb-3">Government Documents</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {doctor.government_document.map((doc, index) => (
-                <div key={index} className="text-center">
-                  <img
-                    src={doc}
-                    alt={`Government document ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border border-yellow-200"
-                  />
-                  <p className="text-xs text-yellow-700 mt-1">Document {index + 1}</p>
-                </div>
-              ))}
+              {doctor.government_document.map((doc, index) => {
+                // Get file extension for better icon representation
+                const getFileIcon = (url: any) => {
+                  if (url.toLowerCase().includes('.pdf')) return 'pdf';
+                  if (url.toLowerCase().match(/\.(doc|docx)$/)) return 'word';
+                  if (url.toLowerCase().match(/\.(xls|xlsx)$/)) return 'excel';
+                  return 'document';
+                };
+
+                const fileType = getFileIcon(doc);
+
+                return (
+                  <div key={index} className="text-center">
+                    <button
+                      onClick={() => window.open(doc, '_blank')}
+                      className="w-full h-32 bg-white rounded-lg border border-yellow-300 hover:border-yellow-500 hover:bg-yellow-100 transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer group"
+                    >
+                      {/* PDF Icon */}
+                      {fileType === 'pdf' && (
+                        <svg className="w-12 h-12 text-red-600 mb-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                        </svg>
+                      )}
+
+                      {/* Word Document Icon */}
+                      {fileType === 'word' && (
+                        <svg className="w-12 h-12 text-blue-600 mb-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                        </svg>
+                      )}
+
+                      {/* Generic Document Icon */}
+                      {fileType === 'document' && (
+                        <svg className="w-12 h-12 text-yellow-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      )}
+
+                      <span className="text-yellow-700 font-medium text-sm group-hover:text-yellow-800">
+                        View {fileType === 'pdf' ? 'PDF' : fileType === 'word' ? 'Word Doc' : 'Document'} {index + 1}
+                      </span>
+                      <span className="text-yellow-600 text-xs mt-1">Click to open in new tab</span>
+                    </button>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      {fileType === 'pdf' ? 'PDF' : fileType === 'word' ? 'Word Document' : 'Document'} {index + 1}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+        <div className="flex flex-col md:flex-row md:justify-end gap-4 pt-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
+            className="px-6 py-2 md:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
           >
             Close
           </button>
           <button
             onClick={() => onReject(doctor)}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium flex items-center gap-2"
+            className="px-6 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium flex items-center gap-2"
           >
             <X size={16} />
             Reject
           </button>
           <button
             onClick={() => onApprove(doctor)}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium flex items-center gap-2"
+            className="px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium flex items-center gap-2"
           >
             <Check size={16} />
             Approve
