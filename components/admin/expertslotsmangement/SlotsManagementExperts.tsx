@@ -349,6 +349,7 @@ export default function ExpertManagement() {
   const [bookingFilter, setBookingFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
   const [passView, setPassView] = useState(false)
+  const [activeTab, setActiveTab] = useState<'bookings' | 'slots'>('bookings');
 
   // Fetch data with pagination
   const fetchExperts = async (page = 1, search = '', status = 'ALL', gender = 'ALL') => {
@@ -1382,160 +1383,237 @@ export default function ExpertManagement() {
       <ModernModal
         isOpen={isBookingsModalOpen}
         onClose={() => setIsBookingsModalOpen(false)}
-        title={`Bookings & Slots - ${selectedExpert?.name}`}
+        title={`${selectedExpert?.name} - Details`}
         size="xl"
       >
         <div className="space-y-6">
-          {/* Booking Filters */}
-          {/* <div className="flex gap-4 mb-4">
-            <button
-              className={`px-4 py-2 rounded-lg text-sm font-medium border ${bookingFilter === 'upcoming' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
-              onClick={() => setBookingFilter('upcoming')}
-            >
-              Upcoming
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg text-sm font-medium border ${bookingFilter === 'past' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
-              onClick={() => setBookingFilter('past')}
-            >
-              Past
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg text-sm font-medium border ${bookingFilter === 'all' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
-              onClick={() => setBookingFilter('all')}
-            >
-              All
-            </button>
-          </div> */}
-
-          {/* Bookings List */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Bookings</h3>
-            {selectedExpert && loadingBookings[selectedExpert.uuid] ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading bookings...</span>
-              </div>
-            ) : selectedExpert && expertBookings?.length > 0 ? (
-              expertBookings?.map((booking: any) => (
-                <div
-                  key={booking.uuid}
-                  className="bg-white border border-gray-100 rounded-xl p-6"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Patient Name</h4>
-                      <p className="mt-1">{booking.patientName}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Patient Email</h4>
-                      <p className="mt-1">{booking.patientEmail}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
-                      <p className="mt-1">{formatDate(booking.start_time)} at {formatTime(booking.start_time)}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                      <div className="mt-1">
-                        <BookingStatusBadge status={booking.status} />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Type</h4>
-                      <p className="mt-1">{booking.type}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Clinic</h4>
-                      <p className="mt-1">{booking.clinic_name || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Booking Type</h4>
-                      <p className="mt-1">{booking.booking_type || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-600 text-center py-8">No bookings found for this expert.</p>
-            )}
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === 'bookings'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <Calendar size={16} className="inline mr-2" />
+                Bookings
+                {selectedExpert && expertBookings?.length > 0 && (
+                  <span className="ml-2 bg-blue-100 text-blue-600 text-xs py-0.5 px-2 rounded-full">
+                    {expertBookings.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('slots')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === 'slots'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <Clock size={16} className="inline mr-2" />
+                Time Slots
+                {selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 && (
+                  <span className="ml-2 bg-blue-100 text-blue-600 text-xs py-0.5 px-2 rounded-full">
+                    {expertSlots[selectedExpert.uuid].length}
+                  </span>
+                )}
+              </button>
+            </nav>
           </div>
-          {/* Slot Details */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Slot Details</h3>
-            {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading slots...</span>
-              </div>
-            ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-gray-50 font-medium">
-                  <div>Date</div>
-                  <div>Start Time</div>
-                  <div>End Time</div>
-                  <div>Status</div>
-                  <div>Clinic</div>
-                  <div>Slot Type</div>
-                  <div>Actions</div>
+
+          {/* Bookings Tab Content */}
+          {activeTab === 'bookings' && (
+            <div className="space-y-4">
+              {/* <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Bookings</h3>
+                <div className="flex gap-2">
+                  <button
+                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'upcoming'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    onClick={() => setBookingFilter('upcoming')}
+                  >
+                    Upcoming
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'past'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    onClick={() => setBookingFilter('past')}
+                  >
+                    Past
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'all'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    onClick={() => setBookingFilter('all')}
+                  >
+                    All
+                  </button>
                 </div>
-                <div className="divide-y divide-gray-100">
-                  {expertSlots[selectedExpert.uuid].map((slot) => (
-                    <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 items-center">
-                      <div>{formatDate(slot.start_time)}</div>
-                      <div>{formatTime(slot.start_time)}</div>
-                      <div>{formatTime(slot.end_time)}</div>
-                      <div>
-                        <SlotStatusBadge is_booked={slot.is_booked} />
-                        {slot.status === 'PENDING' && (
-                          <span className="ml-1 text-yellow-600 text-xs">(Pending)</span>
-                        )}
-                        {slot.status === 'REJECTED' && (
-                          <span className="ml-1 text-red-600 text-xs">(Rejected)</span>
-                        )}
-                      </div>
-                      <div>{slot.clinic_name}</div>
-                      <div className="text-sm">{slot.slot_type}</div>
-                      <div className="flex gap-2">
-                        {slot.status === 'DRAFT' && (
-                          <>
-                            <button
-                              onClick={() => handleApproveSlot(slot)}
-                              className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                              title="Approve Slot"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleRejectSlot(slot)}
-                              className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                              title="Reject Slot"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                          </>
-                        )}
-                        {slot.status === 'APPROVED' && (
-                          <span className="text-sm text-green-600">Approved</span>
-                        )}
-                        {slot.status === 'REJECTED' && (
-                          <span className="text-sm text-red-600">Rejected</span>
-                        )}
-                        {slot.status === 'DRAFT' && (
-                          <span className="text-sm text-yellow-600">Draft</span>
-                        )}
-                        {/* {slot.status  && (
-                <span className="text-sm text-red-600">{slot.status}</span>
-              )} */}
+              </div> */}
+
+              {selectedExpert && loadingBookings[selectedExpert.uuid] ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading bookings...</span>
+                </div>
+              ) : selectedExpert && expertBookings?.length > 0 ? (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {expertBookings?.map((booking: any) => (
+                    <div
+                      key={booking.uuid}
+                      className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Patient Name</h4>
+                          <p className="mt-1 font-medium">{booking?.customer_name}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Patient Email</h4>
+                          <p className="mt-1 text-sm">{booking?.customer_email}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Phone Number</h4>
+                          <p className="mt-1">{booking?.customer_phone_number}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
+                          <p className="mt-1 text-sm">
+                            {formatDate(booking?.start_time)}<br />
+                            {formatTime(booking?.start_time)}
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Status</h4>
+                          <div className="mt-1">
+                            <BookingStatusBadge status={booking?.booking_status} />
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Payment Mode</h4>
+                          <p className="mt-1 text-sm">{booking?.payment_mode}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Booking Type</h4>
+                          <p className="mt-1 text-sm">{booking.booking_type || 'N/A'}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No bookings</h3>
+                  <p className="mt-1 text-sm text-gray-500">No bookings found for this expert.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Slots Tab Content */}
+          {activeTab === 'slots' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Time Slots</h3>
+                <div className="text-sm text-gray-500">
+                  {selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0
+                    ? `${expertSlots[selectedExpert.uuid].length} slots found`
+                    : 'No slots available'
+                  }
+                </div>
               </div>
-            ) : (
-              <p className="text-gray-600 text-center py-8">No slot data available for this expert.</p>
-            )}
-          </div>
+
+              {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading slots...</span>
+                </div>
+              ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
+                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden ">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-gray-50 font-medium text-sm">
+                    <div>Date</div>
+                    <div>Start Time</div>
+                    <div>End Time</div>
+                    <div>Status</div>
+                    <div>Type</div>
+                    <div>Actions</div>
+                  </div>
+                  <div className="divide-y divide-gray-100 max-h-full overflow-y-auto">
+                    {expertSlots[selectedExpert.uuid].map((slot) => (
+                      <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 items-center text-sm">
+                        <div className="font-medium">{formatDate(slot.start_time)}</div>
+                        <div>{formatTime(slot.start_time)}</div>
+                        <div>{formatTime(slot.end_time)}</div>
+                        <div>
+                          <div className="flex flex-col gap-1">
+                            <SlotStatusBadge is_booked={slot.is_booked} />
+                            {slot.status === 'PENDING' && (
+                              <span className="text-yellow-600 text-xs">Pending Approval</span>
+                            )}
+                            {slot.status === 'REJECTED' && (
+                              <span className="text-red-600 text-xs">Rejected</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${slot.slot_type === 'REGULAR'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-purple-100 text-purple-800'
+                            }`}>
+                            {slot.slot_type}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          {slot.status === 'DRAFT' && (
+                            <>
+                              <button
+                                onClick={() => handleApproveSlot(slot)}
+                                className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                                title="Approve Slot"
+                              >
+                                <CheckCircle size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleRejectSlot(slot)}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="Reject Slot"
+                              >
+                                <XCircle size={16} />
+                              </button>
+                            </>
+                          )}
+                          {slot.status === 'APPROVED' && (
+                            <span className="text-sm text-green-600 font-medium">Approved</span>
+                          )}
+                          {slot.status === 'REJECTED' && (
+                            <span className="text-sm text-red-600 font-medium">Rejected</span>
+                          )}
+                          {slot.status === 'DRAFT' && (
+                            <span className="text-sm text-yellow-600 font-medium">Draft</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <Clock className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No slots</h3>
+                  <p className="mt-1 text-sm text-gray-500">No slot data available for this expert.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </ModernModal>
 
