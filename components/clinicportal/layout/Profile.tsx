@@ -8,7 +8,6 @@ import { useOperatingHours } from '@/hooks/useOperatingHours';
 // Services
 import { editClinicODetails } from '@/service/clinic/profileService';
 import { axiosPrivate } from '@/axios/axios';
-import { transformOperatingHoursToAPI } from '@/utils/clinicUtils';
 
 // Components
 import BannerCarousel from './BannerCarousel';
@@ -54,7 +53,10 @@ const ClinicSettingsDashboard = () => {
     toggleDayClosed,
     hasOperatingHoursChanged,
     resetOperatingHoursChanges,
-    loadOperatingHours
+    loadOperatingHours,
+    saveOperatingHours, // This is the function from the hook
+    hasExistingOperatingHours, // This is the boolean from the hook
+    existingTimings
   } = useOperatingHours();
 
   useEffect(() => {
@@ -70,6 +72,34 @@ const ClinicSettingsDashboard = () => {
         ...prev,
         location: coords
       }));
+    }
+  };
+
+  // Handle file upload for registration certificate
+  const handleFileUpload = async (field: keyof ClinicData, file: File) => {
+    try {
+      setSaveStatus('saving');
+
+      // Upload file using presigned URL
+      const uploadedUrls = await uploadFiles([file]);
+
+      if (uploadedUrls && uploadedUrls.length > 0) {
+        const fileUrl = uploadedUrls[0];
+
+        // Update clinic data with the new file URL
+        setClinicData(prev => ({
+          ...prev,
+          [field]: fileUrl
+        }));
+
+        console.log('File uploaded successfully. URL:', fileUrl);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
@@ -101,34 +131,6 @@ const ClinicSettingsDashboard = () => {
     } catch (error) {
       console.error("Error in upload process:", error);
       throw error;
-    }
-  };
-
-  // Handle file upload for registration certificate
-  const handleFileUpload = async (field: keyof ClinicData, file: File) => {
-    try {
-      setSaveStatus('saving');
-
-      // Upload file using presigned URL
-      const uploadedUrls = await uploadFiles([file]);
-
-      if (uploadedUrls && uploadedUrls.length > 0) {
-        const fileUrl = uploadedUrls[0];
-
-        // Update clinic data with the new file URL
-        setClinicData(prev => ({
-          ...prev,
-          [field]: fileUrl
-        }));
-
-        console.log('File uploaded successfully. URL:', fileUrl);
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-      }
-    } catch (error) {
-      console.error('File upload error:', error);
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
@@ -169,37 +171,36 @@ const ClinicSettingsDashboard = () => {
     }));
   };
 
-  // Save operating hours separately
-  const saveOperatingHours = async (): Promise<boolean> => {
+  // Save operating hours separately - FIXED FUNCTION
+  const handleSaveOperatingHours = async (): Promise<boolean> => {
     setOperatingHoursSaveStatus('saving');
     try {
-      const timingList = transformOperatingHoursToAPI(operatingHours, clinicData.uuid);
-      const clinicId = clinicData.uuid || '';
-
-      if (!clinicId) {
+      if (!clinicData.uuid) {
         throw new Error('Clinic ID not found');
       }
 
-      const response = await axiosPrivate.put('/clinic/clinic-timing-update/', timingList);
+      const success = await saveOperatingHours(clinicData.uuid);
 
-      if (response.data.status === 200) {
+      if (success) {
         console.log('Operating hours updated successfully');
         setOperatingHoursSaveStatus('saved');
-        resetOperatingHoursChanges(); // Reset the change tracking
         setTimeout(() => setOperatingHoursSaveStatus('idle'), 2000);
         return true;
       } else {
-        throw new Error(response.data.message || 'Failed to update operating hours');
+        throw new Error('Failed to update operating hours - No success status returned');
       }
     } catch (error: any) {
       console.error("Operating hours update error:", error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to update operating hours';
+      // FIX: Better error message extraction
+      const errorMessage = error.response?.data?.message ||
+        error.message ||
+        error.response?.data?.detail ||
+        'Failed to update operating hours';
       setOperatingHoursSaveStatus('error');
       setTimeout(() => setOperatingHoursSaveStatus('idle'), 3000);
       throw new Error(errorMessage);
     }
   };
-
   // Handle save clinic details (without operating hours)
   const handleSaveClinicDetails = async () => {
     setSaveStatus('saving');
@@ -245,7 +246,7 @@ const ClinicSettingsDashboard = () => {
 
       // Only save operating hours if they have changed
       if (hasOperatingHoursChanged && isEditMode) {
-        await saveOperatingHours();
+        await handleSaveOperatingHours();
       }
     } catch (error) {
       console.error('Failed to save:', error);
@@ -316,7 +317,6 @@ const ClinicSettingsDashboard = () => {
               onFileUpload={handleFileUpload}
             />
 
-           
             <AdditionalInformation
               clinicData={clinicData}
               isEditMode={isEditMode}
@@ -326,16 +326,16 @@ const ClinicSettingsDashboard = () => {
               uploadingImages={uploadingImages}
             />
 
-             <OperatingHours
+            <OperatingHours
               operatingHours={operatingHours}
               isEditMode={isEditMode}
               onHoursChange={handleHoursChange}
               onToggleDayClosed={toggleDayClosed}
               saveStatus={operatingHoursSaveStatus}
-              onSaveOperatingHours={saveOperatingHours}
+              onSaveOperatingHours={handleSaveOperatingHours}
               hasChanges={hasOperatingHoursChanged}
+              hasExistingData={hasExistingOperatingHours} // Fixed prop name
             />
-
           </div>
         </div>
       </div>

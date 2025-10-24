@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { OperatingHours as OperatingHoursType } from '@/types/clinic';
-import { dayNames, generateTimeOptions } from '@/utils/clinicUtils';
+import { dayNames } from '@/utils/clinicUtils';
 import { SaveStatus } from '@/types/clinic';
 import { convertTo12HourFormatN, generate12HourTimeOptions } from '@/utils/formatters';
 
@@ -13,6 +13,7 @@ interface OperatingHoursProps {
   saveStatus?: SaveStatus;
   onSaveOperatingHours?: () => Promise<boolean>;
   hasChanges?: boolean;
+  hasExistingData?: boolean;
 }
 
 const OperatingHours: React.FC<OperatingHoursProps> = ({
@@ -22,7 +23,8 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
   onToggleDayClosed,
   saveStatus = 'idle',
   onSaveOperatingHours,
-  hasChanges = false
+  hasChanges = false,
+  hasExistingData = false
 }) => {
   const timeOptions = generate12HourTimeOptions();
 
@@ -46,11 +48,13 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Operating Hours</h2>
-              <p className="text-gray-500">Set your clinic's working hours</p>
+              <p className="text-gray-500">
+                {hasExistingData ? 'Manage your clinic hours' : 'Set your clinic operating hours'}
+              </p>
             </div>
           </div>
           
-          {/* Separate Save Button for Operating Hours */}
+          {/* Save Button */}
           {isEditMode && hasChanges && (
             <button
               onClick={handleSave}
@@ -83,7 +87,7 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Hours
+                  {hasExistingData ? 'Update Hours' : 'Create Hours'}
                 </>
               )}
             </button>
@@ -104,7 +108,9 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl">
             <div className="flex items-center text-green-800">
               <CheckCircle2 className="w-5 h-5 mr-2" />
-              <span className="font-medium">Operating hours saved successfully!</span>
+              <span className="font-medium">
+                {hasExistingData ? 'Operating hours updated successfully!' : 'Operating hours created successfully!'}
+              </span>
             </div>
           </div>
         )}
@@ -118,19 +124,21 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
                     {dayNames[day as keyof OperatingHoursType]}
                   </span>
                 </div>
-                {/* <button
-                  onClick={() => onToggleDayClosed(day as keyof OperatingHoursType)}
-                  disabled={!isEditMode}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                    hours.closed ? 'bg-gray-300' : 'bg-blue-500'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
-                      hours.closed ? 'translate-x-1' : 'translate-x-7'
+                {isEditMode && (
+                  <button
+                    onClick={() => onToggleDayClosed(day as keyof OperatingHoursType)}
+                    disabled={!isEditMode}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                      hours.closed ? 'bg-gray-300' : 'bg-blue-500'
                     }`}
-                  />
-                </button> */}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
+                        hours.closed ? 'translate-x-1' : 'translate-x-7'
+                      }`}
+                    />
+                  </button>
+                )}
               </div>
               <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full">
                 {hours.closed ? (
@@ -150,7 +158,7 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
                         <select
                           value={hours.open}
                           onChange={(e) => onHoursChange(day as keyof OperatingHoursType, 'open', e.target.value)}
-                          disabled={!isEditMode}
+                          disabled={!isEditMode || hours.closed}
                           className="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-400 disabled:bg-gray-100 disabled:text-gray-500"
                         >
                           {timeOptions.map(time => (
@@ -161,7 +169,7 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
                         <select
                           value={hours.close}
                           onChange={(e) => onHoursChange(day as keyof OperatingHoursType, 'close', e.target.value)}
-                          disabled={!isEditMode}
+                          disabled={!isEditMode || hours.closed}
                           className="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-400 disabled:bg-gray-100 disabled:text-gray-500"
                         >
                           {timeOptions.map(time => (
@@ -182,7 +190,12 @@ const OperatingHours: React.FC<OperatingHoursProps> = ({
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
             <div className="flex items-center text-blue-800">
               <Clock className="w-5 h-5 mr-2" />
-              <span className="font-medium">You have unsaved changes in operating hours</span>
+              <span className="font-medium">
+                {hasExistingData 
+                  ? 'You have unsaved changes in operating hours' 
+                  : 'Ready to create operating hours for your clinic'
+                }
+              </span>
             </div>
           </div>
         )}
