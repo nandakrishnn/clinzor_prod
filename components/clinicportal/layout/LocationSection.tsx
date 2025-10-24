@@ -223,7 +223,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
               
               <div className="mt-4 p-4 bg-white rounded-xl border border-blue-100">
                 <div className="text-sm text-blue-700">
-                  <span className="font-semibold">Current Coordinates:</span>{' '}{clinicData.coordinates}
+                  <span className="font-semibold">Current Coordinates:</span>{' '}{clinicData?.coordinates?.split(";")[1]}
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
                   Format: SRID=4326;POINT ({clinicData.location.lng} {clinicData.location.lat})
@@ -236,7 +236,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
           {!isEditMode && (
             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Location Coordinates</h3>
-              <div className="text-gray-700">{clinicData.coordinates}
+              <div className="text-gray-700">{clinicData?.coordinates?.split(";")[1]}
               </div>
             </div>
           )}
