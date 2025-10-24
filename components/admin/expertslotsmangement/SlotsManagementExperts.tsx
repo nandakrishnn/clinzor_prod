@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { approveExpertSlot, approveOrRejectExpert, blockExpert, createExpert, deleteExpert, getAllBookingForAExpert, getAllBookingforExpret, GetAllClinicServiceforDoc, GetAllExpert, getAllSlotsforExpret, GetStatsAdminExpertService, getStatsAdminExpertService, rejectExpertSlot } from '@/service/admin/expertManagementService';
 
-
 // Types
 type Expert = {
   uuid: string;
@@ -49,21 +48,6 @@ type Expert = {
   user?: string;
 };
 
-type Booking = {
-  uuid: string;
-  patientName: string;
-  patientEmail: string;
-  date: string;
-  time: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'CANCELED' | 'SCHEDULED';
-  type: 'CONSULTATION' | 'FOLLOW_UP' | 'EMERGENCY' | string;
-  booking_type?: string;
-  session_type?: string;
-  clinic_name?: string;
-  start_time: string;
-  end_time: string;
-};
-
 type Slot = {
   uuid: string;
   start_time: string;
@@ -78,6 +62,22 @@ type Slot = {
 };
 
 interface PaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
+interface BookingsPaginationData {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
+interface SlotsPaginationData {
   current_page: number;
   total_pages: number;
   total_items: number;
@@ -276,7 +276,97 @@ const InputField = ({
   </div>
 );
 
+// Pagination Component
+const Pagination = ({
+  paginationData,
+  onPageChange,
+  loading
+}: {
+  paginationData: PaginationData;
+  onPageChange: (page: number) => void;
+  loading: boolean;
+}) => {
+  const generatePageNumbers = () => {
+    const pages: any[] = [];
+    const totalPages = paginationData.total_pages;
+    const current = paginationData.current_page;
 
+    if (totalPages <= 0) return pages;
+
+    // Always show first page
+    pages.push(1);
+
+    // Add ellipsis if needed
+    if (current > 3) {
+      pages.push('...');
+    }
+
+    // Add pages around current page
+    for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
+      if (!pages.includes(i)) {
+        pages.push(i);
+      }
+    }
+
+    // Add ellipsis if needed
+    if (current < totalPages - 2) {
+      pages.push('...');
+    }
+
+    // Always show last page if different from first
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-4 sm:px-6 py-2 sm:py-4 rounded-xl border border-gray-200 gap-2 sm:gap-0">
+      <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-0">
+        <span>
+          Showing page {paginationData.current_page} of {paginationData.total_pages} ({paginationData.total_items} total items)
+        </span>
+      </div>
+      <div className="flex items-center space-x-1 sm:space-x-2">
+        <button
+          onClick={() => onPageChange(paginationData.current_page - 1)}
+          disabled={!paginationData.previous || loading}
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div className="flex space-x-0.5 sm:space-x-1">
+          {generatePageNumbers().map((page, index) => {
+            if (page === '...') {
+              return <span key={index} className="px-1 sm:px-2 text-gray-400">...</span>;
+            }
+            return (
+              <button
+                key={page}
+                onClick={() => onPageChange(page as number)}
+                disabled={loading}
+                className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
+                  ? 'bg-primaryColor text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => onPageChange(paginationData.current_page + 1)}
+          disabled={!paginationData.next || loading}
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function ExpertManagement() {
   // State
@@ -301,11 +391,18 @@ export default function ExpertManagement() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
 
-  // Add state for slots and bookings data
+  // Add state for slots and bookings data with pagination
   const [expertSlots, setExpertSlots] = useState<{ [expertUuid: string]: Slot[] }>({});
-  const [expertBookings, setExpertBookings] = useState([]);
+  const [expertBookings, setExpertBookings] = useState<{ [expertUuid: string]: any[] }>({});
   const [loadingSlots, setLoadingSlots] = useState<{ [expertUuid: string]: boolean }>({});
   const [loadingBookings, setLoadingBookings] = useState<{ [expertUuid: string]: boolean }>({});
+
+  // Pagination states for bookings and slots
+  const [bookingsPagination, setBookingsPagination] = useState<{ [expertUuid: string]: BookingsPaginationData }>({});
+  const [slotsPagination, setSlotsPagination] = useState<{ [expertUuid: string]: SlotsPaginationData }>({});
+  const [bookingsCurrentPage, setBookingsCurrentPage] = useState<{ [expertUuid: string]: number }>({});
+  const [slotsCurrentPage, setSlotsCurrentPage] = useState<{ [expertUuid: string]: number }>({});
+
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [isSlotActionModalOpen, setIsSlotActionModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -389,17 +486,20 @@ export default function ExpertManagement() {
   // Fetch data when filters change
   useEffect(() => {
     fetchExperts(currentPage, searchQuery, selectedStatus, selectedGender);
-
   }, [currentPage, searchQuery, selectedStatus, selectedGender]);
 
-  // Function to fetch slots for a specific expert
-  const fetchExpertSlots = async (expertUuid: string) => {
+  // Function to fetch slots for a specific expert with pagination
+  const fetchExpertSlots = async (expertUuid: string, page = 1) => {
     setLoadingSlots(prev => ({ ...prev, [expertUuid]: true }));
     try {
-      const params = { expert: expertUuid };
+      const params = {
+        expert: expertUuid,
+        page: page,
+        page_size: 10 // Adjust page size as needed
+      };
       const slotsResponse = await getAllSlotsforExpret(params);
 
-      console.log(slotsResponse, 'fromt he expert')
+      console.log(slotsResponse, 'from the expert slots')
       // Transform the API response to match our Slot type
       const transformedSlots = slotsResponse.data.map((slot: any) => ({
         uuid: slot.uuid,
@@ -415,6 +515,25 @@ export default function ExpertManagement() {
       }));
 
       setExpertSlots(prev => ({ ...prev, [expertUuid]: transformedSlots }));
+
+      // Update slots pagination data
+      setSlotsPagination(prev => ({
+        ...prev,
+        [expertUuid]: {
+          current_page: slotsResponse.current_page || page,
+          total_pages: slotsResponse.total_pages || 1,
+          total_items: slotsResponse.total_items || transformedSlots.length,
+          next: slotsResponse.next || null,
+          previous: slotsResponse.previous || null
+        }
+      }));
+
+      // Update current page for slots
+      setSlotsCurrentPage(prev => ({
+        ...prev,
+        [expertUuid]: page
+      }));
+
     } catch (error) {
       console.error("Failed to fetch expert slots:", error);
       setNotification({
@@ -426,15 +545,38 @@ export default function ExpertManagement() {
     }
   };
 
-  // Function to fetch bookings for a specific expert
-  const fetchExpertBookings = async (expertUuid: string) => {
+  // Function to fetch bookings for a specific expert with pagination
+  const fetchExpertBookings = async (expertUuid: string, page = 1) => {
     setLoadingBookings(prev => ({ ...prev, [expertUuid]: true }));
     try {
-      const params = { expert: expertUuid };
+      const params = {
+        expert: expertUuid,
+        page: page,
+        page_size: 10 // Adjust page size as needed
+      };
       const bookingsResponse = await getAllBookingForAExpert(params);
-      console.log(bookingsResponse)
+      console.log(bookingsResponse, 'from the expert bookings')
 
-      setExpertBookings(bookingsResponse?.data);
+      setExpertBookings(prev => ({ ...prev, [expertUuid]: bookingsResponse?.data || [] }));
+
+      // Update bookings pagination data
+      setBookingsPagination(prev => ({
+        ...prev,
+        [expertUuid]: {
+          current_page: bookingsResponse.current_page || page,
+          total_pages: bookingsResponse.total_pages || 1,
+          total_items: bookingsResponse.total_items || (bookingsResponse?.data?.length || 0),
+          next: bookingsResponse.next || null,
+          previous: bookingsResponse.previous || null
+        }
+      }));
+
+      // Update current page for bookings
+      setBookingsCurrentPage(prev => ({
+        ...prev,
+        [expertUuid]: page
+      }));
+
     } catch (error) {
       console.error("Failed to fetch expert bookings:", error);
       setNotification({
@@ -463,10 +605,24 @@ export default function ExpertManagement() {
     fetchAdditionalData();
   }, []);
 
-  // Handle page change
+  // Handle page change for experts
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= paginationData.total_pages) {
       setCurrentPage(newPage);
+    }
+  };
+
+  // Handle page change for bookings
+  const handleBookingsPageChange = (expertUuid: string, newPage: number) => {
+    if (selectedExpert && newPage >= 1 && newPage <= (bookingsPagination[expertUuid]?.total_pages || 1)) {
+      fetchExpertBookings(expertUuid, newPage);
+    }
+  };
+
+  // Handle page change for slots
+  const handleSlotsPageChange = (expertUuid: string, newPage: number) => {
+    if (selectedExpert && newPage >= 1 && newPage <= (slotsPagination[expertUuid]?.total_pages || 1)) {
+      fetchExpertSlots(expertUuid, newPage);
     }
   };
 
@@ -476,42 +632,6 @@ export default function ExpertManagement() {
       setCurrentPage(1);
     }
   }, [searchQuery, selectedStatus, selectedGender]);
-
-  // Generate page numbers for pagination display
-  const generatePageNumbers = () => {
-    const pages = [];
-    const totalPages = paginationData.total_pages;
-    const current = paginationData.current_page;
-
-    // Always show first page
-    if (totalPages > 0) {
-      pages.push(1);
-    }
-
-    // Add ellipsis if needed
-    if (current > 3) {
-      pages.push('...');
-    }
-
-    // Add pages around current page
-    for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) {
-      if (!pages.includes(i)) {
-        pages.push(i);
-      }
-    }
-
-    // Add ellipsis if needed
-    if (current < totalPages - 2) {
-      pages.push('...');
-    }
-
-    // Always show last page
-    if (totalPages > 1) {
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
 
   const getStatsAdminExpert = async () => {
     try {
@@ -537,11 +657,12 @@ export default function ExpertManagement() {
 
   const handleViewBookings = async (expert: Expert) => {
     setSelectedExpert(expert);
+    setActiveTab('bookings');
 
-    // Fetch slots and bookings for this expert
+    // Fetch slots and bookings for this expert with initial page
     await Promise.all([
-      fetchExpertSlots(expert.uuid),
-      fetchExpertBookings(expert.uuid)
+      fetchExpertSlots(expert.uuid, 1),
+      fetchExpertBookings(expert.uuid, 1)
     ]);
 
     setIsBookingsModalOpen(true);
@@ -613,6 +734,28 @@ export default function ExpertManagement() {
     return valid;
   };
 
+  // Check if form is completely filled
+  const isFormComplete = () => {
+    return (
+      newExpert.name.trim() &&
+      newExpert.email.trim() &&
+      newExpert.password.trim() &&
+      newExpert.phone_number.trim() &&
+      newExpert.dob.trim() &&
+      newExpert.addresss.trim()
+    );
+  };
+
+  // Check if form is valid (no errors and all fields filled)
+  const isFormValid = () => {
+    return (
+      isFormComplete() &&
+      Object.values(formErrors).every(error => !error) &&
+      getPasswordStrength(newExpert.password).strength >= 4 // At least "Strong" password
+    );
+  };
+
+
   // Add this function to check password strength
   const getPasswordStrength = (password: string) => {
     if (password.length === 0) return { strength: 0, text: '', color: '' };
@@ -632,7 +775,10 @@ export default function ExpertManagement() {
       5: { text: 'Very Strong', color: 'bg-green-600' }
     };
 
-    return strengthConfig[strength as keyof typeof strengthConfig] || { text: '', color: '' };
+    return {
+      strength,
+      ...(strengthConfig[strength as keyof typeof strengthConfig] || { text: '', color: '' })
+    };
   };
 
   // In the password field section, add this after the input field:
@@ -693,12 +839,12 @@ export default function ExpertManagement() {
         const messages = Object.values(errorData).flat();
         setNotification({
           type: "error",
-          message: messages.join(" | ") || "Failed to add expert. Please try again."
+          message: errorData?.message || "Failed to add expert. Please try again."
         });
       } else {
         setNotification({
           type: "error",
-          message: "Failed to add expert. Please try again."
+          message: errorData?.message ||  "Failed to add expert. Please try again."
         });
       }
       console.error('Error adding expert:', error);
@@ -781,7 +927,7 @@ export default function ExpertManagement() {
 
       // Refresh the slots data
       if (selectedExpert) {
-        await fetchExpertSlots(selectedExpert.uuid);
+        await fetchExpertSlots(selectedExpert.uuid, slotsCurrentPage[selectedExpert.uuid] || 1);
       }
 
       setIsSlotActionModalOpen(false);
@@ -802,9 +948,6 @@ export default function ExpertManagement() {
   const handleSearch = async () => {
     setSearchQuery(tempSearchQuery)
   }
-
-  console.log(expertBookings, "expert booking daata")
-
   return (
     <div className="min-h-screen  p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -1080,10 +1223,6 @@ export default function ExpertManagement() {
                     {expert.address || 'N/A'}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
-                    <Mail size={14} className="mr-2" />
-                    {expert.email || 'N/A'}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
                     <Phone size={14} className="mr-2" />
                     {expert.phone_number || 'N/A'}
                   </div>
@@ -1095,9 +1234,6 @@ export default function ExpertManagement() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">{expert.totalBookings || 0}</span> bookings
-                  </div>
 
                   <div className="flex gap-2">
                     {expert?.is_blocked === true ? (
@@ -1115,12 +1251,6 @@ export default function ExpertManagement() {
                         UnBlocked
                       </button>
                     )}
-                    {/* <button
-                      onClick={() => setConfirmModal({ type: 'delete', expert })}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
-                    >
-                      Delete
-                    </button> */}
                   </div>
                 </div>
               </motion.div>
@@ -1155,95 +1285,122 @@ export default function ExpertManagement() {
 
         {/* Server-side Pagination */}
         {paginationData.total_pages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-4 sm:px-6 py-2 sm:py-4 rounded-xl border border-gray-200 gap-2 sm:gap-0 mb-8">
-            <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-0">
-              <span>
-                Showing page {paginationData.current_page} of {paginationData.total_pages} ({paginationData.total_items} total items)
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              <button
-                onClick={() => handlePageChange(paginationData.current_page - 1)}
-                disabled={!paginationData.previous || loading}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex space-x-0.5 sm:space-x-1">
-                {generatePageNumbers().map((page, index) => {
-                  if (page === '...') {
-                    return <span key={index} className="px-1 sm:px-2 text-gray-400">...</span>;
-                  }
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page as number)}
-                      disabled={loading}
-                      className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${paginationData.current_page === page
-                        ? 'bg-primaryColor text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => handlePageChange(paginationData.current_page + 1)}
-                disabled={!paginationData.next || loading}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            paginationData={paginationData}
+            onPageChange={handlePageChange}
+            loading={loading}
+          />
         )}
       </div>
 
       {/* Add Expert Modal */}
       <ModernModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setNewExpert({
+            name: '',
+            email: '',
+            password: '',
+            phone_number: '',
+            gender: 'MALE',
+            dob: '',
+            addresss: '',
+          });
+          setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "" });
+        }}
         title="Add New Expert"
         size="lg"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InputField
-            label="Full Name"
-            value={newExpert.name}
-            onChange={(e) => setNewExpert({ ...newExpert, name: e.target.value })}
-            placeholder="Enter full name"
-            required
-            error={formErrors.name}
-            icon={User}
-          />
-          <InputField
-            label="Email"
-            type="email"
-            value={newExpert.email}
-            onChange={(e) => setNewExpert({ ...newExpert, email: e.target.value })}
-            placeholder="Enter email address"
-            required
-            error={formErrors.email}
-            icon={Mail}
-          />
+          {/* Name Field */}
+          <div>
+            <InputField
+              label="Full Name"
+              value={newExpert.name}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewExpert({ ...newExpert, name: value });
+                // Real-time validation
+                if (!value.trim()) {
+                  setFormErrors(prev => ({ ...prev, name: 'Name is required' }));
+                } else if (value.trim().length < 2) {
+                  setFormErrors(prev => ({ ...prev, name: 'Name must be at least 2 characters long' }));
+                } else {
+                  setFormErrors(prev => ({ ...prev, name: '' }));
+                }
+              }}
+              placeholder="Enter full name"
+              required
+              error={formErrors.name}
+              icon={User}
+            />
+            {newExpert.name && !formErrors.name && (
+              <div className="flex items-center mt-1 text-green-600 text-xs">
+                <CheckCircle size={12} className="mr-1" />
+                Valid name
+              </div>
+            )}
+          </div>
 
-          <div className='relative'>
+          {/* Email Field */}
+          <div>
+            <InputField
+              label="Email"
+              type="email"
+              value={newExpert.email}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewExpert({ ...newExpert, email: value });
+                // Real-time validation
+                if (!value.match(/^\S+@\S+\.\S+$/)) {
+                  setFormErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+                } else {
+                  setFormErrors(prev => ({ ...prev, email: '' }));
+                }
+              }}
+              placeholder="Enter email address"
+              required
+              error={formErrors.email}
+              icon={Mail}
+            />
+            {newExpert.email && !formErrors.email && (
+              <div className="flex items-center mt-1 text-green-600 text-xs">
+                <CheckCircle size={12} className="mr-1" />
+                Valid email
+              </div>
+            )}
+          </div>
+
+          {/* Password Field */}
+          <div className="relative">
             <InputField
               label="Password"
               type={passView ? "text" : "password"}
               value={newExpert.password}
-              onChange={(e) => setNewExpert({ ...newExpert, password: e.target.value })}
-              placeholder="Enter password "
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewExpert({ ...newExpert, password: value });
+                // Real-time validation
+                if (value.length < 8) {
+                  setFormErrors(prev => ({ ...prev, password: 'Password must be at least 8 characters long' }));
+                } else {
+                  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+                  if (!passwordRegex.test(value)) {
+                    setFormErrors(prev => ({ ...prev, password: 'Missing required character types' }));
+                  } else {
+                    setFormErrors(prev => ({ ...prev, password: '' }));
+                  }
+                }
+              }}
+              placeholder="Enter strong password"
               required
               error={formErrors.password}
             />
-            <div className='absolute right-3 top-10 flex items-center justify-center '>
-              {
-                passView ?
-                  <EyeIcon size={20} onClick={() => setPassView(false)} className='cursor-pointer' /> :
-                  <EyeOffIcon size={20} onClick={() => setPassView(true)} className='cursor-pointer' />
+            <div className='absolute right-3 top-10 flex items-center justify-center'>
+              {passView ?
+                <EyeIcon size={20} onClick={() => setPassView(false)} className='cursor-pointer' /> :
+                <EyeOffIcon size={20} onClick={() => setPassView(true)} className='cursor-pointer' />
               }
             </div>
 
@@ -1260,22 +1417,104 @@ export default function ExpertManagement() {
                     {passwordStrength.text}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Must include: uppercase, lowercase, number, special character (@$!%*?&)
+
+                {/* Progress bar */}
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                  <div
+                    className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.color
+                      }`}
+                    style={{
+                      width: `${(passwordStrength.strength / 5) * 100}%`
+                    }}
+                  ></div>
+                </div>
+
+                {/* Requirements checklist */}
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  <div className="flex items-center">
+                    {newExpert.password.length >= 8 ? (
+                      <CheckCircle size={12} className="text-green-600 mr-1" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400 mr-1" />
+                    )}
+                    <span className={newExpert.password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
+                      8+ characters
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {/[a-z]/.test(newExpert.password) ? (
+                      <CheckCircle size={12} className="text-green-600 mr-1" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400 mr-1" />
+                    )}
+                    <span className={/[a-z]/.test(newExpert.password) ? 'text-green-600' : 'text-gray-500'}>
+                      Lowercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {/[A-Z]/.test(newExpert.password) ? (
+                      <CheckCircle size={12} className="text-green-600 mr-1" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400 mr-1" />
+                    )}
+                    <span className={/[A-Z]/.test(newExpert.password) ? 'text-green-600' : 'text-gray-500'}>
+                      Uppercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {/\d/.test(newExpert.password) ? (
+                      <CheckCircle size={12} className="text-green-600 mr-1" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400 mr-1" />
+                    )}
+                    <span className={/\d/.test(newExpert.password) ? 'text-green-600' : 'text-gray-500'}>
+                      Number
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {/[@$!%*?&]/.test(newExpert.password) ? (
+                      <CheckCircle size={12} className="text-green-600 mr-1" />
+                    ) : (
+                      <XCircle size={12} className="text-gray-400 mr-1" />
+                    )}
+                    <span className={/[@$!%*?&]/.test(newExpert.password) ? 'text-green-600' : 'text-gray-500'}>
+                      Special character
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <InputField
-            label="Phone Number"
-            value={newExpert.phone_number}
-            onChange={(e) => setNewExpert({ ...newExpert, phone_number: e.target.value })}
-            placeholder="Enter phone number"
-            required
-            error={formErrors.phone_number}
-            icon={Phone}
-          />
+          {/* Phone Number Field */}
+          <div>
+            <InputField
+              label="Phone Number"
+              value={newExpert.phone_number}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                setNewExpert({ ...newExpert, phone_number: value });
+                // Real-time validation
+                if (!value.match(/^\d{10}$/)) {
+                  setFormErrors(prev => ({ ...prev, phone_number: 'Phone number must be exactly 10 digits' }));
+                } else {
+                  setFormErrors(prev => ({ ...prev, phone_number: '' }));
+                }
+              }}
+              placeholder="Enter 10-digit phone number"
+              required
+              error={formErrors.phone_number}
+              icon={Phone}
+            />
+            {newExpert.phone_number && !formErrors.phone_number && (
+              <div className="flex items-center mt-1 text-green-600 text-xs">
+                <CheckCircle size={12} className="mr-1" />
+                Valid phone number
+              </div>
+            )}
+          </div>
+
+          {/* Gender Field */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Gender <span className="text-red-500">*</span>
@@ -1289,35 +1528,127 @@ export default function ExpertManagement() {
               <option value="FEMALE">Female</option>
             </select>
           </div>
-          <InputField
-            label="DOB"
-            value={newExpert.dob}
-            onChange={(e) => setNewExpert({ ...newExpert, dob: e.target.value })}
-            placeholder="Enter dob"
-            required
-            type='date'
-            error={formErrors.dob}
-          />
-          <InputField
-            label="Address"
-            value={newExpert.addresss}
-            onChange={(e) => setNewExpert({ ...newExpert, addresss: e.target.value })}
-            placeholder="Enter addresss"
-            required
-            error={formErrors.addresss}
-          />
+
+          {/* Date of Birth Field */}
+          <div>
+            <InputField
+              label="Date of Birth"
+              type="date"
+              value={newExpert.dob}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewExpert({ ...newExpert, dob: value });
+                // Real-time validation
+                if (!value) {
+                  setFormErrors(prev => ({ ...prev, dob: 'Date of birth is required' }));
+                } else {
+                  const dobDate = new Date(value);
+                  const today = new Date();
+                  const minAgeDate = new Date();
+                  minAgeDate.setFullYear(today.getFullYear() - 18);
+
+                  if (dobDate > minAgeDate) {
+                    setFormErrors(prev => ({ ...prev, dob: 'Expert must be at least 18 years old' }));
+                  } else {
+                    setFormErrors(prev => ({ ...prev, dob: '' }));
+                  }
+                }
+              }}
+              placeholder=""
+              required
+              error={formErrors.dob}
+            />
+            {newExpert.dob && !formErrors.dob && (
+              <div className="flex items-center mt-1 text-green-600 text-xs">
+                <CheckCircle size={12} className="mr-1" />
+                Valid date of birth
+              </div>
+            )}
+          </div>
+
+          {/* Address Field */}
+          <div className="md:col-span-2">
+            <InputField
+              label="Address"
+              value={newExpert.addresss}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewExpert({ ...newExpert, addresss: value });
+                // Real-time validation
+                if (!value.trim()) {
+                  setFormErrors(prev => ({ ...prev, addresss: 'Address is required' }));
+                } else if (value.trim().length < 10) {
+                  setFormErrors(prev => ({ ...prev, addresss: 'Address must be at least 10 characters long' }));
+                } else {
+                  setFormErrors(prev => ({ ...prev, addresss: '' }));
+                }
+              }}
+              placeholder="Enter complete address (minimum 10 characters)"
+              required
+              error={formErrors.addresss}
+            />
+            {newExpert.addresss && !formErrors.addresss && (
+              <div className="flex items-center mt-1 text-green-600 text-xs">
+                <CheckCircle size={12} className="mr-1" />
+                Valid address
+              </div>
+            )}
+            {newExpert.addresss && (
+              <div className="text-xs text-gray-500 mt-1">
+                {newExpert.addresss.length}/10 characters minimum
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Form Validation Summary */}
+        {(Object.values(formErrors).some(error => error) || !isFormComplete()) && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <h4 className="text-sm font-medium text-yellow-800">
+                Please fix the following issues to continue:
+              </h4>
+            </div>
+            <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside">
+              {formErrors.name && <li>{formErrors.name}</li>}
+              {formErrors.email && <li>{formErrors.email}</li>}
+              {formErrors.password && <li>{formErrors.password}</li>}
+              {formErrors.phone_number && <li>{formErrors.phone_number}</li>}
+              {formErrors.dob && <li>{formErrors.dob}</li>}
+              {formErrors.addresss && <li>{formErrors.addresss}</li>}
+              {!isFormComplete() && Object.values(formErrors).every(error => !error) && (
+                <li>All fields are required</li>
+              )}
+            </ul>
+          </div>
+        )}
+
         <div className="mt-8 flex justify-end gap-4">
           <button
-            onClick={() => setIsAddModalOpen(false)}
+            onClick={() => {
+              setIsAddModalOpen(false);
+              setNewExpert({
+                name: '',
+                email: '',
+                password: '',
+                phone_number: '',
+                gender: 'MALE',
+                dob: '',
+                addresss: '',
+              });
+              setFormErrors({ name: '', email: '', password: '', phone_number: '', dob: '', addresss: "" });
+            }}
             className="px-6 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleAddExpert}
-            disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={loading || !isFormValid()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Adding...' : 'Add Expert'}
           </button>
@@ -1393,30 +1724,30 @@ export default function ExpertManagement() {
               <button
                 onClick={() => setActiveTab('bookings')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === 'bookings'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <Calendar size={16} className="inline mr-2" />
                 Bookings
-                {selectedExpert && expertBookings?.length > 0 && (
+                {selectedExpert && expertBookings[selectedExpert.uuid]?.length > 0 && (
                   <span className="ml-2 bg-blue-100 text-blue-600 text-xs py-0.5 px-2 rounded-full">
-                    {expertBookings.length}
+                    {bookingsPagination[selectedExpert.uuid]?.total_items || expertBookings[selectedExpert.uuid]?.length}
                   </span>
                 )}
               </button>
               <button
                 onClick={() => setActiveTab('slots')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === 'slots'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <Clock size={16} className="inline mr-2" />
                 Time Slots
                 {selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 && (
                   <span className="ml-2 bg-blue-100 text-blue-600 text-xs py-0.5 px-2 rounded-full">
-                    {expertSlots[selectedExpert.uuid].length}
+                    {slotsPagination[selectedExpert.uuid]?.total_items || expertSlots[selectedExpert.uuid]?.length}
                   </span>
                 )}
               </button>
@@ -1426,89 +1757,67 @@ export default function ExpertManagement() {
           {/* Bookings Tab Content */}
           {activeTab === 'bookings' && (
             <div className="space-y-4">
-              {/* <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Bookings</h3>
-                <div className="flex gap-2">
-                  <button
-                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'upcoming'
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    onClick={() => setBookingFilter('upcoming')}
-                  >
-                    Upcoming
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'past'
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    onClick={() => setBookingFilter('past')}
-                  >
-                    Past
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-lg text-sm font-medium border ${bookingFilter === 'all'
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    onClick={() => setBookingFilter('all')}
-                  >
-                    All
-                  </button>
-                </div>
-              </div> */}
-
               {selectedExpert && loadingBookings[selectedExpert.uuid] ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   <span className="ml-2 text-gray-600">Loading bookings...</span>
                 </div>
-              ) : selectedExpert && expertBookings?.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {expertBookings?.map((booking: any) => (
-                    <div
-                      key={booking.uuid}
-                      className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Patient Name</h4>
-                          <p className="mt-1 font-medium">{booking?.customer_name}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Patient Email</h4>
-                          <p className="mt-1 text-sm">{booking?.customer_email}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Phone Number</h4>
-                          <p className="mt-1">{booking?.customer_phone_number}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
-                          <p className="mt-1 text-sm">
-                            {formatDate(booking?.start_time)}<br />
-                            {formatTime(booking?.start_time)}
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                          <div className="mt-1">
-                            <BookingStatusBadge status={booking?.booking_status} />
+              ) : selectedExpert && expertBookings[selectedExpert.uuid]?.length > 0 ? (
+                <>
+                  <div className="space-y-4 max-h-full ">
+                    {expertBookings[selectedExpert.uuid]?.map((booking: any) => (
+                      <div
+                        key={booking.uuid}
+                        className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Patient Name</h4>
+                            <p className="mt-1 font-medium">{booking?.customer_name}</p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Patient Email</h4>
+                            <p className="mt-1 text-sm">{booking?.customer_email}</p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Phone Number</h4>
+                            <p className="mt-1">{booking?.customer_phone_number}</p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
+                            <p className="mt-1 text-sm">
+                              {formatDate(booking?.start_time)}<br />
+                              {formatTime(booking?.start_time)}
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Status</h4>
+                            <div className="mt-1">
+                              <BookingStatusBadge status={booking?.booking_status} />
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Payment Mode</h4>
+                            <p className="mt-1 text-sm">{booking?.payment_mode}</p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500">Booking Type</h4>
+                            <p className="mt-1 text-sm">{booking.booking_type || 'N/A'}</p>
                           </div>
                         </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Payment Mode</h4>
-                          <p className="mt-1 text-sm">{booking?.payment_mode}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Booking Type</h4>
-                          <p className="mt-1 text-sm">{booking.booking_type || 'N/A'}</p>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+
+                  {/* Bookings Pagination */}
+                  {bookingsPagination[selectedExpert.uuid]?.total_pages > 1 && (
+                    <Pagination
+                      paginationData={bookingsPagination[selectedExpert.uuid]}
+                      onPageChange={(page) => handleBookingsPageChange(selectedExpert.uuid, page)}
+                      loading={loadingBookings[selectedExpert.uuid]}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 bg-gray-50 rounded-lg">
                   <Calendar className="mx-auto h-12 w-12 text-gray-400" />
@@ -1522,89 +1831,90 @@ export default function ExpertManagement() {
           {/* Slots Tab Content */}
           {activeTab === 'slots' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Time Slots</h3>
-                <div className="text-sm text-gray-500">
-                  {selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0
-                    ? `${expertSlots[selectedExpert.uuid].length} slots found`
-                    : 'No slots available'
-                  }
-                </div>
-              </div>
-
               {selectedExpert && loadingSlots[selectedExpert.uuid] ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   <span className="ml-2 text-gray-600">Loading slots...</span>
                 </div>
               ) : selectedExpert && expertSlots[selectedExpert.uuid]?.length > 0 ? (
-                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden ">
-                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-gray-50 font-medium text-sm">
-                    <div>Date</div>
-                    <div>Start Time</div>
-                    <div>End Time</div>
-                    <div>Status</div>
-                    <div>Type</div>
-                    <div>Actions</div>
-                  </div>
-                  <div className="divide-y divide-gray-100 max-h-full overflow-y-auto">
-                    {expertSlots[selectedExpert.uuid].map((slot) => (
-                      <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 items-center text-sm">
-                        <div className="font-medium">{formatDate(slot.start_time)}</div>
-                        <div>{formatTime(slot.start_time)}</div>
-                        <div>{formatTime(slot.end_time)}</div>
-                        <div>
-                          <div className="flex flex-col gap-1">
-                            <SlotStatusBadge is_booked={slot.is_booked} />
-                            {slot.status === 'PENDING' && (
-                              <span className="text-yellow-600 text-xs">Pending Approval</span>
+                <>
+                  <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-gray-50 font-medium text-sm">
+                      <div>Date</div>
+                      <div>Start Time</div>
+                      <div>End Time</div>
+                      <div>Status</div>
+                      <div>Type</div>
+                      <div>Actions</div>
+                    </div>
+                    <div className="divide-y divide-gray-100 max-h-full ">
+                      {expertSlots[selectedExpert.uuid].map((slot) => (
+                        <div key={slot.uuid} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 items-center text-sm">
+                          <div className="font-medium">{formatDate(slot.start_time)}</div>
+                          <div>{formatTime(slot.start_time)}</div>
+                          <div>{formatTime(slot.end_time)}</div>
+                          <div>
+                            <div className="flex flex-col gap-1">
+                              <SlotStatusBadge is_booked={slot.is_booked} />
+                              {slot.status === 'PENDING' && (
+                                <span className="text-yellow-600 text-xs">Pending Approval</span>
+                              )}
+                              {slot.status === 'REJECTED' && (
+                                <span className="text-red-600 text-xs">Rejected</span>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${slot.slot_type === 'REGULAR'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-purple-100 text-purple-800'
+                              }`}>
+                              {slot.slot_type}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            {slot.status === 'DRAFT' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveSlot(slot)}
+                                  className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                                  title="Approve Slot"
+                                >
+                                  <CheckCircle size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleRejectSlot(slot)}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Reject Slot"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                              </>
+                            )}
+                            {slot.status === 'APPROVED' && (
+                              <span className="text-sm text-green-600 font-medium">Approved</span>
                             )}
                             {slot.status === 'REJECTED' && (
-                              <span className="text-red-600 text-xs">Rejected</span>
+                              <span className="text-sm text-red-600 font-medium">Rejected</span>
+                            )}
+                            {slot.status === 'DRAFT' && (
+                              <span className="text-sm text-yellow-600 font-medium">Draft</span>
                             )}
                           </div>
                         </div>
-                        <div>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${slot.slot_type === 'REGULAR'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-purple-100 text-purple-800'
-                            }`}>
-                            {slot.slot_type}
-                          </span>
-                        </div>
-                        <div className="flex gap-2">
-                          {slot.status === 'DRAFT' && (
-                            <>
-                              <button
-                                onClick={() => handleApproveSlot(slot)}
-                                className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                                title="Approve Slot"
-                              >
-                                <CheckCircle size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleRejectSlot(slot)}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                title="Reject Slot"
-                              >
-                                <XCircle size={16} />
-                              </button>
-                            </>
-                          )}
-                          {slot.status === 'APPROVED' && (
-                            <span className="text-sm text-green-600 font-medium">Approved</span>
-                          )}
-                          {slot.status === 'REJECTED' && (
-                            <span className="text-sm text-red-600 font-medium">Rejected</span>
-                          )}
-                          {slot.status === 'DRAFT' && (
-                            <span className="text-sm text-yellow-600 font-medium">Draft</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Slots Pagination */}
+                  {slotsPagination[selectedExpert.uuid]?.total_pages > 1 && (
+                    <Pagination
+                      paginationData={slotsPagination[selectedExpert.uuid]}
+                      onPageChange={(page) => handleSlotsPageChange(selectedExpert.uuid, page)}
+                      loading={loadingSlots[selectedExpert.uuid]}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 bg-gray-50 rounded-lg">
                   <Clock className="mx-auto h-12 w-12 text-gray-400" />
@@ -1647,11 +1957,7 @@ export default function ExpertManagement() {
               <button
                 onClick={() => {
                   if (confirmModal.expert) {
-                    // if (confirmModal.type === 'delete') {
-                    //   handleDeleteExpert(confirmModal.expert);
-                    // } else {
                     handleToggleExpert(confirmModal.expert);
-                    // }
                   }
                   setConfirmModal(null);
                 }}
