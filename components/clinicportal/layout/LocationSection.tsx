@@ -238,10 +238,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
           {!isEditMode && (
             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Location Coordinates</h3>
-              <div className="text-gray-700">
-                <span className="font-medium">Latitude:</span> {clinicData.location.lat.toFixed(6)}
-                <span className="mx-2">•</span>
-                <span className="font-medium">Longitude:</span> {clinicData.location.lng.toFixed(6)}
+              <div className="text-gray-700">{clinicData.coordinates}
               </div>
             </div>
           )}

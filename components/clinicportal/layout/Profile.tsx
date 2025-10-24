@@ -316,7 +316,17 @@ const ClinicSettingsDashboard = () => {
               onFileUpload={handleFileUpload}
             />
 
-            <OperatingHours
+           
+            <AdditionalInformation
+              clinicData={clinicData}
+              isEditMode={isEditMode}
+              onInputChange={handleInputChange}
+              onImageUpload={handleImagesUpload}
+              onRemoveImage={removeImage}
+              uploadingImages={uploadingImages}
+            />
+
+             <OperatingHours
               operatingHours={operatingHours}
               isEditMode={isEditMode}
               onHoursChange={handleHoursChange}
@@ -326,14 +336,6 @@ const ClinicSettingsDashboard = () => {
               hasChanges={hasOperatingHoursChanged}
             />
 
-            <AdditionalInformation
-              clinicData={clinicData}
-              isEditMode={isEditMode}
-              onInputChange={handleInputChange}
-              onImageUpload={handleImagesUpload}
-              onRemoveImage={removeImage}
-              uploadingImages={uploadingImages}
-            />
           </div>
         </div>
       </div>
