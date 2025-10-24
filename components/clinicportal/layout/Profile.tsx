@@ -45,6 +45,8 @@ const ClinicSettingsDashboard = () => {
     setClinicData,
     isClinicLoading,
     handleInputChange,
+    updateLocation,
+    resetToBackendData 
   } = useClinicData();
 
   const {
@@ -54,8 +56,8 @@ const ClinicSettingsDashboard = () => {
     hasOperatingHoursChanged,
     resetOperatingHoursChanges,
     loadOperatingHours,
-    saveOperatingHours, // This is the function from the hook
-    hasExistingOperatingHours, // This is the boolean from the hook
+    saveOperatingHours,
+    hasExistingOperatingHours,
     existingTimings
   } = useOperatingHours();
 
@@ -70,7 +72,8 @@ const ClinicSettingsDashboard = () => {
     if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
       setClinicData(prev => ({
         ...prev,
-        location: coords
+        location: coords,
+        coordinates: `SRID=4326;POINT (${coords.lng} ${coords.lat})` // Keep coordinates in sync
       }));
     }
   };
@@ -201,6 +204,7 @@ const ClinicSettingsDashboard = () => {
       throw new Error(errorMessage);
     }
   };
+
   // Handle save clinic details (without operating hours)
   const handleSaveClinicDetails = async () => {
     setSaveStatus('saving');
@@ -260,6 +264,7 @@ const ClinicSettingsDashboard = () => {
     setSaveStatus('idle');
     setOperatingHoursSaveStatus('idle');
     resetOperatingHoursChanges();
+    resetToBackendData();
   };
 
   // Loading state

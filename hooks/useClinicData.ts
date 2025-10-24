@@ -17,7 +17,7 @@ export const useClinicData = () => {
     landmark: '',
     map_link: '',
     coordinates: '',
-    location: { lat: 0, lng: 0 },
+    location: { lat: 8.5241, lng: 76.9366 }, // Default location
     about: '',
     about_clinic: '',
     gst_no: '',
@@ -29,6 +29,9 @@ export const useClinicData = () => {
     registration_certificate: null,
     reason_for_rejection: null
   });
+
+  // Track if we have initial data loaded from backend
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   const parseCoordinates = (coordinatesString?: string): { lat: number; lng: number } => {
     if (!coordinatesString) return { lat: 8.5241, lng: 76.9366 };
@@ -50,8 +53,13 @@ export const useClinicData = () => {
     }
   };
 
+  // Function to convert location object back to coordinates string
+  const locationToCoordinatesString = (location: { lat: number; lng: number }): string => {
+    return `SRID=4326;POINT (${location.lng} ${location.lat})`;
+  };
+
   useEffect(() => {
-    if (clinic) {
+    if (clinic && !hasInitialData) {
       const backendClinic = clinic as BackendClinic;
       const coordinates = parseCoordinates(backendClinic?.coordinates);
 
@@ -68,7 +76,7 @@ export const useClinicData = () => {
         pincode: backendClinic?.pincode || 0,
         landmark: backendClinic?.landmark || '',
         map_link: backendClinic?.map_link || '',
-        coordinates: backendClinic?.coordinates || '',
+        coordinates: backendClinic?.coordinates || locationToCoordinatesString(coordinates),
         location: coordinates,
         about: backendClinic?.about_clinic || '',
         about_clinic: backendClinic?.about_clinic || '',
@@ -82,15 +90,23 @@ export const useClinicData = () => {
         specialties: [],
         languages: backendClinic?.languages || []
       }));
+      
+      setHasInitialData(true);
     }
-  }, [clinic]);
+  }, [clinic, hasInitialData]);
 
   // Input change handler with type safety
   const handleInputChange = (field: keyof ClinicData, value: any) => {
     setClinicData(prev => {
       // Handle location object separately
       if (field === 'location' && typeof value === 'object') {
-        return { ...prev, location: value };
+        const newLocation = value;
+        const newCoordinates = locationToCoordinatesString(newLocation);
+        return { 
+          ...prev, 
+          location: newLocation,
+          coordinates: newCoordinates
+        };
       }
 
       // Handle languages array (comma separated string to array)
@@ -111,11 +127,36 @@ export const useClinicData = () => {
     });
   };
 
+  // Direct location update function that keeps coordinates in sync
+  const updateLocation = (coords: { lat: number; lng: number }) => {
+    setClinicData(prev => ({
+      ...prev,
+      location: coords,
+      coordinates: locationToCoordinatesString(coords)
+    }));
+  };
+
+  // NEW: Function to reset to backend data (useful when canceling edit)
+  const resetToBackendData = () => {
+    if (clinic) {
+      const backendClinic = clinic as BackendClinic;
+      const coordinates = parseCoordinates(backendClinic?.coordinates);
+      
+      setClinicData(prev => ({
+        ...prev,
+        location: coordinates,
+        coordinates: backendClinic?.coordinates || locationToCoordinatesString(coordinates)
+      }));
+    }
+  };
+
   return {
     clinicData,
     setClinicData,
     isClinicLoading,
     clinicError,
-    handleInputChange
+    handleInputChange,
+    updateLocation,
+    resetToBackendData // Export the reset function
   };
 };
