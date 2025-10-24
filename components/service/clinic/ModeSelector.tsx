@@ -41,8 +41,6 @@ export function ModeSelector({ serviceId, clinicService, value, onChange }: Prop
       getService?.[tab.sessionKey] !== undefined
   )
 
-  console.log(availableTabs, 'clinic service data')
-
   // If no available tabs, don't render anything or show a message
   if (availableTabs.length === 0) {
     return (
