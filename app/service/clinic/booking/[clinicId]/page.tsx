@@ -99,6 +99,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const [payMethod, setPayMethod] = React.useState<"ONLINE" | "OFFLINE">("OFFLINE")
   const [orderId, setOrderId] = React.useState<string | null>(null)
 
+  const [clinicService, setClinicService] = useState<any>()
+
   // for coupon purpose need to get service id for the clinic
   const [clinicOwnServiceId, setClinicServiceId] = useState('')
 
@@ -189,6 +191,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       const res = await getAllClinicRelatedService(id)
       if (res?.status === 200) {
+        setClinicService(res?.data?.data)
         const getService = res?.data?.data?.find(
           (service: any) => service?.service === serviceId
         )
@@ -464,7 +467,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                     sessionType={sessionType}
                     onSessionTypeChange={setSessionType}
                   />
-                  <ModeSelector value={mode} onChange={setMode} />
+                  <ModeSelector serviceId={serviceId} clinicService={clinicService} value={mode} onChange={setMode} />
                 </div>
                 <aside className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col justify-between">
                   <dl className="space-y-1 text-sm">
