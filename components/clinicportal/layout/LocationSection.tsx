@@ -223,9 +223,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
               
               <div className="mt-4 p-4 bg-white rounded-xl border border-blue-100">
                 <div className="text-sm text-blue-700">
-                  <span className="font-semibold">Current Coordinates:</span>{' '}
-                  {isNaN(clinicData.location.lat) ? '0.00000' : clinicData.location.lat.toFixed(6)}
-                  , {isNaN(clinicData.location.lng) ? '0.00000' : clinicData.location.lng.toFixed(6)}
+                  <span className="font-semibold">Current Coordinates:</span>{' '}{clinicData.coordinates}
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
                   Format: SRID=4326;POINT ({clinicData.location.lng} {clinicData.location.lat})
