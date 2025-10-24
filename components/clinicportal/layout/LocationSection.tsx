@@ -25,6 +25,8 @@ const LocationSection: React.FC<LocationSectionProps> = ({
     }
   };
 
+
+  console.log(clinicData, "data from clinic")
   return (
     <section className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
       <div className="p-8">

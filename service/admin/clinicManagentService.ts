@@ -7,6 +7,8 @@ import { axiosPrivate, axiosPublic } from "../../axios/axios";
 export const createClinic = async (clinicData: {
   name: string;
   email: string;
+  pincode: string;
+  landmark: string;
   phone: string;
   city: string;
   address?: string;
@@ -21,16 +23,18 @@ export const createClinic = async (clinicData: {
   try {
     const response = await axiosPrivate.post('/clinic/', {
       name: clinicData.name,
-      email: clinicData.email,
-      contact_number: clinicData.phone,
-      city: clinicData.city,
       address: clinicData.address,
+      pincode: clinicData.pincode,
+      landmark: clinicData.landmark,
       map_link: clinicData.map_link,
       coordinates: `POINT(${clinicData.gps_coordinates})`,
-      registration_certificate: clinicData.registration_certificate,
+      city: clinicData.city,
+      email: clinicData.email,
       gst_no: clinicData.gst_no,
+      registration_certificate: clinicData.registration_certificate,
       about_clinic: clinicData.about_clinic,
-      images: clinicData.images
+      images: clinicData.images,
+      contact_number: clinicData.phone,
     });
     return response.data;
   } catch (error) {
