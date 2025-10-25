@@ -27,7 +27,7 @@ export interface ClinicData {
   is_active: boolean;
 
   // Additional
-  languages: string[];
+  languages: string[] ;
   images?: any;
 
   // Certificates

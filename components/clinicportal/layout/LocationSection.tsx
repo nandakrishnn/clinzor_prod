@@ -1,4 +1,5 @@
-import React from 'react';
+'use clinic'
+import React, { useState } from 'react';
 import { MapPin, Navigation, FileText, Calendar, Languages, Upload } from 'lucide-react';
 import { ClinicData } from '@/types/clinic';
 
@@ -17,6 +18,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
   onLocationChange,
   onFileUpload
 }) => {
+
   
   const handleFileChange = (field: keyof ClinicData, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -162,7 +164,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
               <Languages className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                value={clinicData.languages?.join(', ') || ''}
+                value={clinicData.languages}
                 onChange={(e) => onInputChange('languages', e.target.value)}
                 disabled={!isEditMode}
                 className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:outline-none  text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 text-lg"

@@ -46,7 +46,7 @@ const ClinicSettingsDashboard = () => {
     isClinicLoading,
     handleInputChange,
     updateLocation,
-    resetToBackendData 
+    resetToBackendData
   } = useClinicData();
 
   const {
@@ -209,6 +209,12 @@ const ClinicSettingsDashboard = () => {
   const handleSaveClinicDetails = async () => {
     setSaveStatus('saving');
     try {
+
+      const languagesArray = (clinicData.languages as any)
+        ?.split(',')
+        .map((lang: any) => lang.trim())
+        .filter((lang: any) => lang) || [];
+
       const requestData = {
         name: clinicData.name,
         email: clinicData.email,
@@ -224,10 +230,11 @@ const ClinicSettingsDashboard = () => {
         coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`,
         images: clinicData.images,
         registration_certificate: clinicData.registration_certificate,
-        languages: clinicData.languages
+        languages: languagesArray
       };
 
       const clinicId = clinicData.uuid || '';
+      console.log(requestData)
 
       await editClinicODetails(clinicId, requestData);
 

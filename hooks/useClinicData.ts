@@ -110,12 +110,12 @@ export const useClinicData = () => {
       }
 
       // Handle languages array (comma separated string to array)
-      if (field === 'languages' && typeof value === 'string') {
-        return {
-          ...prev,
-          languages: value.split(',').map(lang => lang.trim()).filter(lang => lang.length > 0)
-        };
-      }
+      // if (field === 'languages' && typeof value === 'string') {
+      //   return {
+      //     ...prev,
+      //     languages: value.split(',').map(lang => lang.trim()).filter(lang => lang.length > 0)
+      //   };
+      // }
 
       // Handle images array
       if (field === 'images' && Array.isArray(value)) {
