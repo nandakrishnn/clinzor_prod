@@ -210,10 +210,12 @@ const ClinicSettingsDashboard = () => {
     setSaveStatus('saving');
     try {
 
-      const languagesArray = (clinicData.languages as any)
-        ?.split(',')
-        .map((lang: any) => lang.trim())
-        .filter((lang: any) => lang) || [];
+      const languagesArray = typeof clinicData.languages === 'string'
+        ? (clinicData.languages as any)
+          .split(',')
+          .map((lang: any) => lang.trim())
+          .filter((lang: any) => lang)
+        : clinicData.languages || [];
 
       const requestData = {
         name: clinicData.name,

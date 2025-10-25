@@ -19,13 +19,31 @@ const LocationSection: React.FC<LocationSectionProps> = ({
   onFileUpload
 }) => {
 
-  
+
   const handleFileChange = (field: keyof ClinicData, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && onFileUpload) {
       onFileUpload(field, file);
     }
   };
+
+  // Inside your component
+  const [lat, setLat] = useState<number | ''>(() => {
+    if (clinicData.coordinates) {
+      const match = clinicData.coordinates.match(/POINT \(([-\d.]+) ([-\d.]+)\)/);
+      if (match) return parseFloat(match[2]); // lat
+    }
+    return '';
+  });
+
+  const [lng, setLng] = useState<number | ''>(() => {
+    if (clinicData.coordinates) {
+      const match = clinicData.coordinates.match(/POINT \(([-\d.]+) ([-\d.]+)\)/);
+      if (match) return parseFloat(match[1]); // lng
+    }
+    return '';
+  });
+
 
 
   console.log(clinicData, "data from clinic")
@@ -186,43 +204,41 @@ const LocationSection: React.FC<LocationSectionProps> = ({
               <p className="text-blue-700 text-sm mb-4">
                 Enter the latitude and longitude coordinates for your clinic location.
               </p>
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="block text-sm font-semibold text-blue-800 mb-2">Latitude</label>
                   <input
                     type="number"
                     step="any"
-                    value={isNaN(clinicData.location.lat) ? '' : clinicData.location.lat}
+                    value={lat}
                     onChange={(e) => {
-                      const lat = parseFloat(e.target.value);
-                      if (!isNaN(lat)) {
-                        onLocationChange({ ...clinicData.location, lat });
-                      }
+                      const value = parseFloat(e.target.value);
+                      setLat(isNaN(value) ? '' : value);
+                      if (!isNaN(value) && lng !== '') onLocationChange({ lat: value, lng: lng as number });
                     }}
                     className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-blue-900"
                     placeholder="e.g., 12.9715987"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold text-blue-800 mb-2">Longitude</label>
                   <input
                     type="number"
                     step="any"
-                    value={isNaN(clinicData.location.lng) ? '' : clinicData.location.lng}
+                    value={lng}
                     onChange={(e) => {
-                      const lng = parseFloat(e.target.value);
-                      if (!isNaN(lng)) {
-                        onLocationChange({ ...clinicData.location, lng });
-                      }
+                      const value = parseFloat(e.target.value);
+                      setLng(isNaN(value) ? '' : value);
+                      if (!isNaN(value) && lat !== '') onLocationChange({ lat: lat as number, lng: value });
                     }}
                     className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-blue-900"
                     placeholder="e.g., 77.5945627"
                   />
                 </div>
               </div>
-              
+
               <div className="mt-4 p-4 bg-white rounded-xl border border-blue-100">
                 <div className="text-sm text-blue-700">
                   <span className="font-semibold">Current Coordinates:</span>{' '}{clinicData?.coordinates?.split(";")[1]}
