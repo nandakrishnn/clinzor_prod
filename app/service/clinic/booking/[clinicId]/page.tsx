@@ -334,6 +334,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     setIsConfirming(true);
     setBookingError(null);
     try {
+      const sessionData = sessionType === "TREATMENT" ? "SESSION" : sessionType
       // Prepare the booking data according to the API requirements
       const bookingData = {
         slot: selectedSlot?.uuid,
@@ -342,9 +343,9 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
         booking_type: mode === "CLINIC_VISIT" ? "PHYSICAL_VISIT" : mode, // Adjust mapping as needed
         doctor_gender_preference: genderPref === "NONE" ? "OTHER" : genderPref,
         payment_mode: payMethod,
-        session_type: sessionType,
+        session_type: sessionData,
         patient_name: patient.name,
-        patient_address: session?.user?.address || "Address not provided", // You might want to get this from patient form
+        patient_address: session?.user?.address || "Address not provided", 
         patient_mobile: patient.phone_number,
         patient_email: patient.email || "",
         offers_applied: coupon ? [coupon.uuid] : [],
