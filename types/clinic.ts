@@ -15,7 +15,6 @@ export interface ClinicData {
   landmark?: string;
   map_link: string;
   coordinates: string;
-  location: { lat: number; lng: number };
 
   // Clinic Details
   about: string;
@@ -27,7 +26,7 @@ export interface ClinicData {
   is_active: boolean;
 
   // Additional
-  languages: string[] ;
+  languages: string[];
   images?: any;
 
   // Certificates

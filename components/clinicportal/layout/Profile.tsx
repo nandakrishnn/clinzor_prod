@@ -210,8 +210,10 @@ const ClinicSettingsDashboard = () => {
     setSaveStatus('saving');
     try {
 
+      console.log( clinicData, "data fromt he form")
+
       const languagesArray = typeof clinicData.languages === 'string'
-        ? (clinicData.languages as any)
+        ? (clinicData.languages as string)
           .split(',')
           .map((lang: any) => lang.trim())
           .filter((lang: any) => lang)
@@ -229,7 +231,7 @@ const ClinicSettingsDashboard = () => {
         about_clinic: clinicData.about_clinic,
         gst_no: clinicData.gst_no,
         founded_on: clinicData.founded_on,
-        coordinates: `SRID=4326;POINT (${clinicData.location.lng} ${clinicData.location.lat})`,
+        coordinates: `${clinicData.coordinates}`,
         images: clinicData.images,
         registration_certificate: clinicData.registration_certificate,
         languages: languagesArray
