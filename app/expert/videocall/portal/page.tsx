@@ -1,28 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Video,
   Calendar,
   Clock,
   Users,
   Play,
-  Mic,
-  MicOff,
-  VideoOff,
-  Phone,
-  Maximize2,
-  Minimize2,
-  MessageCircle
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import {
   GetAllExpertBooking,
   GetAExpertBookingDetails,
-  addSuggestion
 } from "@/service/expert/bookingMangementService";
-import { GetAllServiceForClinic } from "@/service/clinic/serviceManagementService";
 import { convertTo12HourFormat } from "@/utils/formatters";
 import { useSession } from "next-auth/react";
 
@@ -50,492 +42,50 @@ interface VideoCall {
   booking_charge?: string;
 }
 
-interface LocalMediaVideoCallProps {
-  userName: string;
-  onLeave: () => void;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void;
-  expertMeetingLink?: string;
-  callTitle?: string;
-  bookingId?: string;
+interface PaginationInfo {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
 }
-
-interface Service {
-  uuid: string;
-  name: string;
-  description: string;
-  price: string;
-  duration: string;
-}
-
-// Services Modal Component
-interface ServicesModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  services: Service[];
-  selectedServices: string[];
-  onServiceSelect: (serviceId: string) => void;
-  onSubmit: () => void;
-  isLoading: boolean;
-  isSubmitting: boolean;
-  submitSuccess: boolean;
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
-}
-
-const ServicesModal: React.FC<ServicesModalProps> = ({
-  isOpen,
-  onClose,
-  services,
-  selectedServices,
-  onServiceSelect,
-  onSubmit,
-  isLoading,
-  isSubmitting,
-  submitSuccess,
-  searchTerm,
-  onSearchChange
-}) => {
-  if (!isOpen) return null;
-
-  const filteredServices = services.filter(service =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">
-            Suggest Services
-          </h3>
-        </div>
-
-        {/* Services List */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            </div>
-          ) : filteredServices.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              {searchTerm ? "No services found" : "No services available"}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredServices.map((service) => (
-                <div
-                  key={service.uuid}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedServices.includes(service.uuid)
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-blue-300"
-                    }`}
-                  onClick={() => onServiceSelect(service.uuid)}
-                >
-                  <div className="flex items-start">
-                    <div
-                      className={`w-5 h-5 rounded border flex items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${selectedServices.includes(service.uuid)
-                        ? "bg-blue-500 border-blue-500"
-                        : "bg-white border-gray-300"
-                        }`}
-                    >
-                      {selectedServices.includes(service.uuid) && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-800">
-                        {service.name}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {service.description}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm font-medium text-blue-600">
-                          ₹{service.price}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {service.duration} mins
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gray-600">
-              {selectedServices.length} service(s) selected
-            </span>
-          </div>
-          <button
-            onClick={onSubmit}
-            disabled={selectedServices.length === 0 || isSubmitting}
-            className={`w-full py-3 px-4 rounded-lg flex items-center justify-center ${selectedServices.length === 0
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-              } transition-colors font-medium`}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Submitting...
-              </>
-            ) : submitSuccess ? (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Submitted Successfully
-              </>
-            ) : (
-              "Submit Suggestions"
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const LocalMediaVideoCall: React.FC<LocalMediaVideoCallProps> = ({
-  userName,
-  onLeave,
-  isFullscreen,
-  onToggleFullscreen,
-  expertMeetingLink,
-  callTitle,
-  bookingId
-}) => {
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [showMeetingFrame, setShowMeetingFrame] = useState(false);
-  const [showServicesModal, setShowServicesModal] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const videoCallRef = useRef<HTMLDivElement>(null);
-
-  // Automatically show meeting frame if expertMeetingLink exists
-  useEffect(() => {
-    if (expertMeetingLink) {
-      setShowMeetingFrame(true);
-    }
-  }, [expertMeetingLink]);
-
-  // Initialize media stream
-  useEffect(() => {
-    let stream: MediaStream;
-    (async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        });
-        setMediaStream(stream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err) {
-        console.error("Error accessing media devices:", err);
-        setMediaStream(null);
-      }
-    })();
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
-
-  const toggleVideo = () => {
-    if (mediaStream) {
-      mediaStream.getVideoTracks().forEach((track) => {
-        track.enabled = !isVideoEnabled;
-      });
-    }
-    setIsVideoEnabled((v) => !v);
-  };
-
-  const toggleAudio = () => {
-    if (mediaStream) {
-      mediaStream.getAudioTracks().forEach((track) => {
-        track.enabled = !isAudioEnabled;
-      });
-    }
-    setIsAudioEnabled((a) => !a);
-  };
-
-  const handleCloseMeetingFrame = () => {
-    setShowMeetingFrame(false);
-  };
-
-  return (
-    <div
-      ref={videoCallRef}
-      className={`relative overflow-hidden ${isFullscreen ? "fixed inset-4 z-50" : "w-full h-full"
-        }`}
-      style={isFullscreen ? { width: "auto", height: "auto" } : {}}
-    >
-      <div className="flex h-full">
-        {/* Video/Meeting Container */}
-        <div className="w-full relative">
-          {/* Meeting Link Iframe - Full overlay when active */}
-          {showMeetingFrame && expertMeetingLink && (
-            <div className="absolute inset-0 z-30 bg-white overflow-hidden">
-              {/* Iframe Header */}
-              <div className="bg-gray-900 text-white p-3 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Video size={16} className="text-blue-400" />
-                  <span className="text-sm font-medium truncate">
-                    {callTitle}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowMeetingFrame(false)}
-                  className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Close Meeting"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Iframe Content */}
-              <iframe
-                src={expertMeetingLink}
-                className="w-full h-full border-0"
-                style={{ height: "calc(100% - 48px)" }}
-                allow="camera; microphone; fullscreen; speaker; display-capture"
-                allowFullScreen
-                title="Expert Meeting"
-              />
-            </div>
-          )}
-
-          {/* Local Video Feed */}
-          <div className="relative w-full h-full flex items-center justify-center bg-black">
-            {mediaStream && !showMeetingFrame ? (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-            ) : !showMeetingFrame ? (
-              <div className="flex flex-col items-center justify-center w-full h-full text-white">
-                <Video size={48} className="mb-4 text-white/60" />
-                <p className="text-lg font-medium">
-                  Camera or mic not available
-                </p>
-              </div>
-            ) : null}
-          </div>
-
-          {/* Control Bar */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-            <div className="bg-black/70 backdrop-blur-md rounded-2xl px-6 py-4 flex items-center space-x-4">
-              {!showMeetingFrame && (
-                <>
-                  <button
-                    onClick={toggleAudio}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isAudioEnabled
-                      ? "bg-gray-600 hover:bg-gray-500 text-white"
-                      : "bg-red-500 hover:bg-red-600 text-white"
-                      }`}
-                  >
-                    {isAudioEnabled ? <Mic size={20} /> : <Mic size={20} />}
-                  </button>
-                  <button
-                    onClick={toggleVideo}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isVideoEnabled
-                      ? "bg-gray-600 hover:bg-gray-500 text-white"
-                      : "bg-red-500 hover:bg-red-600 text-white"
-                      }`}
-                  >
-                    {isVideoEnabled ? (
-                      <Video size={20} />
-                    ) : (
-                      <Video size={20} />
-                    )}
-                  </button>
-                </>
-              )}
-
-              {/* Suggestions Button - Only show when in meeting */}
-              {showMeetingFrame && (
-                <button
-                  onClick={() => setShowServicesModal(true)}
-                  className="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all"
-                  title="Suggest Services"
-                >
-                  <MessageCircle size={20} />
-                </button>
-              )}
-
-              <button
-                onClick={onLeave}
-                className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all"
-              >
-                <Phone size={20} />
-              </button>
-              <button
-                onClick={onToggleFullscreen}
-                className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-500 text-white flex items-center justify-center transition-all"
-              >
-                {isFullscreen ? (
-                  <Minimize2 size={20} />
-                ) : (
-                  <Maximize2 size={20} />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Fullscreen Exit Button */}
-      {isFullscreen && (
-        <button
-          onClick={onToggleFullscreen}
-          className="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full text-white flex items-center justify-center hover:bg-black/70 transition-all z-10"
-        >
-          <Minimize2 size={18} />
-        </button>
-      )}
-    </div>
-  );
-};
 
 function VideoCallPortalContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [videoCalls, setVideoCalls] = useState<VideoCall[]>([]);
   const [selectedCall, setSelectedCall] = useState<VideoCall | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  const [isJoining, setIsJoining] = useState(false);
-  const [joinedCallId, setJoinedCallId] = useState<string | null>(null);
-  const [isInCall, setIsInCall] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showServicesModal, setShowServicesModal] = useState(false);
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [isLoadingServices, setIsLoadingServices] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const videoContainerRef = useRef<HTMLDivElement>(null);
-
-  const userType = searchParams.get("userType") || "expert";
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    next: null,
+    previous: null
+  });
   const userName = searchParams.get("userName") || "Expert User";
+  const router = useRouter()
 
   const { data: session, status }: any = useSession();
-  console.log(session, 'user data')
 
-  // Load services when component mounts
-  useEffect(() => {
-    const fetchServices = async () => {
-      setIsLoadingServices(true);
-      try {
-        // Using dummy data
-        const dummyServices: Service[] = [
-          {
-            uuid: "1",
-            name: "General Consultation",
-            description: "Basic health checkup and consultation",
-            price: "500",
-            duration: "30"
-          },
-          {
-            uuid: "2",
-            name: "Dental Checkup",
-            description: "Comprehensive dental examination",
-            price: "800",
-            duration: "45"
-          },
-          {
-            uuid: "3",
-            name: "Eye Examination",
-            description: "Complete eye health assessment",
-            price: "600",
-            duration: "40"
-          }
-        ];
-        setServices(dummyServices);
-      } catch (error) {
-        console.error("Error fetching services:", error);
-      } finally {
-        setIsLoadingServices(false);
-      }
-    };
-
-    fetchServices();
-  }, []);
-
-  // Handle service selection
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
-        ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId]
-    );
-  };
-
-  // Handle form submission
-  const handleSubmitSuggestions = async () => {
-    if (!selectedCall?.uuid || selectedServices.length === 0) return;
-
-    setIsSubmitting(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      setSubmitSuccess(true);
-      setTimeout(() => {
-        setSubmitSuccess(false);
-        setShowServicesModal(false);
-        setSelectedServices([]);
-        setSearchTerm("");
-      }, 2000);
-    } catch (error) {
-      console.error("Error submitting services:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const convertUTCTimeToLocal = (utcDateString: string) => {
+    const utcDate = new Date(utcDateString);
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
   };
 
   const isWithin10Minutes = (startTime: string) => {
     const now = new Date();
-    const start = new Date(startTime);
+    const start = convertUTCTimeToLocal(startTime); // Convert UTC to local time
     const diffInMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
+    console.log("10min check:", { start: start.toString(), now: now.toString(), diffInMinutes });
     return diffInMinutes <= 10 && diffInMinutes >= 0;
   };
 
   const isWithin5Minutes = (startTime: string) => {
     const now = new Date();
-    const start = new Date(startTime);
+    const start = convertUTCTimeToLocal(startTime); // Convert UTC to local time
     const diffInMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
+    console.log("5min check:", { start: start.toString(), now: now.toString(), diffInMinutes });
     return diffInMinutes <= 5 && diffInMinutes >= 0;
   };
 
@@ -564,14 +114,22 @@ function VideoCallPortalContent() {
     return booking;
   };
 
-  const fetchAllBookings = async () => {
+  const fetchAllBookings = async (page: number = 1) => {
     try {
       const params = {
-        expert: session?.user?.uuid
+        expert: session?.user?.uuid,
+        page: page.toString()
       }
       const response = await GetAllExpertBooking(params);
+      console.log(response)
       let bookings = response.data || [];
-      console.log(bookings, "Fetched bookings data");
+      const paginationInfo = {
+        current_page: response?.current_page,
+        total_pages: response?.total_pages,
+        total_items: response?.total_items,
+        next: response?.next,
+        previous: response?.previous
+      };
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -606,6 +164,7 @@ function VideoCallPortalContent() {
       );
 
       setVideoCalls(updatedBookings);
+      setPagination(paginationInfo);
       setIsLoading(false);
 
       const activeCall = updatedBookings.find(
@@ -622,46 +181,26 @@ function VideoCallPortalContent() {
 
   useEffect(() => {
     setIsClient(true);
-    fetchAllBookings();
+    fetchAllBookings(1);
 
-    const interval = setInterval(fetchAllBookings, 60000);
+    const interval = setInterval(() => fetchAllBookings(pagination.current_page), 60000);
     return () => clearInterval(interval);
   }, [session]);
 
-  const handleGoBack = () => {
-    if (isInCall) {
-      setIsInCall(false);
-      setIsFullscreen(false);
-      setShowServicesModal(false);
-    } else {
-      router.back();
-    }
-  };
-
-  const handleSelectCall = (videoCall: VideoCall) => {
-    if (!isInCall) {
-      setSelectedCall(videoCall);
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= pagination.total_pages) {
+      setIsLoading(true);
+      fetchAllBookings(page);
     }
   };
 
   const handleJoinCall = async (videoCall: VideoCall) => {
     if (videoCall.expert_meeting_link) {
       // Open meeting link in new tab
-      window.open(videoCall.expert_meeting_link, '_blank', 'noopener,noreferrer');
+      router.push(`/expert/videocall/user-connect?meetingUrl=${encodeURIComponent(videoCall.expert_meeting_link)}`)
+      // window.open(videoCall.expert_meeting_link, '_blank', 'noopener,noreferrer');
     }
-  };
-
-  const handleLeaveCall = () => {
-    setIsInCall(false);
-    setIsFullscreen(false);
-    setJoinedCallId(null);
-    setShowServicesModal(false);
-    setSelectedServices([]);
-    setSearchTerm("");
-  };
-
-  const handleToggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
   };
 
   const getStatusConfig = (status: string) => {
@@ -718,6 +257,54 @@ function VideoCallPortalContent() {
     return { date, time };
   };
 
+  // Pagination Component
+  const Pagination = () => {
+    if (pagination.total_pages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-center space-x-2 mt-8 ">
+        <button
+          onClick={() => handlePageChange(pagination.current_page - 1)}
+          disabled={pagination.current_page === 1}
+          className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.current_page === 1
+            ? "text-gray-400 cursor-not-allowed"
+            : "text-gray-700 hover:bg-gray-100"
+            }`}
+        >
+          <ChevronLeft size={16} className="mr-1" />
+          Previous
+        </button>
+
+        <div className="flex items-center space-x-1">
+          {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === pagination.current_page
+                ? "bg-blue-600 text-white"
+                : "text-gray-700 hover:bg-gray-100"
+                }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => handlePageChange(pagination.current_page + 1)}
+          disabled={pagination.current_page === pagination.total_pages}
+          className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.current_page === pagination.total_pages
+            ? "text-gray-400 cursor-not-allowed"
+            : "text-gray-700 hover:bg-gray-100"
+            }`}
+        >
+          Next
+          <ChevronRight size={16} className="ml-1" />
+        </button>
+      </div>
+    );
+  };
+
   if (!isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -746,216 +333,162 @@ function VideoCallPortalContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-3">
-      {/* Services Modal */}
-      <ServicesModal
-        isOpen={showServicesModal}
-        onClose={() => {
-          setShowServicesModal(false);
-          setSearchTerm("");
-        }}
-        services={services}
-        selectedServices={selectedServices}
-        onServiceSelect={handleServiceSelect}
-        onSubmit={handleSubmitSuggestions}
-        isLoading={isLoadingServices}
-        isSubmitting={isSubmitting}
-        submitSuccess={submitSuccess}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
 
-      <div className="sticky top-0 z-40 transition-all duration-300">
-        <div className="">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              {!isInCall && (
-                <button
-                  onClick={handleGoBack}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-              )}
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">
-                  {isInCall ? "In Meeting" : "Video Calls"}
-                </h1>
-                {isInCall && selectedCall && (
-                  <p className="text-sm text-gray-500">{selectedCall.title}</p>
-                )}
-              </div>
+      <div className="px-4 py-4 sm:pt-5 ">
+        <div className="flex items-center justify-between ">
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between ">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Expert Video Call
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Manage and track all your Expert Calls
+              </p>
             </div>
-            {isInCall && (
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowServicesModal(true)}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition-colors"
-                >
-                  <MessageCircle size={16} />
-                  <span>Suggest Services</span>
-                </button>
-                <div className="flex items-center space-x-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Live</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {!isInCall ? (
-        <div className="py-6 transition-all duration-300">
-          <div className="mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableCalls.map((videoCall) => {
-                const { date, time } = formatDateTime(
-                  videoCall.startTime,
-                  videoCall.endTime
-                );
-                const statusConfig = getStatusConfig(
-                  videoCall.booking_status
-                );
-                const isSelected = selectedCall?.uuid === videoCall.uuid;
-                const canJoin = videoCall.booking_status === "ACTIVE" ||
-                  (videoCall.booking_status === "SCHEDULED" &&
-                    isWithin10Minutes(videoCall.startTime));
-
-                return (
-                  <div
-                    key={videoCall.uuid}
-                    className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 cursor-pointer ${isSelected
-                      ? "border-blue-600 shadow-lg shadow-blue-600/10 ring-1 ring-blue-600/20"
-                      : "border-gray-200 hover:border-gray-300 hover:shadow-md hover:shadow-gray-500/5"
-                      } hover:scale-[1.01]`}
-                    onClick={() => handleSelectCall(videoCall)}
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-gray-900 truncate mb-1">
-                            {videoCall.title}
-                          </h3>
-                          <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded-md inline-block">
-                            {videoCall.room_id}
-                          </p>
-                        </div>
-                        <div
-                          className={`ml-3 flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.color}`}
-                        >
-                          <div
-                            className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusConfig.dot}`}
-                          ></div>
-                          {statusConfig.label}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-xs text-gray-600">
-                          <Calendar
-                            size={12}
-                            className="mr-2 text-gray-400"
-                          />
-                          {date}
-                        </div>
-                        <div className="flex items-center text-xs text-gray-600">
-                          <Clock size={12} className="mr-2 text-gray-400" />
-                          {time}
-                        </div>
-                        <div className="flex items-center text-xs text-gray-600">
-                          <Users size={12} className="mr-2 text-gray-400" />
-                          {videoCall.participants.length} participants
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="flex -space-x-1">
-                          {videoCall.participants
-                            .slice(0, 2)
-                            .map((participant, pIndex) => (
-                              <div
-                                key={pIndex}
-                                className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white shadow-sm"
-                              >
-                                {participant
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </div>
-                            ))}
-                          {videoCall.participants.length > 2 && (
-                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white shadow-sm">
-                              +{videoCall.participants.length - 2}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {canJoin && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleJoinCall(videoCall);
-                          }}
-                          className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm ${videoCall.booking_status === "ACTIVE"
-                            ? "bg-green-600 hover:bg-green-700 text-white shadow-green-600/20"
-                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
-                            } hover:scale-105 hover:shadow-lg`}
-                        >
-                          <Play size={12} />
-                          <span>Join Meeting</span>
-                        </button>
-                      )}
-
-                      {videoCall.booking_status === "SCHEDULED" && !canJoin && (
-                        <button
-                          disabled
-                          className="w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-400 text-white cursor-not-allowed flex items-center justify-center space-x-2"
-                        >
-                          <Clock size={12} />
-                          <span>Meeting Starts Soon</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+      <div className="transition-all duration-300 ">
+        <div className="mx-auto px-4 pb-10 md:pb-20">
+          {/* Pagination Info */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm text-gray-600">
+              {/* Showing {availableCalls.length} of {pagination.total_items} meetings */}
             </div>
-
-            {availableCalls.length === 0 && (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-6 mx-auto">
-                  <Video size={32} className="text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Available Meetings
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  There are no active or upcoming meetings at the moment.
-                </p>
-              </div>
-            )}
+            <div className="text-sm text-gray-600">
+              Page {pagination.current_page} of {pagination.total_pages}
+            </div>
           </div>
-        </div>
-      ) : null}
 
-      <div className={`${isInCall ? "min-h-[calc(100vh-80px)]" : ""} flex items-center justify-center`}
-        ref={videoContainerRef}
-      >
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {selectedCall && isInCall && (
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
-              <div className="h-[70vh]">
-                <LocalMediaVideoCall
-                  userName={userName}
-                  onLeave={handleLeaveCall}
-                  isFullscreen={isFullscreen}
-                  onToggleFullscreen={handleToggleFullscreen}
-                  expertMeetingLink={selectedCall.expert_meeting_link}
-                  callTitle={selectedCall.title}
-                  bookingId={selectedCall?.uuid}
-                />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {availableCalls.map((videoCall) => {
+              const { date, time } = formatDateTime(
+                videoCall.startTime,
+                videoCall.endTime
+              );
+              const statusConfig = getStatusConfig(
+                videoCall.booking_status
+              );
+              const isSelected = selectedCall?.uuid === videoCall.uuid;
+              const canJoin = videoCall.booking_status === "ACTIVE" ||
+                (videoCall.booking_status === "SCHEDULED" &&
+                  isWithin10Minutes(videoCall.startTime));
+
+              return (
+                <div
+                  key={videoCall.uuid}
+                  className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 cursor-pointer ${isSelected
+                    ? "border-blue-600 shadow-lg shadow-blue-600/10 ring-1 ring-blue-600/20"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-md hover:shadow-gray-500/5"
+                    } hover:scale-[1.01]`}
+                >
+                  <div className="p-5">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate mb-1">
+                          {videoCall.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded-md inline-block">
+                          {videoCall.room_id}
+                        </p>
+                      </div>
+                      <div
+                        className={`ml-3 flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.color}`}
+                      >
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusConfig.dot}`}
+                        ></div>
+                        {statusConfig.label}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Calendar
+                          size={12}
+                          className="mr-2 text-gray-400"
+                        />
+                        {date}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Clock size={12} className="mr-2 text-gray-400" />
+                        {time}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Users size={12} className="mr-2 text-gray-400" />
+                        {videoCall.participants.length} participants
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="flex -space-x-1">
+                        {videoCall.participants
+                          .slice(0, 2)
+                          .map((participant, pIndex) => (
+                            <div
+                              key={pIndex}
+                              className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white shadow-sm"
+                            >
+                              {participant
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </div>
+                          ))}
+                        {videoCall.participants.length > 2 && (
+                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white shadow-sm">
+                            +{videoCall.participants.length - 2}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {canJoin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinCall(videoCall);
+                        }}
+                        className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm ${videoCall.booking_status === "ACTIVE"
+                          ? "bg-green-600 hover:bg-green-700 text-white shadow-green-600/20"
+                          : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                          } hover:scale-105 hover:shadow-lg`}
+                      >
+                        <Play size={12} />
+                        <span>Join Meeting</span>
+                      </button>
+                    )}
+
+                    {videoCall.booking_status === "SCHEDULED" && !canJoin && (
+                      <button
+                        disabled
+                        className="w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-400 text-white cursor-not-allowed flex items-center justify-center space-x-2"
+                      >
+                        <Clock size={12} />
+                        <span>Meeting Starts Soon</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination Controls */}
+          <Pagination />
+
+          {availableCalls.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-6 mx-auto">
+                <Video size={32} className="text-gray-400" />
               </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Available Meetings
+              </h3>
+              <p className="text-gray-600 text-sm">
+                There are no active or upcoming meetings at the moment.
+              </p>
             </div>
           )}
         </div>
