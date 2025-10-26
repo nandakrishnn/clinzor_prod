@@ -372,7 +372,7 @@ export default function ExpertSidebar() {
           {/* Collapse toggle button */}
           <motion.button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute -right-3 top-16 p-1.5 bg-white rounded-full border border-gray-100 text-gray-400 shadow-sm hover:text-purple-500 hover:border-purple-100 transition-colors duration-200"
+            className="absolute -right-3 top-16 z-50 p-1.5 bg-white rounded-full border border-gray-100 text-gray-400 shadow-sm hover:text-purple-500 hover:border-purple-100 transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >

@@ -29,7 +29,7 @@ import {
   GetAllSlot
 } from "@/service/expert/slotManangementService";
 import { motion, AnimatePresence } from "framer-motion";
-import { convertTo12HourFormat } from "@/utils/formatters";
+import { convertTo12HourFormat, convertTo12HourFormatN, convertTo24HourFormat } from "@/utils/formatters";
 
 // Type definitions
 interface ExpertSlot {
@@ -62,13 +62,12 @@ const Notification = ({
     initial={{ opacity: 0, y: -50, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -50, scale: 0.9 }}
-    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${
-      type === "success"
+    className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border max-w-sm ${type === "success"
         ? "bg-green-50 border-green-200 text-green-800"
         : type === "error"
-        ? "bg-red-50 border-red-200 text-red-800"
-        : "bg-yellow-50 border-yellow-200 text-yellow-800"
-    }`}
+          ? "bg-red-50 border-red-200 text-red-800"
+          : "bg-yellow-50 border-yellow-200 text-yellow-800"
+      }`}
   >
     <div className="flex items-center justify-between">
       <p className="font-medium">{message}</p>
@@ -102,10 +101,9 @@ const NotificationBanner = ({
   return (
     <div
       className={`w-full flex items-center justify-between gap-4 px-4 py-3 rounded-lg shadow-md mb-4 border text-base font-medium transition-all
-        ${
-          notification.type === "success"
-            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-            : notification.type === "error"
+        ${notification.type === "success"
+          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+          : notification.type === "error"
             ? "bg-red-50 text-red-800 border-red-200"
             : "bg-amber-50 text-amber-800 border-amber-200"
         }
@@ -299,19 +297,18 @@ const CombinedDateTimePicker = React.memo(
                 Select Date
               </label>
               <div
-                className={`w-full px-4 py-3 border-2 rounded-2xl focus:outline-none transition-all duration-300 bg-white shadow-sm hover:shadow-lg cursor-pointer font-medium ${
-                  error
+                className={`w-full px-4 py-3 border-2 rounded-2xl focus:outline-none transition-all duration-300 bg-white shadow-sm hover:shadow-lg cursor-pointer font-medium ${error
                     ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                     : "border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-blue-300"
-                }`}
+                  }`}
               >
                 {dateValue
                   ? dateValue.toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric"
-                    })
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                  })
                   : "Select date..."}
               </div>
             </div>
@@ -370,11 +367,10 @@ const CombinedDateTimePicker = React.memo(
                       <button
                         onClick={decreaseMonth}
                         disabled={prevMonthButtonDisabled}
-                        className={`p-2 rounded-xl transition-colors ${
-                          prevMonthButtonDisabled
+                        className={`p-2 rounded-xl transition-colors ${prevMonthButtonDisabled
                             ? "text-gray-300 cursor-not-allowed"
                             : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <ChevronLeft size={20} />
                       </button>
@@ -418,11 +414,10 @@ const CombinedDateTimePicker = React.memo(
                       <button
                         onClick={increaseMonth}
                         disabled={nextMonthButtonDisabled}
-                        className={`p-2 rounded-xl transition-colors ${
-                          nextMonthButtonDisabled
+                        className={`p-2 rounded-xl transition-colors ${nextMonthButtonDisabled
                             ? "text-gray-300 cursor-not-allowed"
                             : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <ChevronRight size={20} />
                       </button>
@@ -447,16 +442,13 @@ const CombinedDateTimePicker = React.memo(
 
                     return `
                       w-8 h-8 flex items-center justify-center rounded-full
-                      ${
-                        isToday ? "bg-blue-100 text-blue-600 font-semibold" : ""
+                      ${isToday ? "bg-blue-100 text-blue-600 font-semibold" : ""
                       }
-                      ${
-                        isSelected ? "bg-blue-600 text-white font-semibold" : ""
+                      ${isSelected ? "bg-blue-600 text-white font-semibold" : ""
                       }
-                      ${
-                        isDisabled
-                          ? "text-gray-300 cursor-not-allowed"
-                          : "hover:bg-blue-50 cursor-pointer"
+                      ${isDisabled
+                        ? "text-gray-300 cursor-not-allowed"
+                        : "hover:bg-blue-50 cursor-pointer"
                       }
                       transition-colors duration-200
                     `;
@@ -573,19 +565,18 @@ const SmartDatePicker = ({
       </label>
       <div
         onClick={handleContainerClick}
-        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md cursor-pointer ${
-          error
+        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md cursor-pointer ${error
             ? "border-red-300 focus:ring-red-500 focus:border-red-500"
             : "border-gray-300"
-        }`}
+          }`}
       >
         {selectedDate
           ? selectedDate.toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              year: "numeric"
-            })
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+          })
           : "Select date..."}
       </div>
 
@@ -627,11 +618,10 @@ const SmartDatePicker = ({
                     <button
                       onClick={decreaseMonth}
                       disabled={prevMonthButtonDisabled}
-                      className={`p-2 rounded-xl transition-colors ${
-                        prevMonthButtonDisabled
+                      className={`p-2 rounded-xl transition-colors ${prevMonthButtonDisabled
                           ? "text-gray-300 cursor-not-allowed"
                           : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       <ChevronLeft size={20} />
                     </button>
@@ -675,11 +665,10 @@ const SmartDatePicker = ({
                     <button
                       onClick={increaseMonth}
                       disabled={nextMonthButtonDisabled}
-                      className={`p-2 rounded-xl transition-colors ${
-                        nextMonthButtonDisabled
+                      className={`p-2 rounded-xl transition-colors ${nextMonthButtonDisabled
                           ? "text-gray-300 cursor-not-allowed"
                           : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -703,16 +692,13 @@ const SmartDatePicker = ({
 
                   return `
                     w-8 h-8 flex items-center justify-center rounded-full
-                    ${
-                      isToday ? "bg-blue-100 text-blue-600 font-semibold" : ""
+                    ${isToday ? "bg-blue-100 text-blue-600 font-semibold" : ""
                     }
-                    ${
-                      isSelected ? "bg-blue-600 text-white font-semibold" : ""
+                    ${isSelected ? "bg-blue-600 text-white font-semibold" : ""
                     }
-                    ${
-                      isDisabled
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "hover:bg-blue-50 cursor-pointer"
+                    ${isDisabled
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "hover:bg-blue-50 cursor-pointer"
                     }
                     transition-colors duration-200
                   `;
@@ -752,11 +738,10 @@ const SmartTimePicker = ({
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md ${
-          error
+        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md ${error
             ? "border-red-300 focus:ring-red-500 focus:border-red-500"
             : "border-gray-300"
-        }`}
+          }`}
       />
       {error && <ErrorMessage message={error} />}
     </div>
@@ -849,14 +834,14 @@ export default function ExpertSlotManagement() {
   // FIXED: Proper date formatting function for API
   const formatDateTimeForAPI = (dateTimeString: string): string => {
     const date = new Date(dateTimeString);
-    
+
     // Format to YYYY-MM-DDTHH:mm format (API requirement)
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -870,8 +855,8 @@ export default function ExpertSlotManagement() {
   // FIXED: Check for duplicate slots
   const hasDuplicateSlots = (newSlots: { start_time: string }[]): boolean => {
     const existingSlotTimes = new Set(slots.map(slot => formatDateTimeForAPI(slot.start_time)));
-    
-    return newSlots.some(newSlot => 
+
+    return newSlots.some(newSlot =>
       existingSlotTimes.has(formatDateTimeForAPI(newSlot.start_time))
     );
   };
@@ -1165,7 +1150,7 @@ export default function ExpertSlotManagement() {
         setNotification({ type: "error", message: "Start time is required" });
         return;
       }
-      
+
       // Check for existing slot with the same start time
       const formattedTime = formatDateTimeForAPI(formData.start_time);
       const existingSlot = slots.find(
@@ -1201,7 +1186,7 @@ export default function ExpertSlotManagement() {
       }
 
       // Additional validation for bulk slots
-      const pastSlots = bulkFormData.slot_list.filter(slot => 
+      const pastSlots = bulkFormData.slot_list.filter(slot =>
         isSlotInPast(slot.start_time)
       );
 
@@ -1267,7 +1252,7 @@ export default function ExpertSlotManagement() {
       } else if (modalType === "bulk") {
         // FIXED: Proper bulk slot creation with correct payload format
         console.log("Sending bulk slots:", bulkFormData);
-        
+
         const response = await createBlukSlot({
           slot_list: bulkFormData.slot_list.map(slot => ({
             start_time: slot.start_time // Already in correct format from generateBulkSlots
@@ -1340,7 +1325,7 @@ export default function ExpertSlotManagement() {
         </div>
 
         {/* Date & Time Preview */}
-        {formData.start_time && (
+        {/* {formData.start_time && (
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -1349,12 +1334,12 @@ export default function ExpertSlotManagement() {
                 </p>
                 <p className="text-lg font-bold text-gray-900 mt-1">
                   {formatDateTime(formData.start_time).date} at{" "}
-                  {formatDateTime(formData.start_time).time}
+                  {convertTo24HourFormat(formData.start_time)}
                 </p>
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
           <button
@@ -1462,11 +1447,10 @@ export default function ExpertSlotManagement() {
                           weekdays: undefined
                         }));
                       }}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        isSelected
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${isSelected
                           ? "bg-emerald-500 text-white shadow-lg transform scale-105"
                           : "bg-white text-gray-600 border border-gray-300 hover:border-emerald-300 hover:shadow-md"
-                      }`}
+                        }`}
                     >
                       {day}
                     </button>
@@ -1561,11 +1545,10 @@ export default function ExpertSlotManagement() {
                 Generated Slots ({bulkFormData.slot_list.length})
               </h4>
               <div className="flex items-center gap-2">
-                <span className={`text-sm px-2 py-1 rounded ${
-                  bulkFormData.slot_list.length > 50 
-                    ? "bg-green-100 text-green-800" 
+                <span className={`text-sm px-2 py-1 rounded ${bulkFormData.slot_list.length > 50
+                    ? "bg-green-100 text-green-800"
                     : "bg-blue-100 text-blue-800"
-                }`}>
+                  }`}>
                   Ready to create
                 </span>
                 <button
@@ -1670,26 +1653,24 @@ export default function ExpertSlotManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Status</p>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      selectedSlot.status === "ACTIVE"
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedSlot.status === "ACTIVE"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : selectedSlot.status === "DRAFT"
-                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : selectedSlot.status === "CANCELLED"
-                        ? "bg-red-50 text-red-700 border-red-200"
-                        : "bg-gray-50 text-gray-700 border-gray-200"
-                    }`}
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : selectedSlot.status === "CANCELLED"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-gray-50 text-gray-700 border-gray-200"
+                      }`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        selectedSlot.status === "ACTIVE"
+                      className={`w-1.5 h-1.5 rounded-full ${selectedSlot.status === "ACTIVE"
                           ? "bg-emerald-500"
                           : selectedSlot.status === "DRAFT"
-                          ? "bg-amber-500"
-                          : selectedSlot.status === "CANCELLED"
-                          ? "bg-red-500"
-                          : "bg-gray-500"
-                      } mr-1.5`}
+                            ? "bg-amber-500"
+                            : selectedSlot.status === "CANCELLED"
+                              ? "bg-red-500"
+                              : "bg-gray-500"
+                        } mr-1.5`}
                     ></span>
                     {selectedSlot.status}
                   </span>
