@@ -1,5 +1,5 @@
 import { axiosPrivate, axiosPublic } from "@/axios/axios"
-import { USER_EXPERT } from "@/utils/Endpoint"
+import { EXPERT, USER_EXPERT } from "@/utils/Endpoint"
 
 export const getAllExpertService = async () => {
     const res = await axiosPrivate.get(`${USER_EXPERT.GET_EXPERT}`)
@@ -34,5 +34,9 @@ export const cancelExpertService = async (id: string, status: any) => {
 }
 export const getExpertSuggestionsService = async () => {
     const res = await axiosPrivate.get(`${USER_EXPERT.EXPERT_BOOKING_SUGGESTION}`);
+    return res.data;
+}
+export const postExpertSuggestionsService = async (id: string, selectedServices: string[]) => {
+    const res = await axiosPrivate.patch(`${EXPERT.EXPERT_PATCH_SUGGESTION}${id}/`, { services: selectedServices });
     return res.data;
 }

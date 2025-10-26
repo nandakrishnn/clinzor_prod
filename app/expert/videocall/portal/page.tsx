@@ -9,7 +9,10 @@ import {
   Users,
   Play,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Phone,
+  Mail,
+  Map
 } from "lucide-react";
 import {
   GetAllExpertBooking,
@@ -77,7 +80,6 @@ function VideoCallPortalContent() {
     const now = new Date();
     const start = convertUTCTimeToLocal(startTime); // Convert UTC to local time
     const diffInMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
-    console.log("10min check:", { start: start.toString(), now: now.toString(), diffInMinutes });
     return diffInMinutes <= 10 && diffInMinutes >= 0;
   };
 
@@ -85,7 +87,6 @@ function VideoCallPortalContent() {
     const now = new Date();
     const start = convertUTCTimeToLocal(startTime); // Convert UTC to local time
     const diffInMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
-    console.log("5min check:", { start: start.toString(), now: now.toString(), diffInMinutes });
     return diffInMinutes <= 5 && diffInMinutes >= 0;
   };
 
@@ -121,7 +122,6 @@ function VideoCallPortalContent() {
         page: page.toString()
       }
       const response = await GetAllExpertBooking(params);
-      console.log(response)
       let bookings = response.data || [];
       const paginationInfo = {
         current_page: response?.current_page,
@@ -138,18 +138,18 @@ function VideoCallPortalContent() {
         .map((booking: any) => ({
           uuid: booking.uuid,
           room_id: booking.room_id,
-          title: `Consultation with ${booking.patient_name || "Patient"}`,
-          participants: [userName, booking.patient_name || "Patient"],
+          title: `Consultation with ${booking.customer_name || "Patient"}`,
+          participants: [userName, booking.customer_name || "Patient"],
           startTime: booking.start_time || new Date().toISOString(),
           endTime:
             booking.end_time ||
             new Date(new Date().getTime() + 30 * 60 * 1000).toISOString(),
           booking_status: booking.booking_status,
           expert_meeting_link: booking.expert_meeting_link,
-          patient_name: booking.patient_name,
-          patient_mobile: booking.patient_mobile,
-          patient_email: booking.patient_email,
-          patient_address: booking.patient_address,
+          patient_name: booking.customer_name,
+          patient_mobile: booking.customer_phone_number,
+          patient_email: booking.customer_email,
+          patient_address: booking.customer_addresss,
           booking_charge: booking.booking_charge,
           bookingDate: booking.start_time
             ? new Date(booking.start_time)
@@ -196,9 +196,10 @@ function VideoCallPortalContent() {
   };
 
   const handleJoinCall = async (videoCall: VideoCall) => {
+    console.log(videoCall, 'get the clicking call')
     if (videoCall.expert_meeting_link) {
       // Open meeting link in new tab
-      router.push(`/expert/videocall/user-connect?meetingUrl=${encodeURIComponent(videoCall.expert_meeting_link)}`)
+      router.push(`/expert/videocall/user-connect?meetingUrl=${encodeURIComponent(videoCall.expert_meeting_link)}&bookingId=${videoCall?.uuid}`)
       // window.open(videoCall.expert_meeting_link, '_blank', 'noopener,noreferrer');
     }
   };
@@ -362,7 +363,7 @@ function VideoCallPortalContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableCalls.map((videoCall) => {
+            {availableCalls.map((videoCall: any) => {
               const { date, time } = formatDateTime(
                 videoCall.startTime,
                 videoCall.endTime
@@ -417,7 +418,15 @@ function VideoCallPortalContent() {
                       </div>
                       <div className="flex items-center text-xs text-gray-600">
                         <Users size={12} className="mr-2 text-gray-400" />
-                        {videoCall.participants.length} participants
+                        {videoCall?.patient_name} ,{videoCall?.patient_email}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Phone size={12} className="mr-2 text-gray-400" />
+                        {videoCall?.patient_mobile} 
+                      </div>
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Map size={12} className="mr-2 text-gray-400" />
+                        {videoCall?.patient_address}
                       </div>
                     </div>
 
@@ -425,14 +434,14 @@ function VideoCallPortalContent() {
                       <div className="flex -space-x-1">
                         {videoCall.participants
                           .slice(0, 2)
-                          .map((participant, pIndex) => (
+                          .map((participant: any, pIndex: any) => (
                             <div
                               key={pIndex}
                               className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white shadow-sm"
                             >
                               {participant
                                 .split(" ")
-                                .map((n) => n[0])
+                                .map((n: any) => n[0])
                                 .join("")}
                             </div>
                           ))}

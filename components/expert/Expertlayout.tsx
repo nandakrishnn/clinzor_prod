@@ -215,7 +215,7 @@ export default function ExpertSidebar() {
   const renderSidebarContent = () => (
     <>
       <motion.div
-        className={`flex items-center ${collapsed ? 'justify-center py-8' : ''} px-5 py-8`}
+        className={`flex items-center ${collapsed ? 'justify-center py-8' : ''} px-5 py-8 z-50`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -335,7 +335,7 @@ export default function ExpertSidebar() {
         {/* Mobile sidebar - slides in from left */}
         <AnimatePresence>
           {mobileOpen && (
-            <div className="md:hidden fixed inset-0 z-40">
+            <div className="md:hidden fixed inset-0 z-50">
               <motion.div
                 className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
                 initial={{ opacity: 0 }}

@@ -56,6 +56,9 @@ export const USER_EXPERT = {
     CANCEL_EXPERT_BOOKING: 'customer/expert-booking-cancel/',
     EXPERT_BOOKING_SUGGESTION: 'customer/list-suggestion/',
 }
+export const EXPERT = {
+    EXPERT_PATCH_SUGGESTION: 'clinic/expert-suggestion-create/',
+}
 
 
 // CLINIC ENDPOINTS
