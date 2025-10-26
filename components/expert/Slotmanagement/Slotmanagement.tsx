@@ -161,7 +161,7 @@ const Modal = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div
-        className={`bg-white rounded-2xl shadow-2xl ${sizeClasses[size]} w-full max-h-[95vh] overflow-y-auto flex flex-col`}
+        className={`bg-white rounded-2xl shadow-2xl ${sizeClasses[size]} w-full max-h-[95vh] overflow-y-auto hide-scrollbar flex flex-col`}
       >
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900">
