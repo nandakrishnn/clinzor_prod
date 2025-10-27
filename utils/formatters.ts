@@ -210,3 +210,13 @@ export const parse12HourFormat = (time12Hour: string, originalDate: Date): Date 
 
   return newDate;
 };
+
+
+export const DateTimeConverter = (date: any) => {
+  const formattedTime = new Date(date).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return formattedTime
+}

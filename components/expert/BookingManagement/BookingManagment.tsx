@@ -4,6 +4,8 @@ import {
   AlertCircle, Eye, ChevronLeft, ChevronRight, Clock, X
 } from 'lucide-react';
 import { GetAllExpertBooking } from '@/service/expert/bookingMangementService';
+import { convertTo12HourFormat } from '@/utils/formatters';
+import { useSession } from 'next-auth/react';
 
 // Types
 interface Booking {
@@ -22,6 +24,7 @@ interface Booking {
   slot: string;
   expert: string;
   customer_name?: string;
+  customer_phone_number?: string;
 }
 
 interface ModalProps {
@@ -37,24 +40,13 @@ interface Notification {
   type: 'success' | 'error' | 'warning';
 }
 
-// Add new interface for Slot
-interface Slot {
-  uuid: string;
-  expert: string;
-  created_by: string | null;
-  start_time: string;
-  end_time: string;
-  status: string;
-  is_booked: boolean;
-  reason_for_rejection: string | null;
-}
-
-// Add missing type definitions
-interface ChatMessage {
-  id: number;
-  text: string;
-  sender: string;
-  timestamp: string;
+interface Filters {
+  booking_status: string;
+  payment_status: string;
+  from_date: string;
+  to_date: string;
+  sort_by: string;
+  quick_date: string;
 }
 
 // Modal Component
@@ -88,27 +80,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   );
 };
 
-// Add type definitions for status configs
-type StatusConfig = {
-  color: string;
-  icon: string;
-};
-
-type StatusConfigs = {
-  [key: string]: StatusConfig;
-};
-
-interface Filters {
-  booking_status: string;
-  payment_status: string;
-  booking_type: string;
-  payment_mode: string;
-  from_date: string;
-  to_date: string;
-  sort_by: string;
-  quick_date: string;
-}
-
 const ExpertBookingManager: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,30 +87,27 @@ const ExpertBookingManager: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalItemsCount, setTotalItemsCount] = useState(0);
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [modalType, setModalType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
   const [editData, setEditData] = useState<Partial<Booking>>({});
-
+  const { data: session, status }: any = useSession();
 
   // Filter states
   const [filters, setFilters] = useState<Filters>({
     booking_status: 'ALL',
     payment_status: 'ALL',
-    booking_type: 'ALL',
-    payment_mode: 'ALL',
     from_date: '',
     to_date: '',
     sort_by: 'date_desc',
     quick_date: 'ALL'
   });
+
   const bookingStatuses = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELED'];
   const paymentStatuses = ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'];
 
-  // Add a counter for booking numbers
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  // Add quick date options
+  // Quick date options
   const quickDateOptions = [
     { value: 'ALL', label: 'All Time' },
     { value: 'TODAY', label: 'Today' },
@@ -149,23 +117,52 @@ const ExpertBookingManager: React.FC = () => {
     { value: 'THIS_MONTH', label: 'This Month' }
   ];
 
-  // Add sorting options
+  // Sort options
   const sortOptions = [
     { value: 'date_desc', label: 'Date (Newest First)' },
     { value: 'date_asc', label: 'Date (Oldest First)' },
     { value: 'status_asc', label: 'Status (A-Z)' },
     { value: 'status_desc', label: 'Status (Z-A)' }
   ];
-  // Debounce search term
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms delay
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchTerm]);
+  // Status configs
+  const statusConfigs = useMemo((): { booking: any; payment: any } => ({
+    booking: {
+      'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+      'CONFIRMED': { color: 'bg-blue-100 text-blue-800', icon: '✅' },
+      'COMPLETED': { color: 'bg-green-100 text-green-800', icon: '✅' },
+      'CANCELED': { color: 'bg-red-100 text-red-800', icon: '❌' }
+    },
+    payment: {
+      'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+      'COMPLETED': { color: 'bg-green-100 text-green-800', icon: '✅' },
+      'FAILED': { color: 'bg-red-100 text-red-800', icon: '❌' },
+      'REFUNDED': { color: 'bg-orange-100 text-orange-800', icon: '↩️' }
+    }
+  }), []);
+
+  // Function to format date for API (YYYY-MM-DDTHH:mm:ss)
+  const formatDateForAPI = (dateString: string, isStartDate: boolean = true): string => {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (isStartDate) {
+      // For from_date: set time to 00:00:00
+      date.setHours(0, 0, 0, 0);
+    } else {
+      // For to_date: set time to 23:59:59
+      date.setHours(23, 59, 59, 999);
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
 
   const fetchBooking = async (page = 1, search = '', filters: Filters) => {
     try {
@@ -173,6 +170,7 @@ const ExpertBookingManager: React.FC = () => {
 
       // Prepare query parameters
       const params: any = {
+        expert: session?.user?.uuid,
         page: page
       };
 
@@ -188,17 +186,13 @@ const ExpertBookingManager: React.FC = () => {
       if (filters.payment_status !== 'ALL') {
         params.payment_status = filters.payment_status;
       }
-      if (filters.booking_type !== 'ALL') {
-        params.booking_type = filters.booking_type;
-      }
-      if (filters.payment_mode !== 'ALL') {
-        params.payment_mode = filters.payment_mode;
-      }
       if (filters.from_date) {
-        params.from_date = filters.from_date;
+        // Format from_date with time 00:00:00
+        params.from_date = formatDateForAPI(filters.from_date, true);
       }
       if (filters.to_date) {
-        params.to_date = filters.to_date;
+        // Format to_date with time 23:59:59
+        params.to_date = formatDateForAPI(filters.to_date, false);
       }
       if (filters.sort_by) {
         params.sort_by = filters.sort_by;
@@ -206,6 +200,8 @@ const ExpertBookingManager: React.FC = () => {
       if (filters.quick_date && filters.quick_date !== 'ALL') {
         params.quick_date = filters.quick_date;
       }
+
+      console.log('API Params:', params); // For debugging
 
       const data = await GetAllExpertBooking(params);
       setBookings(data.data);
@@ -218,19 +214,31 @@ const ExpertBookingManager: React.FC = () => {
     }
   }
 
-  // Fetch data when filters change
+  // Fetch data when filters change or page changes
   useEffect(() => {
-    fetchBooking(currentPage, debouncedSearchTerm, filters);
-  }, [currentPage, debouncedSearchTerm, filters]);
+    if (session?.user?.uuid) {
+      fetchBooking(currentPage, searchTerm, filters);
+    }
+  }, [currentPage, filters, session]);
 
-  console.log("Bookings fetched:", bookings);
+  // Handle search submission (both button click and enter key)
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset to page 1 when searching
+    fetchBooking(1, searchTerm, filters);
+  };
 
-  const filteredBookings = bookings;
+  // Handle enter key in search input
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   // Memoize pagination calculations
   const paginationData = useMemo(() => {
     const totalItems = totalItemsCount;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const paginatedBookings = bookings; // API already returns paginated data
+    const paginatedBookings = bookings;
 
     return {
       totalItems,
@@ -244,52 +252,29 @@ const ExpertBookingManager: React.FC = () => {
   // Memoize statistics calculations
   const stats = useMemo(() => {
     const total = totalItemsCount;
-    const pending = filteredBookings.filter(b => b.booking_status === 'PENDING').length;
-    const confirmed = filteredBookings.filter(b => b.booking_status === 'CONFIRMED').length;
-    const completed = filteredBookings.filter(b => b.booking_status === 'COMPLETED').length;
-    const canceled = filteredBookings.filter(b => b.booking_status === 'CANCELED').length;
+    const pending = bookings.filter(b => b.booking_status === 'PENDING').length;
+    const confirmed = bookings.filter(b => b.booking_status === 'CONFIRMED').length;
+    const completed = bookings.filter(b => b.booking_status === 'COMPLETED').length;
+    const canceled = bookings.filter(b => b.booking_status === 'CANCELED').length;
 
     return { total, pending, confirmed, completed, canceled };
-  }, [filteredBookings]);
+  }, [bookings]);
 
-  // Update the status configs with proper typing
-  const statusConfigs = useMemo(() => ({
-    booking: {
-      'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-      'CONFIRMED': { color: 'bg-blue-100 text-blue-800', icon: '✅' },
-      'COMPLETED': { color: 'bg-green-100 text-green-800', icon: '✅' },
-      'CANCELED': { color: 'bg-red-100 text-red-800', icon: '❌' }
-    } as StatusConfigs,
-    payment: {
-      'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-      'COMPLETED': { color: 'bg-green-100 text-green-800', icon: '✅' },
-      'FAILED': { color: 'bg-red-100 text-red-800', icon: '❌' },
-      'REFUNDED': { color: 'bg-orange-100 text-orange-800', icon: '↩️' }
-    } as StatusConfigs
-  }), []);
-
-  // Update the utility functions with proper typing
-  const getStatusConfig = useCallback((status: string): StatusConfig => {
+  // Utility functions
+  const getStatusConfig = useCallback((status: string): any => {
     return statusConfigs.booking[status] || { color: 'bg-gray-100 text-gray-800', icon: '❓' };
   }, [statusConfigs]);
 
   const formatDateTime = useCallback((startTime: string, endTime: string) => {
     const start = new Date(startTime);
-    const end = new Date(endTime);
 
-    const date = start.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    const date = start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
     });
 
-    const time = `${start.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })} - ${end.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })}`;
+    const time = `${convertTo12HourFormat(startTime)} – ${convertTo12HourFormat(endTime)}`;
 
     return { date, time };
   }, []);
@@ -304,15 +289,21 @@ const ExpertBookingManager: React.FC = () => {
     setFilters({
       booking_status: 'ALL',
       payment_status: 'ALL',
-      booking_type: 'ALL',
       from_date: '',
       to_date: '',
-      payment_mode: 'ALL',
       sort_by: 'date_desc',
       quick_date: 'ALL'
     });
     setSearchTerm('');
     setCurrentPage(1);
+    fetchBooking(1, '', {
+      booking_status: 'ALL',
+      payment_status: 'ALL',
+      from_date: '',
+      to_date: '',
+      sort_by: 'date_desc',
+      quick_date: 'ALL'
+    });
   };
 
   const handleView = useCallback((booking: Booking) => {
@@ -323,6 +314,11 @@ const ExpertBookingManager: React.FC = () => {
   const handleComplete = useCallback((booking: Booking) => {
     setSelectedBooking(booking);
     setModalType('complete');
+  }, []);
+
+  const handleCancel = useCallback((booking: Booking) => {
+    setSelectedBooking(booking);
+    setModalType('cancel');
   }, []);
 
   const closeModal = useCallback(() => {
@@ -348,47 +344,35 @@ const ExpertBookingManager: React.FC = () => {
     }, 1000);
   };
 
-  // Update the chatMessages state with proper typing
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const handleCompleteConfirm = () => {
+    if (!selectedBooking) return;
 
-  // Update the newMessage state with proper typing
-  const [newMessage, setNewMessage] = useState('');
-
-  // Update the showChat state with proper typing
-  const [showChat, setShowChat] = useState(false);
-
-  // Update the isCallActive state with proper typing
-  const [isCallActive, setIsCallActive] = useState(false);
-
-  // Event handler for sending a message
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    // Simulate sending a message
-    const message: ChatMessage = {
-      id: Date.now(),
-      text: newMessage,
-      sender: 'expert',
-      timestamp: new Date().toISOString()
-    };
-    setChatMessages(prev => [...prev, message]);
-    setNewMessage('');
+    setIsLoading(true);
+    setTimeout(() => {
+      setBookings(prev => prev.map(b =>
+        b.uuid === selectedBooking.uuid
+          ? { ...b, booking_status: 'COMPLETED' }
+          : b
+      ));
+      setIsLoading(false);
+      closeModal();
+      showNotification('Booking marked as completed!');
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-3">
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg transform transition-all duration-300 ease-in-out ${notification?.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-            notification?.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-              'bg-amber-50 text-amber-800 border border-amber-200'
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg transform transition-all duration-300 ease-in-out ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+          notification.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+            'bg-amber-50 text-amber-800 border border-amber-200'
           }`}>
           <div className="flex items-center space-x-2">
-            {notification?.type === 'success' ? <CheckCircle size={20} className="text-emerald-600" /> :
-              notification?.type === 'error' ? <XCircle size={20} className="text-red-600" /> :
+            {notification.type === 'success' ? <CheckCircle size={20} className="text-emerald-600" /> :
+              notification.type === 'error' ? <XCircle size={20} className="text-red-600" /> :
                 <AlertCircle size={20} className="text-amber-600" />}
-            <span className="font-medium">{notification?.message}</span>
+            <span className="font-medium">{notification.message}</span>
           </div>
         </div>
       )}
@@ -402,7 +386,7 @@ const ExpertBookingManager: React.FC = () => {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => fetchBooking(currentPage, searchTerm, filters)}
               className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <RefreshCw size={18} className="animate-spin-slow" />
@@ -478,15 +462,22 @@ const ExpertBookingManager: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
           <div className="flex flex-col space-y-4">
             <div className="w-full">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <div className="relative flex items-center">
+                <Search className="absolute left-4 text-gray-400" size={20} />
                 <input
                   type="text"
                   placeholder="Search by booking ID, customer, expert, or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  onKeyPress={handleKeyPress}
+                  className="w-full pl-12 pr-24 py-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
+                <button
+                  onClick={handleSearch}
+                  className="absolute right-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                >
+                  Search
+                </button>
               </div>
             </div>
 
@@ -543,7 +534,7 @@ const ExpertBookingManager: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Existing filters with improved styling */}
+                {/* Booking Status */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Booking Status</label>
                   <select
@@ -558,6 +549,7 @@ const ExpertBookingManager: React.FC = () => {
                   </select>
                 </div>
 
+                {/* Payment Status */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
                   <select
@@ -572,6 +564,7 @@ const ExpertBookingManager: React.FC = () => {
                   </select>
                 </div>
 
+                {/* From Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
                   <input
@@ -582,6 +575,7 @@ const ExpertBookingManager: React.FC = () => {
                   />
                 </div>
 
+                {/* To Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
                   <input
@@ -645,9 +639,9 @@ const ExpertBookingManager: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {paginationData?.paginatedBookings.map((booking, index) => {
-                  const { date, time } = formatDateTime(booking?.start_time, booking?.end_time);
-                  const statusConfig = getStatusConfig(booking?.booking_status);
+                {paginationData.paginatedBookings.map((booking, index) => {
+                  const { date, time } = formatDateTime(booking.start_time, booking.end_time);
+                  const statusConfig = getStatusConfig(booking.booking_status);
                   return (
                     <tr key={booking.uuid} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -657,7 +651,7 @@ const ExpertBookingManager: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {booking?.customer_name}
+                          {booking.customer_name || 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -670,7 +664,7 @@ const ExpertBookingManager: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium`}>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {booking.payment_mode}
                         </span>
                       </td>
@@ -685,14 +679,24 @@ const ExpertBookingManager: React.FC = () => {
                             <span>View</span>
                           </button>
                           {booking.booking_status === 'PENDING' && (
-                            <button
-                              onClick={() => handleComplete(booking)}
-                              className="flex items-center space-x-2 px-3 py-2 text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200"
-                              title="Mark Booking as Complete"
-                            >
-                              <CheckCircle size={16} />
-                              <span>Complete</span>
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleComplete(booking)}
+                                className="flex items-center space-x-2 px-3 py-2 text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200"
+                                title="Mark Booking as Complete"
+                              >
+                                <CheckCircle size={16} />
+                                <span>Complete</span>
+                              </button>
+                              <button
+                                onClick={() => handleCancel(booking)}
+                                className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200"
+                                title="Cancel Booking"
+                              >
+                                <XCircle size={16} />
+                                <span>Cancel</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -715,7 +719,8 @@ const ExpertBookingManager: React.FC = () => {
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}`}>{statusConfig.icon} {booking.booking_status}</span>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">{date}</div>
+                    <div className="text-sm font-semibold text-gray-900">{booking.customer_name || 'N/A'}</div>
+                    <div className="text-sm text-gray-900">{date}</div>
                     <div className="text-xs text-gray-500">{time}</div>
                   </div>
                   <div className="flex space-x-2 pt-2">
@@ -728,14 +733,24 @@ const ExpertBookingManager: React.FC = () => {
                       <span>View</span>
                     </button>
                     {booking.booking_status === 'PENDING' && (
-                      <button
-                        onClick={() => handleComplete(booking)}
-                        className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200 text-xs"
-                        title="Mark Booking as Complete"
-                      >
-                        <CheckCircle size={14} />
-                        <span>Complete</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleComplete(booking)}
+                          className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200 text-xs"
+                          title="Mark Booking as Complete"
+                        >
+                          <CheckCircle size={14} />
+                          <span>Complete</span>
+                        </button>
+                        <button
+                          onClick={() => handleCancel(booking)}
+                          className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 text-xs"
+                          title="Cancel Booking"
+                        >
+                          <XCircle size={14} />
+                          <span>Cancel</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -754,140 +769,43 @@ const ExpertBookingManager: React.FC = () => {
       >
         {selectedBooking && (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Customer Name</h3>
-                <p className="mt-1 text-sm text-gray-900 capitalize">{selectedBooking?.customer_name}</p>
+                <p className="mt-1 text-sm text-gray-900 capitalize">{selectedBooking.customer_name || 'N/A'}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Customer Phone Number</h3>
-                <p className="mt-1 text-sm text-gray-900 capitalize">{selectedBooking?.customer_phone_number}</p>
+                <p className="mt-1 text-sm text-gray-900 capitalize">{selectedBooking.customer_phone_number || 'N/A'}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Booking Number</h3>
-                <p className="mt-1 text-sm text-gray-900">{selectedBooking?.uuid}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedBooking.uuid}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Date & Time</h3>
                 <p className="mt-1 text-sm text-gray-900">
-                  {formatDateTime(selectedBooking?.start_time || '', selectedBooking?.end_time || '').date}
+                  {formatDateTime(selectedBooking.start_time, selectedBooking.end_time).date}
                   <br />
-                  {formatDateTime(selectedBooking?.start_time || '', selectedBooking?.end_time || '').time}
+                  {formatDateTime(selectedBooking.start_time, selectedBooking.end_time).time}
                 </p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                <p className="mt-1 text-sm text-gray-900">{selectedBooking?.booking_status}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedBooking.booking_status}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Payment Status</h3>
-                <p className="mt-1 text-sm text-gray-900">{selectedBooking?.payment_status}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedBooking.payment_status}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Booking Type</h3>
-                <p className="mt-1 text-sm text-gray-900">{selectedBooking?.booking_type}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedBooking.booking_type}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-500">Payment Mode</h3>
-                <p className="mt-1 text-sm text-gray-900">{selectedBooking?.payment_mode}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedBooking.payment_mode}</p>
               </div>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={modalType === 'edit'}
-        onClose={closeModal}
-        title="Edit Booking"
-      >
-        {selectedBooking && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Booking Status</label>
-              <select
-                value={editData.booking_status || selectedBooking.booking_status}
-                onChange={(e) => setEditData({ ...editData, booking_status: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-              >
-                {bookingStatuses.map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Payment Status</label>
-              <select
-                value={editData.payment_status || selectedBooking.payment_status}
-                onChange={(e) => setEditData({ ...editData, payment_status: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-              >
-                {paymentStatuses.map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setIsLoading(true);
-                  setTimeout(() => {
-                    setBookings(prev => prev.map(b =>
-                      b.uuid === selectedBooking.uuid ? { ...b, ...editData } : b
-                    ));
-                    setIsLoading(false);
-                    closeModal();
-                    showNotification('Booking updated successfully!');
-                  }, 1000);
-                }}
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={modalType === 'delete'}
-        onClose={closeModal}
-        title="Delete Booking"
-      >
-        {selectedBooking && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500">
-              Are you sure you want to delete this booking? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setIsLoading(true);
-                  setTimeout(() => {
-                    setBookings(prev => prev.filter(b => b.uuid !== selectedBooking.uuid));
-                    setIsLoading(false);
-                    closeModal();
-                    showNotification('Booking deleted successfully!');
-                  }, 1000);
-                }}
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-              >
-                {isLoading ? 'Deleting...' : 'Delete'}
-              </button>
             </div>
           </div>
         )}
@@ -911,17 +829,7 @@ const ExpertBookingManager: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setIsLoading(true);
-                  setTimeout(() => {
-                    setBookings(prev => prev.map(b =>
-                      b.uuid === selectedBooking.uuid ? { ...b, booking_status: 'COMPLETED' } : b
-                    ));
-                    setIsLoading(false);
-                    closeModal();
-                    showNotification('Booking marked as completed!');
-                  }, 1000);
-                }}
+                onClick={handleCompleteConfirm}
                 disabled={isLoading}
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
@@ -960,59 +868,6 @@ const ExpertBookingManager: React.FC = () => {
           </div>
         )}
       </Modal>
-
-      {/* Chat Panel */}
-      {showChat && isCallActive && (
-        <div className="fixed right-4 top-4 bottom-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-40 flex flex-col">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Chat</h3>
-            <button
-              onClick={() => setShowChat(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {chatMessages.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm">No messages yet</p>
-            ) : (
-              chatMessages.map((message) => (
-                <div key={message.id} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-700">{message.sender}</span>
-                    <span className="text-xs text-gray-500">{message.timestamp}</span>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-900">
-                    {message.text}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Add chat input form */}
-          <form onSubmit={sendMessage} className="p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button
-                type="submit"
-                disabled={!newMessage.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 };
