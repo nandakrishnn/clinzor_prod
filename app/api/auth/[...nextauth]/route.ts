@@ -20,6 +20,7 @@ interface ApiResponse {
     is_staff: boolean;
     is_superuser: boolean;
   };
+  error?: any
 }
 interface VerifyOtpResponse {
   message: string;
@@ -37,6 +38,7 @@ interface VerifyOtpResponse {
       is_staff: boolean;
       is_superuser: boolean;
     };
+
   }
 }
 
@@ -86,12 +88,11 @@ const authOptions: NextAuthOptions = {
               refreshToken: data.refresh,
             };
           }
-
           console.error("Login failed:", data);
-          return null;
-        } catch (err) {
+
+        } catch (err: any) {
           console.error("Login error:", err);
-          return null;
+          return err;
         }
       },
     }),

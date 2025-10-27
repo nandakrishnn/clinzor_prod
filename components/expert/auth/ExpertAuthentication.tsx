@@ -3,6 +3,7 @@ import { Mail, Lock, Stethoscope, Shield, ArrowRight, Eye, EyeOff, CheckCircle, 
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import ForgotPasswordModal from '@/components/authentication/ForgotPasswordModal';
+import { toast } from 'sonner';
 
 interface FormState {
   email: string;
@@ -85,14 +86,18 @@ const ExpertAuthentication: React.FC = () => {
         password: formState.password,
         callbackUrl: '/expert', // Redirect after successful login
       });
+      console.log(result)
 
-      if (result?.error) {
-        setError(result.error);
+      if (result?.error && result?.status === 401 ) {
+        toast.error("Invalid credentials");
+      } else if (result?.error) {
+         toast.error(result?.error);
       } else if (result?.url) {
         router.push(result.url);
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
+      toast.error('Invalid Credentials')
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -245,104 +250,104 @@ const ExpertAuthentication: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setForgotPasswordOpen(true)}
-                className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
+                  className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
                 >
-                Forgot password?
-              </button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
-                  }`} />
+                  Forgot password?
+                </button>
               </div>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={formState.password}
-                onChange={handleInputChange}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField('')}
-                className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'password'
-                  ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                  : validationState.password === true
-                    ? 'border-green-500'
-                    : validationState.password === false
-                      ? 'border-red-500'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                placeholder="••••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formState.password}
+                  onChange={handleInputChange}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField('')}
+                  className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 focus:outline-none ${focusedField === 'password'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                    : validationState.password === true
+                      ? 'border-green-500'
+                      : validationState.password === false
+                        ? 'border-red-500'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  placeholder="••••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
-        </div>
 
-        {/* Remember Me */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              name="rememberMe"
-              checked={formState.rememberMe}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
-            />
-            <span className="ml-2 text-sm text-gray-600">Remember this device</span>
-          </label>
-        </div>
+            {/* Remember Me */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formState.rememberMe}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+                />
+                <span className="ml-2 text-sm text-gray-600">Remember this device</span>
+              </label>
+            </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              Signing in...
-            </>
-          ) : (
-            <>
-              Sign in to Expert Portal
-              <ArrowRight className="w-5 h-5" />
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Help Section */}
-      <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-        <div className="flex items-start gap-3">
-          <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-1">Need Expert Access?</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Contact your system administrator for expert portal credentials.
-            </p>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-              Contact Support →
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign in to Expert Portal
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
+          </form>
+
+          {/* Help Section */}
+          <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Need Expert Access?</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Contact your system administrator for expert portal credentials.
+                </p>
+                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
+                  Contact Support →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 text-center text-sm text-gray-500">
+            <p>© {new Date().getFullYear()} Clinzor Healthcare. All rights reserved.</p>
+            <div className="flex justify-center gap-4 mt-2">
+              <button className="hover:text-blue-600 transition-colors">Privacy Policy</button>
+              <button className="hover:text-blue-600 transition-colors">Terms of Service</button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-8 text-center text-sm text-gray-500">
-        <p>© {new Date().getFullYear()} Clinzor Healthcare. All rights reserved.</p>
-        <div className="flex justify-center gap-4 mt-2">
-          <button className="hover:text-blue-600 transition-colors">Privacy Policy</button>
-          <button className="hover:text-blue-600 transition-colors">Terms of Service</button>
-        </div>
-      </div>
-    </div>
       </div >
     </div >
   );
