@@ -745,7 +745,7 @@ const ClinicOffersManager = () => {
 
                     <div className="px-7">
                       {/* Header */}
-                      <div className="flex items-start justify-between mb-5">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-1">
                             <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 capitalize transition-colors">
@@ -763,7 +763,7 @@ const ClinicOffersManager = () => {
                       </div>
 
                       {/* Stats */}
-                      <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="grid grid-cols-2 gap-4 mb-5">
                         <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                           <p className="text-2xl font-bold text-blue-700">{offer.discount_percentage}%</p>
                           <p className="text-xs text-blue-600 font-medium">Discount</p>
