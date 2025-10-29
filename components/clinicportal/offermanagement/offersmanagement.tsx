@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Calendar, Percent, Tag, Clock, Edit3, Trash2, Eye, Search, Filter, MoreHorizontal, TrendingUp, Users, DollarSign, CheckCircle, XCircle, AlertTriangle, X, Loader } from 'lucide-react';
+import { Plus, Calendar, Percent, Tag, Clock, Edit3, Trash2, Eye, Search, Filter, MoreHorizontal, TrendingUp, Users, DollarSign, CheckCircle, XCircle, AlertTriangle, X, Loader, IndianRupee } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { createClinicOffers, deleteClinicOffers, editClinicOffers, GetAllClinicOffers } from '@/service/clinic/clinicOfferManagementService';
@@ -39,13 +39,6 @@ interface NewOffer {
   clinic_service: string;
 }
 
-// Sample services for dropdown (replace with API data as needed)
-// const sampleServices: Service[] = [
-//   { uuid: '1', name: 'Cardiology Consultation' },
-//   { uuid: '2', name: 'Heart Surgery' },
-//   { uuid: '3', name: 'Neurology Consultation' },
-//   { uuid: '4', name: 'General Medicine' },
-// ];
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   const getIcon = () => {
     switch (type) {
@@ -177,20 +170,20 @@ const ClinicOffersManager = () => {
     fetchOffers();
   }, []);
 
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  
-  // Format for Indian timezone without double conversion
-  return date.toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-};
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+
+    // Format for Indian timezone without double conversion
+    return date.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
 
   // Update search handler with debounce
@@ -283,10 +276,10 @@ const formatDate = (dateString: string): string => {
   // const paginatedOffers = filteredOffers.slice((currentPage - 1) * offersPerPage, currentPage * offersPerPage);
   const paginatedOffers = offers;
 
-const totalActiveOffers = offers.filter(offer => offer.status === 'ACTIVE').length;
-const totalUsage = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
-const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
-const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
+  const totalActiveOffers = offers.filter(offer => offer.status === 'ACTIVE').length;
+  const totalUsage = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
+  const totalSavings = offers.reduce((sum, offer) => sum + (offer.total_savings || 0), 0);
+  const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count || 0), 0);
 
   const handleCreateOffer = async () => {
     try {
@@ -341,7 +334,7 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
       console.error("Failed to create offer:", error?.response?.data?.message);
       setNotification({
         type: 'error',
-        message: `Failed to save offer. Please try again ${error?.response?.data?.message  || error?.response?.data?.non_field_errors || error.message}`
+        message: `Failed to save offer. Please try again ${error?.response?.data?.message || error?.response?.data?.non_field_errors || error.message}`
       });
       // You might want to show an error message to the user here
     } finally {
@@ -471,10 +464,10 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
     }
   };
 
-  
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading ...</p>
@@ -484,10 +477,10 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <div className="backdrop-blur-xl bg-white/80 border-b border-slate-200/60 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="backdrop-blur-xl bg-white/80 border-b border-slate-200/60  z-40">
+        <div className="max-w-7xl mx-auto ">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-8">
               <div>
@@ -519,14 +512,13 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
                 </div>
                 <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-100">
                   <div className="p-2 bg-purple-500 rounded-lg">
-                    <DollarSign className="w-4 h-4 text-white" />
+                    <IndianRupee className="w-4 h-4 text-white" />
                   </div>
                   <div>
                     <p className="text-xs text-purple-600 font-medium">Savings</p>
-                    <p className="text-lg font-bold text-purple-700">${totalSavings.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-purple-700">₹{totalSavings.toLocaleString()}</p>
                   </div>
                 </div>
-                {/* Unique Users Card */}
                 <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-100">
                   <div className="p-2 bg-orange-500 rounded-lg">
                     <Users className="w-4 h-4 text-white" />
@@ -552,7 +544,7 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
       </div>
 
       {/* Advanced Filtering Section */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto py-8">
         <div className="bg-white/80 border border-slate-200 rounded-2xl shadow-md p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 flex-wrap">
             {/* Search Bar */}
@@ -690,7 +682,7 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
               const isLive = isOfferLive(offer);
 
               return (
-                <div key={offer.uuid} className="group relative">
+                <div key={offer.uuid} className="group relative ">
                   {/* Glow effect for live offers */}
                   {isLive && (
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
@@ -702,19 +694,61 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
                       <div className="h-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
                     )}
                     {/* Usage count badge */}
-                    <div
-                      className="absolute top-3 right-3 z-10 flex items-center space-x-1 px-2 py-0.5 rounded-full bg-white/80 border border-blue-200 text-blue-700 text-xs font-medium shadow-sm hover:bg-blue-50 transition-colors cursor-default group"
-                      title="Times used"
-                    >
-                      <Users className="w-3 h-3 mr-1 text-blue-400" />
-                      <span>{offer.usage_count}</span>
+                    <div className='flex my-4 w-full justify-between items-center px-6'>
+                      <div className="flex items-center space-x-2 relative">
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
+                          <div className={`w-1.5 h-1.5 ${statusConfig.dot} rounded-full mr-2`}></div>
+                          {offer.status}
+                        </span>
+                        <div
+                          className=" z-10 flex items-center space-x-1 px-2 py-0.5 rounded-full bg-white/80 border border-blue-200 text-blue-700 text-xs font-medium shadow-sm hover:bg-blue-50 transition-colors cursor-default group"
+                          title="Times used"
+                        >
+                          <Users className="w-3 h-3 mr-1 text-blue-400" />
+                          <span>{offer.usage_count}</span>
+                        </div>
+
+                      </div>
+                      {/* Actions Dropdown */}
+                      <div>
+                        <button
+                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          onClick={() => setActionMenuOfferId(actionMenuOfferId === offer.uuid ? null : offer.uuid)}
+                          aria-label="Actions"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {actionMenuOfferId === offer.uuid && (
+                          <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 rounded-t-xl"
+                              onClick={() => { handleViewOffer(offer); setActionMenuOfferId(null); }}
+                            >
+                              View
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700"
+                              onClick={() => { handleEditOffer(offer); setActionMenuOfferId(null); }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl"
+                              onClick={() => { handleDeleteOffer(offer); setActionMenuOfferId(null); }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="p-7">
+
+                    <div className="px-7">
                       {/* Header */}
-                      <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-start justify-between mb-5">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                          <div className="flex items-center space-x-3 mb-1">
+                            <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 capitalize transition-colors">
                               {offer.title}
                             </h3>
                             {isLive && (
@@ -724,58 +758,17 @@ const totalUniqueUsers = offers.reduce((sum, offer) => sum + (offer.usage_count 
                               </div>
                             )}
                           </div>
-                          <p className="text-slate-600 leading-relaxed">{offer.description}</p>
-                        </div>
-
-                        <div className="flex items-center space-x-2 ml-4 relative">
-                          <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${statusConfig.color}`}>
-                            <div className={`w-1.5 h-1.5 ${statusConfig.dot} rounded-full mr-2`}></div>
-                            {offer.status}
-                          </span>
-                          {/* Actions Dropdown */}
-                          <div>
-                            <button
-                              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              onClick={() => setActionMenuOfferId(actionMenuOfferId === offer.uuid ? null : offer.uuid)}
-                              aria-label="Actions"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            {actionMenuOfferId === offer.uuid && (
-                              <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
-                                <button
-                                  className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 rounded-t-xl"
-                                  onClick={() => { handleViewOffer(offer); setActionMenuOfferId(null); }}
-                                >
-                                  View
-                                </button>
-                                <button
-                                  className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700"
-                                  onClick={() => { handleEditOffer(offer); setActionMenuOfferId(null); }}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl"
-                                  onClick={() => { handleDeleteOffer(offer); setActionMenuOfferId(null); }}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                          <p className="text-slate-600 leading-relaxed text-sm">{offer.description || "Your offer here."}</p>
                         </div>
                       </div>
 
                       {/* Stats */}
                       <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                          <Percent className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                           <p className="text-2xl font-bold text-blue-700">{offer.discount_percentage}%</p>
                           <p className="text-xs text-blue-600 font-medium">Discount</p>
                         </div>
                         <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-100">
-                          <Users className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
                           <p className="text-2xl font-bold text-emerald-700">{offer.usage_count || 0}</p>
                           <p className="text-xs text-emerald-600 font-medium">Used</p>
                         </div>
