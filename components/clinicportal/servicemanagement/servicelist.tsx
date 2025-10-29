@@ -1202,7 +1202,7 @@ const ServiceManagement: React.FC = () => {
                                     {/* Content */}
                                     <div className="p-6">
                                       {/* Header */}
-                                      <div className="flex items-start gap-4 mb-4">
+                                      <div className="flex items-start gap-4 mb-2">
                                         <div className="flex-1 min-w-0">
                                           <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors capitalize line-clamp-2 mb-2">
                                             {clinicService?.clinic_provided_name || clinicService?.service_name}
@@ -1215,30 +1215,28 @@ const ServiceManagement: React.FC = () => {
                                       </div>
 
                                       {/* Description */}
-                                      {clinicService.description || clinicService?.service_description && (
-                                        <p className="text-slate-700 text-sm line-clamp-2 mb-4 leading-relaxed">
-                                          {clinicService?.description || clinicService?.service_description}
-                                        </p>
-                                      )}
+                                      <div className='mb-3 text-sm text-slate-600 line-clamp-2'>
+                                        <p>{clinicService?.description || clinicService?.service_description || "Please add a proper description for get a good understanding of visiters"}</p>
+                                      </div>
 
                                       {/* Pricing Summary */}
                                       <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
                                         {clinicService.consultation_charge_video_call && (
-                                          <div className="text-center p-2 bg-slate-50 rounded-lg">
-                                            <div className="font-semibold text-slate-900">₹{clinicService.consultation_charge_video_call}</div>
-                                            <div className="text-slate-500">Video Call</div>
+                                          <div className="text-start p-2.5 bg-slate-50 rounded-lg">
+                                            <div className="font-semibold text-slate-900">₹ {clinicService.consultation_charge_video_call}</div>
+                                            <div className="text-slate-500 truncate">Video Call</div>
                                           </div>
                                         )}
                                         {clinicService.consultation_charge_physical_visit && (
-                                          <div className="text-center p-2 bg-slate-50 rounded-lg">
-                                            <div className="font-semibold text-slate-900">₹{clinicService.consultation_charge_physical_visit}</div>
-                                            <div className="text-slate-500">Physical Visit</div>
+                                          <div className="text-start p-2.5 bg-slate-50 rounded-lg">
+                                            <div className="font-semibold text-slate-900">₹ {clinicService.consultation_charge_physical_visit}</div>
+                                            <div className="text-slate-500 truncate">Physical Visit</div>
                                           </div>
                                         )}
                                         {clinicService.consultation_charge_home_visit && (
                                           <div className="text-center p-2 bg-slate-50 rounded-lg">
                                             <div className="font-semibold text-slate-900">₹{clinicService.consultation_charge_home_visit}</div>
-                                            <div className="text-slate-500">Home Visit</div>
+                                            <div className="text-slate-500 truncate">Home Visit</div>
                                           </div>
                                         )}
                                       </div>
@@ -1250,12 +1248,6 @@ const ServiceManagement: React.FC = () => {
                                             <div className="text-2xl font-bold text-emerald-600">{clinicService.rank}</div>
                                             <div className="text-xs text-slate-500 font-medium">Rank</div>
                                           </div>
-                                          {/* <button
-                                            onClick={() => setDatePickerModal({ open: true, uuid: clinicService.uuid, date: clinicService.display_date ? new Date(clinicService.display_date) : new Date() })}
-                                            className="text-xs text-slate-600 hover:text-blue-600 transition-colors"
-                                          >
-                                            {clinicService.display_date ? new Date(clinicService.display_date).toLocaleDateString() : 'Set Date'}
-                                          </button> */}
                                         </div>
 
                                         {/* Action Buttons */}
