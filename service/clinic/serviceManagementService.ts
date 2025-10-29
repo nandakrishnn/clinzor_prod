@@ -90,15 +90,29 @@ export const updateRankClinicService = async (
 export const deleteClinicService = async (Id: string) => {
   return await axiosPrivate.delete(`clinic/clinic-service-rud/${Id}/`);
 };
-export const GetAllServiceForClinic = async (status?: string) => {
+
+export const GetAllServiceForClinic = async (status?: string, search?: string, page?: number, pageSize?: number) => {
   try {
-    const response = await axiosPrivate.get(`clinic/service-lc/?status=${status}`);
+    let url = `clinic/service-lc/?status=${status || 'APPROVED'}`;
+
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    if (page) {
+      url += `&page=${page}`;
+    }
+    if (pageSize) {
+      url += `&page_size=${pageSize}`;
+    }
+
+    const response = await axiosPrivate.get(url);
     return response.data.data;
   } catch (error) {
-    console.error("Failed to fetch users", error);
+    console.error("Failed to fetch services", error);
     throw error;
   }
 };
+
 export const GetAllClinicService = async (
   clinicId?: string,
   status?: string,

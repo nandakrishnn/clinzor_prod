@@ -98,6 +98,7 @@ interface ClinicUserMinimal {
   uuid: string;
   [key: string]: any;
 }
+
 // Sample data
 const sampleClinics = [
   { uuid: "5a1f8f39-ca38-464c-93c5-ea8edbd6c03f", name: "City General Hospital" },
@@ -133,6 +134,14 @@ const ServiceManagement: React.FC = () => {
   const [serviceSearchTerm, setServiceSearchTerm] = useState('');
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [servicePagination, setServicePagination] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    has_more: false
+  });
+  const [loadingMoreServices, setLoadingMoreServices] = useState(false);
+
 
   // Service request states
   const [serviceRequest, setServiceRequest] = useState({
@@ -188,6 +197,18 @@ const ServiceManagement: React.FC = () => {
   // Add state for filters
   const [statusFilter, setStatusFilter] = useState<string>('');
 
+  const handleServiceScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+
+    // Load more when 80% scrolled and there are more pages to load
+    if (scrollTop + clientHeight >= scrollHeight - 100 &&
+      servicePagination.has_more &&
+      !loadingMoreServices &&
+      !isLoadingServices) {
+      handleServiceSearch(servicePagination.current_page + 1, serviceSearchTerm, true);
+    }
+  };
+
   // Modify the fetchService function to use parameters
   const fetchService = async (pageNum: number = currentPage, searchText: string = searchTerm, status: string = statusFilter) => {
     try {
@@ -197,15 +218,15 @@ const ServiceManagement: React.FC = () => {
       const clinicId = clinicUserData?.uuid as string;
 
       // Fetch services in parallel using clinic id with parameters
-      const [servicesData, clinicServicesData, dashData] = await Promise.all([
-        GetAllServiceForClinic("APPROVED"),
+      const [clinicServicesData, dashData] = await Promise.all([
+        // GetAllServiceForClinic("APPROVED"),/
         GetAllClinicService(clinicId, status = statusFilter, searchText, pageNum, itemsPerPage),
         getClinicServiceStaticData()
       ]);
 
       setClinicUser(clinicUserData);
-      setServices(servicesData.data || []);
-      setAllServices(servicesData.data || []);
+      // setServices(servicesData.data || []);
+      // setAllServices(servicesData.data || []);
       setClinicServices(clinicServicesData.data || []);
       setDashData(dashData?.data)
 
@@ -223,6 +244,44 @@ const ServiceManagement: React.FC = () => {
     }
 
   }
+
+  const handleServiceSearch = async (page: number = 1, searchTerm: string = serviceSearchTerm, append: boolean = false) => {
+    try {
+      if (page === 1) {
+        setIsLoadingServices(true);
+        // Clear existing services when starting a new search
+        if (!append) {
+          setAllServices([]);
+        }
+      } else {
+        setLoadingMoreServices(true);
+      }
+
+      const response = await GetAllServiceForClinic("APPROVED", searchTerm, page, 12);
+
+      if (append) {
+        // Append new services to existing list
+        setAllServices(prev => [...prev, ...(response.data || [])]);
+      } else {
+        // Replace with new search results
+        setAllServices(response.data || []);
+      }
+
+      setServicePagination({
+        current_page: response.current_page || 1,
+        total_pages: response.total_pages || 1,
+        total_items: response.total_items || 0,
+        has_more: (response.current_page || 1) < (response.total_pages || 1)
+      });
+
+    } catch (error) {
+      console.error("Error searching services:", error);
+      showToast('Failed to load services', 'error');
+    } finally {
+      setIsLoadingServices(false);
+      setLoadingMoreServices(false);
+    }
+  };
 
   // Update useEffect to use parameters
   useEffect(() => {
@@ -597,6 +656,9 @@ const ServiceManagement: React.FC = () => {
   const handleOpenServiceSearch = () => {
     // allServices is already populated from the API in fetchService
     setShowServiceSearchModal(true);
+    setServiceSearchTerm('');
+    // Load first page of services
+    handleServiceSearch(1, '');
   };
 
   const handleSelectService = (service: Service) => {
@@ -776,6 +838,17 @@ const ServiceManagement: React.FC = () => {
       });
     }
   }, [modalMode, selectedItem, services]);
+
+  // the search input handler with debouncing
+  useEffect(() => {
+    if (showServiceSearchModal) {
+      const timeoutId = setTimeout(() => {
+        handleServiceSearch(1, serviceSearchTerm);
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [serviceSearchTerm, showServiceSearchModal]);
 
   const handleUpdateClinicService = async () => {
     if (!selectedItem) return;
@@ -1110,11 +1183,11 @@ const ServiceManagement: React.FC = () => {
 
                                     {/* Service Image/Icon */}
                                     <div className="relative h-48 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-                                      {clinicService.image ? (
+                                      {clinicService.image || clinicService?.service_image ? (
                                         <img
-                                          src={clinicService.image}
+                                          src={clinicService.image || clinicService?.service_image}
                                           alt={clinicService.service_name}
-                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                          className="w-full h-full object-cover"
                                         />
                                       ) : (
                                         <img
@@ -1131,7 +1204,7 @@ const ServiceManagement: React.FC = () => {
                                       {/* Header */}
                                       <div className="flex items-start gap-4 mb-4">
                                         <div className="flex-1 min-w-0">
-                                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+                                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors capitalize line-clamp-2 mb-2">
                                             {clinicService?.clinic_provided_name || clinicService?.service_name}
                                           </h3>
                                           <p className="text-sm text-slate-600 flex items-center gap-1.5">
@@ -1142,9 +1215,9 @@ const ServiceManagement: React.FC = () => {
                                       </div>
 
                                       {/* Description */}
-                                      {clinicService.description && (
+                                      {clinicService.description || clinicService?.service_description && (
                                         <p className="text-slate-700 text-sm line-clamp-2 mb-4 leading-relaxed">
-                                          {clinicService?.description}
+                                          {clinicService?.description || clinicService?.service_description}
                                         </p>
                                       )}
 
@@ -1228,9 +1301,9 @@ const ServiceManagement: React.FC = () => {
                                       {/* Service Info */}
                                       <div className="col-span-4 flex items-center gap-4">
                                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                                          {clinicService.image ? (
+                                          {clinicService.image || clinicService?.service_image ? (
                                             <img
-                                              src={clinicService.image}
+                                              src={clinicService.image || clinicService?.service_image}
                                               alt={clinicService.service_name}
                                               className="w-full h-full object-contain"
                                             />
@@ -1243,7 +1316,7 @@ const ServiceManagement: React.FC = () => {
                                           )}
                                         </div>
                                         <div className="min-w-0">
-                                          <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                          <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 capitalize transition-colors truncate">
                                             {clinicService.clinic_provided_name || clinicService.service_name}
                                           </h3>
                                           <p className="text-sm text-slate-600 truncate">{clinicService?.clinic_name}</p>
@@ -2260,9 +2333,9 @@ const ServiceManagement: React.FC = () => {
       {/* Service Search Modal */}
       {showServiceSearchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
               <div>
                 <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">Search & Select Services</h2>
                 <p className="text-sm text-gray-600">Browse available services or request a new one</p>
@@ -2289,7 +2362,7 @@ const ServiceManagement: React.FC = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
               <div className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
@@ -2310,17 +2383,34 @@ const ServiceManagement: React.FC = () => {
               </div>
               <div className="mt-3 text-center">
                 <p className="text-sm text-slate-600">
-                  Found <span className="font-semibold text-blue-600">{filteredAllServices.length}</span> services
-                  {serviceSearchTerm && (
-                    <span> matching "<span className="font-medium">{serviceSearchTerm}</span>"</span>
+                  {isLoadingServices ? (
+                    'Searching...'
+                  ) : (
+                    <>
+                      Found <span className="font-semibold text-blue-600">{servicePagination.total_items}</span> services
+                      {serviceSearchTerm && (
+                        <span> matching "<span className="font-medium">{serviceSearchTerm}</span>"</span>
+                      )}
+                      {servicePagination.total_items > 0 && (
+                        <span> - Page {servicePagination.current_page} of {servicePagination.total_pages}</span>
+                      )}
+                    </>
                   )}
                 </p>
               </div>
             </div>
 
-            {/* Services Grid */}
-            <div className="p-4 sm:p-6">
-              {services.length === 0 ? (
+            {/* Services Grid with Scrollable Area */}
+            <div
+              className="flex-1 overflow-y-auto p-4 sm:p-6"
+              onScroll={handleServiceScroll}
+            >
+              {isLoadingServices && allServices.length === 0 ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-slate-600">Loading services...</span>
+                </div>
+              ) : allServices.length === 0 ? (
                 <div className="text-center py-12 sm:py-16">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
@@ -2370,10 +2460,10 @@ const ServiceManagement: React.FC = () => {
 
                   {/* Services Grid */}
                   <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {filteredAllServices.map((service, idx) => {
+                    {allServices.map((service, idx) => {
                       const ServiceIcon = getServiceIcon(service.name);
                       return (
-                        <div key={service.uuid} className="group relative">
+                        <div key={`${service.uuid}-${idx}`} className="group relative">
                           <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 hover:border-slate-300/60 transition-all duration-300 shadow-sm hover:shadow-2xl overflow-hidden">
                             <div className="p-6">
                               {/* Header */}
@@ -2398,7 +2488,7 @@ const ServiceManagement: React.FC = () => {
                                         {service.name}
                                       </h3>
                                       <p className="text-sm text-slate-600">
-                                        Service ID: {service.uuid}
+                                        Service ID: {service.uuid.slice(0, 8)}...
                                       </p>
                                     </div>
                                   </div>
@@ -2421,12 +2511,17 @@ const ServiceManagement: React.FC = () => {
                               {service.tags && (
                                 <div className="mb-4">
                                   <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                                    {service.tags.split(',').map((tag, index) => (
+                                    {service.tags.split(',').slice(0, 3).map((tag, index) => (
                                       <span key={index} className="inline-flex items-center px-2 py-1 bg-slate-50 rounded-lg">
                                         <Tag className="w-4 h-4 mr-1 text-slate-500" />
                                         {tag.trim()}
                                       </span>
                                     ))}
+                                    {service.tags.split(',').length > 3 && (
+                                      <span className="inline-flex items-center px-2 py-1 bg-slate-50 rounded-lg text-slate-500">
+                                        +{service.tags.split(',').length - 3} more
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -2445,6 +2540,24 @@ const ServiceManagement: React.FC = () => {
                       );
                     })}
                   </div>
+
+                  {/* Loading More Indicator */}
+                  {loadingMoreServices && (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-slate-600">Loading more services...</span>
+                    </div>
+                  )}
+
+                  {/* End of Results */}
+                  {!servicePagination.has_more && allServices.length > 0 && (
+                    <div className="text-center py-8">
+                      <div className="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        All {servicePagination.total_items} services loaded
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
