@@ -25,7 +25,8 @@ import {
   LayoutGrid,
   List as ListIcon,
   Calendar as CalendarIcon,
-  Upload
+  Upload,
+  Wallet
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import DatePicker from 'react-datepicker';
@@ -1204,7 +1205,7 @@ const ServiceManagement: React.FC = () => {
                                       {/* Header */}
                                       <div className="flex items-start gap-4 mb-2">
                                         <div className="flex-1 min-w-0">
-                                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors capitalize line-clamp-2 mb-2">
+                                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600  transition-colors capitalize line-clamp-1 mb-2">
                                             {clinicService?.clinic_provided_name || clinicService?.service_name}
                                           </h3>
                                           <p className="text-sm text-slate-600 flex items-center gap-1.5">
@@ -1220,6 +1221,10 @@ const ServiceManagement: React.FC = () => {
                                       </div>
 
                                       {/* Pricing Summary */}
+                                      <p className="text-sm text-slate-600 flex items-center gap-1.5 mb-2">
+                                        <Wallet className="w-4 h-4" />
+                                        Consultation Charges
+                                      </p>
                                       <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
                                         {clinicService.consultation_charge_video_call && (
                                           <div className="text-start p-2.5 bg-slate-50 rounded-lg">
@@ -1236,6 +1241,30 @@ const ServiceManagement: React.FC = () => {
                                         {clinicService.consultation_charge_home_visit && (
                                           <div className="text-center p-2 bg-slate-50 rounded-lg">
                                             <div className="font-semibold text-slate-900">₹{clinicService.consultation_charge_home_visit}</div>
+                                            <div className="text-slate-500 truncate">Home Visit</div>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <p className="text-sm text-slate-600 flex items-center gap-1.5 mb-2">
+                                        <Wallet className="w-4 h-4" />
+                                        Session Charges
+                                      </p>
+                                      <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
+                                        {clinicService.treatment_charge_video_call && (
+                                          <div className="text-start p-2.5 bg-slate-50 rounded-lg">
+                                            <div className="font-semibold text-slate-900">₹ {clinicService.treatment_charge_video_call}</div>
+                                            <div className="text-slate-500 truncate">Video Call</div>
+                                          </div>
+                                        )}
+                                        {clinicService.treatment_charge_physical_visit && (
+                                          <div className="text-start p-2.5 bg-slate-50 rounded-lg">
+                                            <div className="font-semibold text-slate-900">₹ {clinicService.treatment_charge_physical_visit}</div>
+                                            <div className="text-slate-500 truncate">Physical Visit</div>
+                                          </div>
+                                        )}
+                                        {clinicService.treatment_charge_home_visit && (
+                                          <div className="text-center p-2 bg-slate-50 rounded-lg">
+                                            <div className="font-semibold text-slate-900">₹{clinicService.treatment_charge_home_visit}</div>
                                             <div className="text-slate-500 truncate">Home Visit</div>
                                           </div>
                                         )}
