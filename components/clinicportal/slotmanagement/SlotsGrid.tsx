@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Clock,
-  Users,
   Stethoscope,
   Edit,
   Trash2,

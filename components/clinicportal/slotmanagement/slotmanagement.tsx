@@ -84,13 +84,6 @@ const SlotManagementSystem = () => {
     serviceType: '',
   });
 
-  const clinicServices = [
-    { id: "159e3627-65eb-40b2-b535-37cbb6535ab8", name: "General Consultation" },
-    { id: "259e3627-65eb-40b2-b535-37cbb6535ab9", name: "Cardiology" },
-    { id: "359e3627-65eb-40b2-b535-37cbb6535ac0", name: "Dermatology" },
-    { id: "459e3627-65eb-40b2-b535-37cbb6535ac1", name: "Pediatrics" }
-  ];
-
   const showNotification = (type: "success" | "error" | "warning", message: string) => {
     setNotification({ type, message });
     // Auto-hide after 5 seconds
@@ -139,15 +132,6 @@ const SlotManagementSystem = () => {
   const handleEdit = (slot: Slot) => {
     setEditingSlot({ ...slot });
     setShowEditModal(true);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingSlot) return;
-    setSlots(prev => prev.map(slot =>
-      slot.uuid === editingSlot.uuid ? editingSlot : slot
-    ));
-    setShowEditModal(false);
-    setEditingSlot(null);
   };
 
   const handleDelete = async (uuid: string) => {
@@ -210,8 +194,6 @@ const SlotManagementSystem = () => {
         setShowEditModal={setShowEditModal}
         editingSlot={editingSlot}
         setEditingSlot={setEditingSlot}
-        handleSaveEdit={handleSaveEdit}
-        clinicServices={clinicServices}
         showNotification={showNotification}
         fetchSlots={() => fetchSlots(currentPage)}
       />

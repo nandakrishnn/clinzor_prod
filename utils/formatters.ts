@@ -87,6 +87,13 @@ export const formatLocalDate = (date: Date) => {
   return `${yyyy}-${mm}-${dd}T00:00:00`;   // local midnight
 };
 
+export const formatToDate = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T23:59:59`;
+};
+
 export const convertTo12HourFormat = (utcDateString: string) => {
   const date = new Date(utcDateString);
   let hours = date.getUTCHours();

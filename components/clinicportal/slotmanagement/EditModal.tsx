@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { X, Save, Clock, Loader } from 'lucide-react';
-import { ClinicService, Slot } from '@/types/common';
+import { X, Save, Loader, Calendar } from 'lucide-react';
+import { Slot } from '@/types/common';
+import { editClinicSlot } from '@/service/clinic/slotManagementService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { editClinicSlot } from '@/service/clinic/slotManagementService';
 
 interface EditModalProps {
   showEditModal: boolean;
   setShowEditModal: (show: boolean) => void;
   editingSlot: Slot | null;
   setEditingSlot: (slot: Slot | null) => void;
-  handleSaveEdit: () => void;
-  clinicServices: ClinicService[];
   showNotification: (type: "success" | "error" | "warning", message: string) => void;
   fetchSlots: () => void;
 }
@@ -21,8 +19,6 @@ const EditModal: React.FC<EditModalProps> = ({
   setShowEditModal,
   editingSlot,
   setEditingSlot,
-  handleSaveEdit,
-  clinicServices,
   showNotification,
   fetchSlots
 }) => {
@@ -37,20 +33,34 @@ const EditModal: React.FC<EditModalProps> = ({
     }
   };
 
+  // Convert UTC time from backend to local Date object for DatePicker
+  const convertUTCToLocal = (utcString: string) => {
+    if (!utcString) return null;
+    const date = new Date(utcString);
+    // Create a new date with local timezone but same UTC time
+    return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  };
+
+  // Convert local Date object back to UTC string for backend
+  const convertLocalToUTC = (localDate: Date | null) => {
+    if (!localDate) return '';
+    // Convert local date to UTC string in the required format
+    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+    return utcDate.toISOString();
+  };
+
   const handleSave = async () => {
     if (!editingSlot || !editingSlot.uuid) return;
 
     setIsLoading(true);
     try {
-      // Prepare the data for API call
+      // Prepare the data for API call based on the required body structure
       const slotData = {
-        clinic_service: editingSlot.clinic_service,
         start_time: editingSlot.start_time,
         end_time: editingSlot.end_time,
+        slot_type: editingSlot.slot_type,
         max_bookings: editingSlot.max_bookings,
-        available_slots: editingSlot.available_slots,
-        status: editingSlot.status,
-        reason_for_rejection: editingSlot.reason_for_rejection || ''
+        female_doctor_count: editingSlot.female_doctor_count || 0
       };
 
       await editClinicSlot(editingSlot.uuid, slotData);
@@ -68,9 +78,27 @@ const EditModal: React.FC<EditModalProps> = ({
     }
   };
 
+  // Custom input component for better styling
+  const CustomDateTimeInput = ({ value, onClick, onChange, placeholder }: any) => (
+    <div className="relative">
+      <input
+        type="text"
+        className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+        value={value}
+        onClick={onClick}
+        onChange={onChange}
+        placeholder={placeholder}
+        readOnly
+      />
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+        <Calendar className="w-4 h-4 text-gray-400" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto hide-scrollbar ">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto hide-scrollbar">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Edit Slot</h2>
@@ -86,72 +114,56 @@ const EditModal: React.FC<EditModalProps> = ({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Service</label>
-            <select
-              value={editingSlot.clinic_service}
-              onChange={(e) => updateEditingSlot({ clinic_service: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            >
-              {clinicServices.map(service => (
-                <option key={service.id} value={service.id}>{service.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
-            <div className="relative">
-              <div
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer z-10"
-                onClick={() => document.getElementById('editStartTimePicker')?.focus()}
-              >
-                <Clock className="w-5 h-5 text-gray-400" />
-              </div>
-              <DatePicker
-                id="editStartTimePicker"
-                selected={editingSlot.start_time ? new Date(editingSlot.start_time) : null}
-                onChange={(date: Date | null) => updateEditingSlot({
-                  start_time: date?.toISOString() || ''
-                })}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="yyyy-MM-dd HH:mm"
-                placeholderText="Select start time"
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                wrapperClassName="w-full"
-                disabled={isLoading}
-              />
-            </div>
+            <DatePicker
+              selected={convertUTCToLocal(editingSlot.start_time)}
+              onChange={(date: Date | null) => updateEditingSlot({
+                start_time: convertLocalToUTC(date)
+              })}
+              showTimeSelect
+              timeFormat="h:mm aa"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              placeholderText="Select start date and time"
+              customInput={<CustomDateTimeInput placeholder="Select start date and time" />}
+              wrapperClassName="w-full"
+              disabled={isLoading}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
-            <div className="relative">
-              <div
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer z-10"
-                onClick={() => document.getElementById('editEndTimePicker')?.focus()}
-              >
-                <Clock className="w-5 h-5 text-gray-400" />
-              </div>
-              <DatePicker
-                id="editEndTimePicker"
-                selected={editingSlot.end_time ? new Date(editingSlot.end_time) : null}
-                onChange={(date: Date | null) => updateEditingSlot({
-                  end_time: date?.toISOString() || ''
-                })}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="yyyy-MM-dd HH:mm"
-                placeholderText="Select end time"
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                wrapperClassName="w-full"
-                disabled={isLoading}
-              />
-            </div>
+            <DatePicker
+              selected={convertUTCToLocal(editingSlot.end_time)}
+              onChange={(date: Date | null) => updateEditingSlot({
+                end_time: convertLocalToUTC(date)
+              })}
+              showTimeSelect
+              timeFormat="h:mm aa"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              placeholderText="Select end date and time"
+              customInput={<CustomDateTimeInput placeholder="Select end date and time" />}
+              wrapperClassName="w-full"
+              disabled={isLoading}
+            />
           </div>
+
+          {/* Commented out slot type field for now - will use backend value */}
+          {/* <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Slot Type</label>
+            <select
+              value={editingSlot.slot_type || 'PHYSICAL_OR_VIDEO'}
+              onChange={(e) => updateEditingSlot({ 
+                slot_type: e.target.value as 'HOME_VISIT' | 'PHYSICAL_OR_VIDEO' 
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            >
+              <option value="PHYSICAL_OR_VIDEO">Physical or Video</option>
+              <option value="HOME_VISIT">Home Visit</option>
+            </select>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Max Bookings</label>
@@ -168,49 +180,18 @@ const EditModal: React.FC<EditModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Female Doctor Count</label>
             <input
               type="number"
-              value={editingSlot.available_slots}
+              value={editingSlot.female_doctor_count || 0}
               onChange={(e) => updateEditingSlot({
-                available_slots: parseInt(e.target.value) || 0
+                female_doctor_count: parseInt(e.target.value) || 0
               })}
               min="0"
-              max={editingSlot.max_bookings}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isLoading}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={editingSlot.status}
-              onChange={(e) => updateEditingSlot({ status: e.target.value as Slot['status'] })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            >
-              <option value="APPROVED">Approved</option>
-              <option value="PENDING">Pending</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
-          </div>
-
-          {editingSlot.status === 'REJECTED' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Rejection</label>
-              <textarea
-                value={editingSlot.reason_for_rejection || ''}
-                onChange={(e) => updateEditingSlot({
-                  reason_for_rejection: e.target.value
-                })}
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="Enter reason for rejection..."
-                disabled={isLoading}
-              />
-            </div>
-          )}
         </div>
 
         <div className="p-6 border-t border-gray-200 flex space-x-3">

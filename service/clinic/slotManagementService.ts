@@ -1,7 +1,7 @@
 
 import { FilterState } from "@/types/common";
 import { axiosPrivate } from "../../axios/axios";
-import { formatLocalDate } from "@/utils/formatters";
+import { formatLocalDate, formatToDate } from "@/utils/formatters";
 
 interface Slot {
   start_time: string;
@@ -109,7 +109,7 @@ export const GetAllClinicSlot = async (page: number, filters: FilterState) => {
     }
 
     if (filters.toDate) {
-      params.append("to_date", formatLocalDate(filters.toDate));
+      params.append("to_date", formatToDate(filters.toDate));
     }
 
     // Handle service type filters
