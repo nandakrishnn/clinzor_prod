@@ -136,8 +136,8 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
           <div className="relative overflow-hidden">
             {clinicList.length === 0 ? (
               <DataPlaceholder
-                title="No Clinics Available"
-                description="There are no clinics available for this service in your area"
+                title="Coming Soon to Your Area"
+                description="We’re working hard to bring our clinics near you!"
               />
             ) : (
               <div className="flex justify-start gap-4 w-full">

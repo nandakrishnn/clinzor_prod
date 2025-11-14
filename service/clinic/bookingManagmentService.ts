@@ -22,7 +22,7 @@ export const getAllClinicBookings = async (
     if (search) params.append('search', search);
     if (status) params.append('booking_status', status);
     if (type) params.append('booking_type', type);
-    if (date) params.append('date', date);
+    if (date) params.append('to_date', date);
     if (showToday) params.append('show_today', 'true');
 
     const response = await axiosPrivate.get(`clinic/clinic-bookings/?${params.toString()}`);
