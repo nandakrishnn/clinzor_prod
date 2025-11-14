@@ -66,14 +66,8 @@ const BookingManagement = () => {
     format(new Date(), "yyyy-MM-dd")
   );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const dateObj = useMemo(
-    () => (dateFilter ? new Date(dateFilter) : new Date()),
-    [dateFilter]
-  );
-  const isDateToday = useMemo(
-    () => (dateFilter ? isToday(dateObj) : true),
-    [dateObj, dateFilter]
-  );
+  const dateObj = useMemo(() => dateFilter ? new Date(dateFilter) : new Date(), [dateFilter]);
+  const isDateToday = useMemo(() => dateFilter ? isToday(dateObj) : true, [dateObj, dateFilter]);
   const [loading, setLoading] = useState(false);
   const [paginationData, setPaginationData] = useState({
     current_page: 1,
@@ -219,26 +213,9 @@ const BookingManagement = () => {
       let showTodayParam = false;
       let dateParam = "";
       if (dateFilter) {
-        // Create date in local timezone at start of day (00:00:00)
-        const localDate = new Date(dateFilter + "T00:00:00");
-
-        // Convert to UTC without changing the date
-        // Get UTC components to ensure date remains the same
-        const utcYear = localDate.getUTCFullYear();
-        const utcMonth = localDate.getUTCMonth();
-        const utcDate = localDate.getUTCDate();
-
-        // Create UTC date string in the format backend expects
-        const utcDateString = new Date(
-          Date.UTC(utcYear, utcMonth, utcDate, 0, 0, 0)
-        )
-          .toISOString()
-          .split(".")[0]; // This gives "2025-11-19T00:00:00"
-
+        const localDate = new Date(dateFilter);
+        const utcDateString = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
         dateParam = utcDateString;
-
-        console.log("Original date:", dateFilter);
-        console.log("UTC date sent to backend:", dateParam);
       }
 
       // If date filter is today, set show_today=true and clear the date parameter
@@ -489,6 +466,7 @@ const BookingManagement = () => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen ">
