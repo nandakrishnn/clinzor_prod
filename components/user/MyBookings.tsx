@@ -1,92 +1,108 @@
-"use client"
+"use client";
 
-import { Calendar, Clock, MapPin, Eye, X, CreditCard, User, Laptop } from "lucide-react"
-import { useEffect, useState } from "react"
-import { cancelBookingService, getBookingService } from "@/service/user/profileService"
-import type { Booking } from "@/types/user"
-import BookingDetailsModal from "./BookingDetailsModal"
-import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton"
-import { toast } from "sonner"
-import { ConfirmationModal } from "../common/ConfirmationModal"
-import { convertTo12HourFormat, formatLocalDate } from "@/utils/formatters"
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Eye,
+  X,
+  CreditCard,
+  User,
+  Laptop
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  cancelBookingService,
+  getBookingService
+} from "@/service/user/profileService";
+import type { Booking } from "@/types/user";
+import BookingDetailsModal from "./BookingDetailsModal";
+import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton";
+import { toast } from "sonner";
+import { ConfirmationModal } from "../common/ConfirmationModal";
+import { convertTo12HourFormat, formatLocalDate } from "@/utils/formatters";
 
 interface defaultProps {
-  defaultTab?: "PENDING" | "SCHEDULED" | "COMPLETED"
+  defaultTab?: "PENDING" | "SCHEDULED" | "COMPLETED";
 }
 
-export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
-  const [activeTab, setActiveTab] = useState<"PENDING" | "SCHEDULED" | "COMPLETED">(defaultTab)
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [bookings, setBookings] = useState<any[]>([])
-  const [isLoading, setLoading] = useState(true)
-  const [cancelingId, setCancelingId] = useState<string | null>(null) // track cancel loading
+export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
+  const [activeTab, setActiveTab] = useState<
+    "PENDING" | "SCHEDULED" | "COMPLETED"
+  >(defaultTab);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const [cancelingId, setCancelingId] = useState<string | null>(null); // track cancel loading
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState('')
+  const [selectedBookingId, setSelectedBookingId] = useState("");
 
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const formatDate = (isoDate: string) => {
-    if (!isoDate) return "-"
+    if (!isoDate) return "-";
     return new Date(isoDate).toLocaleString("en-IN", {
-      dateStyle: "medium",
-    })
-  }
+      dateStyle: "medium"
+    });
+  };
 
   const getBookings = async () => {
     try {
-      setLoading(true)
-      const res = await getBookingService(activeTab)
+      setLoading(true);
+      const res = await getBookingService(activeTab);
       if (res.status === 200) {
-        setBookings(res?.data?.data || [])
+        setBookings(res?.data?.data || []);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const cancelBooking = async (id: string) => {
-
-    setIsConfirming(true)
+    setIsConfirming(true);
 
     try {
-      setCancelingId(id)
-      const status = "CANCELED"
-      const res = await cancelBookingService(id, status)
+      setCancelingId(id);
+      const status = "CANCELED";
+      const res = await cancelBookingService(id, status);
       if (res.status === 200) {
-        setBookings((prev) => prev.filter((b) => b.uuid !== id))
-        toast(res?.message || "Successfully Cancelled The Booking")
+        setBookings((prev) => prev.filter((b) => b.uuid !== id));
+        toast(res?.message || "Successfully Cancelled The Booking");
       }
     } catch (error: any) {
-      toast(error?.response?.data?.message || "Currently we unable to cancel please try again later.")
-      console.log(error)
+      toast(
+        error?.response?.data?.message ||
+          "Currently we unable to cancel please try again later."
+      );
+      console.log(error);
     } finally {
-      setCancelingId(null) // reset loading state
+      setCancelingId(null); // reset loading state
       setIsConfirming(false);
       setShowConfirmModal(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getBookings()
-  }, [activeTab])
+    getBookings();
+  }, [activeTab]);
 
   const handleViewDetails = (booking: Booking) => {
-    setSelectedBooking(booking)
-    setIsModalOpen(true)
-  }
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedBooking(null)
-  }
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  };
 
   const handleConfirmBooking = (id: any) => {
     setShowConfirmModal(true);
-    setSelectedBookingId(id)
+    setSelectedBookingId(id);
   };
 
   // Function to check if join button should be shown
@@ -98,11 +114,11 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
     const fiveMinutesBeforeStart = new Date(startTime.getTime() - 5 * 60000);
 
     return currentTime >= fiveMinutesBeforeStart && currentTime <= endTime;
-  }
+  };
 
-  if (isLoading) return <BookingsSkeleton />
+  if (isLoading) return <BookingsSkeleton />;
 
-  console.log(bookings, 'bookings')
+  console.log(bookings, "bookings");
   return (
     <section>
       <div className="bg-card rounded-xl shadow-sm border border-border p-5 md:p-8">
@@ -114,16 +130,17 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab
-                ? "bg-primaryColor text-white shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/80"
-                }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === tab
+                  ? "bg-primaryColor text-white shadow-sm border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+              }`}
             >
               {tab === "PENDING"
                 ? "Incomplete"
                 : tab === "SCHEDULED"
-                  ? "Upcoming"
-                  : "Completed"}
+                ? "Upcoming"
+                : "Completed"}
             </button>
           ))}
         </div>
@@ -138,8 +155,10 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
               <p className="text-sm text-muted-foreground">
                 {activeTab === "COMPLETED" &&
                   "All your bookings are confirmed or completed."}
-                {activeTab === "SCHEDULED" && "You don't have any upcoming bookings."}
-                {activeTab === "PENDING" && "You haven't completed any bookings yet."}
+                {activeTab === "SCHEDULED" &&
+                  "You don't have any upcoming bookings."}
+                {activeTab === "PENDING" &&
+                  "You haven't completed any bookings yet."}
               </p>
             </div>
           ) : (
@@ -155,7 +174,8 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
                       {booking?.clinic_name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Service: {booking?.service_default_name || "Not specified"}
+                      Service:{" "}
+                      {booking?.service_default_name || "Not specified"}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User size={14} />
@@ -164,12 +184,13 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
                   </div>
 
                   <span
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium self-start ${booking?.booking_status === "COMPLETED"
-                      ? "bg-accent/20 text-accent border border-accent/30"
-                      : booking?.booking_status === "PENDING"
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium self-start ${
+                      booking?.booking_status === "COMPLETED"
+                        ? "bg-accent/20 text-accent border border-accent/30"
+                        : booking?.booking_status === "PENDING"
                         ? "bg-secondary/20 text-secondary border border-secondary/30"
                         : "bg-primary/20 text-primary border border-primary/30"
-                      }`}
+                    }`}
                   >
                     {booking?.booking_status}
                   </span>
@@ -179,18 +200,22 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
                 <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} />
-                    <span>{`${formatDate(booking?.start_time)}, ${convertTo12HourFormat(booking?.start_time)}`}</span>
+                    <span>{`${formatDate(
+                      booking?.start_time
+                    )}, ${convertTo12HourFormat(booking?.start_time)}`}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock size={16} />
-                    <span>{`${formatDate(booking?.end_time)}, ${convertTo12HourFormat(booking?.end_time)}`}</span>
+                    <span>{`${formatDate(
+                      booking?.end_time
+                    )}, ${convertTo12HourFormat(booking?.end_time)}`}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin size={16} />
                     <span>{booking?.session_type}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CreditCard size={16} />
+                    Payment Status :{/* <CreditCard size={16} /> */}
                     <span
                       className={
                         booking?.payment_status === "FAILED"
@@ -270,5 +295,5 @@ export default function MyBookings({defaultTab = "SCHEDULED"}: defaultProps) {
         isLoading={isConfirming}
       />
     </section>
-  )
+  );
 }
