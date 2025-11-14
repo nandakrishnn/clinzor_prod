@@ -66,8 +66,8 @@ const BookingManagement = () => {
     format(new Date(), "yyyy-MM-dd")
   );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const dateObj = useMemo(() => new Date(dateFilter), [dateFilter]);
-  const isDateToday = useMemo(() => isToday(dateObj), [dateObj]);
+  const dateObj = useMemo(() => dateFilter ? new Date(dateFilter) : new Date(), [dateFilter]);
+  const isDateToday = useMemo(() => dateFilter ? isToday(dateObj) : true, [dateObj, dateFilter]);
   const [loading, setLoading] = useState(false);
   const [paginationData, setPaginationData] = useState({
     current_page: 1,
@@ -217,8 +217,6 @@ const BookingManagement = () => {
         const utcDateString = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
         dateParam = utcDateString;
       }
-
-      console.log(dateParam, 'date filter')
 
       // If date filter is today, set show_today=true and clear the date parameter
       if (dateFilter === format(new Date(), "yyyy-MM-dd")) {
