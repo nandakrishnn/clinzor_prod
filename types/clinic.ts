@@ -37,7 +37,7 @@ export interface OperatingHour {
   open: string;
   close: string;
   closed: boolean;
-  uuid: undefined | string
+  uuid?: undefined | string
 }
 
 export interface OperatingHours {

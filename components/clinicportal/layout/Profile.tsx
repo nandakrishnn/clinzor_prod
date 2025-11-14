@@ -62,7 +62,7 @@ const ClinicSettingsDashboard = () => {
   } = useOperatingHours();
 
   useEffect(() => {
-    if (clinicData.uuid) {
+    if (clinicData?.uuid) {
       loadOperatingHours(clinicData.uuid);
     }
   }, [clinicData]);
@@ -350,7 +350,7 @@ const ClinicSettingsDashboard = () => {
               saveStatus={operatingHoursSaveStatus}
               onSaveOperatingHours={handleSaveOperatingHours}
               hasChanges={hasOperatingHoursChanged}
-              hasExistingData={hasExistingOperatingHours} // Fixed prop name
+              hasExistingData={hasExistingOperatingHours}
             />
           </div>
         </div>

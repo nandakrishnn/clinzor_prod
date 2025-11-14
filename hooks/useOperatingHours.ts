@@ -4,12 +4,12 @@ import { getOperatingHours, updateOperatingHours, createOperatingHours } from '@
 
 // Initial operating hours structure
 const initialOperatingHours: OperatingHours = {
-  monday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
-  tuesday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
-  wednesday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
-  thursday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
-  friday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
-  saturday: { open: '09:00', close: '17:00', closed: false, uuid: undefined },
+  monday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
+  tuesday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
+  wednesday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
+  thursday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
+  friday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
+  saturday: { open: '09:00', close: '17:00', closed: true, uuid: undefined },
   sunday: { open: '09:00', close: '17:00', closed: true, uuid: undefined }
 };
 
@@ -25,6 +25,8 @@ export const useOperatingHours = () => {
     try {
       const res = await getOperatingHours(clinicId);
       const data = res?.data?.data || [];
+
+      console.log(data, 'data update timing')
       
       if (data.length > 0) {
         setExistingTimings(data);
@@ -49,13 +51,13 @@ export const useOperatingHours = () => {
   const formatApiDataToOperatingHours = (apiData: any[]): OperatingHours => {
     const formatted: OperatingHours = { ...initialOperatingHours };
 
-    apiData.forEach(item => {
+    apiData?.forEach(item => {
       const day = item.day.toLowerCase() as keyof OperatingHours;
       if (formatted[day]) {
         formatted[day] = {
-          open: item.opening_time?.slice(0, 5) || '09:00', // Remove seconds
-          close: item.closing_time?.slice(0, 5) || '17:00', // Remove seconds
-          closed: item.is_closed || false,
+          open: item.opening_time?.slice(0, 5) ,
+          close: item.closing_time?.slice(0, 5) ,
+          closed: item.is_closed  ,
           uuid: item.clinic_timing_uuid || item.uuid
         };
       }
