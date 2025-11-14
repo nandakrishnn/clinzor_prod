@@ -161,7 +161,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({
                 <CardContent className="">
                   <div className="flex items-start gap-4 mb-4">
                     <img
-                      src={service?.image || "/clinic.png"}
+                      src={service?.service_image || "/clinic.png"}
                       alt={service?.service_name}
                       className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover"
                     />

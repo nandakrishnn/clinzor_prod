@@ -250,7 +250,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                         onClick={() => handleConfirmBooking(booking?.uuid)}
                         // onClick={() => cancelBooking(booking?.uuid)}
                         disabled={cancelingId === booking?.uuid}
-                        className="inline-flex items-center gap-2 bg-red-800 rounded text-white px-4 p-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 bg-red-500 rounded text-white px-4 p-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
                       >
                         {cancelingId === booking?.uuid ? (
                           <>
