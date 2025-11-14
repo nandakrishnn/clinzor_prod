@@ -21,6 +21,8 @@ import { BookingsSkeleton } from "../skeltons/user/LoadingSkeleton";
 import { toast } from "sonner";
 import { ConfirmationModal } from "../common/ConfirmationModal";
 import { convertTo12HourFormat, formatLocalDate } from "@/utils/formatters";
+import { Money } from "@mui/icons-material";
+import { IconCash } from "@tabler/icons-react";
 
 interface defaultProps {
   defaultTab?: "PENDING" | "SCHEDULED" | "COMPLETED";
@@ -215,7 +217,8 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                     <span>{booking?.session_type}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    Payment Status :{/* <CreditCard size={16} /> */}
+                    <IconCash size={16} />
+                    Payment Status :
                     <span
                       className={
                         booking?.payment_status === "FAILED"
@@ -231,6 +234,10 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                 {/* Actions */}
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mt-4 flex flex-wrap gap-3">
+                    <a href={booking?.clinic_map_link || ""} target="_blank">
+                      <MapPin size={16} />
+                      View Clinic Location
+                    </a>
                     <button
                       onClick={() => handleViewDetails(booking)}
                       className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
@@ -243,7 +250,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                         onClick={() => handleConfirmBooking(booking?.uuid)}
                         // onClick={() => cancelBooking(booking?.uuid)}
                         disabled={cancelingId === booking?.uuid}
-                        className="inline-flex items-center gap-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 bg-red-500 text-white px-4 p-2.5 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
                       >
                         {cancelingId === booking?.uuid ? (
                           <>
