@@ -217,7 +217,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                     <span>{booking?.session_type}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IconCash size={16} />
+                    <IconCash size={18} />
                     Payment Status :
                     <span
                       className={
@@ -234,7 +234,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                 {/* Actions */}
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <a href={booking?.clinic_map_link || ""} target="_blank">
+                    <a className="inline-flex items-center gap-2" href={booking?.clinic_map_link || ""} target="_blank">
                       <MapPin size={16} />
                       View Clinic Location
                     </a>
@@ -250,7 +250,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                         onClick={() => handleConfirmBooking(booking?.uuid)}
                         // onClick={() => cancelBooking(booking?.uuid)}
                         disabled={cancelingId === booking?.uuid}
-                        className="inline-flex items-center gap-2 bg-red-500 text-white px-4 p-2.5 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 bg-red-500 rounded text-white px-4 p-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
                       >
                         {cancelingId === booking?.uuid ? (
                           <>
@@ -260,7 +260,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                         ) : (
                           <>
                             <X size={14} />
-                            Cancel
+                            Cancel Booking
                           </>
                         )}
                       </button>
