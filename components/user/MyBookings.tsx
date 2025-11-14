@@ -234,7 +234,7 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                 {/* Actions */}
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <a className="inline-flex items-center gap-2" href={booking?.clinic_map_link || ""} target="_blank">
+                    <a className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors" href={booking?.clinic_map_link || ""} target="_blank">
                       <MapPin size={16} />
                       View Clinic Location
                     </a>
