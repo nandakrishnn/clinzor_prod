@@ -11,8 +11,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@mui/material";
 import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Email } from "@mui/icons-material";
 import DataPlaceholder from "@/components/common/DataPlaceholder";
 import { useSession } from "next-auth/react";

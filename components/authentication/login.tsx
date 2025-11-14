@@ -19,9 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import {
   findUsers,
-  sendOTP,
-  verifyOTP
-} from "@/service/user/userAuthService/userAuthService";
+  sendOTP,} from "@/service/user/userAuthService/userAuthService";
 
 // =======================
 // Reusable Input Component
@@ -394,8 +392,8 @@ export default function AuthenticationGateway() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawRedirectUrl = searchParams.get("redirection");
-  const redirectUrl = rawRedirectUrl ? decodeURIComponent(rawRedirectUrl) : "";
+  const raw = searchParams.get("redirection");
+  const redirectUrl = raw ? decodeURIComponent(raw) : "";
 
   // Form state
   const [email, setEmail] = useState("");
