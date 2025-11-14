@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import {
   Star,
   MapPin,
@@ -19,31 +19,38 @@ import { useSession } from "next-auth/react";
 import { ClinicDetailedViewSkeleton } from "@/components/skeltons/service/ClinicDetailedViewSkeleton";
 
 interface ClinicDetailedViewProps {
-  data: any,
-  services: any,
-  activeServiceTab: string,
-  doctors: any,
-  serviceId: any,
+  data: any;
+  services: any;
+  activeServiceTab: string;
+  doctors: any;
+  serviceId: any;
   loading?: boolean;
 }
 
-const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data, services, activeServiceTab, doctors, loading = false, }) => {
+const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({
+  serviceId,
+  data,
+  services,
+  activeServiceTab,
+  doctors,
+  loading = false
+}) => {
   const router = useRouter();
-  const clinicInfo = data?.clinic
-  const stats = data?.stats
+  const clinicInfo = data?.clinic;
+  const stats = data?.stats;
 
   // user data
-  const { data: session } = useSession()
+  const { data: session } = useSession();
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return ""
-    const date = new Date(dateStr)
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
     return date.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
-      year: "numeric",
-    })
-  }
+      year: "numeric"
+    });
+  };
 
   if (loading) return <ClinicDetailedViewSkeleton />;
   return (
@@ -63,10 +70,11 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${i < Math.floor(stats?.avg_rating)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
-                      }`}
+                    className={`w-5 h-5 ${
+                      i < Math.floor(stats?.avg_rating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
                   />
                 ))}
               </div>
@@ -89,7 +97,9 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
               </div>
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-[#033C8D]" />
-                <span className="text-gray-700">{clinicInfo?.contact_number}</span>
+                <span className="text-gray-700">
+                  {clinicInfo?.contact_number}
+                </span>
               </div>
               <div className="flex items-start gap-3">
                 <Email className="w-5 h-5 text-[#033C8D]" />
@@ -120,7 +130,9 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                     <Users className="w-5 h-5" />
                     <span>Female Doctors</span>
                   </div>
-                  <span className="font-semibold">{data?.female_doctors} +</span>
+                  <span className="font-semibold">
+                    {data?.female_doctors} +
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -138,59 +150,90 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
       {/* Specialties Section */}
       <div className="mb-8" id="service">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Top Services</h2>
-        {
-          services?.length == 0 ? <DataPlaceholder title="No Service Available" /> : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {services?.map((service: any) => (
-                <Card key={service?.uuid} className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="">
-                    <div className="flex items-start gap-4 mb-4">
-                      <img
-                        src={service?.image || "/clinic.png"}
-                        alt={service?.service_name}
-                        className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 capitalize">{service?.clinic_provided_name || service?.service_name}</h3>
-                        <p className="text-sm text-gray-600 line-clamp-3">{service?.description}</p>
-                      </div>
+        {services?.length == 0 ? (
+          <DataPlaceholder title="No Service Available" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {services?.map((service: any) => (
+              <Card
+                key={service?.uuid}
+                className="hover:shadow-lg transition-shadow duration-300"
+              >
+                <CardContent className="">
+                  <div className="flex items-start gap-4 mb-4">
+                    <img
+                      src={service?.image || "/clinic.png"}
+                      alt={service?.service_name}
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 capitalize">
+                        {service?.clinic_provided_name || service?.service_name}
+                      </h3>
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {service?.description}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <span className="text-lg font-bold text-[#033C8D]">₹ {service?.consultation_charge_physical_visit}</span>
-                        <span className="text-sm text-gray-600 ml-2">( {service?.duration || "45 min"} )</span>
-                      </div>
-                      <Badge className={`${service?.status === "APPROVED" ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"} px-2 py-1 rounded-md text-sm`}>
-                        {service?.status === "APPROVED" ? "Available" : "Not Available"}
-                      </Badge>
+                  </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="text-lg font-bold text-[#033C8D]">
+                        ₹ {service?.consultation_charge_physical_visit}
+                      </span>
+                      <span className="text-sm text-gray-600 ml-2">
+                        ( {service?.duration || "45 min"} )
+                      </span>
                     </div>
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>Male: {data?.male_doctors || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>Female: {data?.female_doctors || 0}</span>
-                      </div>
-                    </div>
-                    <Button
-                      className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
-                      onClick={() => { session?.accessToken ? router.push(`/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&&serviceId=${service?.service}`) : router.push('/auth') }}
+                    <Badge
+                      className={`${
+                        service?.status === "APPROVED"
+                          ? "text-green-600 bg-green-50"
+                          : "text-red-600 bg-red-50"
+                      } px-2 py-1 rounded-md text-sm`}
                     >
-                      Book Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )
-        }
+                      {service?.status === "APPROVED"
+                        ? "Available"
+                        : "Not Available"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>Male: {data?.male_doctors || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>Female: {data?.female_doctors || 0}</span>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-[#033C8D] hover:bg-[#033C8D]/90 text-white"
+                    onClick={() => {
+                      const url = `/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&serviceId=${service?.service}`;
+
+                      const redirect = encodeURIComponent(url);
+
+                      session?.accessToken
+                        ? router.push(
+                            `/service/clinic/booking/${clinicInfo?.uuid}?selectedService=${activeServiceTab}&serviceId=${service?.service}`
+                          )
+                        : router.push(`/auth?redirection=${redirect}`);
+                    }}
+                  >
+                    Book Now
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Offers Section */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Exclusive Offers</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">
+          Exclusive Offers
+        </h2>
 
         {data?.offers.length === 0 ? (
           <DataPlaceholder title="No Offers Available" />
@@ -204,7 +247,9 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                 {/* Discount Badge */}
                 <div className="absolute top-0 right-0 bg-[#033C8D] text-white text-sm font-semibold px-3 py-1 rounded-bl-lg">
                   {offer?.discount_percentage
-                    ? `${parseFloat(offer?.discount_percentage).toFixed(0)}% OFF`
+                    ? `${parseFloat(offer?.discount_percentage).toFixed(
+                        0
+                      )}% OFF`
                     : `₹${offer?.flat_discount_amt} OFF`}
                 </div>
 
@@ -245,11 +290,15 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
         )}
       </div>
 
-
       {/* Doctors Section */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-6"> Our Doctors Doctors</h2>
-        {doctors?.length == 0 ? <DataPlaceholder title="No Doctors Available For Now" /> : (
+        <h2 className="text-xl font-bold text-gray-900 mb-6">
+          {" "}
+          Our Doctors Doctors
+        </h2>
+        {doctors?.length == 0 ? (
+          <DataPlaceholder title="No Doctors Available For Now" />
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {doctors?.map((doctor: any) => (
               <Card
@@ -275,13 +324,18 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({ serviceId, data
                   </p>
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{doctor?.rating || 4.5}</span>
+                    <span className="text-sm font-medium">
+                      {doctor?.rating || 4.5}
+                    </span>
                   </div>
                   <p className="text-xs text-gray-500 mb-3">
                     {doctor?.experience} experience
                   </p>
                   <p className="text-xs text-gray-600 mb-4">
-                    Available: {doctor?.status === "APPROVED" ? "Mon to Fri" : "Not Available"}
+                    Available:{" "}
+                    {doctor?.status === "APPROVED"
+                      ? "Mon to Fri"
+                      : "Not Available"}
                   </p>
                 </CardContent>
               </Card>

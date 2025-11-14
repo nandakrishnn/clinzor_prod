@@ -1,10 +1,27 @@
 "use client";
 import { JSX, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, AlertCircle, Phone, User, MapPin, Key, Calendar, VenetianMask, Edit } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  AlertCircle,
+  Phone,
+  User,
+  MapPin,
+  Key,
+  Calendar,
+  VenetianMask,
+  Edit
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { findUsers, sendOTP, verifyOTP } from "@/service/user/userAuthService/userAuthService";
+import {
+  findUsers,
+  sendOTP,
+  verifyOTP
+} from "@/service/user/userAuthService/userAuthService";
 
 // =======================
 // Reusable Input Component
@@ -14,7 +31,9 @@ type InputProps = {
   label: string;
   type: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
   error?: string;
   placeholder?: string;
   icon?: JSX.Element;
@@ -33,7 +52,7 @@ const Input = ({
   placeholder,
   icon,
   showToggle = false,
-  toggleVisibility = () => { },
+  toggleVisibility = () => {},
   options
 }: InputProps) => (
   <div className="mb-4">
@@ -52,11 +71,14 @@ const Input = ({
           name={id}
           value={value}
           onChange={onChange}
-          className={`block w-full px-4 py-3 ${icon ? 'pl-10' : 'pl-4'} rounded-xl border text-black ${error ? "border-red-300" : "border-neutral-300"
-            } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+          className={`block w-full px-4 py-3 ${
+            icon ? "pl-10" : "pl-4"
+          } rounded-xl border text-black ${
+            error ? "border-red-300" : "border-neutral-300"
+          } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
         >
           <option value="">Select {label}</option>
-          {options?.map(option => (
+          {options?.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -71,8 +93,11 @@ const Input = ({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className={`block w-full px-4 py-3 ${icon ? 'pl-10' : 'pl-4'} rounded-xl border text-black placeholder:text-black ${error ? "border-red-300" : "border-neutral-300"
-              } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+            className={`block w-full px-4 py-3 ${
+              icon ? "pl-10" : "pl-4"
+            } rounded-xl border text-black placeholder:text-black ${
+              error ? "border-red-300" : "border-neutral-300"
+            } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
           />
           {showToggle && (
             <button
@@ -180,15 +205,15 @@ function AuthContent({
               {showOtpField
                 ? "Verify OTP"
                 : authMode === "login"
-                  ? "Welcome back"
-                  : "Create account"}
+                ? "Welcome back"
+                : "Create account"}
             </h2>
             <p className="mt-2 text-primaryColor">
               {showOtpField
                 ? "Enter the OTP sent to your phone"
                 : authMode === "login"
-                  ? "Sign in to access your account"
-                  : "Fill in your details to get started"}
+                ? "Sign in to access your account"
+                : "Fill in your details to get started"}
             </p>
           </motion.div>
 
@@ -201,7 +226,9 @@ function AuthContent({
 
           {/* Form */}
           {!showOtpField ? (
-            <form onSubmit={authMode === "login" ? handleLogin : handleRegister}>
+            <form
+              onSubmit={authMode === "login" ? handleLogin : handleRegister}
+            >
               {authMode === "register" && (
                 <>
                   <Input
@@ -281,8 +308,8 @@ function AuthContent({
                 {isLoading
                   ? "Sending OTP..."
                   : authMode === "login"
-                    ? "Send OTP"
-                    : "Register & Send OTP"}
+                  ? "Send OTP"
+                  : "Register & Send OTP"}
               </button>
 
               {/* Toggle mode */}
@@ -326,8 +353,12 @@ function AuthContent({
               <div className="mt-4 text-center text-sm text-black">
                 <p className="text-xs py-1.5 flex text-center items-center justify-center gap-1">
                   OTP send to
-                  <span className="text-primaryColor">{" "} {phone_number}</span>
-                  <Edit size={14} className="cursor-pointer" onClick={() => setShowOtpField(false)} />
+                  <span className="text-primaryColor"> {phone_number}</span>
+                  <Edit
+                    size={14}
+                    className="cursor-pointer"
+                    onClick={() => setShowOtpField(false)}
+                  />
                 </p>
                 {resendTimer > 0 ? (
                   <>
@@ -362,6 +393,9 @@ export default function AuthenticationGateway() {
   const [authMode, setAuthMode] = useState("login");
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawRedirectUrl = searchParams.get("redirection");
+  const redirectUrl = rawRedirectUrl ? decodeURIComponent(rawRedirectUrl) : "";
 
   // Form state
   const [email, setEmail] = useState("");
@@ -508,7 +542,9 @@ export default function AuthenticationGateway() {
         setFormError("Failed to resend OTP. Please try again.");
       }
     } catch (error: any) {
-      setFormError(error.response?.data?.message || "An error occurred while resending OTP");
+      setFormError(
+        error.response?.data?.message || "An error occurred while resending OTP"
+      );
     } finally {
       setIsResending(false);
     }
@@ -525,7 +561,7 @@ export default function AuthenticationGateway() {
     try {
       // Checking if the user exists
       const isUserExist = await findUsers({ phone_number });
-      console.log(isUserExist)
+      console.log(isUserExist);
 
       if (isUserExist?.data?.user_in_db) {
         const response = await sendOTP({ phone_number });
@@ -540,7 +576,9 @@ export default function AuthenticationGateway() {
         setFormError("User not found. Please register first.");
       }
     } catch (error: any) {
-      setFormError(error.response?.data?.message || "An error occurred during login");
+      setFormError(
+        error.response?.data?.message || "An error occurred during login"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -564,7 +602,9 @@ export default function AuthenticationGateway() {
         setFormError("Failed to send OTP. Please try again.");
       }
     } catch (error: any) {
-      setFormError(error.response?.data?.message || "An error occurred during registration");
+      setFormError(
+        error.response?.data?.message || "An error occurred during registration"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -579,7 +619,7 @@ export default function AuthenticationGateway() {
     setIsLoading(true);
 
     try {
-      let result
+      let result;
       if (authMode === "register") {
         // For registration, verify OTP with all user details
         result = await signIn("otp", {
@@ -591,14 +631,14 @@ export default function AuthenticationGateway() {
           dob,
           gender,
           authMode,
-          redirect: false,
+          redirect: false
         });
       } else {
         result = await signIn("otp", {
           otp,
           refrence_id: referenceId,
           authMode,
-          redirect: false,
+          redirect: false
         });
       }
 
@@ -611,7 +651,10 @@ export default function AuthenticationGateway() {
       }
     } catch (error: any) {
       console.error("OTP verification error ui:", error);
-      setFormError(error.response?.data?.message || "An error occurred during OTP verification");
+      setFormError(
+        error.response?.data?.message ||
+          "An error occurred during OTP verification"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -640,7 +683,12 @@ export default function AuthenticationGateway() {
     if (status === "authenticated") {
       // Check if user has CUSTOMER role
       if (session?.user?.role === "CUSTOMER") {
-        router.replace("/");
+        console.log("halo i am authendicated");
+        if (redirectUrl) {
+          router.replace(redirectUrl);
+        } else {
+          router.replace("/");
+        }
       }
     }
   }, [status, router, session?.user?.role]);

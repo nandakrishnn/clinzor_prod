@@ -41,7 +41,6 @@ const ReviewSection = ({ id }: { id: string }) => {
     setIsLoading(true);
     try {
       const res = await getAllReviewService(id, service, pageNum);
-      console.log(res, 'from the admin');
 
       if (res?.data?.data) {
         const newReviews = res.data.data.map((item: any) => ({
