@@ -119,8 +119,6 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
   };
 
   if (isLoading) return <BookingsSkeleton />;
-
-  console.log(bookings, "bookings");
   return (
     <section>
       <div className="bg-card rounded-xl shadow-sm border border-border p-5 md:p-8">

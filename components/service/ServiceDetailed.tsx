@@ -58,10 +58,10 @@ const ServiceDetailed = ({ id }: { id: string }) => {
             {serviceData?.name}
           </h1>
 
-          <div className="flex items-center mb-1">
+          {/* <div className="flex items-center mb-1">
             <div className="text-yellow-400 text-xl mr-2">★★★★☆</div>
             <span className="text-gray-600 text-sm">{serviceData?.rating ? serviceData?.rating : "428"} Reviews</span>
-          </div>
+          </div> */}
 
           <div className="mb-4 space-y-3 text-gray-700 leading-relaxed">
             <p className="text-[13px] text-justify text-gray-700">
