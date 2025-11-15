@@ -1,3 +1,4 @@
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -11,14 +12,17 @@ interface CardProps {
 
 const CardTwo: React.FC<CardProps> = ({ className, icon, title, content, service }) => {
   const router = useRouter();
-
+  const { setItem } = useLocalStorage()
   const tags = service?.tags?.split(",") || [];
 
   return (
     <div
       key={service?.uuid}
       className={`group bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 cursor-pointer md:h-[350px] ${className}`}
-      onClick={() => router.push(`/service/${service?.uuid}`)}
+      onClick={() => {
+         setItem("slugId", service?.uuid);
+          router.push(`/service/${service?.slug}`)
+      }}
     >
       <div className="relative w-full h-48 overflow-hidden">
         <img

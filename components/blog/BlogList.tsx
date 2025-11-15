@@ -9,6 +9,7 @@ import DataPlaceholder from '../common/DataPlaceholder';
 import SearchBar from '../common/SearchBar';
 import { ChevronRight, Loader } from 'lucide-react';
 import Link from 'next/link';
+import useLocalStorage from '@/hooks/useLocalStorage.ts';
 
 type Blogs = {
     uuid: string;
@@ -17,6 +18,7 @@ type Blogs = {
     title: string;
     created_by: string;
     image: string;
+    slug:string
 };
 
 const BlogList = () => {
@@ -28,6 +30,7 @@ const BlogList = () => {
     const [showBlog, setShowBlog] = useState<Blogs[]>([])
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const {setItem} = useLocalStorage()
 
     const getBlogData = async (pageNum: number, search: string = '') => {
         try {
@@ -112,11 +115,16 @@ const BlogList = () => {
                 <div className="mb-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {showBlog.map((post, index) => (
-                            <Link href={`/blog/${post?.uuid}`}
+                            <Link href={`/blog/${post?.slug}`}
                                 key={index}
                                 className="bg-white rounded-xl overflow-hidden cursor-pointer"
                             >
-                                <img
+                               <div className='bg-white rounded-xl overflow-hidden cursor-pointer' 
+                                   onClick={()=>{
+                                   setItem("blogSlug",post.uuid)
+                               }}
+                               >
+                                 <img
                                     src={post?.image || '/blogs.png'}
                                     alt={post?.title}
                                     className="w-full h-48 object-cover rounded-xl"
@@ -133,6 +141,7 @@ const BlogList = () => {
                                         {post?.content}
                                     </p>
                                 </div>
+                               </div>
                             </Link>
                         ))}
                     </div>

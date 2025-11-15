@@ -8,6 +8,7 @@ import { Clinic } from "@/types/common";
 import ClinicCard from "./ClinicCard";
 import { getClinicListService } from "@/service/user/sevicePage";
 import DataPlaceholder from "../common/DataPlaceholder";
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
 const AvailableClinics = ({ id, search, type }: { id: string; search?: string, type: string }) => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(true);
+  const {getItem} = useLocalStorage()
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,7 +73,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(id, locationParams, search, type);
+      const res = await getClinicListService(getItem("slugId"), locationParams, search, type);
 
       if (res.status === 200) {
         setClinicList(res?.data?.data);

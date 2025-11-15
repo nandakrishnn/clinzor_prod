@@ -10,7 +10,7 @@ type BlogDetailedPageProps = {
 }
 
 const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
-    const post = await getABlog(params.id).catch(() => null)
+    // const post = await getABlog(params.id).catch(() => null)
 
     return (
         <div>
@@ -22,7 +22,9 @@ const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
                 <CommonHeroSection className="h-[15vh]" />
             </section>
 
-            <BlogDetailView post={post?.data} />
+            <BlogDetailView 
+            // post={post?.data}
+            />
 
             {/* Footer */}
             <FooterSection />

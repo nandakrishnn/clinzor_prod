@@ -1,19 +1,42 @@
 'use client'
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
+import { getABlog } from "@/service/user/blogPage";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Clock, Bookmark, Heart, Share2 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export interface BlogDetailViewProps {
-  post: {
+  
     image?: string
     title: string
     content?: string
     created_by?: string
     created_at?: string
-  }
+  
 }
 
-export const BlogDetailView: React.FC<BlogDetailViewProps> = ({ post }) => {
+export const BlogDetailView: React.FC =  () => {
+ const [post,setPost] = useState<BlogDetailViewProps|null>(null)
+ const {getItem} = useLocalStorage()
+   
+   
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const slug = getItem("blogSlug");
+      const postData = await getABlog(slug);      
+      setPost(postData.data);
+    } catch (error) {
+      console.log("Error fetching blog:", error);
+      setPost(null);
+    }
+  };
+
+  fetchData();
+}, []);
+
+
   return (
     <div className="min-h-screen pb-10">
       {/* Content */}
@@ -29,7 +52,7 @@ export const BlogDetailView: React.FC<BlogDetailViewProps> = ({ post }) => {
           </div>
 
           {/* Blog content part */}
-          <motion.div
+        {post&&  <motion.div
             className="my-4 md:my-8"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -60,7 +83,7 @@ export const BlogDetailView: React.FC<BlogDetailViewProps> = ({ post }) => {
               dangerouslySetInnerHTML={{ __html: post?.content || "" }}
             />
 
-          </motion.div>
+          </motion.div>}
 
 
           <hr />

@@ -3,6 +3,7 @@ import { getAllService, getAService } from "@/service/user/sevicePage";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import ServiceDetailedVIewSkelton from "../skeltons/service/ServiceDetailedVIewSkelton";
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
 type ServiceData = {
   image?: string | null;
@@ -19,20 +20,23 @@ type ServiceData = {
 const ServiceDetailed = ({ id }: { id: string }) => {
   const [serviceData, setServiceData] = useState<ServiceData | undefined>(undefined)
   const [isLoading, setLoading] = useState(true)
+   const {getItem} = useLocalStorage()
 
   const getServiceData = async () => {
-    try {
-      const res = await getAService(id)
-
+  try {
+    if (id !== null) {
+      const res = await getAService(getItem("slugId"));
       if (res.status === 200) {
         setServiceData(res?.data)
+        setServiceData(res.data);
       }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setLoading(false)
     }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
   }
+};
 
   useEffect(() => {
     getServiceData()
