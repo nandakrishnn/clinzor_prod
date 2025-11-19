@@ -573,6 +573,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     }
   }, [activeStep, days, selectedDayIndex, templateDate]);
 
+
   /* --------------------------- Slot Generation ---------------------------- */
 
   const generateTimeSlots = (
@@ -731,6 +732,8 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     setSelectedByDate(newSelections);
     setCopyDays(newCopyDays); // Update copyDays to mark the applied days as selected
   };
+
+  // console.log(copyDays,'selected date')
 
   /* ---------------------------- Edit & Time Logic -------------------------- */
 
