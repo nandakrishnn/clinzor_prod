@@ -3,14 +3,14 @@ import { axiosPrivate } from "../../axios/axios";
 
 
 // Clinic Booking  api
-
 export const getAllClinicBookings = async (
   page: number = 1,
   pageSize: number = 10,
   search: string = '',
   status: string = '',
   type: string = '',
-  date: string = '',
+  fromDate: string = '',
+  toDate: string = '',
   showToday: boolean = false
 ) => {
   try {
@@ -22,7 +22,8 @@ export const getAllClinicBookings = async (
     if (search) params.append('search', search);
     if (status) params.append('booking_status', status);
     if (type) params.append('booking_type', type);
-    if (date) params.append('to_date', date);
+    if (fromDate) params.append('from_date', fromDate);
+    if (toDate) params.append('to_date', toDate);
     if (showToday) params.append('show_today', 'true');
 
     const response = await axiosPrivate.get(`clinic/clinic-bookings/?${params.toString()}`);

@@ -209,19 +209,34 @@ const BookingManagement = () => {
     try {
       setLoading(true);
 
-      // Determine if we should show today's bookings
+      let fromDateParam = "";
+      let toDateParam = "";
       let showTodayParam = false;
-      let dateParam = "";
+
       if (dateFilter) {
+        // Convert the selected date to UTC format for from_date and to_date
         const localDate = new Date(dateFilter);
-        const utcDateString = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
-        dateParam = utcDateString;
+
+        // Set from_date to start of the selected day in UTC
+        const fromDate = new Date(localDate);
+        fromDate.setHours(0, 0, 0, 0);
+        const fromDateUTC = new Date(fromDate.getTime() - fromDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
+
+        // Set to_date to start of next day in UTC
+        const toDate = new Date(localDate);
+        toDate.setDate(toDate.getDate() + 1);
+        toDate.setHours(0, 0, 0, 0);
+        const toDateUTC = new Date(toDate.getTime() - toDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
+
+        fromDateParam = fromDateUTC;
+        toDateParam = toDateUTC;
       }
 
-      // If date filter is today, set show_today=true and clear the date parameter
+      // If date filter is today, set show_today=true and clear the date parameters
       if (dateFilter === format(new Date(), "yyyy-MM-dd")) {
         showTodayParam = true;
-        dateParam = ""; // Clear date parameter since we're using show_today
+        fromDateParam = "";
+        toDateParam = "";
       }
 
       const data = await getAllClinicBookings(
@@ -230,7 +245,8 @@ const BookingManagement = () => {
         search,
         status,
         type,
-        dateParam,
+        fromDateParam, // Send from_date
+        toDateParam,   // Send to_date
         showTodayParam
       );
 
@@ -450,7 +466,7 @@ const BookingManagement = () => {
       console.error("Error canceling booking:", error);
       toast.error(
         error?.response?.data?.detail ||
-          "Status updating have some issue please try again latter."
+        "Status updating have some issue please try again latter."
       );
       // You might want to add error handling here (e.g., show a toast notification)
     }
@@ -844,11 +860,10 @@ const BookingManagement = () => {
                           </button>
                           {/* Action Menu with transition */}
                           <div
-                            className={`absolute z-50 right-0 top-12 w-40 bg-white border border-slate-200 rounded-xl shadow-xl transition-all duration-200 ${
-                              showActionMenu === booking.uuid
+                            className={`absolute z-50 right-0 top-12 w-40 bg-white border border-slate-200 rounded-xl shadow-xl transition-all duration-200 ${showActionMenu === booking.uuid
                                 ? "opacity-100 scale-100 pointer-events-auto"
                                 : "opacity-0 scale-95 pointer-events-none"
-                            }`}
+                              }`}
                             tabIndex={-1}
                             aria-label="Action Menu"
                           >
@@ -1047,11 +1062,10 @@ const BookingManagement = () => {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${
-                    currentPage === i + 1
+                  className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1
                       ? "bg-blue-600 text-white"
                       : "bg-white/80 text-slate-700"
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </button>
