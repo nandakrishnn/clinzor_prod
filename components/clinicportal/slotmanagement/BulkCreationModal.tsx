@@ -412,9 +412,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
   // Steps
   const [activeStep, setActiveStep] = useState(0);
-  const [slotType, setSlotType] = useState<
-    "PHYSICAL_OR_VIDEO" | "HOME_VISIT" | ""
-  >("");
+  const [slotType, setSlotType] = useState<"PHYSICAL_OR_VIDEO" | "HOME_VISIT" | "">("");
   const [showBasicConfig, setShowBasicConfig] = useState(false);
 
   // Config
@@ -568,7 +566,6 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
 
   useEffect(() => {
     if (activeStep === 2) {
-      // const tmplDate = templateDate ?? days[selectedDayIndex]?.date;
       setCopyDays(
         days.map((d) => ({ date: d.date, dayName: d.dayName, selected: false }))
       );
@@ -691,6 +688,9 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     base.setDate(base.getDate() + 1); // tomorrow
 
     const updated = [...days];
+    const newSelections = { ...selectedByDate };
+    const newCopyDays = [...copyDays];
+
     for (let i = 0; i < copyForDays; i++) {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
@@ -712,15 +712,24 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
         end_time: slot.end_time.replace(/^\d{4}-\d{2}-\d{2}T/, `${dateStr}T`)
       }));
 
-      // Clear selection for copied days; user can select explicitly later if needed
-      setSelectedByDate((prev) => {
-        const clone = { ...prev };
-        delete clone[dateStr];
-        return clone;
-      });
+      // Auto-populate selections for copied days based on template
+      if (selectedSet && selectedSet.size > 0) {
+        newSelections[dateStr] = new Set(selectedSet);
+      } else {
+        // If template has no explicit selections, clear any existing selections for this day
+        delete newSelections[dateStr];
+      }
+
+      // Mark this day as selected in copyDays
+      const copyDayIndex = newCopyDays.findIndex((cd) => cd.date === dateStr);
+      if (copyDayIndex !== -1) {
+        newCopyDays[copyDayIndex].selected = true;
+      }
     }
 
     setDays(updated);
+    setSelectedByDate(newSelections);
+    setCopyDays(newCopyDays); // Update copyDays to mark the applied days as selected
   };
 
   /* ---------------------------- Edit & Time Logic -------------------------- */
@@ -763,18 +772,24 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     return days.filter((d) => selectedDates.includes(d.date));
   }, [copyDays, days]);
 
-  // if neither exists, show no slots.
+  // FIXED: Properly handle slot filtering for review
   const getFilteredSlotsForDay = (day: DaySlots) => {
     if (!day) return [];
+    
+    // 1. First check if this specific day has slot selections
     const sel = selectedByDate[day.date];
     if (sel && sel.size > 0) return day.slots.filter((_, i) => sel.has(i));
 
+    // 2. If no specific selections for this day, check template day selections
     const tmpl = templateDate ?? days[selectedDayIndex]?.date;
     const tmplSel = tmpl ? selectedByDate[tmpl] : undefined;
     if (tmplSel && tmplSel.size > 0) {
       return day.slots.filter((_, i) => tmplSel.has(i));
     }
-    return []; // never fallback to all
+
+    // 3. If neither has explicit selections, return ALL slots for this day
+    // This is the key fix - don't return empty array
+    return day.slots;
   };
 
   // Map filtered index back to original index for edit/delete mappings
@@ -903,7 +918,10 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                 .filter((i) => i >= 0)
               : [];
 
-        indices.forEach((i) => {
+        // FIXED: If no explicit selections, use all slots for the day
+        const finalIndices = indices.length > 0 ? indices : day.slots.map((_, i) => i);
+
+        finalIndices.forEach((i) => {
           const slot = day.slots[i];
           const slotData: any = {
             start_time: formatLocalNaiveForApi(slot.start_time),
