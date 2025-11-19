@@ -733,7 +733,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     setCopyDays(newCopyDays); // Update copyDays to mark the applied days as selected
   };
 
-  // console.log(copyDays,'selected date')
+  console.log(copyDays, 'selected date')
 
   /* ---------------------------- Edit & Time Logic -------------------------- */
 
@@ -751,6 +751,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
   const removeSlot = (index: number) => {
     const updated = [...days];
     const day = updated[selectedDayIndex];
+
     day.slots.splice(index, 1);
     setDays(updated);
 
@@ -758,6 +759,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     setSelectedByDate((prev) => {
       const set = prev[date] ? new Set(prev[date]) : undefined;
       if (!set) return prev;
+
       const nextSet = new Set<number>();
       for (const s of set) {
         if (s === index) continue;
@@ -775,26 +777,38 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
     return days.filter((d) => selectedDates.includes(d.date));
   }, [copyDays, days]);
 
-  // FIXED: Properly handle slot filtering for review
-  const getFilteredSlotsForDay = (day: DaySlots) => {
-    if (!day) return [];
-    
-    // 1. First check if this specific day has slot selections
-    const sel = selectedByDate[day.date];
-    if (sel && sel.size > 0) return day.slots.filter((_, i) => sel.has(i));
+  console.log(reviewDayList, 'review day list')
 
-    // 2. If no specific selections for this day, check template day selections
-    const tmpl = templateDate ?? days[selectedDayIndex]?.date;
-    const tmplSel = tmpl ? selectedByDate[tmpl] : undefined;
-    if (tmplSel && tmplSel.size > 0) {
-      return day.slots.filter((_, i) => tmplSel.has(i));
+  const getFilteredSlotsForDay = (day: DaySlots) => {
+    if (!day || !day.slots.length) return [];
+
+    // 1. Check if this specific day has VALID slot selections
+    const sel = selectedByDate[day.date];
+    if (sel && sel.size > 0) {
+      // Only include indices that actually exist
+      const validSelections = Array.from(sel).filter(index => index < day.slots.length);
+      if (validSelections.length > 0) {
+        return validSelections.map(index => day.slots[index]);
+      }
     }
 
-    // 3. If neither has explicit selections, return ALL slots for this day
-    // This is the key fix - don't return empty array
+    // 2. Check template day selections (with validation)
+    const tmpl = templateDate || days[selectedDayIndex]?.date;
+    const tmplSel = tmpl ? selectedByDate[tmpl] : undefined;
+    if (tmplSel && tmplSel.size > 0) {
+      // Only include indices that exist in the current day's slots
+      // Note: This assumes template and target day have same slot structure
+      const validSelections = Array.from(tmplSel).filter(index => index < day.slots.length);
+      if (validSelections.length > 0) {
+        return validSelections.map(index => day.slots[index]);
+      }
+    }
+
+    // 3. If no valid selections, return ALL slots
     return day.slots;
   };
 
+  
   // Map filtered index back to original index for edit/delete mappings
   const mapFilteredToOriginalIndex = (day: DaySlots, filteredIndex: number) => {
     const sel = selectedByDate[day.date];
@@ -1559,7 +1573,7 @@ const BulkCreationModal: React.FC<BulkCreationModalProps> = ({
                     <div>
                       <span className="text-gray-600">Total Slots:</span>
                       <span className="font-semibold text-gray-800 ml-2">
-                        {reviewDayList.reduce(
+                        {reviewDayList?.reduce(
                           (sum, d) => sum + getFilteredSlotsForDay(d).length,
                           0
                         )}
