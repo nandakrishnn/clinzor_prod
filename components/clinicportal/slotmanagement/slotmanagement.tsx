@@ -152,8 +152,6 @@ const SlotManagementSystem = () => {
     setShowViewModal(true);
   };
 
-  console.log(filters, 'filter data')
-
   return (
     <div className="min-h-screen ">
       <Header setShowBulkForm={setShowBulkForm} />
