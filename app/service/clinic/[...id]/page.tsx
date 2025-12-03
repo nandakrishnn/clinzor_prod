@@ -10,6 +10,8 @@ type ServiceClinicBookingProps = {
 }
 
 const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
+  console.log("saman",params);
+  
   return (
     <div>
       {/* Nav bar section */}

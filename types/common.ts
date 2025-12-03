@@ -23,6 +23,7 @@ export interface Clinic {
   services: string[];
   doctors: string[];
   femaleDoctors: boolean;
+  slug?:string
 }
 
 export const clinicData: Clinic[] = [

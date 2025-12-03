@@ -19,7 +19,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(true);
-  const {getItem} = useLocalStorage()
+  const {getItem,setItem} = useLocalStorage()
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,7 +110,8 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   };
 
   const handleBookNow = (clinic: Clinic) => {
-    router.push(`/service/clinic/${clinic?.clinic_uuid}?serviceId=${id}`);
+    setItem("clinicId",clinic?.clinic_uuid)
+    router.push(`/service/clinic/${clinic.slug}/${id}`);
   };
 
   // Calculate the subset of clinics to display

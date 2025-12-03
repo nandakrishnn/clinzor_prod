@@ -7,8 +7,10 @@ import ClinicBanner from './ClinicBanner'
 import { useSearchParams } from 'next/navigation'
 import { getAClinicDetailed, getAllClinicDoctorsService, getAllClinicRelatedService, getAService } from '@/service/user/sevicePage'
 import LocationMap from './LocationMap'
+import useLocalStorage from '@/hooks/useLocalStorage.ts'
 
 const ClinicDetailed = ({ id }: { id: string }) => {
+    
     const [clinicData, setClinicData] = useState<any>(null)
     const [selectedService, setService] = useState<any>()
     const [clinicService, setClinicService] = useState<any>()
@@ -17,10 +19,12 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(true)
     const params = useSearchParams();
     const service = params.get("serviceId")
+    const {getItem} = useLocalStorage()
+    const cliniId = getItem("clinicId")
 
     const getClinicData = async () => {
         try {
-            const res = await getAClinicDetailed(id)
+            const res = await getAClinicDetailed(cliniId)
             if (res.status === 200) {
                 setClinicData(res?.data)
             }
@@ -33,7 +37,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
 
     const getServiceData = async (id: string) => {
         try {
-            const res = await getAService(id)
+            const res = await getAService(cliniId)
             if (res.status === 200) {
                 setService(res?.data)
             }
@@ -46,7 +50,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
 
     const getAllServiceClinic = async () => {
         try {
-            const res = await getAllClinicRelatedService(id)
+            const res = await getAllClinicRelatedService(cliniId)
             if (res.status === 200) {
                 setClinicService(res?.data?.data)
             }
@@ -59,7 +63,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
 
     const getAllDoctorsClinic = async () => {
         try {
-            const res = await getAllClinicDoctorsService(id)
+            const res = await getAllClinicDoctorsService(cliniId)
             if (res.status === 200) {
                 setDoctorsService(res?.data?.data)
             }
@@ -74,8 +78,8 @@ const ClinicDetailed = ({ id }: { id: string }) => {
         getClinicData()
         getAllServiceClinic()
         getAllDoctorsClinic()
-        if (service) {
-            getServiceData(service)
+        if (id[1]) {
+            getServiceData(id[1])
         }
     }, []);
 
