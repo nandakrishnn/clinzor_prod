@@ -73,7 +73,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(getItem("slugId"), locationParams, search, type);
+      const res = await getClinicListService(getItem("slugId"), locationParams, search, type); 
 
       if (res.status === 200) {
         setClinicList(res?.data?.data);

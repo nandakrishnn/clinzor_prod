@@ -2,13 +2,35 @@
 import { Close } from '@mui/icons-material';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const FloatingBanner = () => {
   const [hidden, setHidden] = useState(false)
-  const handleHide = async () => {
+   useEffect(() => {
+    const hiddenUntil = localStorage.getItem('floatingBannerHiddenUntil')
+    
+    if (hiddenUntil) {
+      const hiddenUntilTime = parseInt(hiddenUntil, 10)
+      const currentTime = Date.now()
+      
+      
+      if (currentTime < hiddenUntilTime) {
+        setHidden(true)
+      } else {
+        
+        localStorage.removeItem('floatingBannerHiddenUntil')
+        setHidden(false)
+      }
+    }
+  }, [])
+  
+  const handleHide = () => {
     setHidden(true)
+    const hideUntil = Date.now() + (3 * 60 * 60 * 1000)
+    localStorage.setItem('floatingBannerHiddenUntil', hideUntil.toString())
   }
+
+
   return (
     <>
 
@@ -37,7 +59,7 @@ const FloatingBanner = () => {
           </div>
 
           {/* Close button*/}
-          <div onClick={handleHide} className='absolute top-2 right-2 z-50 border rounded-full flex items-center justify-center border-white cursor-pointer md:hidden'>
+          <div onClick={handleHide} className='absolute top-2 right-2 z-50 border rounded-full flex items-center justify-center border-white cursor-pointer '>
             <Close className='text-white text-lg' />
           </div>
 
