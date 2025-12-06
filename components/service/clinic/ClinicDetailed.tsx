@@ -18,8 +18,9 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     const [activeServiceTab, setActiveServiceTab] = useState("PHYSICAL_VISIT")
     const [loading, setLoading] = useState(true)
     const params = useSearchParams();
-    const service = params.get("serviceId")
-    const {getItem} = useLocalStorage()
+     const {getItem} = useLocalStorage()
+    const service = getItem("slugId")
+   
     const cliniId = getItem("clinicId")
 
     const getClinicData = async () => {
@@ -37,7 +38,7 @@ const ClinicDetailed = ({ id }: { id: string }) => {
 
     const getServiceData = async (id: string) => {
         try {
-            const res = await getAService(cliniId)
+            const res = await getAService(id)
             if (res.status === 200) {
                 setService(res?.data)
             }
@@ -75,25 +76,29 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     }
 
     useEffect(() => {
+        console.log("service",service);
+        console.log("clinicid",cliniId);
+        
+        
         getClinicData()
         getAllServiceClinic()
         getAllDoctorsClinic()
-        if (id[1]) {
-            getServiceData(id[1])
+        if (service) {
+            getServiceData(service.trim())
         }
     }, []);
 
     return (
         <>
             <section className="max-w-screen-xl mx-auto pb-10 px-3">
-                <ClinicBanner images={clinicData?.clinic?.images} serviceImage={selectedService?.image} />
+                <ClinicBanner images={clinicData?.clinic?.images??""} serviceImage={selectedService?.image??""} />
             </section>
 
-            <section className="max-w-screen-xl mx-auto pb-5">
-                <ClinicCarousal loading={loading} id={id} clinicService={clinicService} serviceDetailed={selectedService} setActiveServiceTab={setActiveServiceTab} activeServiceTab={activeServiceTab} />
+            <section className="max-w-screen-xl mx-auto pb-5 ">
+                <ClinicCarousal loading={loading} id={cliniId} clinicService={clinicService} serviceDetailed={selectedService} setActiveServiceTab={setActiveServiceTab} activeServiceTab={activeServiceTab} />
             </section>
 
-            <section className="pb-5">
+            <section className="pb-5 ">
                 <ClinicDetailedView loading={loading} serviceId={service} data={clinicData} services={clinicService} activeServiceTab={activeServiceTab} doctors={doctorsService} />
             </section>
 
