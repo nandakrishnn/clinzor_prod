@@ -9,13 +9,11 @@ import {
   MapPin,
   Filter,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   MoreHorizontal,
   Info
 } from "lucide-react";
-import { format, isToday, parseISO, addDays, subDays } from "date-fns";
+import { format } from "date-fns";
 import {
   cancelClinicBookings,
   getAllClinicBookings
@@ -62,12 +60,12 @@ const BookingManagement = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<string>(() =>
+  const [fromDateFilter, setFromDateFilter] = useState<string>(() =>
     format(new Date(), "yyyy-MM-dd")
   );
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const dateObj = useMemo(() => dateFilter ? new Date(dateFilter) : new Date(), [dateFilter]);
-  const isDateToday = useMemo(() => dateFilter ? isToday(dateObj) : true, [dateObj, dateFilter]);
+  const [toDateFilter, setToDateFilter] = useState<string>(() =>
+    format(new Date(), "yyyy-MM-dd")
+  );
   const [loading, setLoading] = useState(false);
   const [paginationData, setPaginationData] = useState({
     current_page: 1,
@@ -204,7 +202,8 @@ const BookingManagement = () => {
     search: string = searchTerm,
     status: string = statusFilter,
     type: string = typeFilter,
-    date: string = dateFilter
+    fromDate: string = fromDateFilter,
+    toDate: string = toDateFilter
   ) => {
     try {
       setLoading(true);
@@ -213,30 +212,38 @@ const BookingManagement = () => {
       let toDateParam = "";
       let showTodayParam = false;
 
-      if (dateFilter) {
-        // Convert the selected date to UTC format for from_date and to_date
-        const localDate = new Date(dateFilter);
-
-        // Set from_date to start of the selected day in UTC
-        const fromDate = new Date(localDate);
-        fromDate.setHours(0, 0, 0, 0);
-        const fromDateUTC = new Date(fromDate.getTime() - fromDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
-
-        // Set to_date to start of next day in UTC
-        const toDate = new Date(localDate);
-        toDate.setDate(toDate.getDate() + 1);
-        toDate.setHours(0, 0, 0, 0);
-        const toDateUTC = new Date(toDate.getTime() - toDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
-
+      if (fromDate) {
+        const localDate = new Date(fromDate);
+        const fDate = new Date(localDate);
+        fDate.setHours(0, 0, 0, 0);
+        const fromDateUTC = new Date(fDate.getTime() - fDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
         fromDateParam = fromDateUTC;
+      }
+
+      if (toDate) {
+        const localDate = new Date(toDate);
+        const tDate = new Date(localDate);
+        tDate.setHours(23, 59, 59, 999);
+        const toDateUTC = new Date(tDate.getTime() - tDate.getTimezoneOffset() * 60000).toISOString().split('.')[0];
         toDateParam = toDateUTC;
       }
 
-      // If date filter is today, set show_today=true and clear the date parameters
-      if (dateFilter === format(new Date(), "yyyy-MM-dd")) {
+      // If fromDate and toDate are today, set show_today=true
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      if (fromDate === todayStr && toDate === todayStr) {
         showTodayParam = true;
+        // Logic in backend might prefer explicit dates or show_today flag. 
+        // Keeping params as calculated above is safer if we want exact range, 
+        // but existing logic used show_today for single day. 
+        // Let's keep sending dates AND maybe show_today if needed, 
+        // but the previous logic CLEARED dates if today.
+        // Let's rely on the range. The backend logic for show_today likely just filters for today.
+        // If we send specific range covering today, it should work.
+        // But to be safe and consistent with previous behavior:
         fromDateParam = "";
         toDateParam = "";
+      } else {
+        showTodayParam = false;
       }
 
       const data = await getAllClinicBookings(
@@ -267,9 +274,9 @@ const BookingManagement = () => {
 
   // Initial fetch and when filters change
   useEffect(() => {
-    fetchBookings(1, searchTerm, statusFilter, typeFilter, dateFilter);
+    fetchBookings(1, searchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, typeFilter, dateFilter]);
+  }, [searchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter]);
 
   // In your useEffect for page changes:
   useEffect(() => {
@@ -278,7 +285,8 @@ const BookingManagement = () => {
       searchTerm,
       statusFilter,
       typeFilter,
-      dateFilter
+      fromDateFilter,
+      toDateFilter
     );
   }, [currentPage]);
 
@@ -293,7 +301,7 @@ const BookingManagement = () => {
 
     // Set new timeout for debounced search
     const timeoutId = setTimeout(() => {
-      fetchBookings(1, term, statusFilter, typeFilter, dateFilter);
+      fetchBookings(1, term, statusFilter, typeFilter, fromDateFilter, toDateFilter);
     }, 500);
 
     setSearchTimeout(timeoutId);
@@ -308,12 +316,19 @@ const BookingManagement = () => {
     setTypeFilter(type);
   };
 
-  const handleDateFilterChange = (date: string) => {
-    setDateFilter(date);
+  const handleFromDateChange = (date: string) => {
+    setFromDateFilter(date);
+    // Auto-update toDate if it's before fromDate
+    if (toDateFilter && date > toDateFilter) {
+      setToDateFilter(date);
+    }
+  };
 
-    // If selecting today, we might want to trigger a refresh immediately
-    if (date === format(new Date(), "yyyy-MM-dd")) {
-      fetchBookings(1, searchTerm, statusFilter, typeFilter, date);
+  const handleToDateChange = (date: string) => {
+    setToDateFilter(date);
+    // Auto-update fromDate if it's after toDate
+    if (fromDateFilter && date < fromDateFilter) {
+      setFromDateFilter(date);
     }
   };
 
@@ -547,56 +562,29 @@ const BookingManagement = () => {
         <div className="bg-white/80 border border-slate-200 rounded-2xl shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
             {/* Date Filter */}
+            {/* From Date Filter */}
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-2 block">
-                Date
+                From Date
               </label>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDateFilterChange(
-                      format(subDays(dateObj, 1), "yyyy-MM-dd")
-                    )
-                  }
-                  className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  aria-label="Previous Day"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDatePickerOpen(true)}
-                  className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-left font-medium text-slate-700"
-                >
-                  {isDateToday ? "Today" : format(dateObj, "yyyy-MM-dd")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDateFilterChange(
-                      format(addDays(dateObj, 1), "yyyy-MM-dd")
-                    )
-                  }
-                  className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  aria-label="Next Day"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Hidden date input for picker */}
               <input
                 type="date"
-                value={dateFilter}
-                onChange={(e) => {
-                  handleDateFilterChange(e.target.value);
-                  setDatePickerOpen(false);
-                }}
-                className="hidden"
-                ref={(el) => {
-                  if (datePickerOpen && el) el.showPicker && el.showPicker();
-                }}
-                onBlur={() => setDatePickerOpen(false)}
+                value={fromDateFilter}
+                onChange={(e) => handleFromDateChange(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm font-medium text-slate-700"
+              />
+            </div>
+            {/* To Date Filter */}
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-2 block">
+                To Date
+              </label>
+              <input
+                type="date"
+                value={toDateFilter}
+                onChange={(e) => handleToDateChange(e.target.value)}
+                min={fromDateFilter}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm font-medium text-slate-700"
               />
             </div>
             {/* Search Filter */}
@@ -654,7 +642,8 @@ const BookingManagement = () => {
                   setSearchTerm("");
                   setStatusFilter("");
                   setTypeFilter("");
-                  setDateFilter(format(new Date(), "yyyy-MM-dd"));
+                  setFromDateFilter(format(new Date(), "yyyy-MM-dd"));
+                  setToDateFilter(format(new Date(), "yyyy-MM-dd"));
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700 rounded-xl font-medium border border-slate-300 hover:from-slate-300 hover:to-slate-200 transition-all duration-200"
               >
@@ -861,8 +850,8 @@ const BookingManagement = () => {
                           {/* Action Menu with transition */}
                           <div
                             className={`absolute z-50 right-0 top-12 w-40 bg-white border border-slate-200 rounded-xl shadow-xl transition-all duration-200 ${showActionMenu === booking.uuid
-                                ? "opacity-100 scale-100 pointer-events-auto"
-                                : "opacity-0 scale-95 pointer-events-none"
+                              ? "opacity-100 scale-100 pointer-events-auto"
+                              : "opacity-0 scale-95 pointer-events-none"
                               }`}
                             tabIndex={-1}
                             aria-label="Action Menu"
@@ -1063,8 +1052,8 @@ const BookingManagement = () => {
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-2 rounded-lg border border-slate-200 font-semibold ${currentPage === i + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-white/80 text-slate-700"
+                    ? "bg-blue-600 text-white"
+                    : "bg-white/80 text-slate-700"
                     }`}
                 >
                   {i + 1}
