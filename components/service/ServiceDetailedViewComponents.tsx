@@ -12,6 +12,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
   const [serviceTag, setServiceTag] = useState<any>()
   const [isSearching, setIsSearching] = useState(false);
   const [visitType, setVisitType] = useState('')
+  const [distance, setDistance] = useState<number>(5)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -76,6 +77,22 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
               )}
             </div>
           </div>
+          <div className="w-full md:w-[30%]">
+            <select
+              className="py-3.5 w-full px-5 border border-gray-300 rounded-lg focus:outline-none"
+              value={distance}
+              onChange={(e: any) => setDistance(e.target.value)}
+            >
+              {/* <option value="">Select Radius</option> */}
+               {/* <option value="1">Within 1 km</option> */}
+              <option value="5">Within 5 km</option>
+              <option value="10">Within 10 km</option>
+              <option value="15">Within 15 km</option>
+              <option value="20">Within 20 km</option>
+               <option value="100">More than 20 km</option>
+            </select>
+          </div>
+
 
           {/* Filter part */}
           <div className='w-full md:w-[30%]'>
@@ -104,7 +121,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
 
       {/* Children */}
       <div className="max-w-7xl mx-auto min-w-full flex flex-col md:flex-row ">
-        <AvailableClinics id={id} search={search} type={visitType} />
+        <AvailableClinics id={id} search={search} type={visitType} distance={distance} />
         <ServiceDetailed id={id} />
       </div>
     </div>
