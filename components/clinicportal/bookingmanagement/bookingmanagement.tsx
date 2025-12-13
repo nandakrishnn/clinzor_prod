@@ -232,14 +232,6 @@ const BookingManagement = () => {
       const todayStr = format(new Date(), "yyyy-MM-dd");
       if (fromDate === todayStr && toDate === todayStr) {
         showTodayParam = true;
-        // Logic in backend might prefer explicit dates or show_today flag. 
-        // Keeping params as calculated above is safer if we want exact range, 
-        // but existing logic used show_today for single day. 
-        // Let's keep sending dates AND maybe show_today if needed, 
-        // but the previous logic CLEARED dates if today.
-        // Let's rely on the range. The backend logic for show_today likely just filters for today.
-        // If we send specific range covering today, it should work.
-        // But to be safe and consistent with previous behavior:
         fromDateParam = "";
         toDateParam = "";
       } else {
