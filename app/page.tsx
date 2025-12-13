@@ -4,7 +4,6 @@ import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import ServicesWeOffer from "@/components/landingpage/Ourservice/ServicesWeOffer";
 import FooterSection from "@/components/landingpage/footer/footer";
 import HeroSection from "@/components/landingpage/hero/Hero";
-import SearchBar from "@/components/landingpage/searchbar/searchbar";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
