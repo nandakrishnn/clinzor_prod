@@ -1,146 +1,51 @@
 "use client";
 
-import { useState } from "react";
-
-const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const TIME_SLOTS = [
-  "09:00 AM",
-  "09:30 AM",
-  "10:00 AM",
-  "10:30 AM",
-  "11:00 AM",
-  "11:30 AM"
-];
+import Image from "next/image";
 
 export default function ScheduleConsultation() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState("10:00 AM");
-  const [weekOffset, setWeekOffset] = useState(0); // each offset = 2 weeks
-
-  const getTwoWeekDates = () => {
-    const today = new Date();
-    const startDate = new Date(
-      today.setDate(today.getDate() + weekOffset * 14)
-    );
-
-    return Array.from({ length: 14 }, (_, i) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      return date;
-    });
-  };
-
-  const twoWeekDays = getTwoWeekDates();
-
-  const formatDate = (date: Date) => {
-    return date.toISOString().split("T")[0];
-  };
-
-  const selectedDateStr = formatDate(selectedDate);
-
-  // Get the current visible month from the middle date
-  const midIndex = Math.floor(twoWeekDays.length / 2);
-  const currentMonthLabel = twoWeekDays[midIndex].toLocaleString("default", {
-    month: "long",
-    year: "numeric"
-  });
-
   return (
-    <section className="flex flex-col gap-5 px-5 md:px-8 py-10 bg-white rounded-xl shadow-md w-full overflow-hidden">
-      <h2 className="text-xl font-bold text-center">
-        Schedule Your Consultation
-      </h2>
+    <section className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8 relative">
+      {/* Decorative background blobs */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-blue-100/50 via-purple-100/30 to-teal-100/50 rounded-full blur-3xl -z-10" />
 
-      {/* Specialty */}
-      <div>
-        <label className="block text-gray-500 mb-1">Select Specialty</label>
-        <div className="mb-4 font-medium mt-2">Dermatology</div>
-      </div>
+      <div className="relative w-full aspect-square md:aspect-[4/4] rounded-3xl overflow-hidden shadow-2xl border-[6px] border-white ring-1 ring-slate-100 transform hover:scale-[1.02] transition-all duration-500 ease-out">
+        <Image
+          src="/clinzor_expert.png"
+          alt="Clinzor Expert Consultation"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority
+        />
 
-      {/* Navigation and Month Display */}
-      <div className="flex justify-between items-center ">
-        <button
-          className="text-blueText font-medium"
-          onClick={() => setWeekOffset((prev) => prev - 1)}
-        >
-          ← Previous
-        </button>
-        <div className="text-gray-800 font-semibold text-sm">
-          {currentMonthLabel}
-        </div>
-        <button
-          className="text-blueText font-medium"
-          onClick={() => setWeekOffset((prev) => prev + 1)}
-        >
-          Next →
-        </button>
-      </div>
+        {/* Glassmorphism Badge */}
+        <div className="absolute bottom-6 left-6 right-6">
+          <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              <div>
+                <p className="font-bold text-slate-800 text-sm leading-tight">
+                  Clinzor Expert
+                </p>
+                <p className="text-xs text-slate-500 font-medium">
+                  Available Now
+                </p>
+              </div>
+            </div>
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-400">
+                  Doc
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/* Calendar Grid */}
-      <div>
-        <label className="block text-gray-500 mb-1">Select a Date</label>
-
-        {/* Days of the week header (fixed 7 items) */}
-        <div className="grid grid-cols-7 gap-2 text-sm text-center font-medium text-gray-500 mt-2">
-          {DAYS.map((day) => (
-            <div key={day}>{day}</div>
-          ))}
-        </div>
-
-        {/* 14 days as 2-week date picker */}
-        <div className="grid grid-cols-7 gap-2 mt-2">
-          {twoWeekDays.map((date) => {
-            const dateStr = formatDate(date);
-            const selected = dateStr === selectedDateStr;
-
-            return (
-              <button
-                key={dateStr}
-                onClick={() => setSelectedDate(date)}
-                aria-pressed={selected}
-                className={`flex items-center justify-center text-[14px] font-bold p-2 rounded-lg border-2 transition min-h-[42px] ${
-                  selected
-                    ? "bg-blue-100 border-blueLight text-blueText"
-                    : "border-transparent text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {date.getDate()}
-              </button>
-            );
-          })}
         </div>
       </div>
-
-      {/* Time Slot Selection */}
-      <div>
-        <label className="block text-gray-500 mb-1">Select a Time Slot</label>
-        <div className="grid grid-cols-3 gap-3 mt-2">
-          {TIME_SLOTS.map((slot) => (
-            <button
-              key={slot}
-              className={`py-2 rounded transition border-2 text-sm ${
-                selectedTime === slot
-                  ? "bg-primaryColor text-white border-primaryColor"
-                  : "bg-gray-100 text-gray-800 border-transparent hover:bg-blue-100 hover:text-blueText"
-              }`}
-              onClick={() => setSelectedTime(slot)}
-              aria-pressed={selectedTime === slot}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Confirm Button */}
-      <button
-        className="mt-4 w-full py-3 rounded-md bg-primaryColor text-white text-[16px] font-semibold hover:bg-primaryColor transition"
-        onClick={() => {
-          alert(`Booked: Dermatology on ${selectedDateStr} at ${selectedTime}`);
-        }}
-      >
-        Confirm Booking
-      </button>
     </section>
   );
 }
