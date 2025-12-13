@@ -146,7 +146,8 @@ export default function AdminLogin() {
                 <img
                   src="/assets/logo/logo.png"
                   alt="Admin Logo"
-                  style={{ width: '50px', height: '50px' }}
+                  className='object-contain'
+                  style={{ width: '100px', height: '100px' }}
                 />
                 <Typography level="title-lg">Admin</Typography>
               </Box>
@@ -176,6 +177,22 @@ export default function AdminLogin() {
             >
               <Stack sx={{ gap: 4, mt: 2 }}>
                 <form onSubmit={handleSubmit}>
+                  {error && (
+                    <Typography
+                      color="danger"
+                      level="body-sm"
+                      sx={{
+                        mb: 2,
+                        p: 1.5,
+                        bgcolor: 'background.surface',
+                        border: '1px solid',
+                        borderColor: 'danger.outlinedBorder',
+                        borderRadius: 'sm'
+                      }}
+                    >
+                      {error}
+                    </Typography>
+                  )}
                   <FormControl required>
                     <FormLabel>Email</FormLabel>
                     <Input type="email" name="email" />
