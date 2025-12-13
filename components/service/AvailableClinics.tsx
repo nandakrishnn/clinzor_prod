@@ -76,6 +76,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
       if (res.status === 200) {
         setClinicList(res?.data?.data);
       }
+      
     } catch (error) {
       console.log(error);
     } finally {
