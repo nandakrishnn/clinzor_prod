@@ -71,29 +71,29 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
         </h3>
 
         {/* Timing Section */}
-        <div className="mb-3">
-          <div className="relative">
+        <div className="mb-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2 rounded-xl border border-blue-100">
+          <div className="relative group">
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors"
+              className="absolute left-[-14px] top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 border border-gray-200"
               aria-label="Scroll left"
             >
-              <IoChevronBack className="w-4 h-4 text-gray-600" />
+              <IoChevronBack className="w-3 h-3 text-gray-700" />
             </button>
 
             <div 
               ref={scrollRef}
-              className="flex items-center gap-2 overflow-x-auto px-8 scrollbar-hide"
+              className="flex items-center gap-2 overflow-x-auto px-7 py-1 scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {clinic.timings.map((time, index) => (
-                <button
+              (time.closing_time || time.opening_time )&&<button
                   key={index}
                   onClick={() => setDaySelect(index)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 ${
+                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex-shrink-0 transform hover:scale-105 ${
                     daySelect === index
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md border border-gray-200'
                   }`}
                 >
                   {time.day.substring(0, 3)}
@@ -103,15 +103,15 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
 
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors"
+              className="absolute right-[-14px] top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 border border-gray-200"
               aria-label="Scroll right"
             >
-              <IoChevronForward className="w-4 h-4 text-gray-600" />
+              <IoChevronForward className="w-3.5 h-3.5 text-gray-700" />
             </button>
           </div>
 
-          <div className="text-xs text-gray-600 bg-blue-50 px-3 py-2 rounded-lg mt-2">
-            <span className="font-medium">Opens:</span>{" "}
+        <div className="text-xs text-gray-600 bg-blue-50 px-3 py-2 rounded-lg ">
+            <span className="font-semibold">Timing:</span>{" "}
             <span className="font-semibold text-blue-600">
               {formatTime(clinic.timings[daySelect].opening_time)}
             </span>
@@ -123,7 +123,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
         </div>
 
         {/* Address Section */}
-         <div className="flex items-center text-xs text-gray-500 mb-2 flex-wrap">
+       <div className="flex items-center text-xs text-gray-500 mb-2 flex-wrap">
           <span className="line-clamp-1">{clinic.distance} KM</span>
           <span className="line-clamp-1">{clinic.address}</span>
         </div>
