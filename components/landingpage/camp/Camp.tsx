@@ -173,10 +173,10 @@ const Camp = () => {
     <>
       <section className="overflow-hidden">
         <div className="@container mx-auto max-w-7xl px-3 md:px-6 flex flex-col md:flex-row gap-5 md:gap-14">
-          <div className="md:h-[550px] rounded-2xl overflow-hidden w-full md:w-[60%]  relative shadow-lg ">
+          <div className="md:h-[400px] rounded-2xl overflow-hidden w-full md:w-[40%]  relative shadow-lg ">
             <Slider {...settings}>
               {carouselImages.map((image, index) => (
-                <div key={index} className="h-[235px] md:h-[550px] relative">
+                <div key={index} className="h-[235px] md:h-[400px] relative">
                   <img
                     src={image}
                     alt={`Camp image ${index + 1}`}
@@ -188,13 +188,13 @@ const Camp = () => {
           </div>
 
           <motion.div
-            className="text-start w-full md:w-[50%] flex flex-col items-center justify-center"
+            className="text-start w-full md:w-[60%] flex flex-col items-center justify-center "
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={headingVariants}
           >
-            <div className="text-start flex flex-col items-start justify-center">
+            <div className="text-start flex flex-col items-start justify-center ">
               <h3 className="font-semibold text-[18px] italic ">
                 {"Clinic Camp"}
               </h3>
@@ -239,14 +239,17 @@ const Camp = () => {
                   </div>
                 </li>
               </ul>
-            </div>
-
-            <button
+               <div className="w-full flex justify-start">
+             <button
               onClick={openModal}
-              className="w-full bg-primaryColor text-white p-2.5 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
+              className="w-fit bg-primaryColor text-white px-24 py-2 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
             >
               Register Now
             </button>
+        </div>
+            </div>
+
+       
           </motion.div>
         </div>
       </section>
