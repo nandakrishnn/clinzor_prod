@@ -18,6 +18,7 @@ const AvailableClinics = ({ id, search, type ,distance }: { id: string; search?:
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(true);
+ 
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,6 +90,7 @@ const AvailableClinics = ({ id, search, type ,distance }: { id: string; search?:
     if (!isLocating) {
       getClinicList();
     }
+    
   }, [isLocating, userLocation, search, type,distance]);
 
   // Calculate total slides and current slide
@@ -117,6 +119,10 @@ const AvailableClinics = ({ id, search, type ,distance }: { id: string; search?:
     currentIndex,
     currentIndex + visibleCards
   );
+
+
+  
+
 
   return (
     <div className="p-4 md:p-6 font-inter w-full md:min-w-[70%] ">
