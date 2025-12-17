@@ -100,6 +100,17 @@ export const getClinicListService = async (id?: string, location?: { lat: number
   return res?.data;
 }
 
+export const getIdByServiceName = async (
+  serviceName: string
+): Promise<any> => {
+  const url = `${USER_SERVICE.GET_UUID_BY_SERVICE_NAME}/${serviceName}`;
+  const res = await axiosPublic.get(url);
+  return res.data.data;
+};
+
+
+
+
 export const createBookingService = async (data?: any) => {
   const res = await axiosPrivate.post(`${USER_SERVICE.CREATE_BOOKING}`, data);
   return res.data;

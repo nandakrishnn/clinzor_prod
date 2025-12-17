@@ -6,7 +6,7 @@ import { FiChevronLeft, FiChevronRight, FiMapPin } from "react-icons/fi";
 import { Clinic } from "@/types/common";
 
 import ClinicCard from "./ClinicCard";
-import { getClinicListService } from "@/service/user/sevicePage";
+import { getClinicListService, getIdByServiceName } from "@/service/user/sevicePage";
 import DataPlaceholder from "../common/DataPlaceholder";
 import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
@@ -19,7 +19,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(true);
-  const {getItem,setItem} = useLocalStorage()
+  const { getItem, setItem } = useLocalStorage()
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,7 +65,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
     }
   }, []);
 
-  const getClinicList = async () => {
+  const getClinicList = async (slugId: string) => {
     try {
       setIsLoading(true);
       // Pass user location if available, otherwise null
@@ -73,7 +73,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(getItem("slugId"), locationParams, search, type);
+      const res = await getClinicListService(slugId, locationParams, search, type);
 
       if (res.status === 200) {
         setClinicList(res?.data?.data);
@@ -86,11 +86,21 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   };
 
   useEffect(() => {
-    // Only fetch clinics once we have location (or know we can't get it)
-    if (!isLocating) {
-      getClinicList();
-    }
+    const fetchClinics = async () => {
+      if (!isLocating) {
+        const slugId = getItem("slugId")
+        if (!slugId) {
+          const clinicData = await getIdByServiceName(id);
+          getClinicList(clinicData.uuid);
+        } else {
+          getClinicList(slugId);
+        }
+      }
+    };
+
+    fetchClinics();
   }, [isLocating, userLocation, search, type]);
+
 
   // Calculate total slides and current slide
   const totalSlides = Math.ceil(clinicList.length / visibleCards);
@@ -110,7 +120,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   };
 
   const handleBookNow = (clinic: Clinic) => {
-    setItem("clinicId",clinic?.clinic_uuid)
+    setItem("clinicId", clinic?.clinic_uuid)
     router.push(`/service/clinic/${clinic.slug}/${id}`);
   };
 

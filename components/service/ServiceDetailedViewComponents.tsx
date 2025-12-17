@@ -7,6 +7,8 @@ import { getAllService } from '@/service/user/sevicePage'
 import Link from 'next/link'
 
 const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
+  console.log(id);
+  
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [serviceTag, setServiceTag] = useState<any>()
