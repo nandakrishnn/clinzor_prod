@@ -5,7 +5,7 @@ import ClinicCarousal from '../clinicDetailed/ClinicCarousal'
 import ClinicDetailedView from '../booking/ClinicDetailedView'
 import ClinicBanner from './ClinicBanner'
 import { useSearchParams } from 'next/navigation'
-import { getAClinicDetailed, getAllClinicDoctorsService, getAllClinicRelatedService, getAService } from '@/service/user/sevicePage'
+import { getAClinicDetailed, getAllClinicDoctorsService, getAllClinicRelatedService, getAService, getIdByServiceName } from '@/service/user/sevicePage'
 import LocationMap from './LocationMap'
 import useLocalStorage from '@/hooks/useLocalStorage.ts'
 
@@ -76,16 +76,23 @@ const ClinicDetailed = ({ id }: { id: string }) => {
     }
 
     useEffect(() => {
-        console.log("service",service);
-        console.log("clinicid",cliniId);
-        
-        
+         const fetchServiceData = async () => {
+             
+              
+                if (!service) {
+                  const serviceData = await getIdByServiceName(id[1]);
+                  getServiceData(serviceData.uuid)
+                } else {
+                getServiceData(service.trim())              
+              }
+            
+            };
+            
         getClinicData()
         getAllServiceClinic()
         getAllDoctorsClinic()
-        if (service) {
-            getServiceData(service.trim())
-        }
+        fetchServiceData()
+        
     }, []);
 
     return (
