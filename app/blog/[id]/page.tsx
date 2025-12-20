@@ -23,6 +23,7 @@ const BlogDetailedPage = async ({ params }: BlogDetailedPageProps) => {
             </section>
 
             <BlogDetailView 
+             blogName={params.id}
             // post={post?.data}
             />
 

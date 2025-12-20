@@ -118,6 +118,15 @@ export const getClincDataByName = async (
 };
 
 
+export const getBlogDataByName = async (
+  blogName: string
+): Promise<any> => {
+  const url = `${USER_SERVICE.GET_BLOGDATS_BY_NAME}/${blogName}`;
+  const res = await axiosPublic.get(url);
+  return res.data.data;
+};
+
+
 
 
 export const createBookingService = async (data?: any) => {

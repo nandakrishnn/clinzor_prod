@@ -9,7 +9,6 @@ import LocationMap from './LocationMap'
 import useLocalStorage from '@/hooks/useLocalStorage.ts'
 
 const ClinicDetailed = ({ id }: { id: string }) => {
-  console.log(id);
   const [clinicData, setClinicData] = useState<any>(null)
   const [selectedService, setService] = useState<any>()
   const [clinicService, setClinicService] = useState()

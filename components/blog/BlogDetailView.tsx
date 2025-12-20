@@ -1,6 +1,7 @@
 'use client'
 import useLocalStorage from "@/hooks/useLocalStorage.ts";
 import { getABlog } from "@/service/user/blogPage";
+import { getBlogDataByName } from "@/service/user/sevicePage";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Clock, Bookmark, Heart, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -16,7 +17,7 @@ export interface BlogDetailViewProps {
   
 }
 
-export const BlogDetailView: React.FC =  () => {
+export const BlogDetailView: React.FC<{ blogName: string }> = ({ blogName })  => {
  const [post,setPost] = useState<BlogDetailViewProps|null>(null)
  const {getItem} = useLocalStorage()
    
@@ -24,7 +25,11 @@ export const BlogDetailView: React.FC =  () => {
  useEffect(() => {
   const fetchData = async () => {
     try {
-      const slug = getItem("blogSlug");
+      let  slug = getItem("blogSlug");
+      if(!slug){
+       const blogData = await getBlogDataByName(blogName)
+       slug = blogData.uuid
+      }
       const postData = await getABlog(slug);      
       setPost(postData.data);
     } catch (error) {
