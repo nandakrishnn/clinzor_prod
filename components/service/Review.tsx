@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Title from "../ui/title";
-import { addReviewService, getAllReviewService } from "@/service/user/sevicePage";
+import { addReviewService, getAllReviewService, getIdByServiceName } from "@/service/user/sevicePage";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
 interface Review {
   id: string;
@@ -21,10 +22,11 @@ const ReviewSection = ({ id }: { id: string }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {getItem} = useLocalStorage()
   const [hasMore, setHasMore] = useState(true);
   const { data: session, status } = useSession();
   const params = useSearchParams();
-  const service = params.get("serviceId");
+  let service = getItem("slugId")
   const [page, setPage] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -35,6 +37,18 @@ const ReviewSection = ({ id }: { id: string }) => {
     clinic: id,
     service: service || "",
   });
+  useEffect(()=>{
+    const fetchIdByServiceName = async () => {
+          if (!service) {
+              const clinicData = await getIdByServiceName(id[1]);
+             service = clinicData.uuid;
+            
+          }
+        };
+
+        fetchIdByServiceName()
+
+  },[])
 
   // Fetch reviews function
   const listAllReview = async (service: string, pageNum: number = 1, append: boolean = false) => {
