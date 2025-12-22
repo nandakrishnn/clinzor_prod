@@ -1,4 +1,5 @@
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import Link from "next/link";
 
 export default function ExpertInfoPanel() {
   return (
@@ -6,7 +7,7 @@ export default function ExpertInfoPanel() {
       <h2 className="text-balance text-2xl text-center md:text-start md:text-4xl font-bold bg-clip-text">
         Book an Expert Call
       </h2>
-      <p className="text-gray-600 text-center md:text-start">
+      <p className="text-gray-600 text-center md:text-start text-justify">
         Get personalized medical advice from top specialists through a secure
         video consultation. It’s simple, convenient, and effective.
       </p>
@@ -48,6 +49,16 @@ export default function ExpertInfoPanel() {
           </div>
         </li>
       </ul>
+
+
+      <Link href="/expert-call" className="block mt-4">
+        <button className="w-full md:w-fit md:px-5 bg-primaryColor text-white p-2.5 text-sm rounded-full hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg transform active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+          <span>Book Expert Now</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+      </Link>
     </section>
   );
 }

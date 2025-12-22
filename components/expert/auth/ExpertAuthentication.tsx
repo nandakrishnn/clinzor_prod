@@ -88,16 +88,15 @@ const ExpertAuthentication: React.FC = () => {
       });
       console.log(result)
 
-      if (result?.error && result?.status === 401 ) {
-        toast.error("Invalid credentials");
-      } else if (result?.error) {
-         toast.error(result?.error);
+      if (result?.error) {
+        setError(result.error);
+        toast.error(result.error);
       } else if (result?.url) {
         router.push(result.url);
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
-      toast.error('Invalid Credentials')
+      toast.error('An unexpected error occurred. Please try again.')
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -200,6 +199,14 @@ const ExpertAuthentication: React.FC = () => {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2 text-sm border border-red-100 animate-in fade-in slide-in-from-top-2">
+                <AlertCircle size={16} className="shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">

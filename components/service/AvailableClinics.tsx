@@ -10,7 +10,7 @@ import { getClinicListService, getIdByServiceName } from "@/service/user/seviceP
 import DataPlaceholder from "../common/DataPlaceholder";
 import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
-const AvailableClinics = ({ id, search, type }: { id: string; search?: string, type: string }) => {
+const AvailableClinics = ({ id, search, type ,distance }: { id: string; search?: string, type: string ,distance:number }) => {
   const router = useRouter();
   const [visibleCards, setVisibleCards] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,6 +20,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(true);
   const { getItem, setItem } = useLocalStorage()
+ 
 
   useEffect(() => {
     const handleResize = () => {
@@ -73,11 +74,12 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
         ? { lat: userLocation.lat, lng: userLocation.lng }
         : null;
 
-      const res = await getClinicListService(slugId, locationParams, search, type);
+      const res = await getClinicListService(slugId,distance, locationParams, search, type);
 
       if (res.status === 200) {
         setClinicList(res?.data?.data);
       }
+      
     } catch (error) {
       console.log(error);
     } finally {
@@ -99,7 +101,7 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
     };
 
     fetchClinics();
-  }, [isLocating, userLocation, search, type]);
+  }, [isLocating, userLocation, search, type,distance]);
 
 
   // Calculate total slides and current slide
@@ -129,6 +131,10 @@ const AvailableClinics = ({ id, search, type }: { id: string; search?: string, t
     currentIndex,
     currentIndex + visibleCards
   );
+
+
+  
+
 
   return (
     <div className="p-4 md:p-6 font-inter w-full md:min-w-[70%] ">

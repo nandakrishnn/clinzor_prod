@@ -4,7 +4,6 @@ import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import ServicesWeOffer from "@/components/landingpage/Ourservice/ServicesWeOffer";
 import FooterSection from "@/components/landingpage/footer/footer";
 import HeroSection from "@/components/landingpage/hero/Hero";
-import SearchBar from "@/components/landingpage/searchbar/searchbar";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 import Booking from "@/components/landingpage/booking/Booking";
@@ -55,7 +54,7 @@ export default function Home() {
         </section>
 
         {/* Booking */}
-        <section className="bg-gray-50 py-5 sm:py-14 pb-28 px-4 sm:px-6">
+        <section className="bg-gray-50 py-5 sm:py-14  px-4 sm:px-6">
           <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
             <Booking />
           </div>

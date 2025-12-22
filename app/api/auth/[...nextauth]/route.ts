@@ -90,9 +90,15 @@ const authOptions: NextAuthOptions = {
           }
           console.error("Login failed:", data);
 
+          const errorMessage = data?.error
+            ? (typeof data.error === 'string' ? data.error : JSON.stringify(data.error))
+            : "Invalid credentials";
+
+          throw new Error(errorMessage);
+
         } catch (err: any) {
           console.error("Login error:", err);
-          return err;
+          throw new Error(err.message || "Login failed");
         }
       },
     }),
