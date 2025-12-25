@@ -52,7 +52,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
   return (
     <div className="flex flex-col w-full">
       {/* Search Bar */}
-      <div className="max-w-7xl mx-auto w-full md:my-4 px-5">
+      <div className="max-w-7xl mx-auto w-full md:my-4 px-5 ">
         <div className='flex flex-col md:flex-row items-center justify-center gap-2'>
           {/* search  */}
           <div className='relative w-full'>
@@ -122,7 +122,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
 
 
       {/* Children */}
-      <div className="max-w-7xl mx-auto min-w-full flex flex-col md:flex-row ">
+      <div className="max-w-7xl mx-auto min-w-full flex flex-col md:flex-row   ">
         <AvailableClinics id={id} search={search} type={visitType} distance={distance} />
         <ServiceDetailed id={id} />
       </div>

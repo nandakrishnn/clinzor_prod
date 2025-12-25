@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
 type ServiceCardProps = {
   uuid: string;
@@ -10,6 +11,7 @@ type ServiceCardProps = {
   tags?: string;
   created_by?: string;
   image?: string;
+  slug:string
 };
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
@@ -19,9 +21,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   tags,
   created_by,
   image,
+  slug
 }) => {
   // Convert tags string into an array (max 2 tags to keep UI clean)
   const tagList = tags ? tags.split(",").slice(0, 2) : [];
+  const {setItem} = useLocalStorage()
 
   return (
     <div className="rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden border border-gray-100 hover:border-primary/20 bg-white hover:bg-gradient-to-br from-white to-primary/5">
@@ -72,7 +76,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         {/* Action button */}
         <div className="flex gap-2 w-full">
           <Link
-            href={`/service/${uuid}`}
+            onClick={()=>{
+               setItem("slugId",uuid)
+            }}
+            href={`/service/${slug}`}
             className="flex-1 bg-primaryColor hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-sm text-center transition-colors flex items-center justify-center gap-1"
           >
             View clinic

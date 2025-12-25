@@ -16,6 +16,7 @@ type Service = {
   tags: string;
   created_by: string;
   image: string;
+  slug:string
 };
 
 // Create a wrapper component that uses Suspense
@@ -157,6 +158,7 @@ function ServiceListContent() {
                 description={service.description}
                 tags={service.tags}
                 image={service.image}
+                slug={service.slug}
               />
             ))}
           </section>

@@ -79,7 +79,8 @@ function UserDashContent() {
       console.error(error)
     } finally {
       clearClientData();
-      setShowLogoutConfirm(false)
+      setShowLogoutConfirm(false);
+      localStorage.removeItem('floatingBannerHiddenUntil')
     }
   }
 
