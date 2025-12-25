@@ -77,7 +77,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <div className="flex gap-2 w-full">
           <Link
             onClick={()=>{
-               setItem("slugId",uuid)
+               setItem(slug,uuid)
             }}
             href={`/service/${slug}`}
             className="flex-1 bg-primaryColor hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-sm text-center transition-colors flex items-center justify-center gap-1"

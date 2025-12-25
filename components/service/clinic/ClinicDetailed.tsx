@@ -19,8 +19,8 @@ const ClinicDetailed = ({ id }: { id: string }) => {
   const params = useSearchParams();
   const { getItem } = useLocalStorage()
   
-  const [service, setServiceId] = useState(getItem("slugId"))
-  const [cliniId, setClinicId] = useState(getItem("clinicId"))
+  const [service, setServiceId] = useState(getItem(id[1]))
+  const [cliniId, setClinicId] = useState(getItem(id[0]))
 
   const getClinicData = async () => {
     try {

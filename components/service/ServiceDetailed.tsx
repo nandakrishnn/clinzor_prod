@@ -25,7 +25,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
   const getServiceData = async () => {
   try {
     if (id !== null) {
-      const res = await getAService(getItem("slugId"));
+      const res = await getAService(getItem(id));
       if (res.status === 200) {
         setServiceData(res?.data)
         setServiceData(res.data);

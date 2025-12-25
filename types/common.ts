@@ -23,7 +23,7 @@ export interface Clinic {
   services: string[];
   doctors: string[];
   femaleDoctors: boolean;
-  slug?:string
+  slug:string
   clinic_images?:string[];
   timings: {
   day: string

@@ -20,7 +20,7 @@ const CardTwo: React.FC<CardProps> = ({ className, icon, title, content, service
       key={service?.uuid}
       className={`group bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 cursor-pointer md:h-[350px] ${className}`}
       onClick={() => {
-         setItem("slugId", service?.uuid);
+         setItem(service?.slug, service?.uuid);
           router.push(`/service/${service?.slug}`)
       }}
     >

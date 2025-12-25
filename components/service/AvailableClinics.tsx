@@ -87,7 +87,8 @@ const AvailableClinics = ({ id, search, type, distance }: { id: string; search?:
   useEffect(() => {
     const fetchClinics = async () => {
       if (!isLocating) {
-        const slugId = getItem("slugId");
+        const slugId = await getItem(id);
+        
         if (!slugId) {
           const clinicData = await getIdByServiceName(id);
           getClinicList(clinicData.uuid);
@@ -101,7 +102,7 @@ const AvailableClinics = ({ id, search, type, distance }: { id: string; search?:
   }, [isLocating, userLocation, search, type, distance]);
 
   const handleBookNow = (clinic: Clinic) => {
-    setItem("clinicId", clinic?.clinic_uuid);
+    setItem(clinic.slug, clinic?.clinic_uuid);
     router.push(`/service/clinic/${clinic.slug}/${id}`);
   };
 
