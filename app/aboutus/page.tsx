@@ -9,7 +9,7 @@ import FooterSection from "@/components/landingpage/footer/footer";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 
-const AboutPage = () => {
+const AboutPage = () => {  
   return (
     <main className="min-h-screen bg-gradient-to-b to-white overflow-hidden">
       {/* Nav bar section */}
