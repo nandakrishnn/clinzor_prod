@@ -44,7 +44,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
 
 
   return (
-    <div className="w-full md:min-w-[30%] mb-10">
+    <div className="w-full  sm:min-w-[30%] mb-10">
       {/* {isLoading && <ServiceDetailedVIewSkelton />} */}
       {/* Service Header Section */}
       <section className="flex flex-col gap-5 items-start justify-start font-inter shadow-xl p-4 md:p-6 rounded-xl ">

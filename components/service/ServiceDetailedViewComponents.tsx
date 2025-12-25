@@ -122,7 +122,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
 
 
       {/* Children */}
-      <div className="max-w-7xl mx-auto min-w-full flex flex-col md:flex-row   ">
+      <div className="max-w-7xl mx-auto min-w-full flex flex-col-reverse  lg:flex-row   ">
         <AvailableClinics id={id} search={search} type={visitType} distance={distance} />
         <ServiceDetailed id={id} />
       </div>
