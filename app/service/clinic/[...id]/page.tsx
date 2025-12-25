@@ -10,6 +10,7 @@ type ServiceClinicBookingProps = {
 }
 
 const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
+  
   return (
     <div>
       {/* Nav bar section */}
@@ -18,11 +19,11 @@ const ServiceBooking = ({ params }: ServiceClinicBookingProps) => {
       </nav>
 
       {/* Hero section */}
-      <section className="pb-10">
+      <section className="pb-10 bg-y">
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
-      <section>
+      <section  >
         <ClinicDetailed id={params.id} />
       </section>
 

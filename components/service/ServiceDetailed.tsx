@@ -3,6 +3,7 @@ import { getAllService, getAService } from "@/service/user/sevicePage";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import ServiceDetailedVIewSkelton from "../skeltons/service/ServiceDetailedVIewSkelton";
+import useLocalStorage from "@/hooks/useLocalStorage.ts";
 
 type ServiceData = {
   image?: string | null;
@@ -19,20 +20,23 @@ type ServiceData = {
 const ServiceDetailed = ({ id }: { id: string }) => {
   const [serviceData, setServiceData] = useState<ServiceData | undefined>(undefined)
   const [isLoading, setLoading] = useState(true)
+   const {getItem} = useLocalStorage()
 
   const getServiceData = async () => {
-    try {
-      const res = await getAService(id)
-
+  try {
+    if (id !== null) {
+      const res = await getAService(getItem(id));
       if (res.status === 200) {
         setServiceData(res?.data)
+        setServiceData(res.data);
       }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setLoading(false)
     }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
   }
+};
 
   useEffect(() => {
     getServiceData()
@@ -40,7 +44,7 @@ const ServiceDetailed = ({ id }: { id: string }) => {
 
 
   return (
-    <div className="w-full md:min-w-[30%] mb-10">
+    <div className="w-full  sm:min-w-[30%] mb-10">
       {/* {isLoading && <ServiceDetailedVIewSkelton />} */}
       {/* Service Header Section */}
       <section className="flex flex-col gap-5 items-start justify-start font-inter shadow-xl p-4 md:p-6 rounded-xl ">

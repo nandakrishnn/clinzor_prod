@@ -49,7 +49,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden h-full flex flex-col">
+    <div className="bg-white  rounded-xl shadow-lg border border-gray-100 overflow-hidden h-full flex flex-col">
       <div className="relative h-40 w-full flex-shrink-0">
         <Image
           src={getClinicImage(clinic?.clinic_images)}
@@ -96,7 +96,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
                       : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md border border-gray-200'
                   }`}
                 >
-                  {time.day.substring(0, 3)}
+                  {time.day.substring(0, 3).charAt(0).toUpperCase() + time.day.substring(1, 3).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -136,18 +136,18 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
         )}
 
         {/* Price and Book Button */}
-        <div className="mt-auto pt-3 border-t border-gray-100 flex justify-between items-center">
-          <div>
-            <span className="text-xs text-gray-500">Starting from</span>
-            <div className="font-semibold text-lg text-gray-800">₹{clinic.min_price}</div>
-          </div>
-          <button
-            onClick={() => onBookNow(clinic)}
-            className="bg-primaryColor hover:bg-primaryColor/90 text-white px-6 py-2.5 text-sm font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            Book Now
-          </button>
-        </div>
+        <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+  <div>
+    <span className="text-xs text-gray-500">Starting from</span>
+    <div className="font-semibold text-lg text-gray-800">₹{clinic.min_price}</div>
+  </div>
+  <button
+    onClick={() => onBookNow(clinic)}
+    className="bg-primaryColor hover:bg-primaryColor/90 text-white px-6 py-2.5 text-sm font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
+  >
+    Book Now
+  </button>
+</div>
       </div>
 
       <style jsx>{`

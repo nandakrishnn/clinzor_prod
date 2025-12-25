@@ -6,7 +6,7 @@ export const getUserService = async () => {
   return res.data;
 };
 export const getAllReviewService = async (clinicId: string, serviceId: string, page: number) => {
-  const res = await axiosPublic.get(`${USER_SERVICE.LIST_REVIEW}?clinic=${clinicId}&service=${serviceId}&page=${page}`);
+  const res = await axiosPublic.get(`${USER_SERVICE.LIST_REVIEW}?clinic=${clinicId}&=${serviceId}&page=${page}`);
   return res.data;
 };
 export const addReviewService = async (reviewData: any) => {
@@ -103,6 +103,35 @@ export const getClinicListService = async (id?: string ,distance?:number, locati
   const res = await axiosPublic.get(url, { params });
   return res?.data;
 }
+
+export const getIdByServiceName = async (
+  serviceName: string
+): Promise<any> => {
+  const url = `${USER_SERVICE.GET_UUID_BY_SERVICE_NAME}/${serviceName}`;
+  const res = await axiosPublic.get(url);
+  return res.data.data;
+};
+
+// 
+export const getClincDataByName = async (
+  clinicName: string
+): Promise<any> => {
+  const url = `${USER_SERVICE.GET_CINICDATA_BY_NAME}/${clinicName}`;
+  const res = await axiosPublic.get(url);
+  return res.data.data;
+};
+
+
+export const getBlogDataByName = async (
+  blogName: string
+): Promise<any> => {
+  const url = `${USER_SERVICE.GET_BLOGDATS_BY_NAME}/${blogName}`;
+  const res = await axiosPublic.get(url);
+  return res.data.data;
+};
+
+
+
 
 export const createBookingService = async (data?: any) => {
   const res = await axiosPrivate.post(`${USER_SERVICE.CREATE_BOOKING}`, data);

@@ -28,6 +28,10 @@ export const USER_SERVICE = {
     CREATE_CAMP: "clinic/camp-lc/",
     LIST_REVIEW: "customer/list-review/",
     CREATE_REVIEW: "customer/create-review/",
+    GET_UUID_BY_SERVICE_NAME :'clinic/service-rud',
+    GET_CINICDATA_BY_NAME:'clinic/clinic-rud',
+    GET_BLOGDATS_BY_NAME :'user/blog-rud'
+
 }
 
 export const USER_CLINIC = {
