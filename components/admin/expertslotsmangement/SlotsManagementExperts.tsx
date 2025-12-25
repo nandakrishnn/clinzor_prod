@@ -883,7 +883,11 @@ export default function ExpertManagement() {
 
   // Format time for display
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(dateString).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC'
+  });
   };
 
   const handleApproveSlot = async (slot: Slot) => {
@@ -1787,7 +1791,7 @@ export default function ExpertManagement() {
                             <h4 className="text-sm font-medium text-gray-500">Date & Time</h4>
                             <p className="mt-1 text-sm">
                               {formatDate(booking?.start_time)}<br />
-                              {formatTime(booking?.start_time)}
+                              {formatTime(booking?.end_time)}
                             </p>
                           </div>
                           <div>
