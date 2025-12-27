@@ -57,6 +57,7 @@ const BookingManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [totalPages, setTotalPages] = useState(0);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
@@ -266,9 +267,9 @@ const BookingManagement = () => {
 
   // Initial fetch and when filters change
   useEffect(() => {
-    fetchBookings(1, searchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter);
+    fetchBookings(1, debouncedSearchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter]);
+  }, [debouncedSearchTerm, statusFilter, typeFilter, fromDateFilter, toDateFilter]);
 
   // In your useEffect for page changes:
   useEffect(() => {
@@ -282,21 +283,22 @@ const BookingManagement = () => {
     );
   }, [currentPage]);
 
+  useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    setDebouncedSearchTerm(searchTerm);
+  }, 500); // 500ms delay
+
+  // Cleanup function
+  return () => {
+    clearTimeout(timeoutId);
+  };
+}, [searchTerm]);
+
   // Update search handler with debounce
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
 
-    // Clear previous timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    // Set new timeout for debounced search
-    const timeoutId = setTimeout(() => {
-      fetchBookings(1, term, statusFilter, typeFilter, fromDateFilter, toDateFilter);
-    }, 500);
-
-    setSearchTimeout(timeoutId);
+   
   };
 
   // Update filter handlers to trigger API calls
@@ -479,16 +481,95 @@ const BookingManagement = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen  justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading ...</p>
-        </div>
-      </div>
-    );
-  }
+
+const TableSkeleton = () => {
+  return (
+    <table className="min-w-[900px] w-full text-xs sm:text-sm md:text-base align-middle">
+      <thead className="sticky top-0 bg-white/90 z-10">
+        <tr className="bg-slate-50/80 border-b border-slate-200/60">
+          <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Patient
+          </th>
+          <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Schedule
+          </th>
+          <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Type
+          </th>
+          <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Status
+          </th>
+          <th className="hidden sm:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Amount
+          </th>
+          <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Join
+          </th>
+          <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-200/60">
+        {[...Array(5)].map((_, index) => (
+          <tr key={index} className="animate-pulse">
+            {/* Patient Info Skeleton */}
+            <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="flex items-center space-x-3">
+                <div className="flex flex-col justify-center space-y-2 w-full">
+                  <div className="h-4 bg-slate-200 rounded w-32"></div>
+                  <div className="h-3 bg-slate-200 rounded w-40"></div>
+                  <div className="h-3 bg-slate-200 rounded w-36"></div>
+                </div>
+              </div>
+            </td>
+
+            {/* Schedule Skeleton */}
+            <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="flex flex-col justify-center gap-2">
+                <div className="h-4 bg-slate-200 rounded w-24"></div>
+                <div className="h-3 bg-slate-200 rounded w-20"></div>
+              </div>
+            </td>
+
+            {/* Type Skeleton */}
+            <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="flex flex-col justify-center space-y-2">
+                <div className="h-3 bg-slate-200 rounded w-16"></div>
+                <div className="h-3 bg-slate-200 rounded w-20"></div>
+              </div>
+            </td>
+
+            {/* Status Skeleton */}
+            <td className="px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="h-6 bg-slate-200 rounded-full w-24"></div>
+            </td>
+
+            {/* Amount Skeleton */}
+            <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="h-4 bg-slate-200 rounded w-16"></div>
+            </td>
+
+            {/* Join Button Skeleton */}
+            <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="h-9 bg-slate-200 rounded-lg w-20 mx-auto"></div>
+            </td>
+
+            {/* Actions Skeleton */}
+            <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="h-8 w-8 bg-slate-200 rounded-lg"></div>
+                <div className="h-8 w-8 bg-slate-200 rounded-lg"></div>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
+
 
 
   return (
@@ -645,8 +726,10 @@ const BookingManagement = () => {
           </div>
         </div>
 
-        {/* Table (Responsive) */}
-        <div className="w-full min-h-[50vh] overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block overflow-hidden">
+        {loading ? (
+  <TableSkeleton />
+) : (
+  <div className="w-full min-h-[50vh] overflow-x-auto rounded-2xl border border-slate-200/60 shadow-lg bg-white/80 backdrop-blur-xl relative hidden sm:block overflow-hidden">
           <table className="min-w-[900px]  w-full text-xs sm:text-sm md:text-base align-middle">
             <thead className="sticky top-0 bg-white/90 z-10">
               <tr className="bg-slate-50/80 border-b border-slate-200/60">
@@ -888,6 +971,10 @@ const BookingManagement = () => {
             </tbody>
           </table>
         </div>
+)}
+
+        {/* Table (Responsive) */}
+       
 
         {/* Mobile Card List */}
         <div className="sm:hidden space-y-4">

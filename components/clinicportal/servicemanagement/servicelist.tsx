@@ -135,6 +135,7 @@ const ServiceManagement: React.FC = () => {
   const [serviceSearchTerm, setServiceSearchTerm] = useState('');
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [servicePagination, setServicePagination] = useState({
     current_page: 1,
     total_pages: 1,
@@ -286,8 +287,8 @@ const ServiceManagement: React.FC = () => {
 
   // Update useEffect to use parameters
   useEffect(() => {
-    fetchService(1, searchTerm, statusFilter);
-  }, [statusFilter]); // Refetch when status filter changes
+    fetchService(1, debouncedSearchTerm, statusFilter);
+  }, [statusFilter, debouncedSearchTerm]); // Refetch when status filter changes
 
   useEffect(() => {
     if (clinicUser?.uuid) {
@@ -299,20 +300,25 @@ const ServiceManagement: React.FC = () => {
     }
   }, [clinicUser]);
 
+  useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    setDebouncedSearchTerm(searchTerm);
+  }, 1000);
+
+  return () => {
+    clearTimeout(timeoutId);
+  };
+}, [searchTerm]);
+
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    // Add debounce to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      fetchService(1, term, statusFilter);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
+  
   };
 
   // Update pagination handler
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchService(page, searchTerm, statusFilter);
+    fetchService(page, debouncedSearchTerm, statusFilter);
   };
 
   // Helper functions
@@ -793,7 +799,7 @@ const ServiceManagement: React.FC = () => {
     showToast('Display date updated!', 'success');
   };
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   // Add state for Apple-style date picker modal
   const [datePickerModal, setDatePickerModal] = useState<{ open: boolean; uuid: string | null; date: Date }>({ open: false, uuid: null, date: new Date() });
@@ -902,7 +908,7 @@ const ServiceManagement: React.FC = () => {
       const res = await updateClinicService(updateData, selectedItem?.uuid)
       console.log(res, 'response fromt he updaate ')
       if (res?.status == 200) {
-        fetchService(1, searchTerm, statusFilter);
+        fetchService(1, debouncedSearchTerm, statusFilter);
         closeModal();
         showToast('Clinic service updated successfully!', 'success');
       }
@@ -912,16 +918,67 @@ const ServiceManagement: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen  flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading ...</p>
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen  flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Loading ...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  const ListViewSkeleton = () => {
+  return (
+    <div className="space-y-3">
+      {[...Array(5)].map((_, index) => (
+        <div
+          key={index}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 animate-pulse"
+        >
+          <div className="flex-1 grid grid-cols-12 gap-6 items-center">
+            {/* Service Info Skeleton */}
+            <div className="col-span-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-200 rounded-xl flex-shrink-0"></div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-5 bg-slate-200 rounded w-3/4"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+              </div>
+            </div>
+
+            {/* Status Skeleton */}
+            <div className="col-span-2">
+              <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+            </div>
+
+            {/* Rank Skeleton */}
+            <div className="col-span-1 text-center">
+              <div className="h-7 bg-slate-200 rounded w-8 mx-auto mb-1"></div>
+              <div className="h-3 bg-slate-200 rounded w-10 mx-auto"></div>
+            </div>
+
+            {/* Facilities Skeleton */}
+            <div className="col-span-3">
+              <div className="flex flex-wrap gap-2">
+                <div className="w-4 h-4 bg-slate-200 rounded"></div>
+                <div className="w-4 h-4 bg-slate-200 rounded"></div>
+                <div className="w-4 h-4 bg-slate-200 rounded"></div>
+              </div>
+            </div>
+
+            {/* Actions Skeleton */}
+            <div className="col-span-2 flex items-center justify-end gap-1">
+              <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+              <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+              <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+            </div>
+          </div>
         </div>
-      </div>
-    );
-  }
+      ))}
+    </div>
+  );
+};
   return (
     <>
       <div className="min-h-screen">
@@ -1316,9 +1373,13 @@ const ServiceManagement: React.FC = () => {
                                 )}
 
                                 {/* List View */}
+                                
                                 {viewMode === 'list' && (
                                   <>
-                                    <div className="flex-1 grid grid-cols-12 gap-6 items-center">
+                                   {loading ? (
+                                    <ListViewSkeleton/>
+                                   ): (
+                                     <div className="flex-1 grid grid-cols-12 gap-6 items-center">
                                       {/* Service Info */}
                                       <div className="col-span-4 flex items-center gap-4">
                                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -1401,6 +1462,7 @@ const ServiceManagement: React.FC = () => {
                                         </button>
                                       </div>
                                     </div>
+                                   )}
                                   </>
                                 )}
                               </div>
