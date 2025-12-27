@@ -36,7 +36,7 @@ interface NewOffer {
   discount_percentage: string;
   valid_from: Date | null;
   valid_to: Date | null;
-  clinic_service: string;
+  clinic_service: string|null;
 }
 
 const Notification = ({ type, message, onClose }: NotificationProps) => {
@@ -292,13 +292,14 @@ const ClinicOffersManager = () => {
 
       // Prepare the offer data for the backend
       const offerData = {
+        clinic:clinicUser.uuid,
         title: newOffer.title,
         offer_type: "CLINIC",
         description: newOffer.description,
         valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '',
         valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '',
         discount_percentage: newOffer.discount_percentage,
-        clinic_service: newOffer.clinic_service,
+       ...( newOffer.clinic_service&& {clinic_service: newOffer.clinic_service})
       };
 
       // Call the API
@@ -423,7 +424,7 @@ const ClinicOffersManager = () => {
       // Update local state if API call succeeds
       setOffers(offers.map((o: Offer) =>
         o.uuid === selectedOffer.uuid
-          ? { ...o, ...newOffer, valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '', valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '' }
+          ? { ...o, ...newOffer,clinic_service:newOffer.clinic_service? newOffer.clinic_service:"All Service",valid_from: newOffer.valid_from ? newOffer.valid_from.toISOString() : '', valid_to: newOffer.valid_to ? newOffer.valid_to.toISOString() : '' }
           : o
       ));
       closeModal();
@@ -936,11 +937,15 @@ const ClinicOffersManager = () => {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Service</label>
                   <select
-                    value={newOffer.clinic_service}
-                    onChange={(e) => setNewOffer({ ...newOffer, clinic_service: e.target.value })}
+                    value={newOffer.clinic_service??""}
+                    onChange={(e) => {
+                      setNewOffer({ ...newOffer, clinic_service: e.target.value.trim()!==""?e.target.value:null })
+                    }
+                    }
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
                   >
-                    <option value="">Select a service</option>
+                    {/* <option value="">Select a service</option> */}
+                     <option value="">All service</option>
                     {services.map(service => (
                       <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                     ))}
@@ -1090,11 +1095,11 @@ const ClinicOffersManager = () => {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Service</label>
                   <select
-                    value={newOffer.clinic_service}
-                    onChange={(e) => setNewOffer({ ...newOffer, clinic_service: e.target.value })}
+                    value={newOffer.clinic_service?newOffer.clinic_service:""}
+                    onChange={(e) => setNewOffer({ ...newOffer, clinic_service: e.target.value.trim()!==""?e.target.value:null })}
                     className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-200 text-sm"
                   >
-                    <option value="">Select a service</option>
+                    <option value="">All service</option>
                     {services.map(service => (
                       <option key={service.uuid} value={service.uuid}>{service.service_name}</option>
                     ))}
