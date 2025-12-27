@@ -361,7 +361,7 @@ const Dashboard = () => {
                 <p className="text-gray-500 mt-1 text-xs sm:text-base">Streamline your healthcare operations</p>
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
+            {/* <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
               <div className="relative w-full sm:w-auto">
                 <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -372,7 +372,7 @@ const Dashboard = () => {
                   className="pl-12 pr-4 py-2 sm:py-3 bg-gray-50 border-0 rounded-lg transition-all  duration-200 w-full text-xs sm:text-sm"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
