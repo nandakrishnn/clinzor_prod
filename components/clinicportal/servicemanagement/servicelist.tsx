@@ -2523,7 +2523,7 @@ const ServiceManagement: React.FC = () => {
                               {/* Description */}
                               {service.description && (
                                 <div className="mb-4">
-                                  <p className="text-slate-700 text-sm line-clamp-3">
+                                  <p className="text-slate-700 text-sm line-clamp-1">
                                     {service.description}
                                   </p>
                                 </div>

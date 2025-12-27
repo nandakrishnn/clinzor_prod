@@ -813,7 +813,7 @@ const DoctorManagement: React.FC = () => {
                 >
                   <option value="">All Status</option>
                   <option value="APPROVED">Approved</option>
-                  <option value="PENDING">Pending</option>
+                  <option value="DRAFT">Draft</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
               </div>

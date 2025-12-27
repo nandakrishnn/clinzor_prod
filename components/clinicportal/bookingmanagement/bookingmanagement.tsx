@@ -526,7 +526,7 @@ const BookingManagement = () => {
                   Total Amount Received
                 </p>
                 <p className="text-lg font-bold text-emerald-700">
-                  ${stats.totalAmount.toFixed(2)}
+                  ₹{stats.totalAmount.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -624,7 +624,7 @@ const BookingManagement = () => {
               >
                 <option value="">All Types</option>
                 <option value="VIDEO_CALL">Video Call</option>
-                <option value="IN_PERSON">In Person</option>
+                <option value="PHYSICAL_VISIT">Clinic Visit</option>
               </select>
             </div>
             {/* Reset Button */}
@@ -653,6 +653,9 @@ const BookingManagement = () => {
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
                   Patient
                 </th>
+                <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+                  Service Detail
+                </th>
                 {/* <th className="hidden md:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">Booking Details</th> */}
                 <th className="text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
                   Schedule
@@ -666,9 +669,9 @@ const BookingManagement = () => {
                 <th className="hidden sm:table-cell text-left px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
                   Amount
                 </th>
-                <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
+                {/* <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
                   Join
-                </th>
+                </th> */}
                 <th className="hidden sm:table-cell text-center px-2 py-2 sm:px-4 md:px-6 text-xs font-bold text-slate-600 uppercase tracking-wider align-middle">
                   Actions
                 </th>
@@ -722,6 +725,12 @@ const BookingManagement = () => {
                               </span>
                             </div>
                           </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+                        <div className=" text-slate-900 leading-tight">
+                        <p className="font-semibold text-sm">{booking.service_default_name}</p>
+                        <p className="text-xs font-light">{booking.session_type}</p>
                         </div>
                       </td>
 
@@ -797,7 +806,7 @@ const BookingManagement = () => {
                         </div>
                       </td>
                       {/* Join Button - FIXED VERSION */}
-                      <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
+                      {/* <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <button
                           onClick={() =>
                             handleJoinMeeting(
@@ -813,7 +822,7 @@ const BookingManagement = () => {
                         >
                           {joinButtonInfo.text}
                         </button>
-                      </td>
+                      </td> */}
                       {/* Actions */}
                       <td className="hidden sm:table-cell px-2 py-2 sm:px-4 md:px-6 md:py-4 align-middle">
                         <div className="flex items-center justify-center space-x-2 relative">
@@ -869,7 +878,7 @@ const BookingManagement = () => {
                             >
                               Completed
                             </button>
-                            <button
+                           {  booking.booking_status !== "COMPLETED" && <button
                               onClick={() => handleCancelBooking(booking.uuid)}
                               className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 rounded-b-xl"
                               tabIndex={
@@ -877,7 +886,7 @@ const BookingManagement = () => {
                               }
                             >
                               Cancel Booking
-                            </button>
+                            </button>}
                           </div>
                         </div>
                       </td>

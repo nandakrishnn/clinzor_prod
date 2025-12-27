@@ -82,7 +82,7 @@ const BookingsWithDues: React.FC<BookingsWithDuesProps> = ({
                     <div className="text-right">
                       <p className="text-sm text-slate-600 font-medium mb-1">Due Amount</p>
                       <p className="font-bold text-red-600 text-lg sm:text-xl">
-                        {formatCurrency(parseFloat(transaction.amount))}
+                        {formatCurrency(parseFloat(transaction.final_amount))}
                       </p>
                       {transaction.discount_amount !== "0.00" && (
                         <p className="text-sm text-slate-500 line-through">

@@ -118,7 +118,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Original Amount</span>
                 <span className="font-medium text-gray-900">
-                  {transaction.discount_amount && formatCurrency(parseFloat(transaction.amount) + parseFloat(transaction.discount_amount))}
+                  {transaction.amount}
                 </span>
               </div>
               {transaction.discount_amount && parseFloat(transaction.discount_amount) > 0 && (
