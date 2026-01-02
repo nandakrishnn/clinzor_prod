@@ -230,54 +230,74 @@ export default function MyBookings({ defaultTab = "SCHEDULED" }: defaultProps) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col md:flex-row justify-between items-center">
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <a className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors" href={booking?.clinic_map_link || ""} target="_blank">
-                      <MapPin size={16} />
-                      View Clinic Location
-                    </a>
-                    <button
-                      onClick={() => handleViewDetails(booking)}
-                      className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
-                    >
-                      <Eye size={14} />
-                      View Details
-                    </button>
-                    {activeTab === "SCHEDULED" && (
-                      <button
-                        onClick={() => handleConfirmBooking(booking?.uuid)}
-                        // onClick={() => cancelBooking(booking?.uuid)}
-                        disabled={cancelingId === booking?.uuid}
-                        className="inline-flex items-center gap-2 bg-red-500 rounded text-white px-4 p-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
-                      >
-                        {cancelingId === booking?.uuid ? (
-                          <>
-                            <span className="animate-spin border-2 border-destructive border-t-transparent rounded-full w-4 h-4" />
-                            Canceling...
-                          </>
-                        ) : (
-                          <>
-                            <X size={14} />
-                            Cancel Booking
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                  {/* Conditional Join Button */}
-                  {booking.booking_type === "VIDEO_CALL" &&
-                    booking.booking_status === "SCHEDULED" &&
-                    shouldShowJoinButton(booking) && (
-                      <a
-                        href={`${booking?.customer_meeting_link}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors mt-4"
-                      >
-                        <Laptop size={14} />
-                        Join Now
-                      </a>
-                    )}
-                </div>
+                {/* Actions */}
+<div className="flex flex-col md:flex-row justify-between items-center">
+  <div className="mt-4 flex flex-wrap gap-3">
+    <div className="space-y-3">
+      {/* Embedded Map */}
+      <iframe
+        className="w-full h-64 rounded-lg border hidden"
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+        src={booking?.clinic_map_link || ""}
+      />
+
+      {/* Link - Convert embed URL to regular maps URL */}
+      
+       <a className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
+        href={booking?.clinic_map_link?.replace('/maps/embed', '/maps') || ""}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <MapPin size={16} />
+        View Clinic Location
+      </a>
+    </div>
+    
+    <button
+      onClick={() => handleViewDetails(booking)}
+      className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:text-primary/80 transition-colors"
+    >
+      <Eye size={14} />
+      View Details
+    </button>
+    
+    {activeTab === "SCHEDULED" && (
+      <button
+        onClick={() => handleConfirmBooking(booking?.uuid)}
+        disabled={cancelingId === booking?.uuid}
+        className="inline-flex items-center gap-2 bg-red-500 rounded text-white px-4 p-2 text-destructive text-sm font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+      >
+        {cancelingId === booking?.uuid ? (
+          <>
+            <span className="animate-spin border-2 border-destructive border-t-transparent rounded-full w-4 h-4" />
+            Canceling...
+          </>
+        ) : (
+          <>
+            <X size={14} />
+            Cancel Booking
+          </>
+        )}
+      </button>
+    )}
+  </div>
+  
+  {/* Conditional Join Button */}
+  {booking.booking_type === "VIDEO_CALL" &&
+    booking.booking_status === "SCHEDULED" &&
+    shouldShowJoinButton(booking) && (
+      
+      <a  href={`${booking?.customer_meeting_link}`}
+        target="_blank"
+        className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors mt-4"
+      >
+        <Laptop size={14} />
+        Join Now
+      </a>
+    )}
+</div>
               </div>
             ))
           )}
