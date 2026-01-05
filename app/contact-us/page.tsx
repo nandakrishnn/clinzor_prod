@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 import ContactSection from "@/components/contact/ContactSection";
 import FooterSection from "@/components/landingpage/footer/footer";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: "Contact Clinzor | Get in Touch for Support & Inquiries",
+  description: "Have questions about our services or need help booking an appointment? Contact the Clinzor team today for assistance with your healthcare needs.",
+  keywords: "contact clinzor, healthcare support, clinic inquiries, patient assistance",
+};
 
 const ContactUs = () => {
   return (
@@ -14,7 +21,7 @@ const ContactUs = () => {
 
       {/* Hero section */}
       <section className="">
-        <CommonHeroSection className="h-[15vh]"/>
+        <CommonHeroSection className="h-[15vh]" />
       </section>
 
       {/* Main Section */}

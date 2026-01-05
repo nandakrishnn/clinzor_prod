@@ -17,23 +17,48 @@ type FaqItem = {
   answer: string;
 };
 
-export default function FAQsTwo() {
-  const [faq, setFaq] = useState<FaqItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+const staticFaqs: FaqItem[] = [
+  {
+    uuid: "faq-1",
+    question: "How can I book a physiotherapy home visit in India through Clinzor?",
+    answer: "Booking a home visit is simple. Enter your location, select 'Physiotherapy' as the service, and browse through top-rated specialists available in your area. You can view their credentials and book a slot directly through the platform."
+  },
+  {
+    uuid: "faq-2",
+    question: "Are the physiotherapists on Clinzor certified professionals?",
+    answer: "Yes, Clinzor exclusively partners with certified and verified physiotherapy specialists across India. Every provider undergoes a rigorous credentialing process to ensure high-quality care and patient safety."
+  },
+  {
+    uuid: "faq-3",
+    question: "Do you offer online physiotherapy consultations for patients in remote areas of India?",
+    answer: "Absolutely. Clinzor provides a secure telehealth platform for virtual consultations, allowing patients from anywhere in India to connect with the best physiotherapists for expert guidance and exercise regimes."
+  },
+  {
+    uuid: "faq-4",
+    question: "What conditions do Clinzor's physiotherapy partners treat?",
+    answer: "Our partners specialize in a wide range of treatments, including post-operative rehab, sports injuries, chronic back pain, cervical spondylosis, and neurological rehabilitation."
+  }
+];
 
+export default function FAQsTwo() {
+  const [faq, setFaq] = useState<FaqItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getAllFaq = async () => {
     try {
-      const res = await getFaq()
-      if (res.status === 200) {
-        setFaq(res?.data?.data)
+      const res = await getFaq();
+      if (res.status === 200 && res.data?.data?.length > 0) {
+        setFaq(res.data.data);
+      } else {
+        setFaq(staticFaqs);
       }
     } catch (error) {
-      console.log(error, 'error from faq part')
+      console.log(error, 'error from faq part');
+      setFaq(staticFaqs);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     getAllFaq()

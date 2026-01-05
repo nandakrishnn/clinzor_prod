@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import { PlatformIntro } from "@/components/aboutus/PlatformIntro";
@@ -9,7 +10,13 @@ import FooterSection from "@/components/landingpage/footer/footer";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 
-const AboutPage = () => {  
+export const metadata: Metadata = {
+  title: "About Clinzor | Our Mission in Digital Healthcare",
+  description: "Learn how Clinzor is revolutionizing healthcare access through clinic discovery, virtual consultations, and specialized home care.",
+  keywords: "about clinzor, healthcare mission, physical therapy innovation, digital health platform",
+};
+
+const AboutPage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b to-white overflow-hidden">
       {/* Nav bar section */}
@@ -19,7 +26,7 @@ const AboutPage = () => {
 
       {/* Hero section */}
       <section className="">
-        <CommonHeroSection className="h-[15vh]"/>
+        <CommonHeroSection className="h-[15vh]" />
       </section>
 
       {/* About*/}

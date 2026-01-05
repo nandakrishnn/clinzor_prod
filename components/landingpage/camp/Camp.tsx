@@ -196,10 +196,10 @@ const Camp = () => {
           >
             <div className="text-start flex flex-col items-start justify-center ">
               <h3 className="font-semibold text-[18px] italic ">
-                {"Clinic Camp"}
+                {"Clinzor Health Camps"}
               </h3>
               <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
-                {"Lorem Ipsum is simply dummy"}
+                {"Bringing Specialized Care to Your Community"}
               </h2>
               <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
                 <li className="flex gap-3 items-start">
@@ -207,10 +207,9 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>1. Find Your Expert</strong>
+                    <strong>1. Comprehensive Wellness Screening</strong>
                     <p className="text-gray-500 text-sm">
-                      Search for specialists based on their expertise and patient
-                      reviews.
+                      Access expert-led health assessments including posture analysis, flexibility tests, and vital signs monitoring.
                     </p>
                   </div>
                 </li>
@@ -219,10 +218,9 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>2. Select a Slot</strong>
+                    <strong>2. Specialized Consultations</strong>
                     <p className="text-gray-500 text-sm">
-                      Choose a date and time that works for you from the expert's
-                      available slots.
+                      Meet with top physiotherapists and specialists for personalized recovery plans and preventative care advice.
                     </p>
                   </div>
                 </li>
@@ -231,25 +229,24 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>3. Join the Call</strong>
+                    <strong>3. Follow-up & Digital Care</strong>
                     <p className="text-gray-500 text-sm">
-                      Receive a secure link to join your video consultation at the
-                      scheduled time.
+                      Seamlessly transition from camp assessments to long-term care with our integrated telehealth and clinic booking.
                     </p>
                   </div>
                 </li>
               </ul>
-               <div className="w-full flex justify-start">
-             <button
-              onClick={openModal}
-              className="w-fit bg-primaryColor text-white px-24 py-2 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
-            >
-              Register Now
-            </button>
-        </div>
+              <div className="w-full flex justify-start">
+                <button
+                  onClick={openModal}
+                  className="w-fit bg-primaryColor text-white px-24 py-2 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
+                >
+                  Register Now
+                </button>
+              </div>
             </div>
 
-       
+
           </motion.div>
         </div>
       </section>

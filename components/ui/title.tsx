@@ -43,7 +43,7 @@ const Title: React.FC<TitleProps> = ({
           </h3>
           <h2 className="w-full text-[#424141] text-2xl md:text-3xl font-bold text-center pt-2 leading-7">
             {description ||
-              "Lorem Ipsum is simply dummy text "}
+              "Your Trusted Partner in Physical Health"}
           </h2>
           <p className="mt-4 text-[#4B5563] md:text-lg md:w-[55%]">
             {subtitle}

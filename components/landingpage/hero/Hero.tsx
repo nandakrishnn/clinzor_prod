@@ -41,7 +41,6 @@ export default function HeroSection() {
 
       {/* Content Container */}
       <div className="mx-auto max-w-screen-xl text-center flex flex-col items-center gap-8">
-        {/* Heading */}
         <TextEffect
           preset="fade-in-blur"
           speedSegment={1.5}
@@ -49,20 +48,19 @@ export default function HeroSection() {
           as="h1"
           className="text-4xl md:text-5xl lg:text-7xl font-bold text-white tracking-tight w-ful md:w-[70%]"
         >
-          Discover Trusted Healthcare Providers
+          Find Trusted Healthcare Providers Near You
         </TextEffect>
 
         {/* Subtitle */}
-        {/* <TextEffect
+        <TextEffect
           preset="fade-in-blur"
           speedSegment={1.5}
           delay={0.05}
           as="p"
-          className="max-w-2xl text-sm sm:text-base md:text-lg text-gray-300 md:w-[46%]"
+          className="max-w-2xl text-sm sm:text-base md:text-lg text-gray-200 md:w-[60%] mt-2"
         >
-          Instantly find clinics, book telehealth consultations, or schedule
-          home visits with top specialists in your area.
-        </TextEffect> */}
+          Book expert physiotherapy consultations, in-clinic appointments, and specialized home healthcare services across India. Recover faster with trusted specialists.
+        </TextEffect>
 
         {/* CTA Link */}
         <AnimatedGroup variants={transitionVariants}>

@@ -18,8 +18,8 @@ const BlogCRUD = () => {
   const [blogs, setBlogs] = useState<Blog[]>([
     {
       id: 1,
-      title: "test blog 2",
-      content: "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.",
+      title: "How Digital Physiotherapy is Revolutionizing Physical Recovery",
+      content: "The landscape of physical therapy is shifting towards a hybrid model that combines in-person expertise with digital convenience. At Clinzor, we empower patients to access specialized care through seamless clinic bookings and telehealth consultations. By leveraging real-time data and remote monitoring, physiotherapists can now provide more personalized and consistent guidance, ensuring faster recovery and better long-term outcomes for patients dealing with chronic pain or post-operative rehabilitation.",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -42,11 +42,11 @@ const BlogCRUD = () => {
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.content.trim()) {
       return;
     }
-    
+
     if (currentView === 'create') {
       const newBlog: Blog = {
         id: Date.now(),
@@ -135,13 +135,13 @@ const BlogCRUD = () => {
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  {currentView === 'list' ? 'My Blogs' : 
-                   currentView === 'create' ? 'Create Blog' : 
-                   currentView === 'edit' ? 'Edit Blog' : 'Blog Details'}
+                  {currentView === 'list' ? 'My Blogs' :
+                    currentView === 'create' ? 'Create Blog' :
+                      currentView === 'edit' ? 'Edit Blog' : 'Blog Details'}
                 </h1>
               </div>
             </div>
-            
+
             {currentView === 'list' && (
               <button
                 onClick={() => setCurrentView('create')}
@@ -222,11 +222,11 @@ const BlogCRUD = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     <p className="text-gray-600 mb-6 text-base line-clamp-4 leading-relaxed">
                       {truncateContent(blog.content, 120)}
                     </p>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center text-sm text-gray-500">
@@ -261,7 +261,7 @@ const BlogCRUD = () => {
                     <input
                       type="text"
                       value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Enter your blog title..."
                       className="w-full px-6 py-4 border border-gray-200/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 text-xl font-medium bg-white/50 backdrop-blur-sm placeholder-gray-500"
                     />
@@ -273,7 +273,7 @@ const BlogCRUD = () => {
                     </label>
                     <textarea
                       value={formData.content}
-                      onChange={(e) => setFormData({...formData, content: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="Write your blog content here..."
                       rows={16}
                       className="w-full px-6 py-4 border border-gray-200/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 resize-none text-base leading-relaxed bg-white/50 backdrop-blur-sm placeholder-gray-500"
@@ -324,7 +324,7 @@ const BlogCRUD = () => {
                   )}
                 </div>
               </div>
-              
+
               <div className="prose prose-lg max-w-none">
                 <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
                   {selectedBlog.content}
