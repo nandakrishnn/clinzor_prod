@@ -62,6 +62,7 @@ export default function WallOfLoveSection() {
             title="Trusted by Patients Everywhere"
             subtitle="Real stories from users who’ve discovered, booked, and visited
             clinics through our platform."
+            description="What Physiotherapy Customers Say About Clinzor"
           />
         </div>
 

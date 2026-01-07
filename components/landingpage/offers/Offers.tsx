@@ -39,7 +39,7 @@ const Offers = () => {
     setIsLoading(true);
     try {
       const res = await getAllOffers();
-      console.log(res,'all offers')
+      console.log(res, 'all offers')
       if (res.status === 200) {
         const today = new Date();
         const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -93,6 +93,7 @@ const Offers = () => {
         <Title
           title={"Special Offers & Packages"}
           subtitle={`Exclusive healthcare packages designed for your wellness needs. Save on comprehensive care.`}
+          description="Exclusive Wellness Packages"
           variants={headingVariants}
         />
 

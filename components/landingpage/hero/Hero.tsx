@@ -48,7 +48,7 @@ export default function HeroSection() {
           as="h1"
           className="text-4xl md:text-5xl lg:text-7xl font-bold text-white tracking-tight w-ful md:w-[70%]"
         >
-          Find Trusted Healthcare Providers Near You
+          Doorstep Physiotherapy Services Near You
         </TextEffect>
 
         {/* Subtitle */}
@@ -69,7 +69,7 @@ export default function HeroSection() {
             className="group inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium bg-gray-50 transition-colors"
             aria-label="Jump to search section"
           >
-            <span>Search Clinics Near You</span>
+            <span>Search Physio clinics near you</span>
             <div className="flex overflow-hidden rounded-full p-1 group-hover:bg-blue-800 transition-colors">
               <ArrowRight
                 size={14}
