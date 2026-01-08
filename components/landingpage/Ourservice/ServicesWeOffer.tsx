@@ -93,6 +93,7 @@ export default function ServicesWeProvide() {
           title={"Our Top Services"}
           subtitle={`We provide a wide range of services to keep you and your family
             healthy, safe, and informed.`}
+          description="Comprehensive Physiotherapy & Health Services"
           variants={headingVariants}
         />
 

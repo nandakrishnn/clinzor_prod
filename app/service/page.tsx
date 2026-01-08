@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 
@@ -7,6 +8,12 @@ import ServiceListSection from "@/components/service/ServiceListSection";
 import WhyChooseUs from "@/components/service/WhyChooseUs";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
+
+export const metadata: Metadata = {
+  title: "Clinzor Services | Physiotherapy, Clinic Visits & Home Care",
+  description: "Explore our wide range of healthcare services, including specialized physiotherapy, instant clinic bookings, and qualified home healthcare visits.",
+  keywords: "physiotherapy services, clinic booking, home healthcare, physical therapy, Clinzor services",
+};
 
 const ServicePage = () => {
   return (
