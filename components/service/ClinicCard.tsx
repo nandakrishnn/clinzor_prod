@@ -14,7 +14,7 @@ interface ClinicCardProps {
 const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
   const [daySelect, setDaySelect] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   const getClinicImage = (images?: string[]) => {
     if (
       images &&
@@ -81,20 +81,19 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
               <IoChevronBack className="w-3 h-3 text-gray-700" />
             </button>
 
-            <div 
+            <div
               ref={scrollRef}
               className="flex items-center gap-2 overflow-x-auto px-7 py-1 scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {clinic.timings.map((time, index) => (
-              (time.closing_time || time.opening_time )&&<button
+                (time.closing_time || time.opening_time) && <button
                   key={index}
                   onClick={() => setDaySelect(index)}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex-shrink-0 transform hover:scale-105 ${
-                    daySelect === index
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md border border-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex-shrink-0 transform hover:scale-105 ${daySelect === index
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md border border-gray-200'
+                    }`}
                 >
                   {time.day.substring(0, 3).charAt(0).toUpperCase() + time.day.substring(1, 3).toLowerCase()}
                 </button>
@@ -110,7 +109,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
             </button>
           </div>
 
-        <div className="text-xs text-gray-600 bg-blue-50 px-3 py-2 rounded-lg ">
+          {clinic.timings[daySelect] && clinic.timings[daySelect].opening_time && clinic.timings[daySelect].closing_time && <div className="text-xs text-gray-600 bg-blue-50 px-3 py-2 rounded-lg ">
             <span className="font-semibold">Timing:</span>{" "}
             <span className="font-semibold text-blue-600">
               {formatTime(clinic.timings[daySelect].opening_time)}
@@ -119,11 +118,11 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
             <span className="font-semibold text-blue-600">
               {formatTime(clinic.timings[daySelect].closing_time)}
             </span>
-          </div>
+          </div>}
         </div>
 
         {/* Address Section */}
-       <div className="flex items-center text-xs text-gray-500 mb-2 flex-wrap">
+        <div className="flex items-center text-xs text-gray-500 mb-2 flex-wrap">
           <span className="line-clamp-1">{clinic.distance} KM</span>
           <span className="line-clamp-1">{clinic.address}</span>
         </div>
@@ -137,17 +136,17 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
 
         {/* Price and Book Button */}
         <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-  <div>
-    <span className="text-xs text-gray-500">Starting from</span>
-    <div className="font-semibold text-lg text-gray-800">₹{clinic.min_price}</div>
-  </div>
-  <button
-    onClick={() => onBookNow(clinic)}
-    className="bg-primaryColor hover:bg-primaryColor/90 text-white px-6 py-2.5 text-sm font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
-  >
-    Book Now
-  </button>
-</div>
+          <div>
+            <span className="text-xs text-gray-500">Starting from</span>
+            <div className="font-semibold text-lg text-gray-800">₹{clinic.min_price}</div>
+          </div>
+          <button
+            onClick={() => onBookNow(clinic)}
+            className="bg-primaryColor hover:bg-primaryColor/90 text-white px-6 py-2.5 text-sm font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
+          >
+            Book Now
+          </button>
+        </div>
       </div>
 
       <style jsx>{`

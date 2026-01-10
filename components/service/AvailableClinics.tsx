@@ -89,7 +89,8 @@ const AvailableClinics = ({ id, search, type, distance }: { id: string; search?:
       if (!isLocating) {
         const slugId = await getItem(id);
         
-        if (!slugId) {
+        if (!slugId&&id) {
+          
           const clinicData = await getIdByServiceName(id);
           getClinicList(clinicData.uuid);
         } else {
@@ -99,7 +100,7 @@ const AvailableClinics = ({ id, search, type, distance }: { id: string; search?:
     };
 
     fetchClinics();
-  }, [isLocating, userLocation, search, type, distance]);
+  }, [isLocating, userLocation, search, type, distance,id]);
 
   const handleBookNow = (clinic: Clinic) => {
     setItem(clinic.slug, clinic?.clinic_uuid);
