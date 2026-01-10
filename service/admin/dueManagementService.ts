@@ -30,6 +30,16 @@ export const UpdateDueAmount = async (id: string, body: any) => {
   return res?.data
 };
 
+export const markDueAmount = async(clinicId:string,amount:number,description:string)=>{
+   const res = await axiosPrivate.post(`/clinic/create-clinic-payment-record/`, 
+    {
+    "clinic":clinicId,
+    "amount":amount,
+    "description":description
+});
+  return res?.data
+}
+ 
 export const GetAllDues = async (page: number, search: string = '', filter: string = 'all', sort: string = 'default') => {
   try {
     const params: any = {

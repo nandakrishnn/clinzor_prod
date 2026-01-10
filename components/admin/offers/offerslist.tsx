@@ -250,16 +250,19 @@ const OfferManagementTable = () => {
   const totalPages = paginationData.total_pages;
   const totalItems = paginationData.total_items;
 
+
+
   // Add this helper function
   const formatDateForDisplay = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'UTC' 
+      hour12: true
     });
   };
 

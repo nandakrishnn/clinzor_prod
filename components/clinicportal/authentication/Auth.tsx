@@ -79,7 +79,7 @@ const ClinicPortalLogin = () => {
 
     try {
       const result = await signIn('credentials', {
-        redirect: false,
+        redirect: true,
         email: formState.email,
         password: formState.password,
         callbackUrl: '/clinicportal', // Redirect after successful login
