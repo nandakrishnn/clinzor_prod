@@ -58,10 +58,11 @@ export default function AdminLogin() {
 
     try {
       const result = await signIn('credentials', {
-        redirect: false,
+        redirect: true,
         email: credentials.email,
         password: credentials.password,
         callbackUrl: '/admin/dashboard',
+      
       });
 
       if (result?.error) {

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, Building2, Calendar, MoreHorizontal, X, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, Clock, CheckCircle, AlertCircle, CreditCard, Eye, IndianRupeeIcon } from 'lucide-react';
-import { getAdminDueStaticData, GetAllDues, GetAllPayment, UpdateDueAmount } from '@/service/admin/dueManagementService';
+import { getAdminDueStaticData, GetAllDues, GetAllPayment, markDueAmount, UpdateDueAmount } from '@/service/admin/dueManagementService';
 
 import * as XLSX from 'xlsx';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton';
+import PaymentPopup from './PaymentPopup';
+import { isNull } from 'util';
 
 // Modal component with Apple-style design
 const Modal = ({ isOpen, onClose, title, children, size = 'md' }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode; size?: 'sm' | 'md' | 'lg' }) => {
@@ -220,6 +222,14 @@ const DueManagement = () => {
   const [selectedDue, setSelectedDue] = useState<any>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editReason, setEditReason] = useState('');
+ const [markAmountModal, setMarkAmountModal] = useState<{
+  clinicId: string | null;
+  amount: number | null;
+}>({
+  clinicId: null,
+  amount: null,
+});
+
 
   // Fetch dues data
   const fetchDuesData = async (page = 1, search = '', filter = 'all', sort = 'default') => {
@@ -281,7 +291,16 @@ const DueManagement = () => {
       setLoading(false);
     }
   };
+  
 
+  const handleOpenOrClose = (id:null|string=null,amount:number | null=null)=>{
+    console.log(id);
+    
+    setMarkAmountModal({
+  clinicId:id,
+  amount: amount
+})
+  }
   // Fetch due list data for a specific clinic
   const fetchDueListData = async (page = 1, search = '', clinic = '', filter = 'PAID') => {
     setDueListLoading(true);
@@ -343,6 +362,7 @@ const DueManagement = () => {
     }
   };
 
+ 
   // Fetch data when filters change
   useEffect(() => {
     getDashboardStatics()
@@ -475,6 +495,16 @@ const DueManagement = () => {
     }
   };
 
+
+   const onClickSaveDueAmount  = async(amount:number,description:string)=>{
+      if(markAmountModal.clinicId){
+         const response = await markDueAmount(markAmountModal.clinicId,amount,description)
+         console.log("response",response);
+         handleOpenOrClose(null)
+         window.location.reload()
+      }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -489,7 +519,7 @@ const DueManagement = () => {
   console.log(selectedDue)
 
   return (
-    <div className="min-h-screen">
+    <><div className="min-h-screen">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 pt-5">
@@ -933,12 +963,19 @@ const DueManagement = () => {
                             <td className="p-4 text-sm">{formatCurrency(due?.final_amount) || "No Discount"}</td>
                             <td className="p-4 text-sm font-medium">{due?.patient_name || "No Data"}</td>
                             <td className="p-4 text-sm text-gray-600 max-w-xs truncate">{due?.patient_mobile || "No Data"}</td>
-                            <td className="p-4">
+                            <td className="p-4 space-y-2">
                               <button
                                 onClick={() => handleEditDue(due)}
                                 className="px-3 py-1.5 bg-primaryColor text-white text-sm rounded-lg  transition font-medium"
                               >
                                 Edit Amount
+                              </button>
+                              <button
+                                onClick={()=>handleOpenOrClose(due.clinic,due?.amount
+)}
+                                className="px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg break-words transition font-medium"
+                              >
+                              Mark Amount Recieved
                               </button>
                             </td>
                           </tr>
@@ -1020,6 +1057,14 @@ const DueManagement = () => {
         )}
       </Modal>
     </div>
+    {markAmountModal.clinicId&&markAmountModal.amount&&<PaymentPopup
+     amountfromdata={markAmountModal.amount}
+      isOpen={markAmountModal.clinicId?true:false}
+      onClose={handleOpenOrClose}
+      onSubmit={onClickSaveDueAmount}
+
+    />}
+    </>
   );
 };
 

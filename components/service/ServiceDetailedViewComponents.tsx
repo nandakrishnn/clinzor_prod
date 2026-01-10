@@ -14,7 +14,7 @@ const ServiceDetailedViewComponents = ({ id }: { id: any }) => {
   const [serviceTag, setServiceTag] = useState<any>()
   const [isSearching, setIsSearching] = useState(false);
   const [visitType, setVisitType] = useState('')
-  const [distance, setDistance] = useState<number>(5)
+  const [distance, setDistance] = useState<number>(10)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
