@@ -23,6 +23,7 @@ import { ConfirmationModal } from "@/components/common/ConfirmationModal"
 import { initializeRazorpayPayment, RazorpayResponse } from "@/utils/razorpay"
 import { baseUrl } from "@/utils/Endpoint"
 import { toast } from "sonner"
+import { log } from "util"
 
 type clinicBookingProps = {
   params: {
@@ -61,6 +62,8 @@ type Coupon = {
   flat_discount_amt: number | null;
   valid_from: string;
   valid_to: string;
+  offer_type:"CLINIC"|"ADMIN"
+  clinic:string
 }
 
 const STEPS = ["Service & Mode", "Date & Time", "Details", "Review & Pay", "Done"]
@@ -243,6 +246,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       const res = await getPrivateCouponService(serviceId)
       if (res?.status === 200) {
+        console.log("coupon",res);
+        
         setAllCoupon(res?.data?.data || [])
       }
     } catch (error) {
@@ -402,7 +407,8 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
       setShowConfirmModal(false);
     }
   }
-
+ console.log("all",allCoupon);
+ 
   return (
     <section aria-label="Clinic Booking" className="">
       <nav>
@@ -523,7 +529,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
             )}
 
             {step === 2 && (
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-3 ">
                 <div className="space-y-6 md:col-span-2">
                   <DoctorPreference value={genderPref} onChange={setGenderPref} />
                   <PatientForm value={patient} onChange={setPatient} />
@@ -534,6 +540,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                     applied={coupon}
                     onApply={setCoupon}
                     onRemove={() => setCoupon(null)}
+                    clinicId={params.clinicId}
                   />
                   <div className="flex items-center justify-between">
                     <button
