@@ -149,8 +149,11 @@ export default function ClinicSidebar() {
 
   const handleLogout = () => {
     // Handle logout logic here
-    signOut({ callbackUrl: "/auth/clinicportallogin" });
-    console.log('Logging out...');
+    signOut({
+      redirect:true,
+  callbackUrl: `${window.location.origin}/auth/clinicportallogin`,
+});
+
     // e.g., redirect to login page or call logout API
   };
 
