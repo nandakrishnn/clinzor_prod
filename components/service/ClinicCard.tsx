@@ -87,7 +87,7 @@ const ClinicCard = ({ clinic, onBookNow }: ClinicCardProps) => {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {clinic.timings.map((time, index) => (
-                (time.closing_time || time.opening_time) && <button
+                (time.closing_time && time.opening_time) && <button
                   key={index}
                   onClick={() => setDaySelect(index)}
                   className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 flex-shrink-0 transform hover:scale-105 ${daySelect === index
