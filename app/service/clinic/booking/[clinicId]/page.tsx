@@ -101,6 +101,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
   const [allCoupon, setAllCoupon] = React.useState<Coupon[]>([])
   const [payMethod, setPayMethod] = React.useState<"ONLINE" | "OFFLINE">("OFFLINE")
   const [orderId, setOrderId] = React.useState<string | null>(null)
+  const [adminAddedCoupons,setAdminAddedCoupon] = useState<Coupon[]|[]>([])
 
   const [clinicService, setClinicService] = useState<any>()
 
@@ -246,9 +247,9 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     try {
       const res = await getPrivateCouponService(serviceId)
       if (res?.status === 200) {
-        console.log("coupon",res);
+
         
-        setAllCoupon(res?.data?.data || [])
+       return res?.data?.data
       }
     } catch (error) {
       console.log(error)
@@ -272,11 +273,19 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }, [mode, serviceId])
 
-  console.log(clinicOwnServiceId)
   useEffect(() => {
-    console.log(clinicOwnServiceId)
-    if (serviceId) {
-      getCoupon(clinicOwnServiceId)
+          console.log("serviceId, clinicOwnServiceId",serviceId, clinicOwnServiceId);
+
+    if (clinicOwnServiceId) {
+      
+      getCoupon(clinicOwnServiceId).then((response)=>{
+        setAllCoupon(response?response:[])
+      })
+    }else{
+            getCoupon(clinicOwnServiceId).then((response)=>{
+              setAdminAddedCoupon(response)
+            })
+
     }
   }, [serviceId, clinicOwnServiceId])
 
@@ -408,6 +417,13 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
     }
   }
  console.log("all",allCoupon);
+
+const removeDuplicate = (coupons: Coupon[]):Coupon[]|[] => {
+  return coupons.filter(
+    (coupon, index, self) =>
+      index === self.findIndex((c) => c.uuid === coupon.uuid)
+  );
+}
  
   return (
     <section aria-label="Clinic Booking" className="">
@@ -536,7 +552,7 @@ export default function ClinicBooking({ params }: clinicBookingProps) {
                 </div>
                 <aside className="space-y-6">
                   <CouponApply
-                    available={allCoupon}
+                    available={removeDuplicate([...allCoupon,...adminAddedCoupons])}
                     applied={coupon}
                     onApply={setCoupon}
                     onRemove={() => setCoupon(null)}
