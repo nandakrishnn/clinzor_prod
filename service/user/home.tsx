@@ -1,5 +1,5 @@
 import { axiosPublic } from "@/axios/axios";
-import { USER_HOME } from "@/utils/Endpoint";
+import { USER_CLINIC, USER_HOME } from "@/utils/Endpoint";
 
 
 // GET ALL SERVICE FOR HOME
@@ -12,7 +12,14 @@ export const getServices = async () => {
 export const getAllOffers = async () => {
   const res = await axiosPublic.get(USER_HOME.GET_ALL_OFFERS)
   return res?.data
+
 };
+
+
+export const getClinicDetail = async(clinicId:string)=>{
+  const res = await axiosPublic.get(`${USER_CLINIC.GET_A_CLINIC}${clinicId}`)
+  return res?.data
+}
 
 
 // GET ALL BLOG DATA

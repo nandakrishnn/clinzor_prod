@@ -1,8 +1,9 @@
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import placeHolderImage from "../../../public/offer.png";
+import { getClinicDetail } from "@/service/user/home";
 interface OfferCardProps {
   title: string;
   description: string;
@@ -12,7 +13,13 @@ interface OfferCardProps {
   valid_from: string;
   valid_to: string;
   offer_type: string;
+  clinic:string|undefined|null
 }
+
+interface ClinicName {
+  name: string;
+}
+
 
 const OfferCard: React.FC<OfferCardProps> = ({
   title,
@@ -22,8 +29,26 @@ const OfferCard: React.FC<OfferCardProps> = ({
   flat_discount_amt,
   valid_from,
   valid_to,
-  offer_type
+  offer_type,
+  clinic
 }) => {
+  
+
+const [clinicDetail,setClinicDetail] = useState<null|string>(null)
+
+useEffect(()=>{
+  if(typeof clinic === "string"){
+    getClinicDetail(clinic).then((response)=>{
+      setClinicDetail(response.data.clinic.name)
+    })
+  }
+
+},[clinic])
+
+
+
+
+
   return (
     <motion.div
       className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group h-full flex flex-col border border-gray-100"
@@ -36,7 +61,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
       {/* Tag Ribbon - Top Right */}
       {offer_type &&
         <div className="absolute top-0 right-4 bg-primaryColor text-white font-bold px-3 py-1 rounded-b-lg z-10 text-xs uppercase tracking-wide">
-          {offer_type}
+          {offer_type==="ADMIN"?"Applicable for All clinics":`Specific ${offer_type}`}
         </div>}
 
       {/* Image Section */}
@@ -73,9 +98,12 @@ const OfferCard: React.FC<OfferCardProps> = ({
           <div className="w-10 h-1 bg-primaryColor my-2 rounded-full" />
         </div>
 
-        <p className="capitalize text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+        <p className="capitalize text-gray-600 text-sm mb-4 line-clamp-3 flex-">
           {description} Valid From {valid_from?.split("T")[0]} to{" "}
           {valid_to?.split("T")[0]}
+        </p>
+         <p className=" text-gray-600 text-sm mb-4 line-clamp-3 flex-1 font-bold">
+      { `  ${clinicDetail?"Offer Applicable for : ":""} ${clinicDetail?clinicDetail:"Applicable for All clinic And services"}`}
         </p>
 
         {/* View Details Button */}

@@ -15,6 +15,7 @@ type Offer = {
   valid_to?: string;
   offer_type?: string;
   flat_discount_amt?: string;
+  clinic:string
 };
 
 const Offers = () => {
@@ -112,6 +113,7 @@ const Offers = () => {
                 valid_from={offer?.valid_from ?? ""}
                 valid_to={offer?.valid_to ?? ""}
                 offer_type={offer?.offer_type ?? ""}
+                clinic={offer.clinic}
               />
             ))}
         </div>
