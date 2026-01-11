@@ -11,6 +11,8 @@ type Coupon = {
   flat_discount_amt: number | null;
   valid_from: string;
   valid_to: string;
+  offer_type:"CLINIC"|"ADMIN"
+  clinic:string
 }
 
 export function CouponApply({
@@ -18,12 +20,17 @@ export function CouponApply({
   applied,
   onApply,
   onRemove,
+  clinicId
 }: {
   available: Coupon[]
   applied: Coupon | null
   onApply: (c: Coupon) => void
   onRemove: () => void
+    clinicId:string
+
 }) {
+  console.log("available",available);
+  
   const [open, setOpen] = React.useState(false)
 
   const getDiscountText = (coupon: Coupon) => {
@@ -75,32 +82,33 @@ export function CouponApply({
                 No coupons available at the moment
               </p>
             ) : (
-              available.map((c) => (
-                <motion.div
-                  key={c.uuid}
-                  className="flex items-start justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm transition hover:shadow-md relative"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{c.title}</p>
-                    <p className="text-xs text-gray-600 mt-1">{c.description}</p>
-                    <span className="inline-block mt-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 absolute right-2 top-0">
-                      {getDiscountText(c)}
-                    </span>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Valid:{" "}
-                      {new Date(c.valid_from).toLocaleDateString()} -{" "}
-                      {new Date(c.valid_to).toLocaleDateString()}
-                    </p>
-                    <button
-                      onClick={() => onApply(c)}
-                      className="rounded-full w-full mt-2 bg-primaryColor px-4 py-1.5 text-xs font-medium text-white shadow hover:bg-primaryColor transition"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
-                </motion.div>
-              ))
+             available.map((c) => (
+  (c.clinic === clinicId || c.offer_type === "ADMIN") && (
+    <motion.div
+      key={c.uuid}
+      className="flex items-start justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm transition hover:shadow-md relative"
+    >
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-gray-900">{c.title}</p>
+        <p className="text-xs text-gray-600 mt-1">{c.description}</p>
+        <span className="inline-block mt-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 absolute right-2 top-0">
+          {getDiscountText(c)}
+        </span>
+        <p className="text-xs text-gray-400 mt-1">
+          Valid:{" "}
+          {new Date(c.valid_from).toLocaleDateString()} -{" "}
+          {new Date(c.valid_to).toLocaleDateString()}
+        </p>
+        <button
+          onClick={() => onApply(c)}
+          className="rounded-full w-full mt-2 bg-primaryColor px-4 py-1.5 text-xs font-medium text-white shadow hover:bg-primaryColor transition"
+        >
+          Apply
+        </button>
+      </div>
+    </motion.div>
+  )
+))
             )}
           </motion.div>
         )}
