@@ -196,23 +196,20 @@ const Camp = () => {
           >
             <div className="text-start flex flex-col items-start justify-center ">
               <h3 className="font-semibold text-[18px] italic ">
-                {"Clinzor Physiotherapy Health Camps"}
+                {"Clinzor Physiotherapy Health Camps in Bangalore"}
               </h3>
               <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
-                {"Expert-Led Physiotherapy & Wellness Camps for Corporates, Societies & Communities"}
+                {"Expert-Led Wellness Camps for Corporates & Communities"}
               </h2>
-              <p className="text-gray-600 mt-4 leading-relaxed">
-                Clinzor Health Camps deliver professionally managed physiotherapy health camps designed to identify pain issues early, improve posture, and promote long-term musculoskeletal wellness. Our camps are ideal for corporates, residential societies, institutions, and community groups looking for preventive and rehabilitative physiotherapy care.
-              </p>
               <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
                 <li className="flex gap-3 items-start">
                   <span className="text-primaryColor text-xl bg-blueLight/20 rounded-full w-8 h-8 flex items-center justify-center p-5">
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>1. Comprehensive Physiotherapy Wellness Screening</strong>
+                    <strong>Early Pain & Posture Screening</strong>
                     <p className="text-gray-500 text-sm">
-                      Our physiotherapy health camps include in-depth posture assessment, flexibility testing, movement analysis, and vital signs monitoring. These screenings help detect common issues such as back pain, neck pain, joint stiffness, and posture-related disorders at an early stage.
+                      Detect back pain, neck pain, joint stiffness, and posture issues with professional physiotherapy assessments.
                     </p>
                   </div>
                 </li>
@@ -221,9 +218,9 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>2. Specialized Physiotherapy Consultations</strong>
+                    <strong>1-on-1 Physiotherapy Consultation</strong>
                     <p className="text-gray-500 text-sm">
-                      Participants receive one-on-one consultations with certified physiotherapists, offering personalized recovery plans, posture correction guidance, pain management strategies, and injury prevention advice tailored to individual needs.
+                      Personalized advice from certified physiotherapists for pain relief, posture correction, and injury prevention.
                     </p>
                   </div>
                 </li>
@@ -232,30 +229,13 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>3. Follow-up Care & Digital Physiotherapy Support</strong>
+                    <strong>Seamless Follow-Up Care</strong>
                     <p className="text-gray-500 text-sm">
-                      Clinzor ensures continuity of care beyond the camp. Participants can seamlessly book online physiotherapy consultations, access telehealth support, or schedule appointments with nearby Clinzor partner clinics for ongoing treatment and rehabilitation.
+                      Easy access to online physiotherapy and nearby Clinzor partner clinics across Bangalore.
                     </p>
                   </div>
                 </li>
               </ul>
-
-              <div className="mt-8">
-                <h4 className="font-bold text-lg text-[#424141]">Why Choose Clinzor Health Camps?</h4>
-                <ul className="mt-3 space-y-2 text-sm text-gray-600 list-disc ml-5">
-                  <li>Certified & experienced physiotherapists</li>
-                  <li>Ideal for corporate wellness programs and community initiatives</li>
-                  <li>Focus on preventive physiotherapy & long-term recovery</li>
-                  <li>Easy transition from camp to clinic or online care</li>
-                </ul>
-              </div>
-
-              <div className="mt-8">
-                <h4 className="font-bold text-lg text-[#424141]">Book a Physiotherapy Health Camp with Clinzor</h4>
-                <p className="text-gray-600 text-sm mt-2">
-                  Empower your workplace or community with expert-led physiotherapy health camps focused on pain relief, posture correction, and preventive healthcare.
-                </p>
-              </div>
 
               <div className="w-full flex justify-start">
                 <button

@@ -5,28 +5,28 @@ import { CheckCircle2 } from "lucide-react";
 const WhyChooseUs = () => {
   const features = [
     {
-      title: "Certified Physiotherapy Experts",
-      description: "Clinzor partners with licensed and experienced physiotherapists specializing in pain management, posture correction, sports rehabilitation, and post-surgical recovery."
+      title: "Verified Expert Physiotherapists",
+      description: "Certified specialists for clinical pain management, posture correction, and rehabilitation."
     },
     {
-      title: "Personalized Physiotherapy Care Plans",
-      description: "Every patient receives a customized physiotherapy treatment plan based on their condition, lifestyle, and recovery goals — ensuring faster and sustainable results."
+      title: "Custom Recovery Plans",
+      description: "Personalized physiotherapy treatment programs tailored to your specific health goals."
     },
     {
-      title: "Advanced Physiotherapy Techniques",
-      description: "We use modern physiotherapy methods, including manual therapy, movement correction, exercise therapy, and evidence-based rehabilitation protocols for optimal recovery."
+      title: "Advanced Clinical Techniques",
+      description: "Evidence based manual therapy and expert exercise rehabilitation for faster healing."
     },
     {
-      title: "Safe, Clinically Guided & Effective",
-      description: "All physiotherapy programs follow clinically approved practices, ensuring patient safety, ethical care, and measurable improvement in mobility and pain reduction."
+      title: "Safe Proven Protocols",
+      description: "Clinically guided physiotherapy ensuring safe, effective, and ethical patient recovery."
     },
     {
-      title: "Comfort-Focused Care Experience",
-      description: "Whether online or in-clinic, Clinzor ensures a comfortable, professional, and stress-free physiotherapy experience, designed to support long-term wellness."
+      title: "Seamless Hybrid Care",
+      description: "Convenient access to online video consultations and nearby physiotherapy clinic treatments."
     },
     {
-      title: "Visible Recovery & Lasting Results",
-      description: "Patients experience noticeable improvements in pain relief, posture, flexibility, and movement with consistent physiotherapy care — often from the very first few sessions."
+      title: "Measurable Health Results",
+      description: "Noticeable improvements in pain relief, body mobility, and long term posture."
     }
   ];
 
@@ -56,14 +56,8 @@ const WhyChooseUs = () => {
                 Why Choose Us
               </span>
               <h2 className="text-4xl font-bold text-gray-900">
-                Discover Why Clinzor Is Trusted by <span className="text-primaryColor">Physiotherapy</span> Experts
+                Why Physiotherapy Experts Trust <span className="text-primaryColor">Clinzor</span>
               </h2>
-              <h3 className="text-xl font-semibold text-gray-800">
-                Where Clinical Expertise Meets Compassionate Physiotherapy Care
-              </h3>
-              <p className="text-lg text-gray-600">
-                At Clinzor, evidence-based physiotherapy meets personalized care. Our platform connects patients with certified physiotherapists and rehabilitation specialists who use advanced techniques to deliver safe, effective, and long-lasting recovery results.
-              </p>
             </div>
 
             {/* Features Grid */}
@@ -79,29 +73,6 @@ const WhyChooseUs = () => {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Bottom Summary */}
-            <div className="pt-6 border-t border-gray-100">
-              <h4 className="font-bold text-lg text-gray-900 mb-3">Why Patients Choose Clinzor for Physiotherapy</h4>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primaryColor"></div>
-                  Trusted network of certified physiotherapists
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primaryColor"></div>
-                  Personalized recovery & rehabilitation programs
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primaryColor"></div>
-                  Focus on long-term pain relief & prevention
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primaryColor"></div>
-                  Seamless online & clinic-based care
-                </li>
-              </ul>
             </div>
           </div>
         </div>
