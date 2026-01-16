@@ -51,7 +51,7 @@ export default function ContactSection() {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800">Address</h4>
-                <p className="text-gray-600">Bangalore, India</p>
+                <p className="text-gray-600">Bengaluru</p>
               </div>
             </div>
           </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import Link from "next/link";
 
@@ -5,7 +7,7 @@ export default function ExpertInfoPanel() {
   return (
     <section className="flex flex-col gap-6 px-2 md:px-8 md:py-10 w-full md:w-[80%]">
       <h2 className="text-balance text-2xl text-center md:text-start md:text-4xl font-bold bg-clip-text">
-        Book Online Expert Consultation Video Doctor & Physiotherapy Care
+        Are you confused about which service to choose? We offer a Free Expert Physiotherapy Consultation!
       </h2>
 
       <div className="mt-4">
@@ -37,9 +39,9 @@ export default function ExpertInfoPanel() {
               <HealthAndSafetyIcon className="45" />
             </span>
             <div>
-              <strong>Care From Home, Anytime</strong>
+              <strong>Expert Recovery & Exercise Guidance</strong>
               <p className="text-gray-500 text-sm">
-                Ideal for back pain, joint pain, sports injuries, post-surgery follow-ups & preventive care.
+                During the consultation, our experts guide you with effective physio exercises and recommend the best service to help you cure pain and recover faster.
               </p>
             </div>
           </li>

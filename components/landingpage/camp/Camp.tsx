@@ -195,10 +195,10 @@ const Camp = () => {
             variants={headingVariants}
           >
             <div className="text-start flex flex-col items-start justify-center ">
-              <h3 className="font-semibold text-[18px] italic ">
+              <h3 className="font-semibold text-[18px] italic mb-2">
                 {"Clinzor Physiotherapy Health Camps in Bangalore"}
               </h3>
-              <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
+              <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7 mb-4">
                 {"Expert-Led Wellness Camps for Corporates & Communities"}
               </h2>
               <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">

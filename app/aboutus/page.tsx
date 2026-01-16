@@ -8,6 +8,7 @@ import { VideoConsultation } from "@/components/aboutus/VideoConsultation";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 import FooterSection from "@/components/landingpage/footer/footer";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
+import WhyChooseUs from "@/components/service/WhyChooseUs";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 
 export const metadata: Metadata = {
@@ -38,6 +39,11 @@ const AboutPage = () => {
       <section className="bg-bgLight pb-10 md:pb-20">
         <div className="max-w-screen-[1480px] mx-auto relative pt-14 mt-12">
           <HowItWorks />
+        </div>
+      </section>
+      <section className="bg-white  py-10 md:pb-20 sm:px-6">
+        <div className="max-w-screen-[1480px] mx-auto relative mt-20">
+          <WhyChooseUs />
         </div>
       </section>
       <section className="bg-white  py-10 md:pb-20 sm:px-6">

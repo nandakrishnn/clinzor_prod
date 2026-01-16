@@ -39,12 +39,6 @@ export const PlatformIntro = () => (
             Find the nearest clinics with detailed information about services,
             doctors, and availability.
           </p>
-          <a
-            href="#"
-            className="text-blue-600 font-medium inline-flex items-center"
-          >
-            Learn more <ArrowRight className="ml-1 w-4 h-4" />
-          </a>
         </motion.div>
 
         <motion.div
@@ -65,12 +59,6 @@ export const PlatformIntro = () => (
             Connect with healthcare professionals through secure video calls
             from the comfort of your home.
           </p>
-          <a
-            href="#"
-            className="text-green-600 font-medium inline-flex items-center"
-          >
-            Learn more <ArrowRight className="ml-1 w-4 h-4" />
-          </a>
         </motion.div>
 
         <motion.div
@@ -89,12 +77,6 @@ export const PlatformIntro = () => (
             Schedule qualified healthcare professionals to visit you at home for
             comprehensive check-ups.
           </p>
-          <a
-            href="#"
-            className="text-purple-600 font-medium inline-flex items-center"
-          >
-            Learn more <ArrowRight className="ml-1 w-4 h-4" />
-          </a>
         </motion.div>
       </div>
     </div>
