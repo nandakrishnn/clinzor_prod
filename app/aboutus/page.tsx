@@ -12,9 +12,9 @@ import WhyChooseUs from "@/components/service/WhyChooseUs";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 
 export const metadata: Metadata = {
-  title: "About Clinzor | Our Mission in Digital Healthcare",
-  description: "Learn how Clinzor is revolutionizing healthcare access through clinic discovery, virtual consultations, and specialized home care.",
-  keywords: "about clinzor, healthcare mission, physical therapy innovation, digital health platform",
+  title: "About Clinzor | Bangalore's Trusted Home Care & Physiotherapy Network",
+  description: "Clinzor is redefining healthcare in Bangalore. From finding top-rated physiotherapy clinics to booking secure video consultations and home visits, we bring expert care to every doorstep in Namma Bengaluru.",
+  keywords: "physiotherapy in bangalore, best physiotherapist bangalore, home care services bangalore, clinzor about, digital healthcare bangalore, clinic discovery app bangalore",
 };
 
 const AboutPage = () => {

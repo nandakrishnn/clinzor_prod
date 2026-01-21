@@ -79,13 +79,13 @@ const WhyChooseUs = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 space-y-4">
           <span className="inline-block px-3 py-1 text-sm font-medium text-primaryColor bg-blue-50 rounded-full">
-            Why Choose Us
+            Elite Healthcare Network
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-            Why Physiotherapy Experts Trust <span className="text-primaryColor">Clinzor</span>
+            Why Bangalore's Best Choose <span className="text-primaryColor">Clinzor</span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Experience the best-in-class physiotherapy services with a focus on recovery, comfort, and professional excellence.
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Join thousands of Bangaloreans who have skipped the commute and found professional, effective, and ethical physiotherapy care.
           </p>
         </div>
 

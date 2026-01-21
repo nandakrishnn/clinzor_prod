@@ -13,33 +13,34 @@ export const HowItWorks = () => {
   const steps = [
     {
       icon: <MapPin className="w-8 h-8" />,
-      title: "Find Nearby Clinics",
+      title: "Discover Local Clinics",
+      titleBangalore: "Find Care in Your Locality",
       description:
-        "Search and discover clinics in your area with our intuitive location-based service",
+        "Whether you're in Indiranagar, Whitefield, or Jayanagar, find the best-rated clinics nearby effortlessly.",
       color: "bg-blue-100 text-blue-600",
       borderColor: "border-blue-200"
     },
     {
       icon: <CalendarCheck className="w-8 h-8" />,
-      title: "Book Appointments",
+      title: "Instant Booking",
       description:
-        "Easily schedule visits with real-time availability from healthcare providers",
+        "Book your slot in seconds. No more waiting in long clinic queues—get priority access to experts.",
       color: "bg-green-100 text-green-600",
       borderColor: "border-green-200"
     },
     {
       icon: <PhoneCall className="w-8 h-8" />,
-      title: "Expert Call Support",
+      title: "Bangalore Expert Support",
       description:
-        "Get personalized assistance from our healthcare concierge team",
+        "Our dedicated concierge team is just a call away to help you navigate your healthcare journey.",
       color: "bg-purple-100 text-purple-600",
       borderColor: "border-purple-200"
     },
     {
       icon: <UserCheck className="w-8 h-8" />,
-      title: "Choose Consultation Type",
+      title: "Choose Your Style",
       description:
-        "Select between in-person, video call, or home visit options",
+        "At-home, in-clinic, or via a secure video call—your recovery, your choice, your convenience.",
       color: "bg-amber-100 text-amber-600",
       borderColor: "border-amber-200"
     }
