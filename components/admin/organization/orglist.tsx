@@ -10,12 +10,12 @@ import {
   Info,
   Plus,
   Trash2,
-  Eye
+  Eye,
 } from "lucide-react";
 import {
   createOrganization,
   editOrganization,
-  GetAllOrganization
+  GetAllOrganization,
 } from "@/service/admin/organizationManagementService";
 import { toast } from "sonner";
 
@@ -42,6 +42,19 @@ interface OrganizationFormData {
   auto_approve_expert_slot: boolean;
 }
 
+interface OrganizationPayload {
+  created_by: string;
+  privacy_policy: string;
+  about_organization: string;
+  free_expert_booking: number;
+  expert_booking_charge: string;
+  isPost: boolean;
+  auto_approve_normal_slot: boolean;
+  auto_approve_expert_slot: boolean;
+
+  // Add other fields as needed
+}
+
 const OrganizationManagement = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -54,9 +67,10 @@ const OrganizationManagement = () => {
     free_expert_booking: 0,
     expert_booking_charge: "0.00",
     auto_approve_normal_slot: false,
-    auto_approve_expert_slot: false
+    auto_approve_expert_slot: false,
   });
   const [loading, setLoading] = useState(false);
+  const [isPost, SetIsPost] = useState(false);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
@@ -66,8 +80,12 @@ const OrganizationManagement = () => {
     try {
       setLoading(true);
       const data = await GetAllOrganization();
+
       setOrganizations(data);
       if (data.length > 0) {
+        if (!data[0].uuid) {
+          SetIsPost(true);
+        }
         setFormData({ ...data[0] });
       }
       console.log(data, "org data");
@@ -98,30 +116,37 @@ const OrganizationManagement = () => {
     setApiError(null);
 
     try {
-      const orgData = {
-        ...formData,
+      const orgData: OrganizationPayload = {
+        created_by: formData.created_by,
+        privacy_policy: formData.privacy_policy,
+        about_organization: formData.about_organization,
         free_expert_booking:
           typeof formData.free_expert_booking === "string"
             ? parseInt(formData.free_expert_booking)
             : formData.free_expert_booking,
-        expert_booking_charge: formData.expert_booking_charge
+        expert_booking_charge: formData.expert_booking_charge,
+        isPost: isPost,
+        auto_approve_normal_slot: formData.auto_approve_normal_slot,
+        auto_approve_expert_slot: formData.auto_approve_expert_slot,
       };
 
       // Update existing organization
       const updatedOrg = await editOrganization({
-        ...orgData
+        ...orgData,
       });
 
       setOrganizations([updatedOrg]);
       setIsEditMode(false);
-      toast.success("Organization updated successfully!")
+      toast.success("Organization updated successfully!");
       setNotification({
         type: "success",
-        message: "Organization updated successfully!"
+        message: "Organization updated successfully!",
       });
     } catch (error: any) {
       console.error("Error updating organization:", error);
-      toast.error(error.response?.data?.message || "Failed to update organization")
+      toast.error(
+        error.response?.data?.message || "Failed to update organization"
+      );
       setApiError(
         error.response?.data?.message || "Failed to update organization"
       );
@@ -139,14 +164,16 @@ const OrganizationManagement = () => {
   ) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleToggleChange = (field: "auto_approve_normal_slot" | "auto_approve_expert_slot") => {
+  const handleToggleChange = (
+    field: "auto_approve_normal_slot" | "auto_approve_expert_slot"
+  ) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field],
     }));
   };
 
@@ -184,10 +211,11 @@ const OrganizationManagement = () => {
             {organizations.length > 0 && (
               <button
                 onClick={handleEditToggle}
-                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center ${isEditMode
+                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center ${
+                  isEditMode
                     ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     : "bg-primaryColor text-white "
-                  }`}
+                }`}
               >
                 {isEditMode ? (
                   <>
@@ -223,10 +251,15 @@ const OrganizationManagement = () => {
             <form onSubmit={handleSubmit} className="p-6 sm:p-8">
               {/* Notification */}
               {notification && (
-                <div className={`mb-6 p-4 rounded-lg ${notification.type === "success" ? "bg-green-50 text-green-700" :
-                    notification.type === "error" ? "bg-red-50 text-red-700" :
-                      "bg-yellow-50 text-yellow-700"
-                  }`}>
+                <div
+                  className={`mb-6 p-4 rounded-lg ${
+                    notification.type === "success"
+                      ? "bg-green-50 text-green-700"
+                      : notification.type === "error"
+                      ? "bg-red-50 text-red-700"
+                      : "bg-yellow-50 text-yellow-700"
+                  }`}
+                >
                   {notification.message}
                 </div>
               )}
@@ -241,7 +274,6 @@ const OrganizationManagement = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column */}
                 <div className="space-y-6">
-
                   {/* About Organization */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,7 +326,6 @@ const OrganizationManagement = () => {
 
                 {/* Right Column */}
                 <div className="space-y-6">
-
                   {/* Expert Booking Charge */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -304,7 +335,10 @@ const OrganizationManagement = () => {
                       type="number"
                       value={formData.expert_booking_charge}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange("expert_booking_charge", e.target.value)
+                        handleInputChange(
+                          "expert_booking_charge",
+                          e.target.value
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
                       step="0.01"
@@ -315,7 +349,9 @@ const OrganizationManagement = () => {
 
                   {/* Toggle Settings */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-gray-700">Auto-Approval Settings</h3>
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Auto-Approval Settings
+                    </h3>
 
                     {/* Auto Approve Normal Slot */}
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -329,14 +365,26 @@ const OrganizationManagement = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleToggleChange("auto_approve_normal_slot")}
+                        onClick={() =>
+                          handleToggleChange("auto_approve_normal_slot")
+                        }
                         disabled={!isEditMode}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.auto_approve_normal_slot ? 'bg-blue-600' : 'bg-gray-200'
-                          } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          formData.auto_approve_normal_slot
+                            ? "bg-blue-600"
+                            : "bg-gray-200"
+                        } ${
+                          !isEditMode
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer"
+                        }`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.auto_approve_normal_slot ? 'translate-x-6' : 'translate-x-1'
-                            }`}
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            formData.auto_approve_normal_slot
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          }`}
                         />
                       </button>
                     </div>
@@ -353,14 +401,26 @@ const OrganizationManagement = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleToggleChange("auto_approve_expert_slot")}
+                        onClick={() =>
+                          handleToggleChange("auto_approve_expert_slot")
+                        }
                         disabled={!isEditMode}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.auto_approve_expert_slot ? 'bg-blue-600' : 'bg-gray-200'
-                          } ${!isEditMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          formData.auto_approve_expert_slot
+                            ? "bg-blue-600"
+                            : "bg-gray-200"
+                        } ${
+                          !isEditMode
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer"
+                        }`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.auto_approve_expert_slot ? 'translate-x-6' : 'translate-x-1'
-                            }`}
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            formData.auto_approve_expert_slot
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          }`}
                         />
                       </button>
                     </div>

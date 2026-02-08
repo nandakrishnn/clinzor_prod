@@ -9,14 +9,14 @@ export default function HeroBanner({
   priceText = "Starts at just ₹199",
 }) {
   const scrollToBooking = () => {
-    document
-      .getElementById("consult-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById("consult-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
-    <section className="relative w-full h-[420px] sm:h-full overflow-hidden">
-
+    <section className="relative w-full h-[450px] sm:h-[500px] md:h-[550px] lg:h-[600px] overflow-hidden">
       {/* BACKGROUND IMAGE */}
       <Image
         src={banner}
@@ -24,33 +24,30 @@ export default function HeroBanner({
         fill
         priority
         quality={100}
-        className="object-cover object-right"
+        className="object-cover object-center sm:object-right"
         sizes="100vw"
       />
 
-      {/* GRADIENT OVERLAY (for text readability) */}
-      {/* <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-white/0" /> */}
-
       {/* CONTENT */}
       <div className="relative z-10 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
-        <div className="max-w-xl text-center lg:text-left">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
+        <div className="w-full sm:max-w-xl  sm:bg-transparent p-6 sm:p-0 rounded-2xl sm:rounded-none ">
+          <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
             {title}
             <br />
             {subtitle}
           </h1>
 
-          <p className="mt-4 text-sm sm:text-base md:text-lg text-slate-600">
+          <p className="mt-3 sm:mt-4 text-base sm:text-base md:text-lg text-slate-600">
             Private consultation · Audio & Video call
           </p>
 
-          <p className="mt-2 text-sm sm:text-base md:text-lg font-semibold text-slate-900">
+          <p className="mt-2 text-base sm:text-base md:text-lg font-semibold text-slate-900">
             {priceText}
           </p>
 
           <button
             onClick={scrollToBooking}
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm sm:text-base font-semibold shadow-lg transition"
+            className="mt-5 sm:mt-6 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-8 py-3 rounded-xl text-base font-semibold shadow-lg transition-colors"
           >
             Consult Now
           </button>
