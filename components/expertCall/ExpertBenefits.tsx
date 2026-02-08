@@ -4,9 +4,9 @@ import Title from "../ui/title";
 const ExpertBenefits = () => {
   const benefits = [
     {
-      title: "Personalized Advice",
+      title: "Personalized Physiotherapy Advice",
       description:
-        "Get tailored solutions specific to your unique situation and challenges.",
+        "Get tailored recovery solutions specific to your unique pain and mobility needs.",
       icon: (
         <svg
           className="w-8 h-8 text-blue-600"
@@ -26,7 +26,7 @@ const ExpertBenefits = () => {
     {
       title: "Save Time & Money",
       description:
-        "Avoid costly mistakes by getting the right advice from the start.",
+        "Avoid unnecessary clinic visits with secure, home-based expert consultations.",
       icon: (
         <svg
           className="w-8 h-8 text-blue-600"
@@ -44,9 +44,9 @@ const ExpertBenefits = () => {
       )
     },
     {
-      title: "Verified Experts",
+      title: "Verified Physiotherapy Experts",
       description:
-        "All professionals are vetted to ensure quality and expertise.",
+        "All specialists are certified and vetted for clinical quality.",
       icon: (
         <svg
           className="w-8 h-8 text-blue-600"
@@ -66,7 +66,7 @@ const ExpertBenefits = () => {
     {
       title: "Flexible Scheduling",
       description:
-        "Book sessions at your convenience, with options for evenings and weekends.",
+        "Book your physiotherapy sessions at your convenience, with options for evenings and weekends.",
       icon: (
         <svg
           className="w-8 h-8 text-blue-600"
@@ -90,9 +90,8 @@ const ExpertBenefits = () => {
       <div className="text-center mb-10 md:mb-16">
         <Title
           title="User Benefits"
-          description={"Why Choose Expert Calls?"}
-          subtitle={`Get the guidance you need from professionals who've been where you
-          are.`}
+          description={"Why Choose Clinzor Online Expert Consultation?"}
+          subtitle={`Get the physiotherapy guidance you need from certified specialists who understand your recovery journey.`}
         />
       </div>
 

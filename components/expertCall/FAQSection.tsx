@@ -1,40 +1,52 @@
-"use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getFaq } from "@/service/user/home";
+
+type FaqItem = {
+  uuid: string;
+  question: string;
+  answer: string;
+};
 
 const FAQSection = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const faqs = [
-    {
-      question: "How do I choose the right expert for my needs?",
-      answer:
-        "Browse expert profiles to review their qualifications, experience, and areas of expertise. You can also read reviews from previous clients. If you're unsure, our matching algorithm can suggest the best experts based on your needs."
-    },
-    {
-      question: "What technology do I need for the session?",
-      answer:
-        "You'll need a stable internet connection, a webcam, and a microphone. Most sessions are conducted via our secure video platform (no downloads required) or Zoom. We'll send you all the details after booking."
-    },
-    {
-      question: "Can I reschedule or cancel my session?",
-      answer:
-        "Yes, you can reschedule or cancel up to 24 hours before your session for a full refund. Late cancellations may incur a fee depending on the expert's policy."
-    },
-    {
-      question: "What if I'm not satisfied with my session?",
-      answer:
-        "We want you to be completely satisfied. If your session didn't meet expectations, contact us within 48 hours and we'll work to make it right, which may include a partial refund or connecting you with another expert."
-    },
-    {
-      question: "Are the sessions confidential?",
-      answer:
-        "Absolutely. All sessions are private and confidential. Experts are bound by strict confidentiality agreements, and we never share your information without your consent."
+  const fetchFaqs = async () => {
+    try {
+      const res = await getFaq();
+      if (res.status === 200 && res.data?.data?.length > 0) {
+        setFaqs(res.data.data);
+      } else {
+        setFaqs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching FAQs:", error);
+      setFaqs([]);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
 
   const toggleFAQ = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primaryColor"></div>
+      </div>
+    );
+  }
+
+  if (faqs.length === 0) {
+    return null; // Or show a default message if preferred
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,7 +62,7 @@ const FAQSection = () => {
       <div className="space-y-4">
         {faqs.map((faq, index) => (
           <div
-            key={index}
+            key={faq.uuid || index}
             className="border border-gray-200 rounded-lg overflow-hidden"
           >
             <button
@@ -61,9 +73,8 @@ const FAQSection = () => {
                 {faq.question}
               </h3>
               <svg
-                className={`w-5 h-5 text-gray-500 transform transition-transform ${
-                  activeIndex === index ? "rotate-180" : ""
-                }`}
+                className={`w-5 h-5 text-gray-500 transform transition-transform ${activeIndex === index ? "rotate-180" : ""
+                  }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

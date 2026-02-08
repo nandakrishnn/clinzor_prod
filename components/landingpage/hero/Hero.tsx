@@ -51,16 +51,7 @@ export default function HeroSection() {
           Doorstep Physiotherapy Services Near You
         </TextEffect>
 
-        {/* Subtitle */}
-        <TextEffect
-          preset="fade-in-blur"
-          speedSegment={1.5}
-          delay={0.05}
-          as="p"
-          className="max-w-2xl text-sm sm:text-base md:text-lg text-gray-200 md:w-[60%] mt-2"
-        >
-          Book expert physiotherapy consultations, in-clinic appointments, and specialized home healthcare services across India. Recover faster with trusted specialists.
-        </TextEffect>
+
 
         {/* CTA Link */}
         <AnimatedGroup variants={transitionVariants}>

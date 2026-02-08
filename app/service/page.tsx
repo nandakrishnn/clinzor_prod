@@ -6,6 +6,7 @@ import FooterSection from "@/components/landingpage/footer/footer";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 import ServiceListSection from "@/components/service/ServiceListSection";
 import WhyChooseUs from "@/components/service/WhyChooseUs";
+import Booking from "@/components/landingpage/booking/Booking";
 import WallOfLoveSection from "@/components/landingpage/testimonials/testimonals";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 
@@ -40,8 +41,14 @@ const ServicePage = () => {
         </div>
       </section>
 
+      <section className="bg-white py-10 md:py-20 px-4 sm:px-6">
+        <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
+          <Booking />
+        </div>
+      </section>
+
       {/* Testimonials */}
-      <section className="bg-white py-10 sm:py-14  sm:px-6">
+      <section className="bg-white py-10 sm:py-14 sm:px-6">
         <div className="max-w-screen-[1480px] mx-auto relative my-20">
           <WallOfLoveSection />
         </div>

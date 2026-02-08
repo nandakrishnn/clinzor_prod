@@ -195,11 +195,11 @@ const Camp = () => {
             variants={headingVariants}
           >
             <div className="text-start flex flex-col items-start justify-center ">
-              <h3 className="font-semibold text-[18px] italic ">
-                {"Clinzor Health Camps"}
+              <h3 className="font-semibold text-[18px] italic mb-2">
+                {"Clinzor Physiotherapy Health Camps in Bangalore"}
               </h3>
-              <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7">
-                {"Bringing Specialized Care to Your Community"}
+              <h2 className="w-full text-2xl md:text-3xl text-start font-bold text-[#424141] leading-7 mb-4">
+                {"Expert-Led Wellness Camps for Corporates & Communities"}
               </h2>
               <ul className="space-y-5 my-3 md:my-0 pt-5 md:pt-6">
                 <li className="flex gap-3 items-start">
@@ -207,9 +207,9 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>1. Comprehensive Wellness Screening</strong>
+                    <strong>Early Pain & Posture Screening</strong>
                     <p className="text-gray-500 text-sm">
-                      Access expert-led health assessments including posture analysis, flexibility tests, and vital signs monitoring.
+                      Detect back pain, neck pain, joint stiffness, and posture issues with professional physiotherapy assessments.
                     </p>
                   </div>
                 </li>
@@ -218,9 +218,9 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>2. Specialized Consultations</strong>
+                    <strong>1-on-1 Physiotherapy Consultation</strong>
                     <p className="text-gray-500 text-sm">
-                      Meet with top physiotherapists and specialists for personalized recovery plans and preventative care advice.
+                      Personalized advice from certified physiotherapists for pain relief, posture correction, and injury prevention.
                     </p>
                   </div>
                 </li>
@@ -229,13 +229,14 @@ const Camp = () => {
                     <HealthAndSafetyIcon className="45" />
                   </span>
                   <div>
-                    <strong>3. Follow-up & Digital Care</strong>
+                    <strong>Seamless Follow-Up Care</strong>
                     <p className="text-gray-500 text-sm">
-                      Seamlessly transition from camp assessments to long-term care with our integrated telehealth and clinic booking.
+                      Easy access to online physiotherapy and nearby Clinzor partner clinics across Bangalore.
                     </p>
                   </div>
                 </li>
               </ul>
+
               <div className="w-full flex justify-start">
                 <button
                   onClick={openModal}

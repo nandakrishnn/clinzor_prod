@@ -10,6 +10,7 @@ import ExpertBenefits from "@/components/expertCall/ExpertBenefits";
 import { HowItWorks } from "@/components/aboutus/HowItWorks";
 import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
+import Booking from "@/components/landingpage/booking/Booking";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
 
 const ExpertCall = () => {
@@ -24,8 +25,10 @@ const ExpertCall = () => {
         <CommonHeroSection className="h-[15vh]" />
       </section>
 
-      <section className="">
-        <ExpertHeroSection />
+      <section className="bg-gray-50 py-10 md:py-20 px-4 sm:px-6" id="expert-info">
+        <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
+          <Booking />
+        </div>
       </section>
 
       {/* <section className="pb-16 ">

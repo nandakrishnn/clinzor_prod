@@ -8,8 +8,8 @@ export const VideoConsultation = () => (
     <div className="max-w-6xl mx-auto px-4">
       {/* Heading */}
       <Title
-        title="  Experience beauty transform through"
-        subtitle=" Watch real patient stories, expert insights, and behind-the-scenes."
+        title="Experience Real Physiotherapy Transformation with Clinzor"
+        subtitle="Watch Patient Recovery Stories, Expert Physiotherapy Insights & Real Care in Action."
       />
 
       {/* Video */}
@@ -20,8 +20,8 @@ export const VideoConsultation = () => (
         className="relative rounded-2xl overflow-hidden aspect-video shadow-lg mt-10 md:mt-20"
       >
         <img
-          src="https://dummyimage.com/1280x720/cccccc/ffffff&text=Video+Thumbnail"
-          alt="Video Thumbnail"
+          src="https://dummyimage.com/1280x720/cccccc/ffffff&text=Physiotherapy+Recovery+Stories"
+          alt="Clinzor Physiotherapy Video"
           className="w-full h-full object-cover"
         />
         <button className="absolute inset-0 flex items-center justify-center">
@@ -30,46 +30,6 @@ export const VideoConsultation = () => (
           </span>
         </button>
       </motion.div>
-
-      {/* Features */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-        <div className="flex items-start space-x-3">
-          <UserCheck className="w-6 h-6 text-blue-600 flex-shrink-0" />
-          <div>
-            <h4 className="font-semibold text-gray-900">
-              Patient Testimonials
-            </h4>
-            <p className="text-gray-600 text-sm">
-              Real stories from clients who beautiful, confident
-              transformations.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start space-x-3">
-          <TrendingUp className="w-6 h-6 text-blue-600 flex-shrink-0" />
-          <div>
-            <h4 className="font-semibold text-gray-900">
-              Enhanced Performance
-            </h4>
-            <p className="text-gray-600 text-sm">
-              Real stories from clients who beautiful, confident
-              transformations.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start space-x-3">
-          <Layers className="w-6 h-6 text-blue-600 flex-shrink-0" />
-          <div>
-            <h4 className="font-semibold text-gray-900">Advanced System</h4>
-            <p className="text-gray-600 text-sm">
-              Real stories from clients who beautiful, confident
-              transformations.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 );

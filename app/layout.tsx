@@ -11,16 +11,16 @@ const domine = Domine({ subsets: ["latin"], variable: "--font-domine" });
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
 
 export const metadata: Metadata = {
-  title: "Clinzor | Best Physiotherapy & Clinic Booking App in India",
+  title: "Clinzor | Best Physiotherapy & Clinic Booking App in Bengaluru",
   description:
-    "Book top-rated physiotherapists in India for home visits, in-clinic consultations, and online video calls. Find specialized rehabilitation and recovery experts near you.",
-  keywords: "best physiotherapist India, home visit physiotherapy India, online physiotherapy consultation Bharat, clinic booking app India, sports rehab specialist India, physical therapy experts India",
+    "Book top-rated physiotherapists in Bengaluru for home visits, in-clinic consultations, and online video calls. Find specialized rehabilitation and recovery experts near you.",
+  keywords: "best physiotherapist Bengaluru, home visit physiotherapy Bengaluru, online physiotherapy consultation Bengaluru, clinic booking app Bengaluru, sports rehab specialist Bengaluru, physical therapy experts Bengaluru",
   authors: [{ name: "Clinzor Health" }],
   openGraph: {
-    title: "Clinzor | India's Leading Physiotherapy & Healthcare Platform",
-    description: "Connect with certified physiotherapists across India for professional recovery and wellness.",
+    title: "Clinzor | Bengaluru's Leading Physiotherapy & Healthcare Platform",
+    description: "Connect with certified physiotherapists across Bengaluru for professional recovery and wellness.",
     url: "https://clinzor.com",
-    siteName: "Clinzor India",
+    siteName: "Clinzor Bengaluru",
     locale: "en_IN",
     type: "website",
   },
