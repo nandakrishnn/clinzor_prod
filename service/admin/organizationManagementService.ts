@@ -6,6 +6,7 @@ interface Organization {
   about_organization: string;
   free_expert_booking: number;
   expert_booking_charge: string;
+  isPost:boolean
 
   
   // Add other fields as needed
@@ -29,11 +30,22 @@ export const createOrganization = async (body:Organization) => {
 export const editOrganization = async (
  body: Organization) => {
   try {
-    const response = await axiosPrivate.put(
+    console.log("body",body)
+    if(body.isPost){
+
+      const response = await axiosPrivate.post(
       `clinic/org-detail-update/`,
       body
     );
     return response.data;
+
+    }else{
+      const response = await axiosPrivate.put(
+      `clinic/org-detail-update/`,
+      body
+    );
+    return response.data;
+    }
   } catch (error) {
     
     console.error("Organization update error:", error);

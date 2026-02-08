@@ -237,10 +237,10 @@ const Camp = () => {
                 </li>
               </ul>
 
-              <div className="w-full flex justify-start">
+              <div className="w-full flex justify-center md:justify-start">
                 <button
                   onClick={openModal}
-                  className="w-fit bg-primaryColor text-white px-24 py-2 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
+                  className=" w-fit bg-primaryColor text-white px-24 py-2 text-sm rounded-full mt-8 hover:bg-primaryColor transition-colors shadow-md hover:shadow-lg"
                 >
                   Register Now
                 </button>

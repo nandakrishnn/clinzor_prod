@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function ExpertInfoPanel() {
   return (
     <section className="flex flex-col gap-6 px-2 md:px-8 md:py-10 w-full md:w-[80%]">
-      <h2 className="text-balance text-2xl text-center md:text-start md:text-4xl font-bold bg-clip-text">
+      <h2 className="text-balance text-2xl text-center hidden md:flex  md:text-start md:text-4xl font-bold bg-clip-text">
         Are you confused about which service to choose? We offer a Free Expert Physiotherapy Consultation!
       </h2>
 
