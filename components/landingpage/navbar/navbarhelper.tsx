@@ -192,12 +192,13 @@ export const NavItems = ({
 };
 
 export const NavbarLogo = ({ visible }: { visible: boolean }) => (
-  <Image
+  <Image 
+  
     src={visible ? "/assets/logo/logo.png" : "/assets/logo/logo-white.png"}
     alt="Logo"
     width={100}
     height={100}
-    className="rounded-full z-50"
+    className=" z-50"
   />
 );
 
@@ -247,7 +248,7 @@ export const MobileNav = ({
         : undefined
     }}
   >
-    <div className="flex justify-between w-full">
+    <div className="flex justify-between w-full ">
       <Link href={'/'} className=" w-full h-full">
         <NavbarLogo visible={visible || false} />
       </Link>

@@ -1,16 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import experImage from '../../../public/Clinzor Expert consultation session.png'
 
 export default function ScheduleConsultation() {
   return (
-    <section className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8 relative">
+    <section className="w-full md:w-1/2 flex items-center justify-center p-4 relative">
       {/* Decorative background blobs */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-blue-100/50 via-purple-100/30 to-teal-100/50 rounded-full blur-3xl -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-fit bg-gradient-to-tr from-blue-100/50 via-purple-100/30 to-teal-100/50 rounded-full blur-3xl -z-10" />
 
       <div className="relative w-full aspect-square md:aspect-[2/2] rounded-3xl overflow-hidden  border-[6px] border-white ring-1 ring-slate-100 transform hover:scale-[1.02] transition-all duration-500 ease-out">
         <Image
-          src="/clinzor_expert.png"
+          src={experImage}
           alt="Clinzor Expert Consultation"
           fill
           className="object-cover"
