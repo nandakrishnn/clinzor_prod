@@ -27,7 +27,7 @@ const ExpertCall = () => {
       </section>
       
       <section >
-          <main className="bg-[#F8E9E6] h-fit">
+          <main className="h-fit md:h-[70vh] overflow-hidden">
           <HeroBanner/>
           </main>
           </section>

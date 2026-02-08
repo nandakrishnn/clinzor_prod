@@ -9,67 +9,52 @@ export default function HeroBanner({
   priceText = "Starts at just ₹199",
 }) {
   const scrollToBooking = () => {
-    const bookingSection = document.getElementById("consult-section");
-    if (bookingSection) {
-      const navbarHeight = 80; // Adjust this based on your navbar height
-      const targetPosition = bookingSection.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-      
-      window.scrollTo({
-        top: targetPosition,
-        behavior: "smooth"
-      });
-    }
+    document
+      .getElementById("consult-section")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section className="relative bg-[#F8E9E6] overflow-hidden w-full">
-      {/* Fixed height container to prevent overflow */}
-      <div className="relative w-full h-[600px] md:h-[650px]">
-        
-        {/* Content Container */}
-        <div className="relative z-20 max-w-7xl mx-auto px-6 h-full flex items-center">
-          {/* LEFT CONTENT */}
-          <div className="max-w-xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-              {title} <br />
-              {subtitle}
-            </h1>
+    <section className="relative w-full h-[420px] sm:h-full overflow-hidden">
 
-            <p className="mt-4 text-lg text-slate-600">
-              Private consultation · Audio & Video call
-            </p>
+      {/* BACKGROUND IMAGE */}
+      <Image
+        src={banner}
+        alt="Online doctor consultation"
+        fill
+        priority
+        quality={100}
+        className="object-cover object-right"
+        sizes="100vw"
+      />
 
-            <p className="mt-2 text-lg font-semibold text-slate-900">
-              {priceText}
-            </p>
+      {/* GRADIENT OVERLAY (for text readability) */}
+      {/* <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-white/0" /> */}
 
-            <button 
-              onClick={scrollToBooking}
-              className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
-            >
-              Consult Now
-            </button>
-          </div>
+      {/* CONTENT */}
+      <div className="relative z-10 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
+        <div className="max-w-xl text-center lg:text-left">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
+            {title}
+            <br />
+            {subtitle}
+          </h1>
+
+          <p className="mt-4 text-sm sm:text-base md:text-lg text-slate-600">
+            Private consultation · Audio & Video call
+          </p>
+
+          <p className="mt-2 text-sm sm:text-base md:text-lg font-semibold text-slate-900">
+            {priceText}
+          </p>
+
+          <button
+            onClick={scrollToBooking}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm sm:text-base font-semibold shadow-lg transition"
+          >
+            Consult Now
+          </button>
         </div>
-
-        {/* RIGHT IMAGE (BACKGROUND STYLE) - Properly contained */}
-        <div className="absolute right-0 top-0 bottom-0 w-[65%] hidden lg:block z-0">
-          <div className="relative w-full h-full">
-            <Image
-              src={banner}
-              alt="Online consultation"
-              priority
-              quality={100}
-              fill
-              className="object-cover object-right"
-              sizes="65vw"
-            />
-          </div>
-        </div>
-
-        {/* FADE OVERLAY - Positioned correctly over the image */}
-        <div className="absolute right-0 top-0 bottom-0 w-[65%] hidden lg:block z-10 bg-gradient-to-l from-[#F8E9E6]/0 via-[#F8E9E6]/70 to-[#F8E9E6] pointer-events-none" />
-        
       </div>
     </section>
   );
