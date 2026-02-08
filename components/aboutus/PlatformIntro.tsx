@@ -52,7 +52,7 @@ export const PlatformIntro = () => (
               <Video className="text-green-600 w-6 h-6" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 leading-tight">
-              Virtual Expert Desk
+              Video Call Support
             </h3>
           </div>
           <p className="text-gray-600 mb-4">
@@ -70,7 +70,7 @@ export const PlatformIntro = () => (
             <div className="bg-purple-100 p-3 rounded-full mr-4">
               <HeartPulse className="text-purple-600 w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 leading-tight">VIP Home Visits</h3>
+            <h3 className="text-xl font-bold text-gray-900 leading-tight"> Home Visits</h3>
           </div>
           <p className="text-gray-600 mb-4">
             Can't make it to the clinic? Our certified physiotherapists and doctors bring the hospital-grade care right to your doorstep.

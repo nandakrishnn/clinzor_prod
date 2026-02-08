@@ -12,6 +12,7 @@ import { NavbarDemo } from "@/components/landingpage/navbar/navbar";
 import CommonHeroSection from "@/components/common/CommonHeroSection";
 import Booking from "@/components/landingpage/booking/Booking";
 import FAQsTwo from "@/components/landingpage/faq/Faq";
+import HeroBanner from "@/components/expertCall/HeroBanner";
 
 const ExpertCall = () => {
   return (
@@ -24,24 +25,26 @@ const ExpertCall = () => {
       <section className="">
         <CommonHeroSection className="h-[15vh]" />
       </section>
+      
+      <section >
+          <main className="bg-[#F8E9E6] h-fit">
+          <HeroBanner/>
+          </main>
+          </section>
+    
 
-      <section className="bg-gray-50 py-10 md:py-20 px-4 sm:px-6" id="expert-info">
-        <div className="max-w-screen-xl mx-auto relative overflow-hidden ">
-          <Booking />
-        </div>
+
+     
+
+       <section className="py-16 bg-white" id="consult-section">
+        <BookingFlow />
       </section>
-
-      {/* <section className="pb-16 ">
-        <HowItWorks />
-      </section> */}
 
       <section className="py-16 bg-gray-50" >
         <ExpertBenefits />
       </section>
 
-      <section className="py-16 bg-white" id="booking">
-        <BookingFlow />
-      </section>
+     
 
       <section className="py-16  bg-gray-50">
         <WallOfLoveSection />
