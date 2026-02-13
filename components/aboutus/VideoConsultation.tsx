@@ -24,11 +24,11 @@ export const VideoConsultation = () => (
           alt="Clinzor Physiotherapy Video"
           className="w-full h-full object-cover"
         />
-        <button className="absolute inset-0 flex items-center justify-center">
+        {/* <button className="absolute inset-0 flex items-center justify-center">
           <span className="bg-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform">
             <PlayCircle className="w-14 h-14 text-blue-600" />
           </span>
-        </button>
+        </button> */}
       </motion.div>
     </div>
   </section>

@@ -43,8 +43,8 @@ const headingVariants = {
 
 // Dummy images for the carousel
 const carouselImages = [
-  "/banner1.jpg",
-  "/clinic.png",
+  "/dji_export_photo_20251022214809286 (2).png",
+  "/WhatsApp Image 2026-02-13 at 18.22.30 (1).jpeg",
 ];
 
 // Side image for the modal
