@@ -5,35 +5,36 @@ import { motion, useInView } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import Title from "@/components/ui/title";
+// import gabir from ''
 
 type Testimonial = {
   name: string;
   role: string;
-  image: string;
+  image: string|any;
   quote: string;
 };
 
 const testimonials: Testimonial[] = [
   {
-    name: "Aisha Menon",
-    role: "Patient – GreenLife Clinic",
-    image: "https://randomuser.me/api/portraits/women/21.jpg",
+    name: "Dr Jabir PT",
+    role: "Indian Senior Men’s Football Team Physio",
+    image:'/ChatGPT Image Feb 11, 2026, 01_47_38 PM.png',
     quote:
-      "Booking my appointment was effortless, and the clinic details were so clear. I found a pediatrician within 10 minutes."
+      "I was glad to mentor at the free camps organized by Clinzor. It was a truly meaningful and much-needed experience."
   },
   {
-    name: "Rahul Singh",
-    role: "Father & Caregiver",
-    image: "https://randomuser.me/api/portraits/men/15.jpg",
+    name: "Soul Physio",
+    role: "",
+    image: "/feb 13 (3).png",
     quote:
-      "I didn’t even know there was a 24/7 clinic near me. This app helped me find it during an emergency at midnight!"
+      "We partnered in events organized by Team Clinzor, and it was a wonderful experience. The team was professional, supportive, and great to work with."
   },
   {
-    name: "Linda George",
-    role: "Fitness Coach",
-    image: "https://randomuser.me/api/portraits/women/12.jpg",
+    name: "Rihan",
+    role: "",
+    image: "/WhatsApp Image 2026-02-13 at 12.06.50.jpeg",
     quote:
-      "The platform filters are amazing. I could search based on specialties, services, and even distance. Super useful!"
+      "Excellent physiotherapy service! The home visit was very convenient and the therapist was highly professional."
   }
 ];
 
