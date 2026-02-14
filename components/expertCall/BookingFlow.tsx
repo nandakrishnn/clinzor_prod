@@ -68,7 +68,6 @@ const BookingFlow = () => {
   const [error, setError] = useState<any>();
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [bookingData, setBookingData] = useState<BookingResponse | null>(null);
-
   // get session user data
   const { data: session } = useSession()
 
@@ -666,6 +665,13 @@ const BookingFlow = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+  onClick={() => window.location.href = '/user'}
+  variant="outline"
+  className="px-6 py-2"
+>
+  View Booking
+</Button>
                   <Button
                     onClick={() => {
                       setStep(1);

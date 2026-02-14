@@ -5,8 +5,8 @@ import banner from "../../public/ChatGPT Image Feb 8, 2026, 02_24_57 PM.png";
 
 export default function HeroBanner({
   title = "Skip the travel!",
-  subtitle = "Consult a Doctor Online",
-  priceText = "Starts at just ₹199",
+  subtitle = "Consult an Expert Online",
+  priceText = "Begin your journey at ₹0",
 }) {
   const scrollToBooking = () => {
     const element = document.getElementById("consult-section");

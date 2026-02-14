@@ -104,6 +104,7 @@ export const deleteClinic = async (Id: string) => {
   return await axiosPrivate.delete(`/clinic/clinic-service-rud/${Id}/`);
 };
 
+
 export const getAClinic = async (Id: string) => {
   return await axiosPrivate.get(`clinic/clinic-rud/${Id}`);
 };

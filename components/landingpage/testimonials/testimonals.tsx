@@ -24,14 +24,14 @@ const testimonials: Testimonial[] = [
   },
   {
     name: "Soul Physio",
-    role: "",
+    role: "Leading Physiotherapy Chain, Bangalore",
     image: "/feb 13 (3).png",
     quote:
       "We partnered in events organized by Team Clinzor, and it was a wonderful experience. The team was professional, supportive, and great to work with."
   },
   {
     name: "Rihan",
-    role: "",
+    role: "Working Professional, Bangalore",
     image: "/WhatsApp Image 2026-02-13 at 12.06.50.jpeg",
     quote:
       "Excellent physiotherapy service! The home visit was very convenient and the therapist was highly professional."
