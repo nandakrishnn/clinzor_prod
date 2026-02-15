@@ -293,7 +293,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({
       <div className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           {" "}
-          Our Doctors Doctors
+          Our Doctors
         </h2>
         {doctors?.length == 0 ? (
           <DataPlaceholder title="No Doctors Available For Now" />

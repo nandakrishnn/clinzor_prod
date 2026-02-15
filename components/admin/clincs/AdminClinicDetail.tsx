@@ -423,28 +423,41 @@ export default function AdminClinicDetail({ clinicId }: { clinicId: string }) {
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Contact & Location</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-xl">Visit Us</h3>
-                  <p className="text-gray-600">{clinic?.address}</p>
-                  <p className="text-gray-600">{clinic?.city}, {clinic?.pincode}</p>
-                  <a
-                    href={clinic?.map_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline mt-2 inline-block"
-                  >
-                    View on Map
-                  </a>
-                </div>
-              </div>
-            </div>
+           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
+  <div className="flex items-center gap-4 mb-6">
+    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+      <MapPin className="w-6 h-6 text-blue-600" />
+    </div>
+    <div>
+      <h3 className="font-bold text-gray-900 text-xl">Visit Us</h3>
+      <p className="text-gray-600">{clinic?.address}</p>
+      <p className="text-gray-600">{clinic?.city}, {clinic?.pincode}</p>
+      <a
+        href={clinic?.map_link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline mt-2 inline-block"
+      >
+        View on Map
+      </a>
+    </div>
+  </div>
+  
+  {/* Map iframe */}
+  <div className="w-full h-64 rounded-2xl overflow-hidden border border-gray-200">
+    <iframe
+      src={clinic?.map_link}
+      width="100%"
+      height="100%"
+      style={{ border: 0 }}
+      allowFullScreen
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    />
+  </div>
+</div>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg">
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-lg h-fit">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <Phone className="w-6 h-6 text-green-600" />

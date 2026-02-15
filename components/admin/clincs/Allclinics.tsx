@@ -28,7 +28,8 @@ import {
   ImageIcon,
   FileText,
   EyeIcon,
-  EyeOffIcon
+  EyeOffIcon,
+  Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -37,6 +38,7 @@ import {
   createClinic,
   createUserForClinic,
   deleteClinic,
+  deleteClinicByKey,
   getAdminClinicStaticData,
   getAllClinic,
   toggleActiveClinic
@@ -383,6 +385,9 @@ export default function ClinicManagement() {
 
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
+  const [deleteClinicModal, setDeleteClinicModal] = useState<{isOpen: boolean, clinic: Clinic | null}>({ isOpen: false, clinic: null });
+const [deletionKey, setDeletionKey] = useState("");
+const [deletionKeyError, setDeletionKeyError] = useState("");
   const steps = ["Clinic Details", "Create Admin User"];
 
   // Add Clinic Form State - Step 1
@@ -1043,6 +1048,24 @@ export default function ClinicManagement() {
       });
   }
 
+const onClickConfrimDelete = () => {
+  if (deleteClinicModal.clinic?.uuid) {
+    const clinicName = deleteClinicModal.clinic.name; // capture before clearing
+    deleteClinicByKey(deleteClinicModal.clinic?.uuid, deletionKey).then(() => {
+      setClinics((prev) => prev.filter((c) => c.uuid !== deleteClinicModal.clinic?.uuid));
+      setDeleteClinicModal({ isOpen: false, clinic: null });
+      setDeletionKey("");
+      setDeletionKeyError("");
+      setNotification({           // ✅ ADD THIS
+        type: "success",
+        message: `Clinic "${clinicName}" deleted successfully.`
+      });
+    }).catch((error) => {         // ✅ ADD THIS too — good practice
+      setDeletionKeyError(error?.response?.data?.message || "Invalid deletion key.");
+    });
+  }
+};
+
   function handleDeleteClinic(clinic: Clinic) {
     setClinics((prev) => prev.filter((c) => c.uuid !== clinic.uuid));
     deleteClinic(clinic.uuid)
@@ -1064,6 +1087,8 @@ export default function ClinicManagement() {
         setLoadingId(null);
       });
   }
+
+  
 
   const getDashboardStatics = async () => {
     try {
@@ -1342,132 +1367,145 @@ export default function ClinicManagement() {
 
         {/* Clinics List - Card Style for All Screens */}
         <div ref={clinicsListRef} className="mb-8 space-y-4">
-          {clinics.map((clinic, index) => (
-            <motion.div
-              key={clinic.uuid}
-              className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow cursor-pointer"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Clinic Info */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        {clinic?.name}
-                        <StatusBadge status={clinic?.status} />
-                      </h3>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <MapPin size={14} />
-                        {clinic?.address}, {clinic?.city} - {clinic?.pincode}
-                      </p>
-                    </div>
-
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Mail size={14} />
-                      <span>{clinic.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone size={14} />
-                      <span>{clinic.country_code}{clinic.contact_number}</span>
-                    </div>
-                    {clinic.hours && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Clock size={14} />
-                        <span>{clinic.hours}</span>
-                      </div>
-                    )
-                    }
-                    {clinic?.workingDays && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar size={14} />
-                        <span>{clinic?.workingDays?.join(", ")}</span>
-                      </div>
-                    )}
-
-                  </div>
-                  {clinic.submissionDate && (
-                    <div className="text-xs text-gray-500">
-                      Submitted on:{" "}
-                      {new Date(clinic.submissionDate).toLocaleDateString()}
-                    </div>
-                  )}
-                  {clinic.dueAmount && (
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
-                      <PaymentStatusBadge status={clinic.paymentStatus} />
-                      {clinic.dueAmount !== "₹0" && (
-                        <span className="text-rose-600">
-                          Due: {clinic.dueAmount}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                </div>
-                {/* Actions */}
-                <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
-                  <Link
-                    href={`/admin/allclinics/${clinic.uuid}`}
-                    legacyBehavior
-                  >
-                    <a
-                      className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-                      aria-label="Review details"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Eye size={16} />
-                      <span className="hidden sm:inline">Review</span>
-                    </a>
-                  </Link>
-                  {clinic.status !== "APPROVED" && (
-                    <button
-                      onClick={() => handleApprove(clinic)}
-                      className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      <Check size={16} />
-                      <span className="hidden sm:inline">Approve</span>
-                    </button>
-                  )}
-                  {clinic.status !== "REJECTED" &&
-                    clinic.status !== "APPROVED" && (
-                      <button
-                        onClick={() => handleReject(clinic)}
-                        className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                      >
-                        <X size={16} />
-                        <span className="hidden sm:inline">Reject</span>
-                      </button>
-                    )}
-                  {clinic.is_active ? (
-                    <button
-                      onClick={() =>
-                        setConfirmModal({ type: "inactive", clinic })
-                      }
-                      className="flex items-center gap-2 px-4 py-2 text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
-                    >
-                      <CheckCircle size={16} />
-                      <span className="hidden sm:inline">Deactivate</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        setConfirmModal({ type: "active", clinic })
-                      }
-                      className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors font-medium"
-                    >
-                      <XCircle size={16} />
-                      <span className="hidden sm:inline">Activate</span>
-                    </button>
-                  )}
-                </div>
+  {clinics.map((clinic, index) => (
+    <motion.div
+      key={clinic.uuid}
+      className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Clinic Info */}
+        <div className="flex-1 space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                {clinic?.name}
+                <StatusBadge status={clinic?.status} />
+              </h3>
+              <p className="text-sm text-gray-600 flex items-center gap-1">
+                <MapPin size={14} />
+                {clinic?.address}, {clinic?.city} - {clinic?.pincode}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2 text-gray-600">
+              <Mail size={14} />
+              <span>{clinic.email}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Phone size={14} />
+              <span>{clinic.country_code}{clinic.contact_number}</span>
+            </div>
+            {clinic.hours && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock size={14} />
+                <span>{clinic.hours}</span>
               </div>
-            </motion.div>
-          ))}
+            )}
+            {clinic?.workingDays && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Calendar size={14} />
+                <span>{clinic?.workingDays?.join(", ")}</span>
+              </div>
+            )}
+          </div>
+          {clinic.submissionDate && (
+            <div className="text-xs text-gray-500">
+              Submitted on:{" "}
+              {new Date(clinic.submissionDate).toLocaleDateString()}
+            </div>
+          )}
+          {clinic.dueAmount && (
+            <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
+              <PaymentStatusBadge status={clinic.paymentStatus} />
+              {clinic.dueAmount !== "₹0" && (
+                <span className="text-rose-600">
+                  Due: {clinic.dueAmount}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
+          <Link
+            href={`/admin/allclinics/${clinic.uuid}`}
+            legacyBehavior
+          >
+            <a
+              className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+              aria-label="Review details"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Eye size={16} />
+              <span className="hidden sm:inline">Review</span>
+            </a>
+          </Link>
+
+          {clinic.status !== "APPROVED" && (
+            <button
+              onClick={() => handleApprove(clinic)}
+              className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors font-medium"
+            >
+              <Check size={16} />
+              <span className="hidden sm:inline">Approve</span>
+            </button>
+          )}
+
+          {clinic.status !== "REJECTED" &&
+            clinic.status !== "APPROVED" && (
+              <button
+                onClick={() => handleReject(clinic)}
+                className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+              >
+                <X size={16} />
+                <span className="hidden sm:inline">Reject</span>
+              </button>
+            )}
+
+          {clinic.is_active ? (
+            <button
+              onClick={() => setConfirmModal({ type: "inactive", clinic })}
+              className="flex items-center gap-2 px-4 py-2 text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
+            >
+              <CheckCircle size={16} />
+              <span className="hidden sm:inline">Deactivate</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setConfirmModal({ type: "active", clinic })}
+              className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors font-medium"
+            >
+              <XCircle size={16} />
+              <span className="hidden sm:inline">Activate</span>
+            </button>
+          )}
+
+          {/* ── ADDED: Delete button ── */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteClinicModal({ isOpen: true, clinic
+                :clinic });
+              setDeletionKey("");
+              setDeletionKeyError("");
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+          >
+            <Trash2 size={16} />
+            <span className="hidden sm:inline">Delete</span>
+          </button>
+          {/* ─────────────────────────── */}
+
+        </div>
+      </div>
+    </motion.div>
+  ))}
+</div>
 
         {/* Pagination Controls */}
         {paginationData.total_pages > 1 && (
@@ -1957,6 +1995,109 @@ export default function ClinicManagement() {
             />
           )}
         </AnimatePresence>
+        {/* Delete Clinic Modal */}
+<AnimatePresence>
+  {deleteClinicModal.isOpen && deleteClinicModal.clinic && (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+      >
+        {/* ── Top Warning Banner ── */}
+        <div className="bg-red-600 px-6 py-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-1.5 bg-white/20 rounded-full">
+              <Trash2 className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-white">Delete Clinic</h2>
+          </div>
+          <div className="flex gap-2 bg-red-700/50 rounded-xl p-3">
+            <AlertCircle className="w-4 h-4 text-red-200 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-100 leading-relaxed">
+              <span className="font-semibold text-white">Warning:</span> This action will
+              permanently remove <span className="font-semibold text-white underline">{deleteClinicModal.clinic.name}</span> and
+              all its related data — including appointments, staff accounts, patient
+              records, documents, and settings. <span className="font-semibold text-white">This cannot be undone.</span>
+            </p>
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Deletion Key <span className="text-red-500">*</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              Enter the deletion key assigned to this clinic to confirm. This key is required to proceed with deletion.
+            </p>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                value={deletionKey}
+                onChange={(e) => {
+                  setDeletionKey(e.target.value);
+                  if (deletionKeyError) setDeletionKeyError("");
+                }}
+                // onKeyDown={(e) => e.key === "Enter" && handleDeleteWithKey()}
+                placeholder="e.g. Clinzor#xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                className={`w-full pl-9 pr-4 py-3 border rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent transition-all ${
+                  deletionKeyError
+                    ? "border-red-400 bg-red-50 focus:ring-red-400"
+                    : "border-gray-200 focus:ring-red-400"
+                }`}
+                autoComplete="off"
+                autoFocus
+              />
+            </div>
+            {deletionKeyError && (
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1.5">
+                <XCircle size={14} />
+                {deletionKeyError}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+          <button
+            onClick={() => {
+              setDeleteClinicModal({ isOpen: false, clinic: null });
+              setDeletionKey("");
+              setDeletionKeyError("");
+            }}
+            // disabled={isDeleting}
+            className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all text-sm font-medium disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onClickConfrimDelete}
+            disabled={ !deletionKey.trim()}
+            className="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 active:scale-95 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {/* {isDeleting ? (
+              <>
+                <RefreshCw size={14} className="animate-spin" />
+                Deleting...
+              </>
+            ) : ( */}
+              <>
+                <Trash2 size={14} />
+                Delete Clinic
+              </>
+            {/* )} */}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
 
         {/* Confirmation Modal */}
         {confirmModal && confirmModal.clinic && (

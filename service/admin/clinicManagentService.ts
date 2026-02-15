@@ -104,8 +104,18 @@ export const deleteClinic = async (Id: string) => {
   return await axiosPrivate.delete(`/clinic/clinic-service-rud/${Id}/`);
 };
 
+export const deleteClinicByKey = async (Id: string, deletionKey: string) => {
+  return await axiosPrivate.delete(`/clinic/clinic-rud/${Id}/`, {
+    data: {
+      deletion_key: deletionKey
+    }
+  });
+};
+
 export const getAClinic = async (Id: string) => {
   return await axiosPrivate.get(`clinic/clinic-rud/${Id}`);
+
+
 };
 export const getClinicDoctors = async (Id: string, status?: string ) => {
   const res = await axiosPrivate.get(`clinic/doctor-lc/?clinic=${Id}&status=${status}`);
@@ -114,6 +124,8 @@ export const getClinicDoctors = async (Id: string, status?: string ) => {
 export const getAClinicService = async (Id: string) => {
   return await axiosPublic.get(`clinic/clinic-detail/${Id}`);
 };
+
+
 
 export const getAllClinic = async (params: any = {}) => {
   try {

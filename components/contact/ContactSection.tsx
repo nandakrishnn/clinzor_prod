@@ -1,9 +1,49 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 
 export default function ContactSection() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+  const [status, setStatus] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_key: "d949ac76-21f1-4e22-8c98-b3f50a5ee5f2",
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStatus("success");
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      setStatus("error");
+    }
+
+    setTimeout(() => setStatus(""), 3000);
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-12 md:py-16 bg-white">
       <div className="relative z-10 max-w-7xl w-full">
@@ -119,13 +159,15 @@ export default function ContactSection() {
               Fill out the form below and we'll get back to you shortly
             </p>
 
-            <form className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="block mb-1 font-medium text-gray-700 text-sm">
                   Name
                 </label>
                 <input
                   type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Your name"
                   className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 border border-gray-200 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor/20 focus:bg-white outline-none transition"
                 />
@@ -137,6 +179,8 @@ export default function ContactSection() {
                 </label>
                 <input
                   type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Your email"
                   className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 border border-gray-200 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor/20 focus:bg-white outline-none transition"
                 />
@@ -148,6 +192,8 @@ export default function ContactSection() {
                 </label>
                 <textarea
                   rows={5}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Write your message..."
                   className="w-full rounded-lg px-3 py-2 text-sm bg-gray-50 border border-gray-200 focus:border-primaryColor focus:ring-2 focus:ring-primaryColor/20 focus:bg-white outline-none transition resize-none"
                 ></textarea>
@@ -159,8 +205,19 @@ export default function ContactSection() {
                 type="submit"
                 className="w-full flex items-center justify-center gap-2 bg-primaryColor hover:bg-primaryColor/90 text-white py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
               >
-                <Send size={18} /> Send Message
+                <Send size={18} /> {status === "sending" ? "Sending..." : "Send Message"}
               </motion.button>
+
+              {status === "success" && (
+                <p className="text-green-600 text-center font-medium text-sm">
+                  ✓ Message sent successfully!
+                </p>
+              )}
+              {status === "error" && (
+                <p className="text-red-600 text-center font-medium text-sm">
+                  ✗ Something went wrong. Please try again.
+                </p>
+              )}
             </form>
           </motion.div>
         </div>
