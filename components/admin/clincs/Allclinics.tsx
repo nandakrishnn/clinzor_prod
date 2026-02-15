@@ -1048,15 +1048,23 @@ const [deletionKeyError, setDeletionKeyError] = useState("");
       });
   }
 
-  const onClickConfrimDelete = ()=>{
-    deleteClinicByKey(deletionKey).then(((response)=>{
-      setClinics((prev) => prev.filter((c) => c.uuid !== deleteClinicModal.clinic?.uuid))
+const onClickConfrimDelete = () => {
+  if (deleteClinicModal.clinic?.uuid) {
+    const clinicName = deleteClinicModal.clinic.name; // capture before clearing
+    deleteClinicByKey(deleteClinicModal.clinic?.uuid, deletionKey).then(() => {
+      setClinics((prev) => prev.filter((c) => c.uuid !== deleteClinicModal.clinic?.uuid));
       setDeleteClinicModal({ isOpen: false, clinic: null });
-              setDeletionKey("");
-              setDeletionKeyError("");
-    }))
-
+      setDeletionKey("");
+      setDeletionKeyError("");
+      setNotification({           // ✅ ADD THIS
+        type: "success",
+        message: `Clinic "${clinicName}" deleted successfully.`
+      });
+    }).catch((error) => {         // ✅ ADD THIS too — good practice
+      setDeletionKeyError(error?.response?.data?.message || "Invalid deletion key.");
+    });
   }
+};
 
   function handleDeleteClinic(clinic: Clinic) {
     setClinics((prev) => prev.filter((c) => c.uuid !== clinic.uuid));
