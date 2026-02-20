@@ -7,7 +7,6 @@ interface Slot {
 interface NewDoctor {
   clinic_service: string;
   name: string;
-  dob: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   specializaton: string;
  experience: number | string;
