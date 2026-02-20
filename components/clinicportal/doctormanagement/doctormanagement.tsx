@@ -236,15 +236,15 @@ const DoctorManagement: React.FC = () => {
       genderFilter,
       specializationFilter
     );
-  }, [currentPage, statusFilter, serviceFilter, genderFilter,debouncedSearchTerm, specializationFilter]);
+  }, [currentPage, statusFilter, serviceFilter, genderFilter, debouncedSearchTerm, specializationFilter]);
 
   useEffect(() => {
-  const timeoutId = setTimeout(() => {
-    setDebouncedSearchTerm(searchTerm);
-  }, 500);
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
 
-  return () => clearTimeout(timeoutId);
-}, [searchTerm]);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   // Update search handler to trigger API call with debounce
 
@@ -325,9 +325,7 @@ const DoctorManagement: React.FC = () => {
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
     if (!newDoctor.name.trim()) errors.name = 'Name is required.';
-    if (!newDoctor.dob) errors.dob = 'Date of birth is required.';
     if (!newDoctor.gender) errors.gender = 'Gender is required.';
-    if (!newDoctor.specializaton.trim()) errors.specializaton = 'Specialization is required.';
     if (!newDoctor.experience.trim() || isNaN(Number(newDoctor.experience)) || Number(newDoctor.experience) < 0) errors.experience = 'Valid experience is required.';
     if (!newDoctor.phone_number.trim() || !/^\d{10}$/.test(newDoctor.phone_number)) errors.phone_number = 'Valid 10-digit phone number is required.';
     if (!newDoctor.email.trim() || !/^\S+@\S+\.\S+$/.test(newDoctor.email)) errors.email = 'Valid email is required.';
@@ -437,7 +435,6 @@ const DoctorManagement: React.FC = () => {
       const payload = {
         clinic_service: newDoctor.clinic_service,
         name: newDoctor.name,
-        dob: newDoctor.dob,
         gender: newDoctor.gender,
         specializaton: newDoctor.specializaton,
         experience: newDoctor.experience,
@@ -448,8 +445,6 @@ const DoctorManagement: React.FC = () => {
         profile_pic: profilePicUrl,
         government_document: government_document,
       };
-
-      // Call the create doctor API
       const createdDoctor = await createDoctor(payload);
 
       // Update local state
@@ -505,7 +500,6 @@ const DoctorManagement: React.FC = () => {
       // Prepare the payload for API
       const payload = {
         name: newDoctor.name,
-        dob: newDoctor.dob,
         gender: newDoctor.gender,
         specializaton: newDoctor.specializaton,
         experience: parseInt(newDoctor.experience),
@@ -683,79 +677,79 @@ const DoctorManagement: React.FC = () => {
   //     </div>
   //   );
   // }
-// Add these skeleton components after your interfaces and before the DoctorManagement component
+  // Add these skeleton components after your interfaces and before the DoctorManagement component
 
-const DoctorCardSkeleton = () => {
-  return (
-    <div className="group">
-      <div className="relative bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-        {/* Status Ribbon Skeleton */}
-        <div className="absolute top-4 right-4 z-10">
-          <div className="h-7 w-24 bg-slate-200 rounded-full animate-pulse" />
-        </div>
-
-        <div className="p-6">
-          {/* Doctor Header Skeleton */}
-          <div className="flex items-start space-x-3 mb-6">
-            <div className="flex-shrink-0">
-              <div className="h-20 w-20 bg-slate-200 rounded-xl animate-pulse" />
-            </div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="h-6 bg-slate-200 rounded w-3/4 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
-            </div>
+  const DoctorCardSkeleton = () => {
+    return (
+      <div className="group">
+        <div className="relative bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          {/* Status Ribbon Skeleton */}
+          <div className="absolute top-4 right-4 z-10">
+            <div className="h-7 w-24 bg-slate-200 rounded-full animate-pulse" />
           </div>
 
-          {/* Doctor Information Skeleton */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-2/3 animate-pulse" />
+          <div className="p-6">
+            {/* Doctor Header Skeleton */}
+            <div className="flex items-start space-x-3 mb-6">
+              <div className="flex-shrink-0">
+                <div className="h-20 w-20 bg-slate-200 rounded-xl animate-pulse" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-6 bg-slate-200 rounded w-3/4 animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
+              </div>
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse" />
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-1/3 animate-pulse" />
-            </div>
-          </div>
 
-          {/* Experience Badge Skeleton */}
-          <div className="mb-6">
-            <div className="h-10 w-48 bg-slate-200 rounded-xl animate-pulse" />
-          </div>
+            {/* Doctor Information Skeleton */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded w-2/3 animate-pulse" />
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse" />
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-slate-200 rounded mr-3 animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded w-1/3 animate-pulse" />
+              </div>
+            </div>
 
-          {/* Action Buttons Skeleton */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-            <div className="h-4 bg-slate-200 rounded w-24 animate-pulse" />
-            <div className="flex items-center space-x-2">
-              <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
-              <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
-              <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
+            {/* Experience Badge Skeleton */}
+            <div className="mb-6">
+              <div className="h-10 w-48 bg-slate-200 rounded-xl animate-pulse" />
+            </div>
+
+            {/* Action Buttons Skeleton */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="h-4 bg-slate-200 rounded w-24 animate-pulse" />
+              <div className="flex items-center space-x-2">
+                <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
+                <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
+                <div className="w-9 h-9 bg-slate-200 rounded-xl animate-pulse" />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-const DoctorCardsSkeletonGrid = ({ count = 6 }: { count?: number }) => {
-  return (
-    <>
-      {[...Array(count)].map((_, index) => (
-        <DoctorCardSkeleton key={index} />
-      ))}
-    </>
-  );
-};
-  
+  const DoctorCardsSkeletonGrid = ({ count = 6 }: { count?: number }) => {
+    return (
+      <>
+        {[...Array(count)].map((_, index) => (
+          <DoctorCardSkeleton key={index} />
+        ))}
+      </>
+    );
+  };
+
 
   return (
     <>
@@ -915,202 +909,202 @@ const DoctorCardsSkeletonGrid = ({ count = 6 }: { count?: number }) => {
             </div>
           ) : (
             <>
-             {/* Doctors Grid */}
-{loading ? (
-  // Show skeleton loading state
-  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-    <DoctorCardsSkeletonGrid count={6} />
-  </div>
-) : paginatedDoctors?.length === 0 ? (
-  <div className="text-center py-16 bg-white/50 rounded-3xl border border-slate-200/60 shadow-sm">
-    <div className="max-w-md mx-auto">
-      <div className="relative inline-block mb-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
-        <div className="relative p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl">
-          <Stethoscope className="w-12 h-12 text-slate-400" />
-        </div>
-      </div>
-      <h3 className="text-2xl font-bold text-slate-900 mb-3">No doctors found</h3>
-      <p className="text-slate-500 text-base mb-8">
-        Try adjusting your search criteria or add your first doctor to get started
-      </p>
-      <button
-        onClick={() => setShowCreateModal(true)}
-        className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold hover:scale-105"
-      >
-        <Plus className="w-5 h-5 mr-2" />
-        Add Your First Doctor
-      </button>
-    </div>
-  </div>
-) : (
-  <>
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-      {paginatedDoctors?.map((doctor) => {
-        const statusConfig = getStatusConfig(doctor.status);
-        const StatusIcon = statusConfig.icon;
-
-        return (
-          <div key={doctor.uuid} className="group ">
-            <div className="relative bg-white rounded-2xl border border-slate-200/60 hover:border-blue-200  transition-all duration-300 shadow-sm hover:shadow-xl overflow-hidden">
-              {/* Status Ribbon */}
-              <div className={`absolute top-4 right-4 z-10 ${statusConfig.color} px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm`}>
-                <StatusIcon className="w-3 h-3 mr-1 inline" />
-                {doctor.status}
-              </div>
-
-              <div className="p-6">
-                {/* Doctor Header */}
-                <div className="flex items-start space-x-3 mb-6">
-                  <div className="flex-shrink-0">
-                    {doctor?.profile_pic ? (
-                      <img src={doctor?.profile_pic} alt={doctor.name} className="h-20 w-20 object-cover rounded-xl border border-slate-200" />
-                    ) : (
-                      <div className="h-20 w-20 flex items-center justify-center rounded-xl bg-slate-200 text-slate-400 text-3xl font-bold">
-                        {doctor.name.charAt(0)}
+              {/* Doctors Grid */}
+              {loading ? (
+                // Show skeleton loading state
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                  <DoctorCardsSkeletonGrid count={6} />
+                </div>
+              ) : paginatedDoctors?.length === 0 ? (
+                <div className="text-center py-16 bg-white/50 rounded-3xl border border-slate-200/60 shadow-sm">
+                  <div className="max-w-md mx-auto">
+                    <div className="relative inline-block mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
+                      <div className="relative p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl">
+                        <Stethoscope className="w-12 h-12 text-slate-400" />
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                      {doctor.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 font-medium capitalize mt-1">
-                      {doctor.specializaton}
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-3">No doctors found</h3>
+                    <p className="text-slate-500 text-base mb-8">
+                      Try adjusting your search criteria or add your first doctor to get started
                     </p>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold hover:scale-105"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Add Your First Doctor
+                    </button>
                   </div>
                 </div>
+              ) : (
+                <>
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                    {paginatedDoctors?.map((doctor) => {
+                      const statusConfig = getStatusConfig(doctor.status);
+                      const StatusIcon = statusConfig.icon;
 
-                {/* Doctor Information */}
-                <div className="space-y-3 mb-6 ">
-                  <div className="flex items-center text-sm text-slate-700">
-                    <MapPin className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
-                    <span className="truncate">{getServiceName(doctor.clinic_service)}</span>
+                      return (
+                        <div key={doctor.uuid} className="group ">
+                          <div className="relative bg-white rounded-2xl border border-slate-200/60 hover:border-blue-200  transition-all duration-300 shadow-sm hover:shadow-xl overflow-hidden">
+                            {/* Status Ribbon */}
+                            <div className={`absolute top-4 right-4 z-10 ${statusConfig.color} px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm`}>
+                              <StatusIcon className="w-3 h-3 mr-1 inline" />
+                              {doctor.status}
+                            </div>
+
+                            <div className="p-6">
+                              {/* Doctor Header */}
+                              <div className="flex items-start space-x-3 mb-6">
+                                <div className="flex-shrink-0">
+                                  {doctor?.profile_pic ? (
+                                    <img src={doctor?.profile_pic} alt={doctor.name} className="h-20 w-20 object-cover rounded-xl border border-slate-200" />
+                                  ) : (
+                                    <div className="h-20 w-20 flex items-center justify-center rounded-xl bg-slate-200 text-slate-400 text-3xl font-bold">
+                                      {doctor.name.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                    {doctor.name}
+                                  </h3>
+                                  <p className="text-sm text-slate-600 font-medium capitalize mt-1">
+                                    {doctor.specializaton}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Doctor Information */}
+                              <div className="space-y-3 mb-6 ">
+                                <div className="flex items-center text-sm text-slate-700">
+                                  <MapPin className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                  <span className="truncate">{getServiceName(doctor.clinic_service)}</span>
+                                </div>
+                                {doctor.phone_number && (
+                                  <div className="flex items-center text-sm text-slate-700">
+                                    <Phone className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                    <span>{doctor.phone_number}</span>
+                                  </div>
+                                )}
+                                {doctor.email && (
+                                  <div className="flex items-center text-sm text-slate-700">
+                                    <Mail className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                    <span className="truncate">{doctor.email}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center text-sm text-slate-700">
+                                  <Calendar className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
+                                  <span>{calculateAge(doctor.dob)} • {doctor.gender}</span>
+                                </div>
+                              </div>
+
+                              {/* Experience Badge */}
+                              {doctor.experience && (
+                                <div className="mb-6">
+                                  <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl shadow-lg">
+                                    <span className="text-lg font-bold mr-2">{doctor.experience}</span>
+                                    <span className="text-sm font-medium">Years Experience</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Rejection Reason */}
+                              {doctor.status === 'REJECTED' && doctor.reason_for_rejection && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                                  <p className="text-xs font-semibold text-red-600 mb-1">Rejection Reason</p>
+                                  <p className="text-sm text-red-700">{doctor.reason_for_rejection}</p>
+                                </div>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                <div className="text-xs text-slate-500 font-medium">
+                                  ID: {doctor.uuid.slice(0, 8)}...
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => handleViewDoctor(doctor)}
+                                    className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                    title="View Details"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleEditDoctor(doctor)}
+                                    className="p-2.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                    title="Edit Doctor"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteConfirm(doctor)}
+                                    className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                    title="Delete Doctor"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {doctor.phone_number && (
-                    <div className="flex items-center text-sm text-slate-700">
-                      <Phone className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
-                      <span>{doctor.phone_number}</span>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-wrap justify-center items-center gap-3 mt-12">
+                      <button
+                        onClick={() => {
+                          const nextPage = Math.max(1, currentPage - 1);
+                          if (nextPage !== currentPage) {
+                            setCurrentPage(nextPage);
+                            fetchDoctor(nextPage, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                          }
+                        }}
+                        disabled={currentPage === 1}
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex items-center space-x-2">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setCurrentPage(i + 1);
+                              fetchDoctor(i + 1, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                            }}
+                            className={`w-10 h-10 rounded-xl border font-semibold transition-all duration-200 ${currentPage === i + 1
+                              ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm'
+                              }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const nextPage = Math.min(totalPages, currentPage + 1);
+                          if (nextPage !== currentPage) {
+                            setCurrentPage(nextPage);
+                            fetchDoctor(nextPage, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
+                          }
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                      >
+                        Next
+                      </button>
                     </div>
                   )}
-                  {doctor.email && (
-                    <div className="flex items-center text-sm text-slate-700">
-                      <Mail className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
-                      <span className="truncate">{doctor.email}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm text-slate-700">
-                    <Calendar className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" />
-                    <span>{calculateAge(doctor.dob)} • {doctor.gender}</span>
-                  </div>
-                </div>
-
-                {/* Experience Badge */}
-                {doctor.experience && (
-                  <div className="mb-6">
-                    <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl shadow-lg">
-                      <span className="text-lg font-bold mr-2">{doctor.experience}</span>
-                      <span className="text-sm font-medium">Years Experience</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Rejection Reason */}
-                {doctor.status === 'REJECTED' && doctor.reason_for_rejection && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-xs font-semibold text-red-600 mb-1">Rejection Reason</p>
-                    <p className="text-sm text-red-700">{doctor.reason_for_rejection}</p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                  <div className="text-xs text-slate-500 font-medium">
-                    ID: {doctor.uuid.slice(0, 8)}...
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleViewDoctor(doctor)}
-                      className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEditDoctor(doctor)}
-                      className="p-2.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-110"
-                      title="Edit Doctor"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteConfirm(doctor)}
-                      className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110"
-                      title="Delete Doctor"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-
-    {/* Pagination */}
-    {totalPages > 1 && (
-      <div className="flex flex-wrap justify-center items-center gap-3 mt-12">
-        <button
-          onClick={() => {
-            const nextPage = Math.max(1, currentPage - 1);
-            if (nextPage !== currentPage) {
-              setCurrentPage(nextPage);
-              fetchDoctor(nextPage, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
-            }
-          }}
-          disabled={currentPage === 1}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
-        >
-          Previous
-        </button>
-
-        <div className="flex items-center space-x-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setCurrentPage(i + 1);
-                fetchDoctor(i + 1, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
-              }}
-              className={`w-10 h-10 rounded-xl border font-semibold transition-all duration-200 ${currentPage === i + 1
-                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm'
-                }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={() => {
-            const nextPage = Math.min(totalPages, currentPage + 1);
-            if (nextPage !== currentPage) {
-              setCurrentPage(nextPage);
-              fetchDoctor(nextPage, debouncedSearchTerm, statusFilter, serviceFilter, genderFilter, specializationFilter);
-            }
-          }}
-          disabled={currentPage === totalPages}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-50 hover:bg-slate-50 transition-all duration-200 shadow-sm"
-        >
-          Next
-        </button>
-      </div>
-    )}
-  </>
-)}
+                </>
+              )}
 
               {/* Pagination */}
               {/* {totalPages > 1 && (
@@ -1413,7 +1407,7 @@ const DoctorCardsSkeletonGrid = ({ count = 6 }: { count?: number }) => {
                           {formErrors.name && <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>}
                         </div>
                         <div>
-                          <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Date of Birth *</label>
+                          <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Date of Birth </label>
                           <DatePicker
                             selected={newDoctor.dob ? new Date(newDoctor.dob) : null}
                             onChange={(date: Date | null) => setNewDoctor({ ...newDoctor, dob: date ? date.toISOString().slice(0, 10) : '' })}
@@ -1490,7 +1484,7 @@ const DoctorCardsSkeletonGrid = ({ count = 6 }: { count?: number }) => {
                       <h3 className="text-lg font-semibold text-blue-700 mb-2">Professional Information</h3>
                       <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                          <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Specialization *</label>
+                          <label className="text-xs font-semibold text-slate-600 mb-1 ml-1 block">Specialization </label>
                           <input
                             type="text"
                             placeholder="e.g. Cardiologist, Dermatologist"
