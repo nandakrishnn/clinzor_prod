@@ -328,7 +328,7 @@ const ClinicDetailedView: React.FC<ClinicDetailedViewProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mb-3">
-                    {doctor?.experience} experience
+                    {doctor?.experience}+ Years Experience
                   </p>
                   <p className="text-xs text-gray-600 mb-4">
                     Available:{" "}
