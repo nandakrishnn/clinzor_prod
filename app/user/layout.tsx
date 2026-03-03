@@ -14,14 +14,19 @@ import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import Sidebar from "@/components/admin/Sidebar";
 import ExpertSidebar from "@/components/expert/Expertlayout";
 import CustomerSidebar from "@/components/Customer/appbar/appbar";
+import { CustomerProvider } from "../Providers";
 
 // Sidebar component
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
+    <CustomerProvider>
+
     <main>
         {/* Main Page Content */}
-        {children}
+          {children}
+        
     </main>
+    </CustomerProvider>
   );
 }
