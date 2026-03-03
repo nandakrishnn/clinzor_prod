@@ -29,9 +29,9 @@ export default function Navbar() {
 
     const navLinks = [
         { name: "Services", href: "/connect-with-us#services", hash: "#services" },
-        { name: "About", href: "/connect-with-us#about", hash: "#about" },
+        { name: "About", href: "/aboutus", hash: "" },
         { name: "Corporate", href: "/connect-with-us/corporate", hash: "" },
-        { name: "Contact", href: "/connect-with-us#contact", hash: "#contact" },
+        { name: "Contact", href: "/contact-us", hash: "" },
     ];
 
     return (

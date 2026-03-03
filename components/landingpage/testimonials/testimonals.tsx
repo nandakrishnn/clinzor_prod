@@ -17,7 +17,7 @@ type Testimonial = {
 const testimonials: Testimonial[] = [
   {
     name: "Dr Jabir PT",
-    role: "Indian Senior Men’s Football Team Physio",
+    role: "Indian Men’s Football Team Physio",
     image:'/ChatGPT Image Feb 11, 2026, 01_47_38 PM.png',
     quote:
       "I was glad to mentor at the free camps organized by Clinzor. It was a truly meaningful and much-needed experience."
@@ -32,7 +32,7 @@ const testimonials: Testimonial[] = [
   {
     name: "Rihan",
     role: "Working Professional, Bangalore",
-    image: "/WhatsApp Image 2026-02-13 at 12.06.50.jpeg",
+    image: "/Rihan.jpg",
     quote:
       "Excellent physiotherapy service! The home visit was very convenient and the therapist was highly professional."
   }
