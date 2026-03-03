@@ -1,6 +1,7 @@
 "use client";
 
 import { Home, Building2, Video, ArrowDown } from "lucide-react";
+import Link from "next/link";
 
 export default function HeroSection() {
     return (
@@ -94,9 +95,16 @@ export default function HeroSection() {
                                     <option value="">Select a service type</option>
                                     <option value="Home Visit">Home Visit</option>
                                     <option value="Clinic Visit">Clinic Visit</option>
-                                    <option value="Video Call">Video Call</option>
                                 </select>
                             </div>
+
+                            <Link
+                                href="/expert-call"
+                                className="flex items-center justify-center gap-2 w-full border border-blue-200 bg-blue-50 text-blue-600 font-semibold text-sm py-3 rounded-lg hover:bg-blue-100 transition-colors"
+                            >
+                                <Video className="w-4 h-4" />
+                                Looking for a Video Call? Book Free Consultation
+                            </Link>
 
                             <button
                                 type="submit"

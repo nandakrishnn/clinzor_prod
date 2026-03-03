@@ -1,11 +1,10 @@
-import { Star } from "lucide-react";
 import Image from "next/image";
 
 export default function ReviewsSection() {
     const reviews = [
         {
             name: "Dr Jabir PT",
-            role: "Indian Senior Men's Football Team Physio",
+            role: "Indian Men's Football Team Physio",
             content: "I was glad to mentor at the free camps organized by Clinzor. It was a truly meaningful and much-needed experience.",
             image: "/jabir.png"
         },
