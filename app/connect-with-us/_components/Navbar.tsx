@@ -29,8 +29,15 @@ export default function Navbar() {
 
     const navLinks = [
         { name: "Services", href: "/connect-with-us#services", hash: "#services" },
-        { name: "About", href: "/aboutus", hash: "" },
         { name: "Corporate", href: "/connect-with-us/corporate", hash: "" },
+        { name: "About", href: "/aboutus", hash: "" },
+        { name: "Contact", href: "/contact-us", hash: "" },
+    ];
+
+    const mobileNavLinks = [
+        { name: "Services", href: "/connect-with-us#services", hash: "#services" },
+        { name: "Corporate", href: "/connect-with-us/corporate", hash: "" },
+        { name: "About", href: "/aboutus", hash: "" },
         { name: "Contact", href: "/contact-us", hash: "" },
     ];
 
@@ -89,7 +96,7 @@ export default function Navbar() {
             {isOpen && (
                 <div className="md:hidden">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
-                        {navLinks.map((link) => (
+                        {mobileNavLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.href}
