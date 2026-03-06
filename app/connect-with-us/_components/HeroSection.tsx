@@ -2,8 +2,35 @@
 
 import { Home, Building2, Video, ArrowDown } from "lucide-react";
 import Link from "next/link";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setLoading(true);
+        const form = e.currentTarget;
+        const data = {
+            formType: "session",
+            name: (form.elements.namedItem("name") as HTMLInputElement).value,
+            phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
+            serviceType: (form.elements.namedItem("Service Type") as HTMLSelectElement).value,
+        };
+        try {
+            await fetch("/api/submit-form", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+        } catch (_) {
+            // silently continue — sheet logging best-effort
+        }
+        router.push("/connect-with-us/thank-you");
+    }
+
     return (
         <section className="relative bg-gradient-to-b from-blue-50 to-white pt-10 pb-16 md:pt-16 md:pb-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,13 +79,8 @@ export default function HeroSection() {
 
                         <form
                             className="space-y-4"
-                            action="https://formsubmit.co/clinzorofficial@gmail.com"
-                            method="POST"
+                            onSubmit={handleSubmit}
                         >
-                            <input type="hidden" name="_subject" value="New Booking Request - Clinzor" />
-                            <input type="hidden" name="_captcha" value="false" />
-                            <input type="hidden" name="_template" value="table" />
-                            <input type="hidden" name="_next" value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect-with-us/thank-you`} />
 
                             <div>
                                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
@@ -108,9 +130,10 @@ export default function HeroSection() {
 
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 mt-2"
+                                disabled={loading}
+                                className="w-full bg-blue-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Book Session Now
+                                {loading ? "Booking..." : "Book Session Now"}
                             </button>
 
                             <p className="text-xs text-center text-gray-400 mt-4">

@@ -5,8 +5,37 @@ import Footer from "../_components/Footer";
 
 import { Check, Download, FileText, Users, Activity, ChevronRight, Play } from "lucide-react";
 import Image from "next/image";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CorporatePage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    async function handleCorporateSubmit(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setLoading(true);
+        const form = e.currentTarget;
+        const data = {
+            formType: "corporate",
+            companyName: (form.elements.namedItem("Company Name") as HTMLInputElement).value,
+            contactPerson: (form.elements.namedItem("Contact Person") as HTMLInputElement).value,
+            email: (form.elements.namedItem("Email") as HTMLInputElement).value,
+            phone: (form.elements.namedItem("Phone") as HTMLInputElement).value,
+            teamSize: (form.elements.namedItem("Team Size") as HTMLSelectElement).value,
+        };
+        try {
+            await fetch("/api/submit-form", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+        } catch (_) {
+            // silently continue — sheet logging best-effort
+        }
+        router.push("/connect-with-us/thank-you");
+    }
+
     return (
         <main className="min-h-screen bg-white font-sans">
             <Navbar />
@@ -263,14 +292,9 @@ export default function CorporatePage() {
                     </div>
 
                     <form
-                        action="https://formsubmit.co/clinzorofficial@gmail.com"
-                        method="POST"
+                        onSubmit={handleCorporateSubmit}
                         className="space-y-6 bg-gray-50 p-6 sm:p-8 md:p-10 rounded-2xl border border-gray-100"
                     >
-                        <input type="hidden" name="_subject" value="New Corporate Wellness Consultation Request" />
-                        <input type="hidden" name="_captcha" value="false" />
-                        <input type="hidden" name="_template" value="table" />
-                        <input type="hidden" name="_next" value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect-with-us/thank-you`} />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             <div>
@@ -334,9 +358,10 @@ export default function CorporatePage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg shadow-lg"
+                            disabled={loading}
+                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            Submit Request
+                            {loading ? "Submitting..." : "Submit Request"}
                         </button>
                     </form>
                 </div>
