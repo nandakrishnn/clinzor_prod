@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const lr = require\\(''d:/CLINZOR-PRODUCTION-CODE/clinzor_frontend/node_modules/lucide-react''\\); const icons=[''BarChart3'',''Heart'',''MessageCircle'',''Trophy'',''Baby'',''Scissors'',''Brain'',''Users'',''Bone'',''ArrowDown'',''Building2'',''ArrowRight'',''Check'',''Download'',''FileText'',''Activity'',''ChevronRight'',''Play'',''Home'',''Video'',''Gift'',''Menu'',''X'',''Star'',''CheckCircle'',''Linkedin'',''Facebook'',''Instagram'']; icons.forEach\\(i => console.log\\(i, lr[i] ? ''OK'' : ''MISSING''\\)\\);\")"
+    ]
+  }
+}
