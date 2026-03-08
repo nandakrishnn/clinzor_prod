@@ -17,6 +17,7 @@ export default function HeroSection() {
             formType: "session",
             name: (form.elements.namedItem("name") as HTMLInputElement).value,
             phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
+            email: (form.elements.namedItem("email") as HTMLInputElement).value,
             serviceType: (form.elements.namedItem("Service Type") as HTMLSelectElement).value,
         };
         try {
@@ -103,6 +104,18 @@ export default function HeroSection() {
                                     required
                                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     placeholder="Enter phone number"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="Enter your email"
                                 />
                             </div>
 
