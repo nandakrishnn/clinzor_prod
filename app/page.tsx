@@ -11,6 +11,7 @@ import Offers from "@/components/landingpage/offers/Offers";
 import Camp from "@/components/landingpage/camp/Camp";
 import BlogComponent from "@/components/blog/BlogComponent";
 import FloatingBanner from "@/components/FloatingBanner";
+import WhatsAppButton from "./connect-with-us/_components/WhatsAppButton";
 import CampMarquee from "@/components/landingpage/camp/CampMarquee";
 
 export default function Home() {
@@ -90,6 +91,7 @@ export default function Home() {
       </main>
 
       <FloatingBanner />
+      <WhatsAppButton side="left" />
     </div>
   );
 }

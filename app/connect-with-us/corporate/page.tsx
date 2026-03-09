@@ -5,12 +5,17 @@ import Footer from "../_components/Footer";
 
 import { Check, Download, FileText, Users, Activity, ChevronRight, Play } from "lucide-react";
 import Image from "next/image";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "../_components/MetaPixel";
 
 export default function CorporatePage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        trackEvent("ViewContent", { page: "corporate" });
+    }, []);
 
     async function handleCorporateSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -24,6 +29,7 @@ export default function CorporatePage() {
             phone: (form.elements.namedItem("Phone") as HTMLInputElement).value,
             teamSize: (form.elements.namedItem("Team Size") as HTMLSelectElement).value,
         };
+        trackEvent("Lead", { service: "corporate_wellness" });
         try {
             await fetch("/api/submit-form", {
                 method: "POST",

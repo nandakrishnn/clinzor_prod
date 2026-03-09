@@ -4,6 +4,7 @@ import { Home, Building2, Video, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "./MetaPixel";
 
 export default function HeroSection() {
     const router = useRouter();
@@ -20,6 +21,7 @@ export default function HeroSection() {
             email: (form.elements.namedItem("email") as HTMLInputElement).value,
             serviceType: (form.elements.namedItem("Service Type") as HTMLSelectElement).value,
         };
+        trackEvent("Lead", { service: "physiotherapy_booking" });
         try {
             await fetch("/api/submit-form", {
                 method: "POST",
@@ -135,6 +137,7 @@ export default function HeroSection() {
 
                             <Link
                                 href="/expert-call"
+                                onClick={() => trackEvent("Contact", { consultation_type: "video" })}
                                 className="flex items-center justify-center gap-2 w-full border border-blue-200 bg-blue-50 text-blue-600 font-semibold text-sm py-3 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <Video className="w-4 h-4" />

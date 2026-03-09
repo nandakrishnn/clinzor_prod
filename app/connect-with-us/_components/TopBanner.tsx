@@ -2,6 +2,7 @@
 
 import { Gift, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { trackEvent } from "./MetaPixel";
 
 export default function TopBanner() {
     return (
@@ -15,6 +16,7 @@ export default function TopBanner() {
                 </div>
                 <Link
                     href="https://clinzor.com/expert-call"
+                    onClick={() => trackEvent("InitiateCheckout", { content_name: "free_video_consultation", source: "top_banner" })}
                     className="bg-white text-emerald-600 px-4 py-1.5 rounded-full font-bold text-sm hover:bg-emerald-50 transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap"
                 >
                     Book Free Consultation Now <ArrowRight className="h-4 w-4" />
