@@ -9,7 +9,7 @@ export default function ThankYouPage() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            router.push('/connect-with-us');
+            router.push('/book-your-physiotherapy');
         }, 10000);
 
         return () => clearTimeout(timer);
@@ -95,7 +95,7 @@ export default function ThankYouPage() {
 
                 {/* Return Home Button */}
                 <button
-                    onClick={() => router.push('/connect-with-us')}
+                    onClick={() => router.push('/book-your-physiotherapy')}
                     className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                     Return to Home

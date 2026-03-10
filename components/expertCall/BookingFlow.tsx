@@ -1,7 +1,7 @@
 "use client";
 import type React from "react";
 import { useState, useEffect } from "react";
-import { trackEvent } from "@/app/connect-with-us/_components/MetaPixel";
+import { trackEvent } from "@/app/book-your-physiotherapy/_components/MetaPixel";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,

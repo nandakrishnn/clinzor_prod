@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { trackEvent } from "./MetaPixel";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,21 +23,21 @@ export default function Navbar() {
 
     const isActive = (path: string, hash?: string) => {
         if (hash) {
-            return pathname === "/connect-with-us" && activeSection === hash;
+            return pathname === "/book-your-physiotherapy" && activeSection === hash;
         }
         return pathname === path;
     };
 
     const navLinks = [
-        { name: "Services", href: "/connect-with-us#services", hash: "#services" },
-        { name: "Corporate", href: "/connect-with-us/corporate", hash: "" },
+        { name: "Services", href: "/book-your-physiotherapy#services", hash: "#services" },
+        { name: "Corporate", href: "/book-your-physiotherapy/corporate", hash: "" },
         { name: "About", href: "/aboutus", hash: "" },
         { name: "Contact", href: "/contact-us", hash: "" },
     ];
 
     const mobileNavLinks = [
-        { name: "Services", href: "/connect-with-us#services", hash: "#services" },
-        { name: "Corporate", href: "/connect-with-us/corporate", hash: "" },
+        { name: "Services", href: "/book-your-physiotherapy#services", hash: "#services" },
+        { name: "Corporate", href: "/book-your-physiotherapy/corporate", hash: "" },
         { name: "About", href: "/aboutus", hash: "" },
         { name: "Contact", href: "/contact-us", hash: "" },
     ];
@@ -65,10 +66,13 @@ export default function Navbar() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                onClick={() => link.hash && setActiveSection(link.hash)}
+                                onClick={() => {
+                                    if (link.hash) setActiveSection(link.hash);
+                                    if (link.href === "/book-your-physiotherapy/corporate") trackEvent("ViewContent", { page: "corporate", source: "navbar" });
+                                }}
                                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                                     isActive(link.href, link.hash) ||
-                                    (link.href === "/connect-with-us/corporate" && pathname === "/connect-with-us/corporate")
+                                    (link.href === "/book-your-physiotherapy/corporate" && pathname === "/book-your-physiotherapy/corporate")
                                         ? "text-blue-600 bg-blue-50"
                                         : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 }`}
@@ -76,7 +80,7 @@ export default function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
-                        <Link href="/connect-with-us#book" className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium ml-4">
+                        <Link href="/book-your-physiotherapy#book" className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium ml-4">
                             Book Now
                         </Link>
                     </div>
@@ -102,11 +106,12 @@ export default function Navbar() {
                                 href={link.href}
                                 onClick={() => {
                                     if (link.hash) setActiveSection(link.hash);
+                                    if (link.href === "/book-your-physiotherapy/corporate") trackEvent("ViewContent", { page: "corporate", source: "navbar_mobile" });
                                     setIsOpen(false);
                                 }}
                                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                                     isActive(link.href, link.hash) ||
-                                    (link.href === "/connect-with-us/corporate" && pathname === "/connect-with-us/corporate")
+                                    (link.href === "/book-your-physiotherapy/corporate" && pathname === "/book-your-physiotherapy/corporate")
                                         ? "text-blue-600 bg-blue-50"
                                         : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 }`}
@@ -115,7 +120,7 @@ export default function Navbar() {
                             </Link>
                         ))}
                         <Link
-                            href="/connect-with-us#book"
+                            href="/book-your-physiotherapy#book"
                             onClick={() => setIsOpen(false)}
                             className="block w-full text-center bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-base font-medium mt-4"
                         >

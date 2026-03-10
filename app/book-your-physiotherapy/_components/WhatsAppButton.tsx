@@ -1,4 +1,6 @@
+"use client";
 import Link from "next/link";
+import { trackEvent } from "./MetaPixel";
 
 export default function WhatsAppButton({ side = "right" }: { side?: "left" | "right" }) {
     return (
@@ -6,6 +8,7 @@ export default function WhatsAppButton({ side = "right" }: { side?: "left" | "ri
             href="https://wa.me/917411096006?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20Clinzor%20Physiotherapy"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("Contact", { method: "whatsapp", source: side === "left" ? "landing_page" : "connect_page" })}
             className={`fixed bottom-6 z-50 flex items-center gap-2 bg-[#25D366] text-white px-4 py-3 rounded-full shadow-lg hover:bg-[#1ebe5d] transition-all hover:shadow-xl group ${side === "left" ? "left-6" : "right-6"}`}
             aria-label="Chat with us on WhatsApp"
         >

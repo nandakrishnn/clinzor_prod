@@ -31,7 +31,7 @@ export default function HeroSection() {
         } catch (_) {
             // silently continue — sheet logging best-effort
         }
-        router.push("/connect-with-us/thank-you");
+        router.push("/book-your-physiotherapy/thank-you");
     }
 
     return (
@@ -147,6 +147,7 @@ export default function HeroSection() {
                             <button
                                 type="submit"
                                 disabled={loading}
+                                onClick={() => trackEvent("InitiateCheckout", { content_name: "session_booking", source: "hero_form" })}
                                 className="w-full bg-blue-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {loading ? "Booking..." : "Book Session Now"}

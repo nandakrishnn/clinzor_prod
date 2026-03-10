@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import MetaPixel from "../connect-with-us/_components/MetaPixel";
+import MetaPixel from "../book-your-physiotherapy/_components/MetaPixel";
 import ExpertHeroSection from "@/components/expertCall/ExpertHeroSection";
 import FAQSection from "@/components/expertCall/FAQSection";
 import PricingSection from "@/components/expertCall/PricingSection";

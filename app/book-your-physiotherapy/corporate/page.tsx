@@ -39,7 +39,7 @@ export default function CorporatePage() {
         } catch (_) {
             // silently continue — sheet logging best-effort
         }
-        router.push("/connect-with-us/thank-you");
+        router.push("/book-your-physiotherapy/thank-you");
     }
 
     return (
@@ -69,11 +69,11 @@ export default function CorporatePage() {
                             </p>
 
                             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
-                                <a href="#contact" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center gap-2 transform hover:-translate-y-1">
+                                <a href="#contact" onClick={() => trackEvent("InitiateCheckout", { content_name: "corporate_booking", source: "hero_cta" })} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center gap-2 transform hover:-translate-y-1">
                                     Book
                                     <ChevronRight className="w-5 h-5" />
                                 </a>
-                                <a href="/downloads/Corporate_wellness_clinzor.pdf" download className="px-8 py-4 bg-white text-gray-700 font-bold rounded-full border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-2">
+                                <a href="/downloads/Corporate_wellness_clinzor.pdf" download onClick={() => trackEvent("Lead", { content_name: "guide_download", service: "corporate_wellness", source: "hero" })} className="px-8 py-4 bg-white text-gray-700 font-bold rounded-full border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-2">
                                     <Download className="w-5 h-5" />
                                     Download Guide
                                 </a>
@@ -281,7 +281,7 @@ export default function CorporatePage() {
                                 Download our detailed WorkCare program guide.
                             </p>
                         </div>
-                        <a href="/downloads/Corporate_wellness_clinzor.pdf" download className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                        <a href="/downloads/Corporate_wellness_clinzor.pdf" download onClick={() => trackEvent("Lead", { content_name: "guide_download", service: "corporate_wellness", source: "brochure_section" })} className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
                             <Download className="h-5 w-5" />
                             Download Brochure
                         </a>
@@ -365,6 +365,7 @@ export default function CorporatePage() {
                         <button
                             type="submit"
                             disabled={loading}
+                            onClick={() => trackEvent("InitiateCheckout", { content_name: "corporate_consultation", source: "contact_form" })}
                             className="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {loading ? "Submitting..." : "Submit Request"}
