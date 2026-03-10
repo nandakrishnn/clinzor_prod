@@ -101,6 +101,21 @@ export default function ThankYouPage() {
                     Return to Home
                 </button>
 
+                {/* Clinzor Main Website CTA */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-sm text-gray-600 mb-3">
+                        Looking to schedule more sessions or explore the best physiotherapy clinics near you?
+                    </p>
+                    <a
+                        href="https://clinzor.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full bg-white text-blue-600 font-bold py-2.5 px-6 rounded-lg border border-blue-200 hover:bg-blue-600 hover:text-white transition-colors text-sm"
+                    >
+                        Visit Clinzor.com →
+                    </a>
+                </div>
+
                 <p className="text-xs text-gray-400 mt-4">
                     Redirecting to home in 10 seconds...
                 </p>
