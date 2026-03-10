@@ -1,6 +1,7 @@
 "use client";
 import type React from "react";
 import { useState, useEffect } from "react";
+import { trackEvent } from "@/app/book-your-physiotherapy/_components/MetaPixel";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -193,6 +194,7 @@ const BookingFlow = () => {
       console.log(data, 'booking success ')
       if (data.status === 200) {
         console.log("Booking successful:", data.data);
+        trackEvent("Lead", { service: "video_consultation" });
         setBookingData(data.data);
         setStep(4);
       } else {

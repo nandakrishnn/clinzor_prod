@@ -4,6 +4,7 @@ import { Home, Building2, Video, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "./MetaPixel";
 
 export default function HeroSection() {
     const router = useRouter();
@@ -17,8 +18,10 @@ export default function HeroSection() {
             formType: "session",
             name: (form.elements.namedItem("name") as HTMLInputElement).value,
             phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
+            email: (form.elements.namedItem("email") as HTMLInputElement).value,
             serviceType: (form.elements.namedItem("Service Type") as HTMLSelectElement).value,
         };
+        trackEvent("Lead", { service: "physiotherapy_booking" });
         try {
             await fetch("/api/submit-form", {
                 method: "POST",
@@ -28,7 +31,7 @@ export default function HeroSection() {
         } catch (_) {
             // silently continue — sheet logging best-effort
         }
-        router.push("/connect-with-us/thank-you");
+        router.push("/book-your-physiotherapy/thank-you");
     }
 
     return (
@@ -107,6 +110,18 @@ export default function HeroSection() {
                             </div>
 
                             <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="Enter your email"
+                                />
+                            </div>
+
+                            <div>
                                 <label htmlFor="serviceType" className="block text-sm font-medium text-gray-700 mb-1">Service Type <span className="text-red-500">*</span></label>
                                 <select
                                     id="serviceType"
@@ -122,6 +137,7 @@ export default function HeroSection() {
 
                             <Link
                                 href="/expert-call"
+                                onClick={() => trackEvent("Contact", { consultation_type: "video" })}
                                 className="flex items-center justify-center gap-2 w-full border border-blue-200 bg-blue-50 text-blue-600 font-semibold text-sm py-3 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <Video className="w-4 h-4" />
@@ -131,6 +147,7 @@ export default function HeroSection() {
                             <button
                                 type="submit"
                                 disabled={loading}
+                                onClick={() => trackEvent("InitiateCheckout", { content_name: "session_booking", source: "hero_form" })}
                                 className="w-full bg-blue-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {loading ? "Booking..." : "Book Session Now"}

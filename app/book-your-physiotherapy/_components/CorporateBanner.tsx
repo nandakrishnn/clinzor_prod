@@ -57,7 +57,7 @@ export default function CorporateBanner() {
 
                             {/* CTA Button */}
                             <Link
-                                href="/connect-with-us/corporate"
+                                href="/book-your-physiotherapy/corporate"
                                 className="group bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center"
                             >
                                 <Users className="w-5 h-5 sm:w-6 sm:h-6" />

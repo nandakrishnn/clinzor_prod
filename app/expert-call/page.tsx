@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import MetaPixel from "../book-your-physiotherapy/_components/MetaPixel";
 import ExpertHeroSection from "@/components/expertCall/ExpertHeroSection";
 import FAQSection from "@/components/expertCall/FAQSection";
 import PricingSection from "@/components/expertCall/PricingSection";
@@ -17,6 +18,7 @@ import HeroBanner from "@/components/expertCall/HeroBanner";
 const ExpertCall = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b to-white ">
+      <MetaPixel />
       <nav>
         {/* Navbar */}
         <NavbarDemo />
