@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
                   }
                 : {
                       Name: data.name,
+                      Email: data.email,
                       Phone: data.phone,
                       "Service Type": data.serviceType,
                       _subject: "New Booking Request - Clinzor",
