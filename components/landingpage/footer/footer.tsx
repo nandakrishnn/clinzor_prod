@@ -1,7 +1,7 @@
 export const LogoWhite = () => (
   <img
     src="/assets/logo/logo-white.png"
-    alt="Logo"
+    alt="Clinzor"
     width={100}
     height={50}
     className="h-10 w-auto"

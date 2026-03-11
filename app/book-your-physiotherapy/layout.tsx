@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import WhatsAppButton from "./_components/WhatsAppButton";
-import MetaPixel from "./_components/MetaPixel";
 
 export const metadata: Metadata = {
     title: "Clinzor - Expert Physiotherapy in Bangalore",
@@ -14,7 +13,6 @@ export default function ConnectWithUsLayout({
 }) {
     return (
         <>
-            <MetaPixel />
             {children}
             <WhatsAppButton />
         </>

@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Domine, Inter, Raleway } from "next/font/google";
 import { AuthProvider } from "./Providers";
 import { Toaster } from "@/components/ui/sonner";
+import MetaPixel from "./book-your-physiotherapy/_components/MetaPixel";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const domine = Domine({ subsets: ["latin"], variable: "--font-domine" });
@@ -48,6 +49,7 @@ export default function RootLayout({
       </Head>
       <AuthProvider>
         <body className={`${inter.variable} ${domine.variable} ${raleway.variable} antialiased`}>
+          <MetaPixel />
           {children}
           <Toaster />
         </body>

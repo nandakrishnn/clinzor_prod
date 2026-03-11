@@ -32,7 +32,7 @@ const Navbar = () => {
             <Link href="/" className="text-xl font-bold text-blue-600">
               <Image
                 src={"/assets/logo/logo.png"}
-                alt="Logo"
+                alt="Clinzor"
                 width={80}
                 height={80}
                 className="rounded-full z-50"
